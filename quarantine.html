@@ -18,15 +18,14 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 📁 سایدبار (مشترک) */
+        /* 📁 سایدبار */
         .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
         .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
         .brand span { color: var(--accent); }
         .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
         .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
         .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
-        .badge { background: var(--warning); color: #000; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: auto; font-weight: 900; }
-
+        
         /* 🖥️ محتوای اصلی */
         .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
         .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
@@ -36,20 +35,12 @@
         .h-stat { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .h-stat span { color: var(--warning); font-size: 16px; }
 
-        /* 🔍 نوار فیلتر */
-        .toolbar { display: flex; gap: 15px; margin-bottom: 30px; background: var(--surface-dark); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
-        .filter-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .filter-btn:hover { background: var(--surface-light); color: var(--text-main); }
-        .filter-btn.active { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
-
         /* ⏳ کارت‌های قرنطینه */
-        .quarantine-grid { display: flex; flex-direction: column; gap: 15px; }
+        .quarantine-grid { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         
-        .q-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; display: flex; gap: 20px; align-items: stretch; transition: 0.2s; border-right: 4px solid var(--warning); }
+        .q-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; display: flex; gap: 20px; align-items: stretch; transition: 0.3s; border-right: 4px solid var(--warning); }
         .q-card:hover { transform: translateX(-5px); box-shadow: 5px 10px 20px rgba(0,0,0,0.2); }
-        .q-card.urgent { border-right-color: var(--danger); }
         
-        /* بخش اطلاعات دانش‌آموز */
         .q-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid var(--border-color); padding-left: 20px; }
         .s-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .s-name { font-size: 18px; font-weight: bold; color: var(--text-main); margin-bottom: 5px; }
@@ -59,14 +50,11 @@
         .s-note { background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 10px; font-size: 12px; color: var(--text-main); line-height: 1.6; }
         .s-note span { color: var(--warning); font-weight: bold; display: block; margin-bottom: 3px; font-size: 11px; }
 
-        /* بخش وضعیت هوش مصنوعی */
         .q-ai-status { width: 250px; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; border-left: 1px solid var(--border-color); }
         .ai-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         .ai-metric { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
         .ai-metric.good { color: var(--success); }
-        .ai-metric.bad { color: var(--danger); }
         
-        /* بخش دکمه‌های عملیاتی */
         .q-actions { width: 200px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
         .btn { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; text-align: center; text-decoration: none; display: block; width: 100%; font-family: 'Vazirmatn'; }
         
@@ -90,7 +78,7 @@
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
         <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
-        <a href="quarantine.html" class="nav-item active"><span>⏳</span> آزمایشگاه برنامه‌ریزی <span class="badge">۳</span></a>
+        <a href="quarantine.html" class="nav-item active"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
         <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات سیستم</a>
     </div>
 
@@ -104,264 +92,183 @@
             
             <div class="header-stats">
                 <div class="h-stat"><span id="pendingCount">۰</span> پرونده در صف بررسی</div>
-                <div class="h-stat" style="color: var(--success);"><span style="color: var(--success);">۱۸</span> تأیید شده امروز</div>
             </div>
         </div>
 
-        <div class="toolbar">
-            <button class="filter-btn active">همه موارد (۳)</button>
-            <button class="filter-btn">دارای یادداشت دانش‌آموز (۲)</button>
-            <button class="filter-btn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2);">اولویت بالا / حساس (۱)</button>
-        </div>
-
-        <div class="quarantine-grid">
-            
-            <div class="q-card">
-                <div class="q-info">
-                    <div class="s-header">
-                        <div>
-                            <div class="s-name">سینا رضایی</div>
-                            <div class="s-tags">
-                                <span class="s-tag">دوازدهم تجربی</span>
-                                <span class="s-tag">آزمون ماز</span>
-                            </div>
-                        </div>
-                        <div style="font-size: 11px; color: var(--text-muted);">تولید شده: ۲۰ دقیقه پیش</div>
-                    </div>
-                    <div class="s-note">
-                        <span>💬 پیام ضمیمه شده دانش‌آموز در روز جمعه:</span>
-                        "سلام. این هفته سه‌شنبه امتحان زیست مدرسه دارم. لطفاً تایم مطالعه زیست رو بیشتر کن و برای یکشنبه و دوشنبه پارت‌های تستی نذار."
-                    </div>
-                </div>
-                
-                <div class="q-ai-status">
-                    <div class="ai-label">آنالیز ساختارِ برنامه AI:</div>
-                    <div class="ai-metric good"><span>مجموع ساعات:</span> <span>۴۲ ساعت</span></div>
-                    <div class="ai-metric good"><span>پوشش بودجه‌بندی:</span> <span>۱۰۰٪</span></div>
-                    <div class="ai-metric"><span>تعداد پارت زیست:</span> <span>۶ پارت</span></div>
-                </div>
-
-                <div class="q-actions">
-                    <a href="surgery.html?student=sina" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
-                    <button class="btn btn-quick" onclick="quickApprove(this)">تأیید سریع (ارسال) ✅</button>
-                </div>
+        <div class="quarantine-grid" id="quarantineGrid">
             </div>
-
-            <div class="q-card urgent">
-                <div class="q-info">
-                    <div class="s-header">
-                        <div>
-                            <div class="s-name">امیرحسین کریمی</div>
-                            <div class="s-tags">
-                                <span class="s-tag">دهم انسانی</span>
-                                <span class="s-tag">بدون آزمون</span>
-                                <span class="s-tag" style="background: rgba(239,68,68,0.1); color: var(--danger);">⚠️ افت شدید مطالعه</span>
-                            </div>
-                        </div>
-                        <div style="font-size: 11px; color: var(--text-muted);">تولید شده: ۱ ساعت پیش</div>
-                    </div>
-                    <div class="s-note">
-                        <span>💬 پیام ضمیمه شده دانش‌آموز در روز جمعه:</span>
-                        "هیچی. فقط حالم بده."
-                    </div>
-                </div>
-                
-                <div class="q-ai-status">
-                    <div class="ai-label">آنالیز ساختارِ برنامه AI:</div>
-                    <div class="ai-metric bad"><span>مجموع ساعات:</span> <span>۵۲ ساعت (فشار بالا!)</span></div>
-                    <div class="ai-metric"><span>پوشش بودجه‌بندی:</span> <span>هفته ۱ از ۲</span></div>
-                    <div class="ai-metric bad"><span>هشدار سیستم:</span> <span>احتمال عدم اجرای برنامه</span></div>
-                </div>
-
-                <div class="q-actions">
-                    <a href="surgery.html?student=amirhossein" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
-                    <button class="btn btn-quick" style="opacity: 0.5; cursor: not-allowed;" title="تأیید سریع برای پرونده‌های حساس قفل است">تأیید سریع قفل است 🔒</button>
-                </div>
-            </div>
-
-            <div class="q-card">
-                <div class="q-info">
-                    <div class="s-header">
-                        <div>
-                            <div class="s-name">مریم طاهری</div>
-                            <div class="s-tags">
-                                <span class="s-tag">یازدهم ریاضی</span>
-                                <span class="s-tag">قلم‌چی</span>
-                            </div>
-                        </div>
-                        <div style="font-size: 11px; color: var(--text-muted);">تولید شده: ۳ ساعت پیش</div>
-                    </div>
-                    <div class="s-note" style="background: transparent; border-color: var(--border-color); color: var(--text-muted); text-align: center;">
-                        دانش‌آموز یادداشتی برای این هفته ثبت نکرده است. (استفاده از الگوریتم پیش‌فرض)
-                    </div>
-                </div>
-                
-                <div class="q-ai-status">
-                    <div class="ai-label">آنالیز ساختارِ برنامه AI:</div>
-                    <div class="ai-metric good"><span>مجموع ساعات:</span> <span>۳۸.۵ ساعت</span></div>
-                    <div class="ai-metric good"><span>پوشش بودجه‌بندی:</span> <span>۱۰۰٪</span></div>
-                    <div class="ai-metric good"><span>توازن دروس:</span> <span>رعایت شده</span></div>
-                </div>
-
-                <div class="q-actions">
-                    <a href="surgery.html?student=maryam" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
-                    <button class="btn btn-quick" onclick="quickApprove(this)">تأیید سریع (ارسال) ✅</button>
-                </div>
-            </div>
-
-        </div>
 
     </div>
 
     <script>
         // ==========================================
-// 🔗 تنظیمات اتصال سوپابیس (سیم‌کشی واقعی)
-// ==========================================
-const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 🔗 تنظیمات اتصال سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'لینک_واقعی_شما_اینجا'; 
+        const SUPABASE_KEY = 'کلید_واقعی_شما_اینجا'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-window.onload = async function() {
-    // ۱. چک کردن گارد امنیتی (ورود ادمین)
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-        window.location.replace('index.html');
-        return;
-    }
-    document.getElementById('authLoader').style.display = 'none';
+        window.onload = async function() {
+            try {
+                // ۱. چک کردن دسترسی ادمین
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error || !session) {
+                    window.location.replace('index.html');
+                    return; // توقف اجرای بقیه کدها
+                }
 
-    // ۲. بارگذاری برنامه‌های قرنطینه
-    loadQuarantineSchedules();
-};
+                // اگر سشن معتبر بود، همون اول لودر رو مخفی کن
+                document.getElementById('authLoader').style.display = 'none';
 
-// ==========================================
-// 📥 تابع دریافت و رندر برنامه‌های قرنطینه
-// ==========================================
-async function loadQuarantineSchedules() {
-    const gridContainer = document.querySelector('.quarantine-grid');
-    gridContainer.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال اسکن پایگاه داده... ⏳</div>';
+                // ۲. شروع فرایند خواندن اطلاعات از دیتابیس
+                await loadQuarantineSchedules();
 
-    try {
-        // خواندن تمام برنامه‌های در انتظار تایید
-        const { data: schedules, error } = await supabaseClient
-            .from('ai_schedules')
-            .select('*')
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        // آپدیت کردن کانتر بالای صفحه
-        document.getElementById('pendingCount').innerText = schedules.length; // باید به اون تگ span تو HTML یک آیدی pendingCount بدی
-
-        if (schedules.length === 0) {
-            gridContainer.innerHTML = `
-                <div style="background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--success); padding: 40px; text-align: center; border-radius: 16px;">
-                    <span style="font-size: 40px; display: block; margin-bottom: 10px;">✅</span>
-                    <h3 style="color: var(--success);">قرنطینه پاکسازی شده است!</h3>
-                    <p style="color: var(--text-muted); font-size: 13px;">هیچ برنامه‌ی در انتظار تاییدی وجود ندارد.</p>
-                </div>
-            `;
-            return;
-        }
-
-        gridContainer.innerHTML = ''; // پاک کردن لودینگ
-
-        // ساخت کارت برای هر برنامه
-        for (let sch of schedules) {
-            // دریافت اطلاعات دانش‌آموز از جدول students (برای نمایش اسم و پایه)
-            const { data: student } = await supabaseClient
-                .from('students')
-                .select('*')
-                .eq('chat_id', sch.chat_id)
-                .single();
-
-            const studentName = student ? student.full_name : 'دانش‌آموز ناشناس';
-            const studentGrade = student ? `${student.grade} ${student.major}` : 'نامشخص';
-            const noteText = sch.student_note && sch.student_note !== 'بدون یادداشت' ? sch.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
-            
-            // محاسبه مجموع ساعات برنامه جمینای (برای نمایش تو داشبورد)
-            let totalMinutes = 0;
-            if(sch.raw_plan && Array.isArray(sch.raw_plan)) {
-                sch.raw_plan.forEach(part => {
-                    // محاسبه تفاوت ساعت شروع و پایان
-                    let startVals = part.start_time.split(':');
-                    let endVals = part.end_time.split(':');
-                    let diff = (parseInt(endVals[0])*60 + parseInt(endVals[1])) - (parseInt(startVals[0])*60 + parseInt(startVals[1]));
-                    if(diff > 0) totalMinutes += diff;
-                });
+            } catch (err) {
+                console.error("Auth Error:", err);
+                alert("خطا در تایید هویت. لطفاً دوباره وارد شوید.");
+                window.location.replace('index.html');
             }
-            const totalHours = (totalMinutes / 60).toFixed(1);
+        };
 
-            // تزریق کارت به HTML
-            const cardHTML = `
-                <div class="q-card" id="card-${sch.id}">
-                    <div class="q-info">
-                        <div class="s-header">
-                            <div>
-                                <div class="s-name">${studentName}</div>
-                                <div class="s-tags">
-                                    <span class="s-tag">${studentGrade}</span>
-                                    <span class="s-tag">${sch.week_label}</span>
+        // ==========================================
+        // 📥 تابع دریافت و رندر برنامه‌های قرنطینه
+        // ==========================================
+        async function loadQuarantineSchedules() {
+            const gridContainer = document.getElementById('quarantineGrid');
+            const pendingCountSpan = document.getElementById('pendingCount');
+            
+            gridContainer.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال اسکن پایگاه داده و دریافت برنامه‌ها... ⏳</div>';
+
+            try {
+                // دریافت برنامه‌های در انتظار تایید
+                const { data: schedules, error } = await supabaseClient
+                    .from('ai_schedules')
+                    .select('*')
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // آپدیت تعداد در هدر صفحه
+                pendingCountSpan.innerText = schedules.length;
+
+                if (schedules.length === 0) {
+                    gridContainer.innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--success); padding: 40px; text-align: center; border-radius: 16px;">
+                            <span style="font-size: 40px; display: block; margin-bottom: 10px;">✅</span>
+                            <h3 style="color: var(--success);">قرنطینه پاکسازی شده است!</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;">هیچ برنامه‌ی در انتظار تاییدی وجود ندارد.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                gridContainer.innerHTML = ''; // پاک کردن پیام لودینگ
+
+                // ساخت و تزریق کارت‌ها
+                for (let sch of schedules) {
+                    // دریافت اسم و پایه دانش‌آموز از جدول students
+                    const { data: student } = await supabaseClient
+                        .from('students')
+                        .select('full_name, grade, major')
+                        .eq('chat_id', sch.chat_id)
+                        .single();
+
+                    const studentName = student ? student.full_name : 'دانش‌آموز ناشناس';
+                    const studentGrade = student ? `${student.grade} ${student.major}` : 'نامشخص';
+                    const noteText = (sch.student_note && sch.student_note.trim() !== '') ? sch.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
+                    
+                    // محاسبه مجموع ساعات برنامه برای نمایش
+                    let totalMinutes = 0;
+                    let partsCount = 0;
+                    if(sch.raw_plan && Array.isArray(sch.raw_plan)) {
+                        partsCount = sch.raw_plan.length;
+                        sch.raw_plan.forEach(part => {
+                            if(part.start_time && part.end_time) {
+                                let startVals = part.start_time.split(':');
+                                let endVals = part.end_time.split(':');
+                                let diff = (parseInt(endVals[0])*60 + parseInt(endVals[1])) - (parseInt(startVals[0])*60 + parseInt(startVals[1]));
+                                if(diff > 0) totalMinutes += diff;
+                            }
+                        });
+                    }
+                    const totalHours = (totalMinutes / 60).toFixed(1);
+
+                    const cardHTML = `
+                        <div class="q-card" id="card-${sch.id}">
+                            <div class="q-info">
+                                <div class="s-header">
+                                    <div>
+                                        <div class="s-name">${studentName}</div>
+                                        <div class="s-tags">
+                                            <span class="s-tag">${studentGrade}</span>
+                                            <span class="s-tag">${sch.week_label || 'برنامه هفتگی'}</span>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">شناسه دیتابیس: ${sch.id.substring(0,6)}...</div>
+                                </div>
+                                <div class="s-note">
+                                    <span>💬 پیام ضمیمه شده:</span>
+                                    "${noteText}"
                                 </div>
                             </div>
-                            <div style="font-size: 11px; color: var(--text-muted);">شناسه: ${sch.id.substring(0,6)}...</div>
+                            
+                            <div class="q-ai-status">
+                                <div class="ai-label">آنالیز ساختار برنامه AI:</div>
+                                <div class="ai-metric good"><span>مجموع ساعات:</span> <span>${totalHours} ساعت</span></div>
+                                <div class="ai-metric"><span>تعداد پارت‌ها:</span> <span>${partsCount} پارت</span></div>
+                            </div>
+
+                            <div class="q-actions">
+                                <a href="surgery.html?schedule_id=${sch.id}" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
+                                <button class="btn btn-quick" onclick="quickApprove('${sch.id}')">تأیید سریع (ارسال) ✅</button>
+                            </div>
                         </div>
-                        <div class="s-note">
-                            <span>💬 پیام ضمیمه شده:</span>
-                            "${noteText}"
-                        </div>
-                    </div>
+                    `;
                     
-                    <div class="q-ai-status">
-                        <div class="ai-label">آنالیز ساختار برنامه AI:</div>
-                        <div class="ai-metric good"><span>مجموع ساعات:</span> <span>${totalHours} ساعت</span></div>
-                        <div class="ai-metric"><span>تعداد پارت‌ها:</span> <span>${sch.raw_plan ? sch.raw_plan.length : 0} پارت</span></div>
-                    </div>
+                    gridContainer.insertAdjacentHTML('beforeend', cardHTML);
+                }
 
-                    <div class="q-actions">
-                        <a href="surgery.html?schedule_id=${sch.id}" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
-                        <button class="btn btn-quick" onclick="quickApprove('${sch.id}')">تأیید سریع (ارسال) ✅</button>
-                    </div>
-                </div>
-            `;
-            
-            gridContainer.insertAdjacentHTML('beforeend', cardHTML);
+            } catch (error) {
+                console.error("Database Fetch Error:", error);
+                gridContainer.innerHTML = '<div style="color: var(--danger); text-align: center; padding: 20px; border: 1px solid var(--danger); border-radius: 12px;">خطا در دریافت اطلاعات از دیتابیس. لطفاً کنسول مرورگر را بررسی کنید.</div>';
+            }
         }
 
-    } catch (error) {
-        console.error("خطا در بارگذاری:", error);
-        gridContainer.innerHTML = '<div style="color: var(--danger); text-align: center; padding: 20px;">خطا در ارتباط با دیتابیس!</div>';
-    }
-}
+        // ==========================================
+        // ✅ تابع تایید سریع
+        // ==========================================
+        async function quickApprove(scheduleId) {
+            if(confirm("آیا مطمئن هستید که این برنامه بدون بررسی در اتاق جراحی، تایید شود؟")) {
+                try {
+                    const { error } = await supabaseClient
+                        .from('ai_schedules')
+                        .update({ status: 'approved' })
+                        .eq('id', scheduleId);
 
-// ==========================================
-// ✅ تابع تایید سریع (بدون جراحی)
-// ==========================================
-async function quickApprove(scheduleId) {
-    if(confirm("آیا مطمئن هستید که این برنامه بدون جراحی و به صورت مستقیم تایید شود؟")) {
-        try {
-            // تغییر وضعیت در دیتابیس به approved
-            const { error } = await supabaseClient
-                .from('ai_schedules')
-                .update({ status: 'approved' })
-                .eq('id', scheduleId);
+                    if (error) throw error;
 
-            if (error) throw error;
+                    const card = document.getElementById(`card-${scheduleId}`);
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(50px)';
+                    
+                    setTimeout(() => {
+                        card.remove();
+                        let countSpan = document.getElementById('pendingCount');
+                        if(countSpan) countSpan.innerText = Math.max(0, parseInt(countSpan.innerText) - 1);
+                        
+                        // چک کردن اینکه آیا لیست خالی شده یا نه
+                        if (document.querySelectorAll('.q-card').length === 0) {
+                            loadQuarantineSchedules(); // فراخوانی مجدد برای نمایش پیام "لیست خالی است"
+                        }
+                    }, 300);
 
-            // افکت گرافیکی حذف از لیست
-            const card = document.getElementById(`card-${scheduleId}`);
-            card.style.opacity = '0';
-            card.style.transform = 'translateX(50px)';
-            setTimeout(() => {
-                card.remove();
-                // آپدیت کانتر
-                let countSpan = document.getElementById('pendingCount');
-                if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) - 1;
-            }, 300);
-
-        } catch(err) {
-            alert("خطا در تایید برنامه: " + err.message);
+                } catch(err) {
+                    alert("خطا در تایید برنامه: " + err.message);
+                }
+            }
         }
-    }
-}
+    </script>
+</body>
+</html>
