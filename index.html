@@ -17,12 +17,12 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 📁 سایدبار (منوی کنار) */
-        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
+        /* 📁 سایدبار */
+        .sidebar { width: 270px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
         .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
         .brand span { color: var(--accent); }
         
-        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; }
+        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; transition: 0.3s; border-right: 3px solid transparent; }
         .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
         .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
         .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: auto; }
@@ -45,16 +45,33 @@
         .stat-card.green .stat-value { color: var(--success); }
         .stat-card.red .stat-value { color: var(--danger); }
         
-        .list-container { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; }
-        .list-header { background: var(--surface-light); padding: 15px 20px; font-size: 14px; font-weight: bold; display: flex; border-bottom: 1px solid var(--border-color); }
+        .list-container { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
+        .list-header { background: var(--surface-light); padding: 15px 20px; font-size: 13px; font-weight: bold; display: flex; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
         .list-row { padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; transition: 0.2s; }
         .list-row:hover { background: rgba(255,255,255,0.02); }
-        .col-name { flex: 2; font-weight: bold; }
+        
+        .col-name { flex: 2; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .col-time { flex: 1; color: var(--text-muted); }
         .col-status { flex: 1; text-align: left; }
+        
+        /* دات‌های وضعیت */
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot-yellow { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+        .dot-red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
         .status-badge { padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
         .status-badge.on-time { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
         .status-badge.late { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* 👥 کارنامه جامع دانش‌آموزان */
+        .search-bar { width: 100%; background: var(--surface-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 12px; font-size: 14px; margin-bottom: 20px; outline: none; }
+        .search-bar:focus { border-color: var(--accent); }
+        
+        .col-stats { flex: 1; font-size: 13px; text-align: center; }
+        .col-action { flex: 1; text-align: left; }
+        .btn-view { background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-view:hover { background: var(--accent); color: white; }
 
         /* ⏳ قرنطینه برنامه‌ها */
         .plan-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--warning); }
@@ -70,8 +87,6 @@
         /* 🎛️ جعبه‌ابزار سوئیچ‌ها */
         .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .toggle-card { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* سوئیچ اختصاصی UI */
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--surface-light); transition: .4s; border-radius: 34px; border: 1px solid var(--border-color); }
@@ -86,16 +101,73 @@
         textarea.terminal-input { width: 100%; height: 300px; background: transparent; border: none; color: #a7f3d0; font-family: monospace; font-size: 14px; resize: vertical; outline: none; line-height: 1.5; }
         .btn-terminal { background: #10b981; color: #000; padding: 12px 25px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-family: 'Vazirmatn'; }
 
+        /* 🪟 مودال (پاپ‌آپ) کارنامه کامل */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: var(--surface-dark); border: 1px solid var(--border-color); width: 90%; max-width: 700px; border-radius: 20px; padding: 30px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .btn-close { background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .btn-close:hover { color: var(--danger); }
+        .profile-badges { display: flex; gap: 10px; margin-top: 10px; }
+        .p-badge { background: var(--surface-light); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- سایدبار -->
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 style="color: var(--accent);">پرونده جامع: <span id="modalName" style="color: white;">علی احمدی</span></h2>
+                    <div class="profile-badges">
+                        <span class="p-badge">🎓 دوازدهم تجربی</span>
+                        <span class="p-badge">👑 پلن VIP (پانسیون)</span>
+                        <span class="p-badge" style="color: var(--warning); border-color: var(--warning);">⭐ غول آزمون‌ها</span>
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeModal()">×</button>
+            </div>
+            
+            <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 15px;">📊 خلاصه‌ی عملکرد</h3>
+            <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card" style="padding: 15px;">
+                    <div class="stat-title">مطالعه امروز</div>
+                    <div class="stat-value" style="font-size: 20px;">۶.۵ <span style="font-size: 12px; color: var(--text-muted);">ساعت</span></div>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <div class="stat-title">عملکرد این هفته</div>
+                    <div class="stat-value" style="font-size: 20px;">۴۲ <span style="font-size: 12px; color: var(--text-muted);">ساعت</span></div>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <div class="stat-title">کل ساعت ثبت‌شده</div>
+                    <div class="stat-value" style="font-size: 20px; color: var(--accent);">۶۸۵ <span style="font-size: 12px; color: var(--text-muted);">ساعت</span></div>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <div class="stat-title">میانگین خواب</div>
+                    <div class="stat-value" style="font-size: 20px;">۰۶:۴۵</div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 15px; color: var(--text-muted); margin-top: 20px; margin-bottom: 15px;">📝 آخرین اعترافات و یادداشت‌ها</h3>
+            <div style="background: var(--surface-light); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; font-size: 13px; line-height: 1.8;">
+                <span style="color: var(--warning); font-weight: bold;">جمعه گذشته (درخواست برنامه):</span> "این هفته میخوام بیشتر روی تست‌های زمان‌دار فیزیک کار کنم. لطفاً تایمش رو زیاد کن."<br>
+                <hr style="border-color: var(--border-color); margin: 10px 0;">
+                <span style="color: var(--accent); font-weight: bold;">تحلیل سه‌شنبه:</span> نمره به خود: <strong style="color:white;">۴/۱۰</strong> | "خیلی خسته بودم، گوشیم رو نتونستم کنترل کنم و ۳ ساعت تو اینستاگرام چرخیدم."
+            </div>
+            
+            <div style="text-align: left; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="alert('انتقال به چت پشتیبانی/ویرایش برنامه')">ارسال یادداشت مشاور برای این دانش‌آموز 💬</button>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         
         <div class="nav-item active" onclick="switchNav('sec-radar', this)">
             <span>🌅</span> رادار صبحگاهی
+        </div>
+        <div class="nav-item" onclick="switchNav('sec-students', this)">
+            <span>👥</span> وضعیت کل دانش‌آموزان
         </div>
         <div class="nav-item" onclick="switchNav('sec-quarantine', this)">
             <span>⏳</span> قرنطینه برنامه‌ها <span class="badge">۳</span>
@@ -108,7 +180,6 @@
         </div>
     </div>
 
-    <!-- محتوای اصلی -->
     <div class="main-content">
         
         <div class="page-header">
@@ -116,7 +187,6 @@
             <div class="date-display" id="todayDate">1403/05/20</div>
         </div>
 
-        <!-- 1. مانیتور رادار -->
         <div class="section active" id="sec-radar">
             <div class="stats-grid">
                 <div class="stat-card">
@@ -139,26 +209,87 @@
                     <div class="col-time">ساعت ثبت</div>
                     <div class="col-status">وضعیت</div>
                 </div>
-                <!-- دیتای نمایشی -->
                 <div class="list-row">
-                    <div class="col-name">علی احمدی (دوازدهم تجربی)</div>
+                    <div class="col-name"><span class="status-dot dot-green"></span> علی احمدی</div>
                     <div class="col-time">۰۶:۱۵ صبح</div>
                     <div class="col-status"><span class="status-badge on-time">بیدار و آماده ✅</span></div>
                 </div>
                 <div class="list-row">
-                    <div class="col-name">سارا محمدی (یازدهم ریاضی)</div>
+                    <div class="col-name"><span class="status-dot dot-green"></span> سارا محمدی</div>
                     <div class="col-time">۰۶:۴۸ صبح</div>
                     <div class="col-status"><span class="status-badge on-time">بیدار و آماده ✅</span></div>
                 </div>
                 <div class="list-row">
-                    <div class="col-name">رضا کریمی (دهم انسانی)</div>
-                    <div class="col-time">۰۷:۳۰ صبح (ثبت با تأخیر)</div>
+                    <div class="col-name"><span class="status-dot dot-red"></span> رضا کریمی</div>
+                    <div class="col-time">۰۷:۳۰ صبح (تأخیر)</div>
                     <div class="col-status"><span class="status-badge late">خواب مونده ❌</span></div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. قرنطینه برنامه‌ها -->
+        <div class="section" id="sec-students">
+            <input type="text" class="search-bar" placeholder="🔍 جستجوی نام دانش‌آموز، پایه یا شماره تماس...">
+            
+            <div class="list-container">
+                <div class="list-header">
+                    <div class="col-name" style="flex: 2;">نام و پایه</div>
+                    <div class="col-stats">گزارش امروز</div>
+                    <div class="col-stats">این هفته</div>
+                    <div class="col-stats">ساعت کل</div>
+                    <div class="col-action">عملیات</div>
+                </div>
+
+                <div class="list-row">
+                    <div class="col-name" style="flex: 2;">
+                        <span class="status-dot dot-green"></span>
+                        <div>
+                            <div>علی احمدی</div>
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">دوازدهم تجربی - ماز</div>
+                        </div>
+                    </div>
+                    <div class="col-stats" style="color: var(--success); font-weight: bold;">۶.۵ ساعت</div>
+                    <div class="col-stats">۴۲ ساعت</div>
+                    <div class="col-stats" style="color: var(--accent);">۶۸۵ ساعت</div>
+                    <div class="col-action">
+                        <button class="btn-view" onclick="openModal('علی احمدی')">👁️ کارنامه کامل</button>
+                    </div>
+                </div>
+
+                <div class="list-row">
+                    <div class="col-name" style="flex: 2;">
+                        <span class="status-dot dot-yellow"></span>
+                        <div>
+                            <div>سارا محمدی</div>
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">یازدهم ریاضی - قلم‌چی</div>
+                        </div>
+                    </div>
+                    <div class="col-stats" style="color: var(--warning); font-weight: bold;">۲.۰ ساعت</div>
+                    <div class="col-stats">۱۸ ساعت</div>
+                    <div class="col-stats" style="color: var(--accent);">۲۱۰ ساعت</div>
+                    <div class="col-action">
+                        <button class="btn-view" onclick="openModal('سارا محمدی')">👁️ کارنامه کامل</button>
+                    </div>
+                </div>
+
+                <div class="list-row">
+                    <div class="col-name" style="flex: 2;">
+                        <span class="status-dot dot-red"></span>
+                        <div>
+                            <div>رضا کریمی</div>
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">دهم انسانی - بدون آزمون</div>
+                        </div>
+                    </div>
+                    <div class="col-stats" style="color: var(--danger); font-weight: bold;">غایب ❌</div>
+                    <div class="col-stats">۵ ساعت</div>
+                    <div class="col-stats" style="color: var(--accent);">۹۵ ساعت</div>
+                    <div class="col-action">
+                        <button class="btn-view" onclick="openModal('رضا کریمی')">👁️ کارنامه کامل</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <div class="section" id="sec-quarantine">
             <div style="margin-bottom: 20px; font-size: 14px; color: var(--text-muted);">
                 این برنامه‌ها توسط دستیار هوشمند تولید شده‌اند و منتظر جراحی و تأیید نهایی شما هستند.
@@ -174,20 +305,8 @@
                     <button class="btn btn-primary" onclick="alert('پنل گرافیکی جراحی برنامه باز می‌شود...')">مشاهده و تأیید نهایی</button>
                 </div>
             </div>
-
-            <div class="plan-card">
-                <div class="plan-info">
-                    <h3>مریم طاهری (یازدهم ریاضی - قلم‌چی)</h3>
-                    <p>یادداشت دانش‌آموز: (بدون یادداشت)</p>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-outline">🤖 ارجاع برای اصلاح</button>
-                    <button class="btn btn-primary">مشاهده و تأیید نهایی</button>
-                </div>
-            </div>
         </div>
 
-        <!-- 3. سوئیچ‌ها -->
         <div class="section" id="sec-toggles">
             <button class="btn btn-primary" style="margin-bottom: 20px;">➕ ساخت سوئیچ جدید</button>
             
@@ -202,18 +321,6 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-
-                <div class="toggle-card">
-                    <div>
-                        <h4 style="margin-bottom: 5px;">اردوی طلایی نوروز</h4>
-                        <p style="font-size: 12px; color: var(--text-muted);">تغییر فاز الگوریتم به مرور سریع و تست‌های جامع</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
                 <div class="toggle-card">
                     <div>
                         <h4 style="margin-bottom: 5px;">قفل امنیتی جمعه‌ها</h4>
@@ -227,7 +334,6 @@
             </div>
         </div>
 
-        <!-- 4. ترمینال -->
         <div class="section" id="sec-terminal">
             <div style="margin-bottom: 20px; font-size: 14px; color: var(--text-muted);">
                 کدهای تزریق دیتابیس (SQL یا JSON) را در این قسمت وارد کنید تا مستقیماً به هسته سیستم ارسال شوند.
@@ -243,10 +349,8 @@
     </div>
 
     <script>
-        // تاریخ روز
         document.getElementById('todayDate').innerText = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
-        // تغییر تب‌ها
         function switchNav(sectionId, element) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
@@ -254,14 +358,23 @@
             element.classList.add('active');
             document.getElementById(sectionId).classList.add('active');
             
-            // تغییر عنوان هدر
             const titles = {
                 'sec-radar': 'رادار بیداری (7 AM Club)',
+                'sec-students': 'مانیتورینگ جامع دانش‌آموزان',
                 'sec-quarantine': 'قرنطینه و بررسی برنامه‌ها',
                 'sec-toggles': 'سوئیچ‌های استراتژیک سیستم',
                 'sec-terminal': 'ترمینال مرکزی تزریق دیتا'
             };
             document.getElementById('pageTitle').innerText = titles[sectionId];
+        }
+
+        function openModal(studentName) {
+            document.getElementById('modalName').innerText = studentName;
+            document.getElementById('studentModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('studentModal').style.display = 'none';
         }
     </script>
 </body>
