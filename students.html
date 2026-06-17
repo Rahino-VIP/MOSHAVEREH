@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرونده جامع دانش‌آموزان (CRM) | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
+            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --purple: #8b5cf6; --purple-glow: rgba(139, 92, 246, 0.2);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* 📁 سایدبار (مشترک) */
+        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
+        .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
+        .brand span { color: var(--accent); }
+        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+        .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
+        .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: auto; }
+
+        /* 🖥️ محتوای اصلی */
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
+        .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 24px; font-weight: 900; }
+
+        /* 🔍 نوار جستجو و فیلترها */
+        .toolbar { display: flex; gap: 15px; margin-bottom: 25px; }
+        .search-bar { flex: 1; background: var(--surface-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; }
+        .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .filter-btn { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-muted); padding: 0 20px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .filter-btn:hover, .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* 👥 لیست دانش‌آموزان */
+        .list-container { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; }
+        .list-row { padding: 18px 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; transition: 0.2s; cursor: pointer; }
+        .list-row:hover { background: rgba(59, 130, 246, 0.05); }
+        .col-avatar { width: 45px; height: 45px; border-radius: 12px; background: var(--surface-light); display: flex; justify-content: center; align-items: center; font-size: 20px; margin-left: 15px; border: 1px solid var(--border-color); }
+        .col-info { flex: 2; }
+        .s-name { font-weight: bold; font-size: 15px; margin-bottom: 3px; color: var(--text-main); }
+        .s-meta { font-size: 12px; color: var(--text-muted); }
+        .col-stats { flex: 1; text-align: center; }
+        .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .stat-val { font-size: 14px; font-weight: bold; }
+        .col-action { flex: 1; text-align: left; }
+        .btn-view { background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-view:hover { background: var(--accent); color: white; }
+
+        /* 🪟 مودال پرونده 360 درجه (گرافیک پیشرفته) */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: var(--bg-dark); border: 1px solid var(--border-color); width: 95%; max-width: 1000px; border-radius: 24px; max-height: 95vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        
+        /* هدر پرونده */
+        .profile-header { background: linear-gradient(135deg, var(--surface-dark), var(--bg-dark)); padding: 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; position: relative; overflow: hidden; }
+        .profile-header::before { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--accent-glow); filter: blur(50px); border-radius: 50%; }
+        .p-info-wrap { display: flex; gap: 20px; align-items: center; z-index: 1; }
+        .p-avatar { width: 80px; height: 80px; background: var(--surface-light); border-radius: 20px; font-size: 40px; display: flex; justify-content: center; align-items: center; border: 2px solid var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+        .btn-close { background: transparent; border: none; color: var(--text-muted); font-size: 30px; cursor: pointer; z-index: 1; transition: 0.2s; }
+        .btn-close:hover { color: var(--danger); transform: scale(1.1); }
+        .badge-grid { display: flex; gap: 8px; margin-top: 10px; }
+        .badge-tag { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+
+        .profile-body { padding: 30px; display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+
+        /* 🔮 گوی بلورین هوش مصنوعی */
+        .ai-oracle-box { background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%); border: 1px solid var(--purple); border-radius: 20px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 0 30px var(--purple-glow); }
+        .ai-title { color: #c4b5fd; font-size: 15px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .ai-screen { background: #000; border: 1px solid #2e1065; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 13px; color: #a78bfa; min-height: 150px; line-height: 1.8; position: relative; }
+        .cursor { display: inline-block; width: 8px; height: 15px; background: #a78bfa; animation: blink 1s infinite; vertical-align: middle; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .btn-oracle { background: linear-gradient(135deg, var(--purple), #6d28d9); color: white; padding: 12px 20px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 5px 15px var(--purple-glow); transition: 0.2s; }
+        .btn-oracle:hover { filter: brightness(1.1); }
+
+        /* ویجت‌های آماری */
+        .widget-panel { display: flex; flex-direction: column; gap: 15px; }
+        .widget { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; }
+        .w-title { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px; }
+        
+        .chat-box { width: 100%; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px; border-radius: 12px; font-size: 13px; resize: vertical; min-height: 100px; outline: none; margin-bottom: 10px; }
+        .chat-box:focus { border-color: var(--accent); }
+        .btn-send { background: var(--accent); color: white; padding: 10px 20px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer; width: 100%; }
+
+        .log-entry { font-size: 12px; padding: 10px; background: rgba(255,255,255,0.02); border-left: 3px solid var(--warning); margin-bottom: 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="authLoader" style="display: flex; flex-direction: column;">
+        <h3 style="color: var(--accent); margin-bottom: 10px;">در حال تأیید هویت فرمانده...</h3>
+    </div>
+
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-content">
+            <div class="profile-header">
+                <div class="p-info-wrap">
+                    <div class="p-avatar">🧑‍🎓</div>
+                    <div>
+                        <h2 style="font-size: 26px; font-weight: 900; margin-bottom: 5px;" id="modalName">سینا رضایی</h2>
+                        <div class="badge-grid">
+                            <span class="badge-tag">دوازدهم تجربی (ماز)</span>
+                            <span class="badge-tag" style="color: var(--success); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">🔥 وضعیت: روی غلتک</span>
+                            <span class="badge-tag" style="color: var(--warning); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1);"> میانگین خواب: ۰۶:۱۰</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeProfile()">×</button>
+            </div>
+
+            <div class="profile-body">
+                <div>
+                    <div class="ai-oracle-box">
+                        <div class="ai-title">🔮 گوی بلورین (AI Oracle Prediction)</div>
+                        <div class="ai-screen" id="aiScreen">
+                            <span style="color: #6b7280;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span>
+                            <span class="cursor" id="cursorBlock"></span>
+                        </div>
+                        <button class="btn-oracle" onclick="summonAI()">اسکن ۳۰ روزه و پیش‌بینی رتبه کنکور ⚡</button>
+                    </div>
+
+                    <div class="widget" style="margin-top: 25px;">
+                        <div class="w-title">📝 آخرین اعترافات (فرم جمعه‌ها)</div>
+                        <div class="log-entry">
+                            <strong style="color: var(--text-main);">جمعه گذشته:</strong> "این هفته امتحان فیزیک دارم، توروخدا تو برنامه پارت‌هاش رو زیاد کن. خیلی استرس دارم."
+                        </div>
+                        <div class="log-entry" style="border-left-color: var(--danger);">
+                            <strong style="color: var(--text-main);">۲ هفته پیش:</strong> "حالم اصلاً خوب نیست، همش دارم با گوشیم وقت تلف می‌کنم. تمرکز ندارم."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-panel">
+                    <div class="widget">
+                        <div class="w-title">📊 آمار حیاتی (Vital Signs)</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
+                            <span style="color: var(--text-muted); font-size: 13px;">تیک‌های انجام برنامه:</span>
+                            <span style="font-weight: bold; color: var(--success);">۸۵٪</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
+                            <span style="color: var(--text-muted); font-size: 13px;">ساعت مطالعه این هفته:</span>
+                            <span style="font-weight: bold;">۴۳.۵ ساعت</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-muted); font-size: 13px;">آخرین تراز ماز:</span>
+                            <span style="font-weight: bold; color: var(--accent);">۶۸۵۰</span>
+                        </div>
+                    </div>
+
+                    <div class="widget" style="border-color: var(--accent);">
+                        <div class="w-title" style="color: var(--accent);">💬 بیسیم مستقیم (Direct Message)</div>
+                        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">پیام شما در بالای داشبورد دانش‌آموز پین می‌شود.</p>
+                        <textarea class="chat-box" placeholder="سینا جان، تحلیل آزمونت رو دیدم. فیزیکت عالی بود ولی شیمی نیاز به تست بیشتر داره. این هفته جبران می‌کنیم!"></textarea>
+                        <button class="btn-send" onclick="alert('پیام با موفقیت به داشبورد سینا پین شد!')">ارسال به داشبورد دانش‌آموز 🚀</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
+        <a href="students.html" class="nav-item active"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
+        <a href="quarantine.html" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
+        <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات سیستم</a>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">بانک اطلاعاتی دانش‌آموزان</h1>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" class="search-bar" placeholder="🔍 جستجوی نام، پایه تحصیلی یا شماره موبایل...">
+            <button class="filter-btn active">همه (۲۴۸)</button>
+            <button class="filter-btn">دوازدهمی‌ها</button>
+            <button class="filter-btn" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">⚠️ نیاز به پیگیری (۵)</button>
+        </div>
+
+        <div class="list-container">
+            <div class="list-row" onclick="openProfile('سینا رضایی', 'دوازدهم تجربی')">
+                <div class="col-avatar">👨‍💻</div>
+                <div class="col-info">
+                    <div class="s-name">سینا رضایی</div>
+                    <div class="s-meta">دوازدهم تجربی | برنامه: ماز</div>
+                </div>
+                <div class="col-stats">
+                    <div class="stat-label">مطالعه هفته</div>
+                    <div class="stat-val">۴۳.۵ <span style="font-size: 10px;">ساعت</span></div>
+                </div>
+                <div class="col-stats">
+                    <div class="stat-label">تیک برنامه</div>
+                    <div class="stat-val" style="color: var(--success);">۸۵٪</div>
+                </div>
+                <div class="col-action">
+                    <button class="btn-view">مشاهده پرونده 👁️</button>
+                </div>
+            </div>
+
+            <div class="list-row" onclick="openProfile('مریم طاهری', 'یازدهم ریاضی')">
+                <div class="col-avatar">👩‍🎓</div>
+                <div class="col-info">
+                    <div class="s-name">مریم طاهری</div>
+                    <div class="s-meta">یازدهم ریاضی | برنامه: قلم‌چی</div>
+                </div>
+                <div class="col-stats">
+                    <div class="stat-label">مطالعه هفته</div>
+                    <div class="stat-val">۲۸.۰ <span style="font-size: 10px;">ساعت</span></div>
+                </div>
+                <div class="col-stats">
+                    <div class="stat-label">تیک برنامه</div>
+                    <div class="stat-val" style="color: var(--warning);">۶۰٪</div>
+                </div>
+                <div class="col-action">
+                    <button class="btn-view">مشاهده پرونده 👁️</button>
+                </div>
+            </div>
+            
+            <div class="list-row" style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid var(--danger);" onclick="openProfile('امیرحسین کریمی', 'دهم انسانی')">
+                <div class="col-avatar">🤷‍♂️</div>
+                <div class="col-info">
+                    <div class="s-name">امیرحسین کریمی</div>
+                    <div class="s-meta">دهم انسانی | بدون آزمون</div>
+                </div>
+                <div class="col-stats">
+                    <div class="stat-label">مطالعه هفته</div>
+                    <div class="stat-val" style="color: var(--danger);">۱۲.۰ <span style="font-size: 10px;">ساعت</span></div>
+                </div>
+                <div class="col-stats">
+                    <div class="stat-label">تیک برنامه</div>
+                    <div class="stat-val" style="color: var(--danger);">۳۰٪</div>
+                </div>
+                <div class="col-action">
+                    <button class="btn-view" style="color: var(--danger); border-color: var(--danger); background: transparent;">اقدام فوری ⚠️</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال سوپابیس (گارد امنیتی)
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        window.onload = async function() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) window.location.replace('index.html');
+            else document.getElementById('authLoader').style.display = 'none';
+        };
+
+        // باز و بسته کردن پرونده
+        function openProfile(name, meta) {
+            document.getElementById('modalName').innerText = name;
+            // پاک کردن صفحه نمایش هوش مصنوعی برای کاربری جدید
+            document.getElementById('aiScreen').innerHTML = '<span style="color: #6b7280;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span><span class="cursor" id="cursorBlock"></span>';
+            document.getElementById('studentModal').style.display = 'flex';
+        }
+
+        function closeProfile() {
+            document.getElementById('studentModal').style.display = 'none';
+        }
+
+        // ==========================================
+        // 🔮 افکت تایپ‌شونده (شبیه‌سازی هوش مصنوعی)
+        // ==========================================
+        function summonAI() {
+            const screen = document.getElementById('aiScreen');
+            screen.innerHTML = '<span class="cursor" id="cursorBlock"></span>'; // پاک کردن صفحه
+            
+            const promptResponse = `> Scanning Subject Datasets... [OK]
+> Analyzing Study Habits... [OK]
+> Cross-referencing Maze Exam Scores... [OK]
+
+--- REPORT GENERATED ---
+[!] روند ساعت مطالعه: صعودی (+۱۲٪ در ماه اخیر)
+[!] نقطه بحرانی: فیزیک پایه (نرخ تست‌زنی پایین و خطای بالا)
+[!] نقطه قوت: زیست‌شناسی (تسلط ۸۵٪ روی مباحث دوازدهم)
+
+[🌟] پیش‌بینی ماشین:
+با حفظ روند فعلی و رفع باگ فیزیک، رتبه تخمینی در کنکور بین "۲۸۰۰ تا ۳۵۰۰ منطقه" برآورد می‌شود.
+
+[🛠] پیشنهاد اکشن برای مشاور:
+۱. شیفت کردن پارت‌های فیزیک به زمان‌های پیک انرژی (قورباغه طلایی).
+۲. کاهش پارت‌های درسنامه زیست و تبدیل آن به آزمون‌های زمان‌دار.
+`;
+            
+            let i = 0;
+            // تایمر برای تایپ حرف به حرف
+            const typeWriter = setInterval(() => {
+                if (i < promptResponse.length) {
+                    // قرار دادن متن قبل از مکان‌نما (Cursor)
+                    let currentHtml = screen.innerHTML;
+                    currentHtml = currentHtml.replace('<span class="cursor" id="cursorBlock"></span>', '');
+                    
+                    // هندل کردن اینترها
+                    let char = promptResponse.charAt(i) === '\n' ? '<br>' : promptResponse.charAt(i);
+                    
+                    screen.innerHTML = currentHtml + char + '<span class="cursor" id="cursorBlock"></span>';
+                    i++;
+                } else {
+                    clearInterval(typeWriter);
+                }
+            }, 30); // سرعت تایپ (۳۰ میلی‌ثانیه برای هر حرف)
+        }
+    </script>
+</body>
+</html>
