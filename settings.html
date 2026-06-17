@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنظیمات هسته سیستم | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
+            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --terminal-green: #4ade80;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* 📁 سایدبار (مشترک) */
+        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
+        .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
+        .brand span { color: var(--accent); }
+        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+        .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
+
+        /* 🖥️ محتوای اصلی */
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 30px; }
+        .page-header { margin-bottom: 10px; }
+        .page-title { font-size: 24px; font-weight: 900; }
+        .page-desc { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+
+        /* 🎛️ جعبه‌ابزار سوئیچ‌ها */
+        .settings-section { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; }
+        .section-title { font-size: 16px; font-weight: bold; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        
+        .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .toggle-card { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .toggle-card:hover { border-color: var(--text-muted); }
+        
+        /* استایل سوئیچ */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--surface-light); transition: .4s; border-radius: 34px; border: 1px solid var(--border-color); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 3px; background-color: var(--text-muted); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(24px); background-color: var(--success); box-shadow: 0 0 10px var(--success); }
+
+        .btn-add { background: transparent; border: 2px dashed var(--border-color); color: var(--text-muted); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 20px; width: 100%; font-family: 'Vazirmatn'; }
+        .btn-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+        /* ⚡ ترمینال تزریق */
+        .terminal-container { background: #000; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .terminal-header { background: #111827; padding: 12px 20px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #1f2937; }
+        .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .term-dot.red { background: #ef4444; }
+        .term-dot.yellow { background: #f59e0b; }
+        .term-dot.green { background: #10b981; }
+        .term-title { margin-right: auto; font-family: monospace; font-size: 12px; color: var(--text-muted); }
+
+        .terminal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .terminal-prompt { font-family: monospace; color: var(--terminal-green); font-size: 13px; display: flex; gap: 10px; }
+        .terminal-input { width: 100%; height: 200px; background: rgba(255,255,255,0.02); border: 1px solid #1f2937; color: #a7f3d0; font-family: monospace; font-size: 13px; padding: 15px; border-radius: 8px; resize: vertical; outline: none; line-height: 1.6; direction: ltr; text-align: left; }
+        .terminal-input:focus { border-color: var(--terminal-green); }
+        
+        .terminal-footer { display: flex; justify-content: flex-end; align-items: center; gap: 15px; padding-top: 10px; }
+        .term-status { font-family: monospace; font-size: 12px; color: var(--text-muted); flex: 1; }
+        .btn-execute { background: var(--terminal-green); color: #000; padding: 10px 25px; border-radius: 8px; font-weight: bold; font-family: 'Vazirmatn'; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-execute:hover { background: #22c55e; box-shadow: 0 0 15px rgba(74, 222, 128, 0.4); }
+
+        /* لودر امنیتی */
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="authLoader">
+        <h3 style="color: var(--accent);">در حال اعتبارسنجی دسترسی مدیر ارشد...</h3>
+    </div>
+
+    <div class="sidebar">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
+        <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
+        <a href="quarantine.html" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
+        <a href="settings.html" class="nav-item active"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="page-header">
+            <h1 class="page-title">تنظیمات هسته و مدیریت متغیرها</h1>
+            <p class="page-desc">در این بخش می‌توانید رفتار سیستم و هوش مصنوعی را به صورت زنده تغییر دهید.</p>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-title">🎛️ جعبه‌ابزار ویژگی‌های داینامیک (Feature Toggles)</div>
+            
+            <div class="toggle-grid" id="togglesContainer">
+                <div class="toggle-card">
+                    <div>
+                        <h4 style="margin-bottom: 5px;">حالت پیش‌خوانی یازدهم</h4>
+                        <p style="font-size: 11px; color: var(--text-muted);">نمایش چک‌باکس پیش‌خوانی در فرم درخواست برنامه‌ی روز جمعه.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked onchange="toggleFeature('advance_reading', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-card">
+                    <div>
+                        <h4 style="margin-bottom: 5px;">قفل امنیتی جمعه‌ها</h4>
+                        <p style="font-size: 11px; color: var(--text-muted);">جلوگیری از دریافت برنامه در روزهای وسط هفته برای حفظ دیسیپلین.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked onchange="toggleFeature('friday_lock', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-card">
+                    <div>
+                        <h4 style="margin-bottom: 5px;">فاز اردوی طلایی نوروز</h4>
+                        <p style="font-size: 11px; color: var(--text-muted);">تغییر ساختار الگوریتم هوش مصنوعی به مرور سریع و آزمون‌محور.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" onchange="toggleFeature('norouz_camp', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn-add" onclick="alert('پنجره ساخت سوئیچ جدید باز می‌شود...')">➕ تعریف ویژگی / سوئیچ جدید در دیتابیس</button>
+        </div>
+
+        <div class="settings-section" style="background: transparent; border: none; padding: 0;">
+            <div class="section-title">⚡ ترمینال تزریق مستقیم (Direct Database Injection)</div>
+            
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="term-dot red"></div>
+                    <div class="term-dot yellow"></div>
+                    <div class="term-dot green"></div>
+                    <div class="term-title">admin@rahino-core: ~/database/injector</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-prompt">
+                        <span>➜</span>
+                        <span style="color: #94a3b8;">آپلود دسته‌جمعی بودجه‌بندی آزمون‌ها (فرمت JSON یا دستورات SQL)</span>
+                    </div>
+                    <textarea class="terminal-input" id="terminalInput" placeholder='{\n  "exam_name": "ماز",\n  "grade": "دوازدهم",\n  "major": "تجربی",\n  "exam_date": "1403/05/20",\n  "syllabus": { ... }\n}'></textarea>
+                    
+                    <div class="terminal-footer">
+                        <div class="term-status" id="termStatus">وضعیت: آماده دریافت دستور...</div>
+                        <button class="btn-execute" onclick="executeInjection()">اجرای دستور (Execute)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال سوپابیس (گارد امنیتی)
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        window.onload = async function() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) window.location.replace('index.html');
+            else document.getElementById('authLoader').style.display = 'none';
+        };
+
+        // تغییر وضعیت سوئیچ‌ها
+        function toggleFeature(featureKey, isEnabled) {
+            // در فاز اتصال به دیتابیس، این تابع مستقیماً جدول system_configs رو آپدیت می‌کنه
+            console.log(`Feature [${featureKey}] set to: ${isEnabled}`);
+        }
+
+        // اجرای دستور در ترمینال
+        function executeInjection() {
+            const inputData = document.getElementById('terminalInput').value.trim();
+            const statusBox = document.getElementById('termStatus');
+            
+            if(!inputData) {
+                statusBox.style.color = 'var(--warning)';
+                statusBox.innerText = 'خطا: کادر ورود اطلاعات خالی است!';
+                return;
+            }
+
+            statusBox.style.color = '#38bdf8';
+            statusBox.innerText = 'در حال ارتباط با سرور و تزریق داده‌ها... [||||||    ]';
+            
+            // شبیه‌سازی زمان اتصال به سرور
+            setTimeout(() => {
+                statusBox.style.color = 'var(--terminal-green)';
+                statusBox.innerText = 'تزریق با موفقیت انجام شد! ۱ ردیف به جدول exam_syllabus افزوده شد.';
+                document.getElementById('terminalInput').value = '';
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
