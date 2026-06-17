@@ -77,67 +77,69 @@
         // ==========================================
         // 🔗 تنظیمات اتصال سوپابیس
         // ==========================================
-        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+               
+    // تغییر نام متغیر از supabase به supabaseClient برای جلوگیری از ارور تداخل
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // بررسی اینکه آیا ادمین قبلاً لاگین کرده یا نه
-        window.onload = async function() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                // اگر سشن فعال بود، مستقیم بره به داشبورد
-                window.location.replace('dashboard.html');
-            }
-        };
+    // بررسی اینکه آیا ادمین قبلاً لاگین کرده یا نه
+    window.onload = async function() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            // اگر سشن فعال بود، مستقیم بره به داشبورد
+            window.location.replace('dashboard.html');
+        }
+    };
 
-        async function handleLogin() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const btn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
-            const loader = document.getElementById('btnLoader');
-            const errorBox = document.getElementById('errorBox');
+    async function handleLogin() {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const btn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const loader = document.getElementById('btnLoader');
+        const errorBox = document.getElementById('errorBox');
 
-            if (!email || !password) {
-                errorBox.innerText = "لطفاً ایمیل و رمز عبور را وارد کنید.";
-                errorBox.style.display = 'block';
-                return;
-            }
-
-            // استایل دکمه در حالت لودینگ
-            btn.disabled = true;
-            btnText.style.display = 'none';
-            loader.style.display = 'block';
-            errorBox.style.display = 'none';
-
-            try {
-                // ارسال درخواست لاگین به سوپابیس
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password,
-                });
-
-                if (error) throw error;
-
-                // لاگین موفقیت‌آمیز
-                window.location.replace('dashboard.html');
-
-            } catch (error) {
-                // لاگین ناموفق
-                btn.disabled = false;
-                btnText.style.display = 'block';
-                loader.style.display = 'none';
-                
-                errorBox.innerText = "دسترسی غیرمجاز! ایمیل یا رمز عبور اشتباه است.";
-                errorBox.style.display = 'block';
-            }
+        if (!email || !password) {
+            errorBox.innerText = "لطفاً ایمیل و رمز عبور را وارد کنید.";
+            errorBox.style.display = 'block';
+            return;
         }
 
-        // ورود با زدن دکمه Enter
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') handleLogin();
-        });
-    </script>
-</body>
-</html>
+        // استایل دکمه در حالت لودینگ
+        btn.disabled = true;
+        btnText.style.display = 'none';
+        loader.style.display = 'block';
+        errorBox.style.display = 'none';
+
+        try {
+            // ارسال درخواست لاگین به سوپابیس با متغیر جدید
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) throw error;
+
+            // لاگین موفقیت‌آمیز
+            window.location.replace('dashboard.html');
+
+        } catch (error) {
+            // لاگین ناموفق
+            console.error(error);
+            btn.disabled = false;
+            btnText.style.display = 'block';
+            loader.style.display = 'none';
+            
+            errorBox.innerText = "دسترسی غیرمجاز! ایمیل یا رمز عبور اشتباه است.";
+            errorBox.style.display = 'block';
+        }
+    }
+
+    // ورود با زدن دکمه Enter
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') handleLogin();
+    });
+</script>
+        
+       
