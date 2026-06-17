@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قرنطینه برنامه‌ها | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
+            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* 📁 سایدبار (مشترک) */
+        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
+        .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
+        .brand span { color: var(--accent); }
+        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+        .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
+        .badge { background: var(--warning); color: #000; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: auto; font-weight: 900; }
+
+        /* 🖥️ محتوای اصلی */
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
+        .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 24px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+        
+        .header-stats { display: flex; gap: 15px; }
+        .h-stat { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .h-stat span { color: var(--warning); font-size: 16px; }
+
+        /* 🔍 نوار فیلتر */
+        .toolbar { display: flex; gap: 15px; margin-bottom: 30px; background: var(--surface-dark); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .filter-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .filter-btn:hover { background: var(--surface-light); color: var(--text-main); }
+        .filter-btn.active { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
+
+        /* ⏳ کارت‌های قرنطینه */
+        .quarantine-grid { display: flex; flex-direction: column; gap: 15px; }
+        
+        .q-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; display: flex; gap: 20px; align-items: stretch; transition: 0.2s; border-right: 4px solid var(--warning); }
+        .q-card:hover { transform: translateX(-5px); box-shadow: 5px 10px 20px rgba(0,0,0,0.2); }
+        .q-card.urgent { border-right-color: var(--danger); }
+        
+        /* بخش اطلاعات دانش‌آموز */
+        .q-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid var(--border-color); padding-left: 20px; }
+        .s-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .s-name { font-size: 18px; font-weight: bold; color: var(--text-main); margin-bottom: 5px; }
+        .s-tags { display: flex; gap: 8px; }
+        .s-tag { font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--surface-light); color: var(--text-muted); }
+        
+        .s-note { background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 10px; font-size: 12px; color: var(--text-main); line-height: 1.6; }
+        .s-note span { color: var(--warning); font-weight: bold; display: block; margin-bottom: 3px; font-size: 11px; }
+
+        /* بخش وضعیت هوش مصنوعی */
+        .q-ai-status { width: 250px; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; border-left: 1px solid var(--border-color); }
+        .ai-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .ai-metric { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
+        .ai-metric.good { color: var(--success); }
+        .ai-metric.bad { color: var(--danger); }
+        
+        /* بخش دکمه‌های عملیاتی */
+        .q-actions { width: 200px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+        .btn { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; text-align: center; text-decoration: none; display: block; width: 100%; font-family: 'Vazirmatn'; }
+        
+        .btn-surgery { background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .btn-surgery:hover { background: var(--accent); color: white; }
+        
+        .btn-quick { background: transparent; color: var(--success); border: 1px solid var(--success); }
+        .btn-quick:hover { background: var(--success); color: white; }
+
+        /* لودر امنیتی */
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="authLoader">
+        <h3 style="color: var(--accent);">در حال اعتبارسنجی دسترسی فرمانده...</h3>
+    </div>
+
+    <div class="sidebar">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
+        <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
+        <a href="quarantine.html" class="nav-item active"><span>⏳</span> آزمایشگاه برنامه‌ریزی <span class="badge">۳</span></a>
+        <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات سیستم</a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="page-header">
+            <h1 class="page-title">
+                ⏳ قرنطینه برنامه‌ها
+                <span style="font-size: 13px; font-weight: normal; color: var(--text-muted); background: var(--surface-light); padding: 5px 10px; border-radius: 8px;">منتظر تأیید نهایی شما</span>
+            </h1>
+            
+            <div class="header-stats">
+                <div class="h-stat"><span>۳</span> پرونده در صف بررسی</div>
+                <div class="h-stat" style="color: var(--success);"><span style="color: var(--success);">۱۸</span> تأیید شده امروز</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="filter-btn active">همه موارد (۳)</button>
+            <button class="filter-btn">دارای یادداشت دانش‌آموز (۲)</button>
+            <button class="filter-btn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2);">اولویت بالا / حساس (۱)</button>
+        </div>
+
+        <div class="quarantine-grid">
+            
+            <div class="q-card">
+                <div class="q-info">
+                    <div class="s-header">
+                        <div>
+                            <div class="s-name">سینا رضایی</div>
+                            <div class="s-tags">
+                                <span class="s-tag">دوازدهم تجربی</span>
+                                <span class="s-tag">آزمون ماز</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted);">تولید شده: ۲۰ دقیقه پیش</div>
+                    </div>
+                    <div class="s-note">
+                        <span>💬 پیام ضمیمه شده دانش‌آموز در روز جمعه:</span>
+                        "سلام. این هفته سه‌شنبه امتحان زیست مدرسه دارم. لطفاً تایم مطالعه زیست رو بیشتر کن و برای یکشنبه و دوشنبه پارت‌های تستی نذار."
+                    </div>
+                </div>
+                
+                <div class="q-ai-status">
+                    <div class="ai-label">آنالیز ساختارِ برنامه AI:</div>
+                    <div class="ai-metric good"><span>مجموع ساعات:</span> <span>۴۲ ساعت</span></div>
+                    <div class="ai-metric good"><span>پوشش بودجه‌بندی:</span> <span>۱۰۰٪</span></div>
+                    <div class="ai-metric"><span>تعداد پارت زیست:</span> <span>۶ پارت</span></div>
+                </div>
+
+                <div class="q-actions">
+                    <a href="surgery.html?student=sina" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
+                    <button class="btn btn-quick" onclick="quickApprove(this)">تأیید سریع (ارسال) ✅</button>
+                </div>
+            </div>
+
+            <div class="q-card urgent">
+                <div class="q-info">
+                    <div class="s-header">
+                        <div>
+                            <div class="s-name">امیرحسین کریمی</div>
+                            <div class="s-tags">
+                                <span class="s-tag">دهم انسانی</span>
+                                <span class="s-tag">بدون آزمون</span>
+                                <span class="s-tag" style="background: rgba(239,68,68,0.1); color: var(--danger);">⚠️ افت شدید مطالعه</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted);">تولید شده: ۱ ساعت پیش</div>
+                    </div>
+                    <div class="s-note">
+                        <span>💬 پیام ضمیمه شده دانش‌آموز در روز جمعه:</span>
+                        "هیچی. فقط حالم بده."
+                    </div>
+                </div>
+                
+                <div class="q-ai-status">
+                    <div class="ai-label">آنالیز ساختارِ برنامه AI:</div>
+                    <div class="ai-metric bad"><span>مجموع ساعات:</span> <span>۵۲ ساعت (فشار بالا!)</span></div>
+                    <div class="ai-metric"><span>پوشش بودجه‌بندی:</span> <span>هفته ۱ از ۲</span></div>
+                    <div class="ai-metric bad"><span>هشدار سیستم:</span> <span>احتمال عدم اجرای برنامه</span></div>
+                </div>
+
+                <div class="q-actions">
+                    <a href="surgery.html?student=amirhossein" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
+                    <button class="btn btn-quick" style="opacity: 0.5; cursor: not-allowed;" title="تأیید سریع برای پرونده‌های حساس قفل است">تأیید سریع قفل است 🔒</button>
+                </div>
+            </div>
+
+            <div class="q-card">
+                <div class="q-info">
+                    <div class="s-header">
+                        <div>
+                            <div class="s-name">مریم طاهری</div>
+                            <div class="s-tags">
+                                <span class="s-tag">یازدهم ریاضی</span>
+                                <span class="s-tag">قلم‌چی</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted);">تولید شده: ۳ ساعت پیش</div>
+                    </div>
+                    <div class="s-note" style="background: transparent; border-color: var(--border-color); color: var(--text-muted); text-align: center;">
+                        دانش‌آموز یادداشتی برای این هفته ثبت نکرده است. (استفاده از الگوریتم پیش‌فرض)
+                    </div>
+                </div>
+                
+                <div class="q-ai-status">
+                    <div class="ai-label">آنالیز ساختارِ برنامه AI:</div>
+                    <div class="ai-metric good"><span>مجموع ساعات:</span> <span>۳۸.۵ ساعت</span></div>
+                    <div class="ai-metric good"><span>پوشش بودجه‌بندی:</span> <span>۱۰۰٪</span></div>
+                    <div class="ai-metric good"><span>توازن دروس:</span> <span>رعایت شده</span></div>
+                </div>
+
+                <div class="q-actions">
+                    <a href="surgery.html?student=maryam" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
+                    <button class="btn btn-quick" onclick="quickApprove(this)">تأیید سریع (ارسال) ✅</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال سوپابیس (گارد امنیتی)
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        window.onload = async function() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) window.location.replace('index.html');
+            else document.getElementById('authLoader').style.display = 'none';
+        };
+
+        // تابع تأیید سریع بدون رفتن به اتاق جراحی
+        function quickApprove(buttonElement) {
+            if(confirm("آیا مطمئن هستید که این برنامه بدون جراحی و به صورت مستقیم برای دانش‌آموز ارسال شود؟")) {
+                const card = buttonElement.closest('.q-card');
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(50px)';
+                
+                setTimeout(() => {
+                    card.remove();
+                    // در نسخه نهایی اینجا کدی قرار می‌گیرد که وضعیت را در دیتابیس به 'approved' تغییر می‌دهد
+                }, 300);
+            }
+        }
+    </script>
+</body>
+</html>
