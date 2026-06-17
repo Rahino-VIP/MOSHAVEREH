@@ -3,222 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اتاق فرماندهی راهینو | Admin Cockpit</title>
+    <title>ورود به اتاق فرمان | راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
     <style>
         :root { 
-            --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
-            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --bg-dark: #05080f; 
+            --surface: #0f172a; 
+            --border: #1e293b;
+            --accent: #3b82f6; 
+            --accent-hover: #2563eb;
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; position: relative; }
 
-        /* 📁 سایدبار */
-        .sidebar { width: 270px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
-        .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
+        /* افکت‌های پس‌زمینه */
+        .glow { position: absolute; width: 400px; height: 400px; background: rgba(59, 130, 246, 0.15); filter: blur(100px); border-radius: 50%; z-index: 0; }
+
+        .login-card { background: var(--surface); border: 1px solid var(--border); width: 100%; max-width: 400px; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 1; position: relative; }
+        
+        .brand { text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; }
         .brand span { color: var(--accent); }
-        
-        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; transition: 0.3s; border-right: 3px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
-        .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
-        .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: auto; }
+        .subtitle { text-align: center; font-size: 13px; color: var(--text-muted); margin-bottom: 30px; }
 
-        /* 🖥️ محتوای اصلی */
-        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
-        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .page-title { font-size: 24px; font-weight: 900; }
-        .date-display { background: var(--surface-light); padding: 8px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; color: var(--accent); border: 1px solid var(--border-color); }
+        .input-group { margin-bottom: 20px; }
+        .input-label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
+        .modern-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; text-align: left; direction: ltr; }
+        .modern-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
 
-        .section { display: none; animation: fadeIn 0.4s ease-out; }
-        .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-login { background: var(--accent); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-login:hover { background: var(--accent-hover); }
+        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* ... استایل‌های مانیتورها (مثل قبل) ... */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
-        .stat-title { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px; }
-        .stat-value { font-size: 30px; font-weight: 900; color: var(--text-main); }
-        .stat-card.green .stat-value { color: var(--success); }
-        .stat-card.red .stat-value { color: var(--danger); }
-        
-        .list-container { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
-        .list-header { background: var(--surface-light); padding: 15px 20px; font-size: 13px; font-weight: bold; display: flex; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
-        .list-row { padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; transition: 0.2s; }
-        .list-row:hover { background: rgba(255,255,255,0.02); }
-        .col-name { flex: 2; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .col-time { flex: 1; color: var(--text-muted); }
-        .col-status { flex: 1; text-align: left; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .dot-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .dot-red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-        .status-badge { padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-        .status-badge.on-time { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .status-badge.late { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-        
-        .plan-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--warning); }
-        .plan-info h3 { font-size: 16px; margin-bottom: 5px; }
-        .plan-info p { font-size: 12px; color: var(--text-muted); }
-        .btn-group { display: flex; gap: 10px; }
-        .btn { padding: 10px 15px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; font-family: 'Vazirmatn'; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
-        .btn-outline:hover { border-color: var(--text-muted); }
+        .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-top: 15px; display: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); }
 
-        /* 🪟 مودال جراحی برنامه (جدید) */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: none; justify-content: center; align-items: center; }
-        .modal-content { background: var(--surface-dark); border: 1px solid var(--border-color); width: 95%; max-width: 1100px; border-radius: 20px; padding: 30px; max-height: 95vh; overflow-y: auto; display: flex; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .btn-close { background: transparent; border: none; color: var(--text-muted); font-size: 28px; cursor: pointer; }
-        .btn-close:hover { color: var(--danger); }
-
-        /* نمای گرید (تقویم هفتگی جراحی) */
-        .surgery-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; flex: 1; }
-        .grid-col { flex: 1; min-width: 140px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .grid-header { background: var(--surface-light); text-align: center; padding: 12px; font-size: 13px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--accent); }
-        .grid-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 200px; }
-        
-        .task-block { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-right: 3px solid var(--accent); padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: 0.2s; position: relative; }
-        .task-block:hover { background: rgba(59, 130, 246, 0.2); transform: translateY(-2px); }
-        .task-time { color: var(--text-muted); margin-bottom: 4px; font-size: 10px; font-family: monospace; }
-        .task-title { font-weight: bold; color: var(--text-main); }
-        .task-block.bio { border-right-color: var(--success); background: rgba(16, 185, 129, 0.1); }
-        .task-block.math { border-right-color: var(--warning); background: rgba(245, 158, 11, 0.1); }
-
-        /* کنسول هوش مصنوعی داخل جراحی */
-        .ai-injector-box { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 16px; padding: 20px; margin-top: 20px; display: flex; gap: 15px; align-items: flex-start; }
-        .ai-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px; border-radius: 12px; font-family: 'Vazirmatn'; font-size: 13px; resize: none; outline: none; }
-        .ai-input:focus { border-color: var(--warning); }
-        
-        .action-bar { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
-        .btn-approve { background: linear-gradient(135deg, var(--success), #059669); color: white; padding: 12px 30px; border-radius: 12px; font-size: 15px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
-
+        .loader { display: none; margin: 0 auto; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid white; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="modal-overlay" id="surgeryModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h2 style="color: var(--text-main);">اتاق جراحی برنامه: <span id="surgeryName" style="color: var(--accent);">سینا رضایی</span></h2>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">دانش‌آموز نوشته: "این هفته سه شنبه امتحان زیست مدرسه دارم، تایم بیشتری میخوام."</p>
-                </div>
-                <button class="btn-close" onclick="closeSurgery()">×</button>
-            </div>
-            
-            <div class="surgery-grid">
-                <div class="grid-col">
-                    <div class="grid-header">شنبه</div>
-                    <div class="grid-body">
-                        <div class="task-block bio" onclick="editTask(this)">
-                            <div class="task-time">07:30 - 09:00</div>
-                            <div class="task-title">زیست شناسی</div>
-                        </div>
-                        <div class="task-block" onclick="editTask(this)">
-                            <div class="task-time">09:15 - 10:45</div>
-                            <div class="task-title">شیمی</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid-col">
-                    <div class="grid-header">یکشنبه</div>
-                    <div class="grid-body">
-                        <div class="task-block math" onclick="editTask(this)">
-                            <div class="task-time">07:30 - 09:00</div>
-                            <div class="task-title">ریاضیات</div>
-                        </div>
-                        <div class="task-block bio" onclick="editTask(this)">
-                            <div class="task-time">09:15 - 10:45</div>
-                            <div class="task-title">زیست (تست)</div>
-                        </div>
-                    </div>
-                </div>
+    <div class="glow"></div>
 
-                <div class="grid-col"><div class="grid-header">دوشنبه</div><div class="grid-body"></div></div>
-                <div class="grid-col"><div class="grid-header">سه‌شنبه</div><div class="grid-body"></div></div>
-                <div class="grid-col"><div class="grid-header">چهارشنبه</div><div class="grid-body"></div></div>
-                <div class="grid-col"><div class="grid-header">پنجشنبه</div><div class="grid-body"></div></div>
-                <div class="grid-col"><div class="grid-header">جمعه</div><div class="grid-body"><div class="task-block" style="background: var(--surface-light); border-color: var(--border-color); text-align: center;"><div class="task-title">آزمون و تحلیل</div></div></div></div>
-            </div>
-
-            <div class="ai-injector-box">
-                <div style="font-size: 30px;">🤖</div>
-                <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: bold; color: var(--warning); margin-bottom: 8px;">تزریق دستور مستقیم به مغز هوش مصنوعی:</div>
-                    <textarea class="ai-input" rows="3" placeholder="مثلاً: برنامه برای سه‌شنبه خیلی سبکه. ۳ تا پارت زیست اضافه کن و دوباره برنامه رو بساز..."></textarea>
-                </div>
-                <button class="btn btn-outline" style="border-color: var(--warning); color: var(--warning); align-self: flex-end;" onclick="alert('دستور شما به جمینای ارسال شد. در حال بازسازی برنامه...')">بازسازی برنامه 🔄</button>
-            </div>
-
-            <div class="action-bar">
-                <button class="btn btn-outline" onclick="closeSurgery()">انصراف</button>
-                <button class="btn-approve" onclick="alert('مُهر تأیید زده شد! برنامه به داشبورد سینا رضایی ارسال شد. ✅'); closeSurgery();">تأیید نهایی و ارسال به دانش‌آموز</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="sidebar">
+    <div class="login-card">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
-        <div class="nav-item" onclick="switchNav('sec-radar', this)"><span>🌅</span> رادار صبحگاهی</div>
-        <div class="nav-item active" onclick="switchNav('sec-quarantine', this)"><span>⏳</span> قرنطینه برنامه‌ها <span class="badge">۱</span></div>
-    </div>
+        <div class="subtitle">Secure Admin Cockpit</div>
 
-    <div class="main-content">
-        <div class="page-header">
-            <h1 class="page-title" id="pageTitle">قرنطینه و بررسی برنامه‌ها</h1>
-            <div class="date-display" id="todayDate">1403/05/20</div>
+        <div class="input-group">
+            <label class="input-label">ایمیل سازمانی (Email)</label>
+            <input type="email" id="email" class="modern-input" placeholder="admin@rahino.com" autocomplete="off">
         </div>
 
-        <div class="section active" id="sec-quarantine">
-            <div style="margin-bottom: 20px; font-size: 14px; color: var(--text-muted);">
-                این برنامه‌ها توسط دستیار هوشمند تولید شده‌اند و منتظر جراحی و تأیید نهایی شما هستند.
-            </div>
-
-            <div class="plan-card">
-                <div class="plan-info">
-                    <h3>سینا رضایی (دوازدهم تجربی - ماز)</h3>
-                    <p>یادداشت دانش‌آموز: این هفته سه شنبه امتحان زیست مدرسه دارم، تایم بیشتری میخوام.</p>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="openSurgery('سینا رضایی')">مشاهده و جراحی برنامه 🔬</button>
-                </div>
-            </div>
+        <div class="input-group">
+            <label class="input-label">رمز عبور (Password)</label>
+            <input type="password" id="password" class="modern-input" placeholder="••••••••" autocomplete="off">
         </div>
+
+        <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+            <span id="btnText">ورود به سیستم</span>
+            <div class="loader" id="btnLoader"></div>
+        </button>
+
+        <div class="error-msg" id="errorBox">ایمیل یا رمز عبور اشتباه است.</div>
     </div>
 
     <script>
-        document.getElementById('todayDate').innerText = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        // ==========================================
+        // 🔗 تنظیمات اتصال سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function switchNav(sectionId, element) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById(sectionId).classList.add('active');
-        }
+        // بررسی اینکه آیا ادمین قبلاً لاگین کرده یا نه
+        window.onload = async function() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // اگر سشن فعال بود، مستقیم بره به داشبورد
+                window.location.replace('dashboard.html');
+            }
+        };
 
-        // توابع جراحی برنامه
-        function openSurgery(studentName) {
-            document.getElementById('surgeryName').innerText = studentName;
-            document.getElementById('surgeryModal').style.display = 'flex';
-        }
+        async function handleLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('btnLoader');
+            const errorBox = document.getElementById('errorBox');
 
-        function closeSurgery() {
-            document.getElementById('surgeryModal').style.display = 'none';
-        }
+            if (!email || !password) {
+                errorBox.innerText = "لطفاً ایمیل و رمز عبور را وارد کنید.";
+                errorBox.style.display = 'block';
+                return;
+            }
 
-        function editTask(element) {
-            let currentTitle = element.querySelector('.task-title').innerText;
-            let newTitle = prompt("تغییر نام درس:", currentTitle);
-            if (newTitle !== null && newTitle.trim() !== "") {
-                element.querySelector('.task-title').innerText = newTitle;
+            // استایل دکمه در حالت لودینگ
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            errorBox.style.display = 'none';
+
+            try {
+                // ارسال درخواست لاگین به سوپابیس
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+
+                // لاگین موفقیت‌آمیز
+                window.location.replace('dashboard.html');
+
+            } catch (error) {
+                // لاگین ناموفق
+                btn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+                
+                errorBox.innerText = "دسترسی غیرمجاز! ایمیل یا رمز عبور اشتباه است.";
+                errorBox.style.display = 'block';
             }
         }
+
+        // ورود با زدن دکمه Enter
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleLogin();
+        });
     </script>
 </body>
 </html>
