@@ -24,98 +24,101 @@
         .side-panel { width: 320px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 20; box-shadow: -5px 0 20px rgba(0,0,0,0.3); }
         
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; }
-        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; transition: 0.2s; }
+        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; transition: 0.2s; font-size: 18px; }
         .btn-back:hover { background: var(--danger); border-color: var(--danger); }
-        .student-info h2 { font-size: 16px; font-weight: 900; color: var(--accent); }
+        .student-info h2 { font-size: 16px; font-weight: 900; color: var(--accent); margin-bottom: 3px; }
         .student-info p { font-size: 11px; color: var(--text-muted); }
 
         .panel-body { padding: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         
         .note-box { background: rgba(245, 158, 11, 0.05); border: 1px dashed var(--warning); padding: 15px; border-radius: 12px; }
         .note-title { font-size: 11px; font-weight: bold; color: var(--warning); margin-bottom: 5px; }
-        .note-text { font-size: 13px; line-height: 1.6; }
+        .note-text { font-size: 13px; line-height: 1.6; color: var(--text-main); }
 
         .ai-box { flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
         .ai-header { background: var(--surface-light); padding: 10px 15px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); color: var(--purple); }
         .ai-input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 15px; font-size: 13px; resize: none; outline: none; line-height: 1.6; }
-        .btn-ai { background: rgba(139, 92, 246, 0.1); color: #c4b5fd; border: none; border-top: 1px solid var(--border-color); padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-ai { background: rgba(139, 92, 246, 0.1); color: #c4b5fd; border: none; border-top: 1px solid var(--border-color); padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Vazirmatn'; }
         .btn-ai:hover { background: var(--purple); color: white; }
 
         .panel-footer { padding: 20px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
-        .btn-action { padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; transition: 0.2s; text-align: center; }
+        .btn-action { padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; transition: 0.2s; text-align: center; font-family: 'Vazirmatn'; }
         .btn-approve { background: linear-gradient(135deg, var(--success), #059669); color: white; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
         .btn-approve:hover { filter: brightness(1.1); transform: translateY(-2px); }
         .btn-reject { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
 
         /* 🗓️ بوم تقویم (سمت چپ) */
-        .calendar-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); overflow: hidden; }
+        .calendar-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); overflow: hidden; position: relative; }
         
-        .calendar-header { display: flex; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); }
-        .time-spacer { width: var(--time-col-width); border-left: 1px solid var(--border-color); }
+        .calendar-header { display: flex; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 15; }
+        .time-spacer { width: var(--time-col-width); border-left: 1px solid var(--border-color); flex-shrink: 0; }
         .day-header { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; font-weight: bold; border-left: 1px solid var(--border-color); color: var(--text-main); }
-        .day-header span { display: block; font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 3px; }
+        .day-header.friday { border-left: none; color: var(--danger); }
 
         .calendar-body { flex: 1; overflow-y: auto; position: relative; display: flex; }
         
         /* ستون ساعت‌ها */
-        .time-column { width: var(--time-col-width); background: var(--surface-dark); border-left: 1px solid var(--border-color); position: relative; z-index: 10; }
+        .time-column { width: var(--time-col-width); background: var(--surface-dark); border-left: 1px solid var(--border-color); position: relative; z-index: 10; flex-shrink: 0; }
         .time-label { height: 60px; border-bottom: 1px solid transparent; display: flex; justify-content: center; align-items: flex-start; padding-top: 5px; font-size: 10px; color: var(--text-muted); font-family: monospace; }
         
         /* شبکه روزها */
         .days-grid { flex: 1; display: flex; position: relative; background-image: linear-gradient(var(--border-color) 1px, transparent 1px); background-size: 100% 60px; }
         .day-column { flex: 1; border-left: 1px solid var(--border-color); position: relative; }
+        .day-column:last-child { border-left: none; }
 
-        /* 🧱 بلوک‌های درسی (استایل گوگل کلندر) */
-        .event-block { position: absolute; left: 5px; right: 5px; border-radius: 8px; padding: 8px 10px; font-size: 12px; cursor: grab; transition: transform 0.1s, box-shadow 0.1s; overflow: hidden; border-right: 4px solid; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .event-block:active { cursor: grabbing; transform: scale(0.98); }
+        /* 🧱 بلوک‌های درسی */
+        .event-block { position: absolute; left: 5px; right: 5px; border-radius: 8px; padding: 8px 10px; font-size: 12px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; overflow: hidden; border-right: 4px solid; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .event-block:hover { transform: scale(1.02); z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         .event-time { font-size: 10px; opacity: 0.8; font-family: monospace; margin-bottom: 2px; }
         .event-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .event-desc { font-size: 10px; opacity: 0.7; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* رنگ‌بندی بلوک‌ها بر اساس درس */
-        .event-bio { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: #34d399; }
-        .event-math { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: #fbbf24; }
-        .event-chem { background: rgba(59, 130, 246, 0.15); border-color: var(--accent); color: #60a5fa; }
-        .event-school { background: rgba(148, 163, 184, 0.1); border-color: var(--text-muted); color: var(--text-muted); background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); }
+        /* رنگ‌بندی بلوک‌ها (مدیریت توسط جاوااسکریپت) */
+        .event-bio { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: #34d399; } /* زیست */
+        .event-math { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: #fbbf24; } /* ریاضی */
+        .event-chem { background: rgba(59, 130, 246, 0.15); border-color: var(--accent); color: #60a5fa; } /* شیمی */
+        .event-phys { background: rgba(139, 92, 246, 0.15); border-color: var(--purple); color: #c4b5fd; } /* فیزیک */
+        .event-exam { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); color: #fca5a5; } /* آزمون */
+        .event-break { background: rgba(148, 163, 184, 0.1); border-color: var(--text-muted); color: var(--text-muted); background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); } /* استراحت/مدرسه */
+        .event-default { background: rgba(255, 255, 255, 0.1); border-color: #cbd5e1; color: #f8fafc; } /* سایر دروس */
 
-        /* نوار زمان فعلی (نمایشی) */
-        .current-time-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--danger); z-index: 5; pointer-events: none; }
-        .current-time-line::before { content: ''; position: absolute; right: 0; top: -4px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; }
-
+        /* لودر امنیتی و دیتا */
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
     </style>
 </head>
 <body>
 
-    <div id="authLoader" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-dark); z-index: 1000; display: flex; justify-content: center; align-items: center;">
-        <h3 style="color: var(--accent);">در حال اعتبارسنجی دسترسی...</h3>
+    <div class="loader-overlay" id="mainLoader">
+        <h3 style="color: var(--accent); margin-bottom: 10px;">در حال دریافت اطلاعات بیمار (برنامه)...</h3>
+        <p style="color: var(--text-muted); font-size: 13px;">لطفاً منتظر بمانید</p>
     </div>
 
     <div class="side-panel">
         <div class="panel-header">
             <a href="quarantine.html" class="btn-back">🔙</a>
             <div class="student-info">
-                <h2>سینا رضایی</h2>
-                <p>دوازدهم تجربی (آزمون ماز)</p>
+                <h2 id="stName">در حال بارگذاری...</h2>
+                <p id="stMeta">پایه و رشته</p>
             </div>
         </div>
 
         <div class="panel-body">
             <div class="note-box">
                 <div class="note-title">یادداشت دانش‌آموز برای این هفته:</div>
-                <div class="note-text">"سلام. این هفته سه‌شنبه امتحان زیست مدرسه دارم. لطفاً تایم مطالعه زیست رو بیشتر کن و برای یکشنبه و دوشنبه پارت‌های تستی نذار."</div>
+                <div class="note-text" id="stNote">در حال دریافت...</div>
             </div>
 
             <div class="ai-box">
                 <div class="ai-header">🤖 ترمینال دستور به هوش مصنوعی</div>
-                <textarea class="ai-input" placeholder="دستورات اصلاحی را اینجا بنویسید... (مثال: برنامه سه‌شنبه خیلی سبک است، دو پارت فیزیک اضافه کن)"></textarea>
-                <button class="btn-ai" onclick="alert('دستور به موتور جمینای ارسال شد. در حال بازسازی تقویم...')">بازسازی برنامه با هوش مصنوعی 🔄</button>
+                <textarea class="ai-input" id="aiPromptInput" placeholder="دستورات اصلاحی را اینجا بنویسید... (مثال: برنامه سه‌شنبه خیلی سبک است، دو پارت فیزیک اضافه کن)"></textarea>
+                <button class="btn-ai" onclick="alert('ارتباط با هوش مصنوعی در این نسخه دموی جراحی غیرفعال است.')">بازسازی برنامه با هوش مصنوعی 🔄</button>
             </div>
         </div>
 
         <div class="panel-footer">
-            <button class="btn-action btn-approve" onclick="alert('مُهر تأیید زده شد! تقویم مستقیماً به داشبورد دانش‌آموز ارسال گردید.'); window.location.href='quarantine.html';">✅ تأیید و ارسال برنامه</button>
-            <button class="btn-action btn-reject" onclick="alert('برنامه ریجکت شد.')">❌ رد برنامه و بازگشت</button>
+            <button class="btn-action btn-approve" id="btnApprove" onclick="approveSchedule()">✅ تأیید و ارسال برنامه</button>
+            <button class="btn-action btn-reject" id="btnReject" onclick="rejectSchedule()">❌ رد برنامه و بازگشت</button>
         </div>
     </div>
 
@@ -123,70 +126,21 @@
         
         <div class="calendar-header">
             <div class="time-spacer"></div>
-            <div class="day-header">شنبه <span>۲۴ تیر</span></div>
-            <div class="day-header">یکشنبه <span>۲۵ تیر</span></div>
-            <div class="day-header">دوشنبه <span>۲۶ تیر</span></div>
-            <div class="day-header">سه‌شنبه <span>۲۷ تیر</span></div>
-            <div class="day-header">چهارشنبه <span>۲۸ تیر</span></div>
-            <div class="day-header">پنجشنبه <span>۲۹ تیر</span></div>
-            <div class="day-header" style="border-left: none; color: var(--danger);">جمعه <span>۳۰ تیر</span></div>
+            <div class="day-header">شنبه</div>
+            <div class="day-header">یکشنبه</div>
+            <div class="day-header">دوشنبه</div>
+            <div class="day-header">سه‌شنبه</div>
+            <div class="day-header">چهارشنبه</div>
+            <div class="day-header">پنجشنبه</div>
+            <div class="day-header friday">جمعه</div>
         </div>
 
         <div class="calendar-body" id="scrollArea">
-            
-            <div class="time-column">
-                </div>
+            <div class="time-column" id="timeColumn"></div>
 
-            <div class="days-grid">
-                
-                <div class="day-column">
-                    <div class="event-block event-bio" style="top: 90px; height: 90px;"> <div class="event-time">07:30 - 09:00</div>
-                        <div class="event-title">زیست‌شناسی (پارت ۱)</div>
-                        <div class="event-desc">آموزشی: گوارش و جذب مواد</div>
-                    </div>
-                    
-                    <div class="event-block event-school" style="top: 240px; height: 300px;"> <div class="event-time">10:00 - 15:00</div>
-                        <div class="event-title">مدرسه / کلاس</div>
-                        <div class="event-desc">زمان مسدود شده</div>
-                    </div>
-
-                    <div class="event-block event-chem" style="top: 570px; height: 90px;"> <div class="event-time">15:30 - 17:00</div>
-                        <div class="event-title">شیمی دهم</div>
-                        <div class="event-desc">تست: کیهان زادگاه عنصرها</div>
-                    </div>
-                </div>
-                
-                <div class="day-column">
-                    <div class="event-block event-math" style="top: 90px; height: 90px;">
-                        <div class="event-time">07:30 - 09:00</div>
-                        <div class="event-title">ریاضیات دهم</div>
-                        <div class="event-desc">تست: الگو و دنباله</div>
-                    </div>
-                    <div class="event-block event-bio" style="top: 195px; height: 90px;">
-                        <div class="event-time">09:15 - 10:45</div>
-                        <div class="event-title">زیست‌شناسی</div>
-                        <div class="event-desc">مرور تشریحی (آمادگی امتحان)</div>
-                    </div>
-                </div>
-                
-                <div class="day-column"></div>
-                <div class="day-column"></div>
-                <div class="day-column"></div>
-                <div class="day-column"></div>
-                
-                <div class="day-column" style="border-left: none;">
-                    <div class="event-block event-school" style="top: 120px; height: 180px; border-color: var(--danger); color: var(--danger);">
-                        <div class="event-time">08:00 - 11:00</div>
-                        <div class="event-title">آزمون ماز</div>
-                        <div class="event-desc">شبیه‌سازی و آزمون اصلی</div>
-                    </div>
-                </div>
-
-                <div class="current-time-line" style="top: 210px;"></div>
-
-            </div>
+            <div class="days-grid" id="daysGrid">
+                <div class="day-column" id="col-0"></div> <div class="day-column" id="col-1"></div> <div class="day-column" id="col-2"></div> <div class="day-column" id="col-3"></div> <div class="day-column" id="col-4"></div> <div class="day-column" id="col-5"></div> <div class="day-column" id="col-6"></div> </div>
         </div>
-
     </div>
 
     <script>
@@ -197,29 +151,181 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        window.onload = async function() {
-            // چک کردن دسترسی
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) window.location.replace('index.html');
-            else document.getElementById('authLoader').style.display = 'none';
+        // متغیرهای سراسری برای نگه داشتن اطلاعات رکورد
+        let currentScheduleId = null;
 
-            // تولید ستون ساعت‌ها (از 6 صبح تا 24 شب)
-            const timeCol = document.querySelector('.time-column');
+        // نقشه‌برداری روزهای هفته به ایندکس ستون‌ها
+        const dayMap = {
+            'شنبه': 0, 'یکشنبه': 1, 'دوشنبه': 2, 'سه‌شنبه': 3, 'چهارشنبه': 4, 'پنجشنبه': 5, 'جمعه': 6
+        };
+
+        window.onload = async function() {
+            // ۱. چک کردن دسترسی ادمین
+            const { data: { session }, error: authError } = await supabaseClient.auth.getSession();
+            if (authError || !session) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            // ۲. تولید ستون ساعت‌ها (از 6 صبح تا 24 شب)
+            const timeCol = document.getElementById('timeColumn');
             for(let i = 6; i <= 24; i++) {
                 let timeText = (i < 10 ? '0'+i : i) + ':00';
                 timeCol.innerHTML += `<div class="time-label">${timeText}</div>`;
             }
 
-            // اسکرول اتوماتیک تقویم به ساعت 7 صبح (60px * 1 ساعت)
-            document.getElementById('scrollArea').scrollTop = 60; 
+            // ۳. دریافت آیدی برنامه از لینک (URL Parameters)
+            const urlParams = new URLSearchParams(window.location.search);
+            currentScheduleId = urlParams.get('schedule_id');
+
+            if (!currentScheduleId) {
+                alert("خطا: هیچ برنامه‌ای برای جراحی انتخاب نشده است!");
+                window.location.replace('quarantine.html');
+                return;
+            }
+
+            // ۴. بارگذاری اطلاعات از دیتابیس
+            await fetchAndRenderSchedule();
         };
 
-        /* * نکته فنی برای توسعه‌دهنده (توضیحات تولید): 
-        * در این رابط کاربری از CSS Grid و Absolute Positioning استفاده شده است.
-        * در زمان اتصال به هسته هوشمند، خروجی JSON جمینای خوانده شده و برای هر پارت درسی
-        * فرمول (ساعت شروع * 60 - 360) برای محاسبه ویژگی top محاسبه می‌گردد. 
-        * برای مثال ساعت 07:30 برابر است با: (7.5 * 60) - 360 = 90px
-        */
+        // ==========================================
+        // 📥 تابع دریافت برنامه و رسم تقویم
+        // ==========================================
+        async function fetchAndRenderSchedule() {
+            try {
+                // دریافت رکورد برنامه از جدول قرنطینه
+                const { data: scheduleData, error: scheduleError } = await supabaseClient
+                    .from('ai_schedules')
+                    .select('*')
+                    .eq('id', currentScheduleId)
+                    .single();
+
+                if (scheduleError) throw scheduleError;
+
+                // دریافت اطلاعات دانش‌آموز
+                const { data: studentData } = await supabaseClient
+                    .from('students')
+                    .select('full_name, grade, major')
+                    .eq('chat_id', scheduleData.chat_id)
+                    .single();
+
+                // پر کردن اطلاعات پنل راست
+                document.getElementById('stName').innerText = studentData ? studentData.full_name : 'ناشناس';
+                document.getElementById('stMeta').innerText = studentData ? `${studentData.grade} ${studentData.major} | ${scheduleData.week_label}` : 'اطلاعات نامشخص';
+                document.getElementById('stNote').innerText = (scheduleData.student_note && scheduleData.student_note.trim() !== '') ? scheduleData.student_note : 'بدون یادداشت.';
+
+                // رسم بلوک‌های تقویم
+                if (scheduleData.raw_plan && Array.isArray(scheduleData.raw_plan)) {
+                    renderCalendarBlocks(scheduleData.raw_plan);
+                }
+
+                // پنهان کردن لودینگ
+                document.getElementById('mainLoader').style.display = 'none';
+
+                // اسکرول اتوماتیک تقویم به ساعت 7 صبح (60px)
+                setTimeout(() => {
+                    document.getElementById('scrollArea').scrollTop = 60;
+                }, 100);
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                alert("خطا در بارگذاری اطلاعات برنامه. لطفاً دوباره تلاش کنید.");
+                window.location.replace('quarantine.html');
+            }
+        }
+
+        // ==========================================
+        // 🎨 تابع جادویی تبدیل JSON به بلوک‌های تقویم
+        // ==========================================
+        function renderCalendarBlocks(planArray) {
+            planArray.forEach(part => {
+                // پیدا کردن ستون مربوط به روز
+                const colIndex = dayMap[part.day];
+                if (colIndex === undefined) return; // اگر روز نامعتبر بود رد شو
+                const targetColumn = document.getElementById(`col-${colIndex}`);
+
+                // تبدیل ساعت‌ها به پیکسل
+                let startParts = part.start_time.split(':');
+                let endParts = part.end_time.split(':');
+                
+                let startMinutes = (parseInt(startParts[0]) * 60) + parseInt(startParts[1]);
+                let endMinutes = (parseInt(endParts[0]) * 60) + parseInt(endParts[1]);
+
+                // ساعت 6 صبح برابر 360 دقیقه است. هر پیکسل مساوی یک دقیقه است.
+                let topOffset = startMinutes - 360;
+                let duration = endMinutes - startMinutes;
+
+                // پیدا کردن رنگ مناسب بر اساس کلمه کلیدی یا نوع
+                let typeClass = 'event-default';
+                let subjectName = part.subject || '';
+                let typeStr = part.type || '';
+                
+                if (typeStr.includes('bio') || subjectName.includes('زیست')) typeClass = 'event-bio';
+                else if (typeStr.includes('math') || subjectName.includes('ریاضی') || subjectName.includes('هندسه')) typeClass = 'event-math';
+                else if (typeStr.includes('chem') || subjectName.includes('شیمی')) typeClass = 'event-chem';
+                else if (typeStr.includes('phys') || subjectName.includes('فیزیک')) typeClass = 'event-phys';
+                else if (typeStr.includes('exam') || subjectName.includes('آزمون')) typeClass = 'event-exam';
+                else if (typeStr.includes('break') || subjectName.includes('ناهار') || subjectName.includes('شام') || subjectName.includes('استراحت')) typeClass = 'event-break';
+
+                // ساخت HTML بلوک
+                const blockHTML = `
+                    <div class="event-block ${typeClass}" style="top: ${topOffset}px; height: ${duration}px;" title="${part.topic || ''}">
+                        <div class="event-time">${part.start_time} - ${part.end_time}</div>
+                        <div class="event-title">${part.subject}</div>
+                        <div class="event-desc">${part.topic || ''}</div>
+                    </div>
+                `;
+
+                targetColumn.innerHTML += blockHTML;
+            });
+        }
+
+        // ==========================================
+        // ✅ توابع تأیید و رد
+        // ==========================================
+        async function approveSchedule() {
+            const btn = document.getElementById('btnApprove');
+            btn.innerHTML = 'در حال ثبت... ⏳';
+            btn.disabled = true;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('ai_schedules')
+                    .update({ status: 'approved' })
+                    .eq('id', currentScheduleId);
+
+                if (error) throw error;
+                
+                alert("مُهر تأیید زده شد! تقویم مستقیماً برای دانش‌آموز ارسال گردید.");
+                window.location.replace('quarantine.html');
+            } catch (err) {
+                alert("خطا در تأیید: " + err.message);
+                btn.innerHTML = '✅ تأیید و ارسال برنامه';
+                btn.disabled = false;
+            }
+        }
+
+        async function rejectSchedule() {
+            if(confirm("آیا مطمئن هستید که این برنامه رد شود و به سطل زباله برود؟")) {
+                const btn = document.getElementById('btnReject');
+                btn.innerHTML = 'در حال حذف... ⏳';
+                btn.disabled = true;
+
+                try {
+                    const { error } = await supabaseClient
+                        .from('ai_schedules')
+                        .update({ status: 'rejected' })
+                        .eq('id', currentScheduleId);
+
+                    if (error) throw error;
+                    window.location.replace('quarantine.html');
+                } catch (err) {
+                    alert("خطا در رد برنامه: " + err.message);
+                    btn.innerHTML = '❌ رد برنامه و بازگشت';
+                    btn.disabled = false;
+                }
+            }
+        }
     </script>
 </body>
 </html>
