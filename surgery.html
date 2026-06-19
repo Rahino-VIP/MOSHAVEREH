@@ -438,6 +438,9 @@
         // ==========================================
         // 🧠 تولید محتوای هوشمند با جمینای و ذخیره
         // ==========================================
+        // ==========================================
+        // 🧠 تولید محتوای هوشمند با جمینای و ذخیره (نسخه ضدکرش)
+        // ==========================================
         async function saveAndApproveWithAI() {
             const btn = document.getElementById('btnApprove');
             btn.innerHTML = 'در حال ارتباط با مغز مصنوعی... ⏳';
@@ -490,6 +493,17 @@ ${JSON.stringify(subjectsByDay)}
                 });
                 
                 let aiResult = await aiResponse.json();
+
+                // ✨ سیستم رهگیری دقیق خطاهای گوگل (جدید)
+                if (!aiResponse.ok || aiResult.error) {
+                    let googleError = aiResult.error ? aiResult.error.message : "خطای نامشخص از سمت گوگل";
+                    throw new Error("ارور سرور گوگل: " + googleError);
+                }
+                
+                if (!aiResult.candidates || aiResult.candidates.length === 0) {
+                    throw new Error("جمینای پاسخی نداد (احتمالاً به دلیل حساسیت کلمات یا قوانین Safety).");
+                }
+
                 let motivationData = JSON.parse(aiResult.candidates[0].content.parts[0].text);
 
                 document.getElementById('aiStatus').innerText = "ثبت نهایی در پایگاه داده...";
@@ -499,7 +513,7 @@ ${JSON.stringify(subjectsByDay)}
                     .from('ai_schedules')
                     .update({ 
                         raw_plan: scheduleDataArray,
-                        ai_motivations: motivationData, // ستون جدید یا نگهداری تو JSON
+                        ai_motivations: motivationData,
                         status: 'approved' 
                     })
                     .eq('id', currentScheduleId);
@@ -510,14 +524,14 @@ ${JSON.stringify(subjectsByDay)}
                 window.location.replace('quarantine.html');
 
             } catch (err) {
-                alert("خطا در پردازش هوشمند: " + err.message);
+                console.error(err);
+                alert("❌ خطا در پردازش هوشمند:\n" + err.message);
                 btn.innerHTML = '✅ تولید محتوای هوشمند و ارسال';
                 btn.disabled = false;
                 loader.style.opacity = '0';
                 setTimeout(() => { loader.style.display = 'none'; }, 500);
             }
         }
-
         async function rejectSchedule() {
             if(confirm("آیا مطمئن هستید که این برنامه کاملاً پاک شود؟")) {
                 const btn = document.getElementById('btnReject');
