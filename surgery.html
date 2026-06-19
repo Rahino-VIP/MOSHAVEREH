@@ -3,409 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اتاق جراحی برنامه | راهینو</title>
+    <title>اتاق جراحی تقویم | راهینو VIP</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root { 
             --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
-            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+            --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
             --text-main: #f8fafc; --text-muted: #94a3b8;
-            
             --time-col-width: 60px;
         }
 
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 🎛️ کنسول فرماندهی (سمت راست) */
-        .side-panel { width: 320px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 20; box-shadow: -5px 0 20px rgba(0,0,0,0.3); }
-        
-        .panel-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; }
-        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; transition: 0.2s; font-size: 18px; }
+        /* لودر امنیتی */
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; transition: 0.5s; }
+        .spinner { font-size: 50px; animation: pulse 1.5s infinite; margin-bottom: 15px; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* 🎛️ سایدبار (پنل مدیریت) */
+        .side-panel { width: 340px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 20; box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
+        .panel-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.2); }
+        .btn-back { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-main); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 18px; transition: 0.2s; }
         .btn-back:hover { background: var(--danger); border-color: var(--danger); }
-        .student-info h2 { font-size: 16px; font-weight: 900; color: var(--accent); margin-bottom: 3px; }
+        .student-info h2 { font-size: 16px; font-weight: 900; color: var(--accent); margin-bottom: 5px; }
         .student-info p { font-size: 11px; color: var(--text-muted); }
 
         .panel-body { padding: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         
-        .note-box { background: rgba(245, 158, 11, 0.05); border: 1px dashed var(--warning); padding: 15px; border-radius: 12px; }
-        .note-title { font-size: 11px; font-weight: bold; color: var(--warning); margin-bottom: 5px; }
-        .note-text { font-size: 13px; line-height: 1.6; color: var(--text-main); }
+        /* دستیار هوش مصنوعی */
+        .ai-assistant { background: linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05)); border: 1px solid var(--purple); padding: 15px; border-radius: 12px; position: relative; }
+        .ai-assistant::before { content: '🤖 دستیار جراحی'; position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--purple); font-weight: bold; }
+        .ai-text { font-size: 12px; color: var(--text-main); line-height: 1.8; margin-bottom: 10px; }
+        .st-note-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border-right: 3px solid var(--warning); font-size: 11px; color: var(--text-muted); }
 
-        .ai-box { flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .ai-header { background: var(--surface-light); padding: 10px 15px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); color: var(--purple); }
-        .ai-input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 15px; font-size: 13px; resize: none; outline: none; line-height: 1.6; }
-        .btn-ai { background: rgba(139, 92, 246, 0.1); color: #c4b5fd; border: none; border-top: 1px solid var(--border-color); padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Vazirmatn'; }
-        .btn-ai:hover { background: var(--purple); color: white; }
+        /* فرم افزودن دستی */
+        .add-block-form { background: var(--surface-light); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; }
+        .form-title { font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--text-muted); }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-css { flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 8px; font-size: 12px; outline: none; }
+        .btn-add { background: var(--surface-dark); border: 1px solid var(--accent); color: var(--accent); width: 100%; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-add:hover { background: var(--accent); color: white; }
 
-        .panel-footer { padding: 20px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
-        .btn-action { padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; transition: 0.2s; text-align: center; font-family: 'Vazirmatn'; }
+        .panel-footer { padding: 20px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
+        .btn-action { width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; transition: 0.2s; font-family: 'Vazirmatn'; margin-bottom: 10px; }
         .btn-approve { background: linear-gradient(135deg, var(--success), #059669); color: white; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
-        .btn-approve:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .btn-approve:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
         .btn-reject { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
 
-        /* 🗓️ بوم تقویم (سمت چپ) */
-        .calendar-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); overflow: hidden; position: relative; }
-        
-        .calendar-header { display: flex; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 15; }
+        /* 🗓️ تقویم جراحی */
+        .calendar-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); overflow: hidden; }
+        .calendar-header { display: flex; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 15; box-shadow: 0 5px 10px rgba(0,0,0,0.2); }
         .time-spacer { width: var(--time-col-width); border-left: 1px solid var(--border-color); flex-shrink: 0; }
         .day-header { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; font-weight: bold; border-left: 1px solid var(--border-color); color: var(--text-main); }
         .day-header.friday { border-left: none; color: var(--danger); }
 
         .calendar-body { flex: 1; overflow-y: auto; position: relative; display: flex; }
+        .time-column { width: var(--time-col-width); background: var(--surface-dark); border-left: 1px solid var(--border-color); z-index: 10; flex-shrink: 0; position: relative; }
+        .time-label { height: 60px; display: flex; justify-content: center; padding-top: 5px; font-size: 11px; color: var(--text-muted); font-family: monospace; border-bottom: 1px solid transparent; }
         
-        /* ستون ساعت‌ها */
-        .time-column { width: var(--time-col-width); background: var(--surface-dark); border-left: 1px solid var(--border-color); position: relative; z-index: 10; flex-shrink: 0; }
-        .time-label { height: 60px; border-bottom: 1px solid transparent; display: flex; justify-content: center; align-items: flex-start; padding-top: 5px; font-size: 10px; color: var(--text-muted); font-family: monospace; }
-        
-        /* شبکه روزها */
         .days-grid { flex: 1; display: flex; position: relative; background-image: linear-gradient(var(--border-color) 1px, transparent 1px); background-size: 100% 60px; }
-        .day-column { flex: 1; border-left: 1px solid var(--border-color); position: relative; }
+        .day-column { flex: 1; border-left: 1px solid var(--border-color); position: relative; min-height: 100%; }
         .day-column:last-child { border-left: none; }
 
-        /* 🧱 بلوک‌های درسی */
-        .event-block { position: absolute; left: 5px; right: 5px; border-radius: 8px; padding: 8px 10px; font-size: 12px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; overflow: hidden; border-right: 4px solid; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .event-block:hover { transform: scale(1.02); z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
-        .event-time { font-size: 10px; opacity: 0.8; font-family: monospace; margin-bottom: 2px; }
-        .event-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .event-desc { font-size: 10px; opacity: 0.7; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* 🧱 بلوک‌های درسی (Draggable & Resizable) */
+        .event-block { position: absolute; left: 4px; right: 4px; border-radius: 8px; padding: 6px 8px; font-size: 11px; cursor: grab; transition: box-shadow 0.2s, background-color 0.2s; overflow: hidden; border-right: 4px solid; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 5; }
+        .event-block:active { cursor: grabbing; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.6); opacity: 0.9; }
+        
+        .event-time { font-size: 10px; opacity: 0.9; font-family: monospace; margin-bottom: 2px; font-weight: bold; pointer-events: none; }
+        .event-title { font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; font-size: 12px; }
+        .event-desc { font-size: 10px; opacity: 0.7; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .event-delete { position: absolute; top: 5px; left: 5px; font-size: 10px; cursor: pointer; display: none; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 2px 5px; color: white; z-index: 10; }
+        .event-block:hover .event-delete { display: block; }
 
-        /* رنگ‌بندی بلوک‌ها (مدیریت توسط جاوااسکریپت) */
-        .event-bio { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: #34d399; } /* زیست */
-        .event-math { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: #fbbf24; } /* ریاضی */
-        .event-chem { background: rgba(59, 130, 246, 0.15); border-color: var(--accent); color: #60a5fa; } /* شیمی */
-        .event-phys { background: rgba(139, 92, 246, 0.15); border-color: var(--purple); color: #c4b5fd; } /* فیزیک */
-        .event-exam { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); color: #fca5a5; } /* آزمون */
-        .event-break { background: rgba(148, 163, 184, 0.1); border-color: var(--text-muted); color: var(--text-muted); background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); } /* استراحت/مدرسه */
-        .event-default { background: rgba(255, 255, 255, 0.1); border-color: #cbd5e1; color: #f8fafc; } /* سایر دروس */
+        /* دستگیره تغییر سایز (Resizer) */
+        .resizer { position: absolute; bottom: 0; left: 0; right: 0; height: 8px; cursor: ns-resize; background: rgba(255,255,255,0.1); transition: 0.2s; }
+        .resizer:hover { background: rgba(255,255,255,0.3); }
 
-        /* لودر امنیتی و دیتا */
-        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        /* رنگ‌بندی داینامیک */
+        .event-bio { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: #34d399; } 
+        .event-math { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: #fbbf24; } 
+        .event-chem { background: rgba(59, 130, 246, 0.15); border-color: var(--accent); color: #60a5fa; } 
+        .event-phys { background: rgba(139, 92, 246, 0.15); border-color: var(--purple); color: #c4b5fd; } 
+        .event-exam { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); color: #fca5a5; } 
+        .event-break { background: rgba(148, 163, 184, 0.1); border-color: var(--text-muted); color: var(--text-muted); border-right-style: dashed; } 
+        .event-default { background: rgba(255, 255, 255, 0.1); border-color: #cbd5e1; color: #f8fafc; } 
     </style>
 </head>
 <body>
 
     <div class="loader-overlay" id="mainLoader">
-        <h3 style="color: var(--accent); margin-bottom: 10px;">در حال دریافت اطلاعات بیمار (برنامه)...</h3>
-        <p style="color: var(--text-muted); font-size: 13px;">لطفاً منتظر بمانید</p>
+        <div class="spinner">⚙️</div>
+        <h3 style="color: var(--accent);">آماده‌سازی اتاق جراحی و پردازش تقویم...</h3>
     </div>
 
     <div class="side-panel">
         <div class="panel-header">
             <a href="quarantine.html" class="btn-back">🔙</a>
             <div class="student-info">
-                <h2 id="stName">در حال بارگذاری...</h2>
-                <p id="stMeta">پایه و رشته</p>
+                <h2 id="stName">در حال دریافت...</h2>
+                <p id="stMeta">...</p>
             </div>
         </div>
 
         <div class="panel-body">
-            <div class="note-box">
-                <div class="note-title">یادداشت دانش‌آموز برای این هفته:</div>
-                <div class="note-text" id="stNote">در حال دریافت...</div>
+            <div class="ai-assistant">
+                <div class="ai-text" id="aiAdvice">الگوریتم ریاضی، پارت‌ها را چیده است. لطفاً یادداشت دانش‌آموز را بررسی کنید و در صورت نیاز، پارت‌ها را جابجا کنید.</div>
+                <div class="st-note-box">
+                    <strong>یادداشت دانش‌آموز:</strong><br>
+                    <span id="stNote">در حال پردازش...</span>
+                </div>
             </div>
 
-            <div class="ai-box">
-                <div class="ai-header">🤖 ترمینال دستور به هوش مصنوعی</div>
-                <textarea class="ai-input" id="aiPromptInput" placeholder="دستورات اصلاحی را اینجا بنویسید... (مثال: برنامه سه‌شنبه خیلی سبک است، دو پارت فیزیک اضافه کن)"></textarea>
-                <button class="btn-ai" onclick="alert('ارتباط با هوش مصنوعی در این نسخه دموی جراحی غیرفعال است.')">بازسازی برنامه با هوش مصنوعی 🔄</button>
+            <div class="add-block-form">
+                <div class="form-title">➕ افزودن پارت دستی</div>
+                <div class="form-row">
+                    <select id="newDay" class="input-css">
+                        <option value="شنبه">شنبه</option><option value="یکشنبه">یکشنبه</option>
+                        <option value="دوشنبه">دوشنبه</option><option value="سه‌شنبه">سه‌شنبه</option>
+                        <option value="چهارشنبه">چهارشنبه</option><option value="پنجشنبه">پنجشنبه</option>
+                        <option value="جمعه">جمعه</option>
+                    </select>
+                    <input type="time" id="newTime" class="input-css" value="16:00">
+                </div>
+                <div class="form-row">
+                    <input type="text" id="newSubject" class="input-css" placeholder="نام درس (مثلاً زیست)">
+                    <input type="number" id="newDuration" class="input-css" placeholder="دقیقه" value="90">
+                </div>
+                <button class="btn-add" onclick="addNewBlock()">تزریق پارت به تقویم</button>
             </div>
         </div>
 
         <div class="panel-footer">
-            <button class="btn-action btn-approve" id="btnApprove" onclick="approveSchedule()">✅ تأیید و ارسال برنامه</button>
-            <button class="btn-action btn-reject" id="btnReject" onclick="rejectSchedule()">❌ رد برنامه و بازگشت</button>
+            <button class="btn-action btn-approve" id="btnApprove" onclick="saveAndApprove()">✅ تأیید و ارسال برنامه</button>
+            <button class="btn-action btn-reject" id="btnReject" onclick="rejectSchedule()">❌ رد و حذف برنامه</button>
         </div>
     </div>
 
     <div class="calendar-container">
-        
         <div class="calendar-header">
             <div class="time-spacer"></div>
-            <div class="day-header">شنبه</div>
-            <div class="day-header">یکشنبه</div>
-            <div class="day-header">دوشنبه</div>
-            <div class="day-header">سه‌شنبه</div>
-            <div class="day-header">چهارشنبه</div>
-            <div class="day-header">پنجشنبه</div>
+            <div class="day-header">شنبه</div><div class="day-header">یکشنبه</div>
+            <div class="day-header">دوشنبه</div><div class="day-header">سه‌شنبه</div>
+            <div class="day-header">چهارشنبه</div><div class="day-header">پنجشنبه</div>
             <div class="day-header friday">جمعه</div>
         </div>
 
         <div class="calendar-body" id="scrollArea">
             <div class="time-column" id="timeColumn"></div>
-
             <div class="days-grid" id="daysGrid">
-                <div class="day-column" id="col-0"></div> <div class="day-column" id="col-1"></div> <div class="day-column" id="col-2"></div> <div class="day-column" id="col-3"></div> <div class="day-column" id="col-4"></div> <div class="day-column" id="col-5"></div> <div class="day-column" id="col-6"></div> </div>
+                <div class="day-column" id="col-0" data-dayindex="0"></div>
+                <div class="day-column" id="col-1" data-dayindex="1"></div>
+                <div class="day-column" id="col-2" data-dayindex="2"></div>
+                <div class="day-column" id="col-3" data-dayindex="3"></div>
+                <div class="day-column" id="col-4" data-dayindex="4"></div>
+                <div class="day-column" id="col-5" data-dayindex="5"></div>
+                <div class="day-column" id="col-6" data-dayindex="6"></div>
+            </div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات اتصال سوپابیس
+        // 🔗 تنظیمات و متغیرهای سراسری
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // متغیرهای سراسری برای نگه داشتن اطلاعات رکورد
         let currentScheduleId = null;
+        let scheduleDataArray = []; // نگهداری آرایه نهایی برای ذخیره
+        
+        const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+        const dayMap = { 'شنبه': 0, 'یکشنبه': 1, 'دوشنبه': 2, 'سه‌شنبه': 3, 'چهارشنبه': 4, 'پنجشنبه': 5, 'جمعه': 6 };
 
-        // نقشه‌برداری روزهای هفته به ایندکس ستون‌ها
-        const dayMap = {
-            'شنبه': 0, 'یکشنبه': 1, 'دوشنبه': 2, 'سه‌شنبه': 3, 'چهارشنبه': 4, 'پنجشنبه': 5, 'جمعه': 6
-        };
-
+        // ==========================================
+        // 🚀 راه‌اندازی اولیه
+        // ==========================================
         window.onload = async function() {
-            // ۱. چک کردن دسترسی ادمین
-            const { data: { session }, error: authError } = await supabaseClient.auth.getSession();
-            if (authError || !session) {
-                window.location.replace('index.html');
-                return;
-            }
-
-            // ۲. تولید ستون ساعت‌ها (از 6 صبح تا 24 شب)
+            // رسم ستون ساعت‌ها (از 06:00 تا 24:00)
             const timeCol = document.getElementById('timeColumn');
             for(let i = 6; i <= 24; i++) {
-                let timeText = (i < 10 ? '0'+i : i) + ':00';
-                timeCol.innerHTML += `<div class="time-label">${timeText}</div>`;
+                timeCol.innerHTML += `<div class="time-label">${i.toString().padStart(2, '0')}:00</div>`;
             }
 
-            // ۳. دریافت آیدی برنامه از لینک (URL Parameters)
             const urlParams = new URLSearchParams(window.location.search);
             currentScheduleId = urlParams.get('schedule_id');
 
             if (!currentScheduleId) {
-                alert("خطا: هیچ برنامه‌ای برای جراحی انتخاب نشده است!");
+                alert("خطا: هیچ برنامه‌ای انتخاب نشده است!");
                 window.location.replace('quarantine.html');
                 return;
             }
-
-            // ۴. بارگذاری اطلاعات از دیتابیس
-            await fetchAndRenderSchedule();
+            await fetchAndRender();
         };
 
-        // ==========================================
-        // 📥 تابع دریافت برنامه و رسم تقویم
-        // ==========================================
-        async function fetchAndRenderSchedule() {
+        async function fetchAndRender() {
             try {
-                // دریافت رکورد برنامه از جدول قرنطینه
-                const { data: scheduleData, error: scheduleError } = await supabaseClient
+                const { data: schData, error: schErr } = await supabaseClient
                     .from('ai_schedules')
                     .select('*')
                     .eq('id', currentScheduleId)
                     .single();
+                if (schErr) throw schErr;
 
-                if (scheduleError) throw scheduleError;
-
-                // دریافت اطلاعات دانش‌آموز
-                const { data: studentData } = await supabaseClient
+                const { data: stData } = await supabaseClient
                     .from('students')
                     .select('full_name, grade, major')
-                    .eq('chat_id', scheduleData.chat_id)
+                    .eq('chat_id', schData.chat_id)
                     .single();
 
-                // پر کردن اطلاعات پنل راست
-                document.getElementById('stName').innerText = studentData ? studentData.full_name : 'ناشناس';
-                document.getElementById('stMeta').innerText = studentData ? `${studentData.grade} ${studentData.major} | ${scheduleData.week_label}` : 'اطلاعات نامشخص';
-                document.getElementById('stNote').innerText = (scheduleData.student_note && scheduleData.student_note.trim() !== '') ? scheduleData.student_note : 'بدون یادداشت.';
+                document.getElementById('stName').innerText = stData ? stData.full_name : 'ناشناس';
+                document.getElementById('stMeta').innerText = stData ? `${stData.grade} ${stData.major}` : 'اطلاعات نامشخص';
+                
+                let note = schData.student_note && schData.student_note.trim() !== '' ? schData.student_note : 'بدون یادداشت.';
+                document.getElementById('stNote').innerText = note;
 
-                // رسم بلوک‌های تقویم
-                if (scheduleData.raw_plan && Array.isArray(scheduleData.raw_plan)) {
-                    renderCalendarBlocks(scheduleData.raw_plan);
+                // هوش مصنوعی ساده: هشدار کلمات کلیدی در سایدبار
+                if (note.includes("امتحان") || note.includes("مدرسه")) {
+                    document.getElementById('aiAdvice').innerHTML = "<span style='color:var(--warning)'>⚠️ توجه: دانش‌آموز امتحان دارد!</span> پارت‌های مربوطه را با موس به روزهای قبل از امتحان بکشید.";
                 }
 
-                // پنهان کردن لودینگ
-                document.getElementById('mainLoader').style.display = 'none';
+                // کپی کردن آرایه خام به متغیر سراسری
+                scheduleDataArray = schData.raw_plan || [];
+                renderAllBlocks();
 
-                // اسکرول اتوماتیک تقویم به ساعت 7 صبح (60px)
-                setTimeout(() => {
-                    document.getElementById('scrollArea').scrollTop = 60;
-                }, 100);
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => { document.getElementById('mainLoader').style.display = 'none'; }, 500);
 
-            } catch (error) {
-                console.error("Fetch Error:", error);
-                alert("خطا در بارگذاری اطلاعات برنامه. لطفاً دوباره تلاش کنید.");
+                // اسکرول به ساعت 07:00 (60px)
+                document.getElementById('scrollArea').scrollTop = 60;
+
+            } catch (err) {
+                alert("خطا در بارگذاری: " + err.message);
                 window.location.replace('quarantine.html');
             }
         }
 
         // ==========================================
-        // 🎨 تابع جادویی تبدیل JSON به بلوک‌های تقویم
+        // 🎨 موتور رسم (رندر) پارت‌ها
         // ==========================================
-        function renderCalendarBlocks(planArray) {
-            planArray.forEach(part => {
-                // پیدا کردن ستون مربوط به روز
-                const colIndex = dayMap[part.day];
-                if (colIndex === undefined) return; // اگر روز نامعتبر بود رد شو
-                const targetColumn = document.getElementById(`col-${colIndex}`);
+        function renderAllBlocks() {
+            // پاک کردن تقویم
+            for(let i=0; i<=6; i++) {
+                document.getElementById(`col-${i}`).innerHTML = '';
+            }
 
-                // تبدیل ساعت‌ها به پیکسل
-                let startParts = part.start_time.split(':');
-                let endParts = part.end_time.split(':');
+            scheduleDataArray.forEach((part, index) => {
+                let colIndex = dayMap[part.day];
+                if (colIndex === undefined) return;
+
+                let startMins = timeStrToMins(part.start_time);
+                let endMins = timeStrToMins(part.end_time);
                 
-                let startMinutes = (parseInt(startParts[0]) * 60) + parseInt(startParts[1]);
-                let endMinutes = (parseInt(endParts[0]) * 60) + parseInt(endParts[1]);
+                let topPx = startMins - 360; // ساعت 6 برابر 360 دقیقه است
+                let heightPx = endMins - startMins;
 
-                // ساعت 6 صبح برابر 360 دقیقه است. هر پیکسل مساوی یک دقیقه است.
-                let topOffset = startMinutes - 360;
-                let duration = endMinutes - startMinutes;
+                // پیدا کردن رنگ
+                let typeClass = "event-default";
+                if(part.type) typeClass = `event-${part.type}`;
 
-                // پیدا کردن رنگ مناسب بر اساس کلمه کلیدی یا نوع
-                let typeClass = 'event-default';
-                let subjectName = part.subject || '';
-                let typeStr = part.type || '';
-                
-                if (typeStr.includes('bio') || subjectName.includes('زیست')) typeClass = 'event-bio';
-                else if (typeStr.includes('math') || subjectName.includes('ریاضی') || subjectName.includes('هندسه')) typeClass = 'event-math';
-                else if (typeStr.includes('chem') || subjectName.includes('شیمی')) typeClass = 'event-chem';
-                else if (typeStr.includes('phys') || subjectName.includes('فیزیک')) typeClass = 'event-phys';
-                else if (typeStr.includes('exam') || subjectName.includes('آزمون')) typeClass = 'event-exam';
-                else if (typeStr.includes('break') || subjectName.includes('ناهار') || subjectName.includes('شام') || subjectName.includes('استراحت')) typeClass = 'event-break';
+                const block = document.createElement('div');
+                block.className = `event-block ${typeClass}`;
+                block.style.top = `${topPx}px`;
+                block.style.height = `${heightPx}px`;
+                block.dataset.index = index; // کلید اتصال گرافیک به دیتا
 
-                // ساخت HTML بلوک
-                const blockHTML = `
-                    <div class="event-block ${typeClass}" style="top: ${topOffset}px; height: ${duration}px;" title="${part.topic || ''}">
-                        <div class="event-time">${part.start_time} - ${part.end_time}</div>
-                        <div class="event-title">${part.subject}</div>
-                        <div class="event-desc">${part.topic || ''}</div>
-                    </div>
+                block.innerHTML = `
+                    <div class="event-delete" onclick="deleteBlock(${index})">🗑️</div>
+                    <div class="event-time">${part.start_time} - ${part.end_time}</div>
+                    <div class="event-title">${part.subject}</div>
+                    <div class="event-desc">${part.topic || ''}</div>
+                    <div class="resizer"></div>
                 `;
 
-                targetColumn.innerHTML += blockHTML;
+                // فعال‌سازی رویدادهای Drag و Resize برای این بلوک
+                block.addEventListener('mousedown', handleMouseDown);
+                document.getElementById(`col-${colIndex}`).appendChild(block);
             });
-            // بعد از اینکه تمام HTML بلوک‌ها ساخته و به صفحه اضافه شد:
-initDragAndDrop();
         }
 
         // ==========================================
-        // ✅ توابع تأیید و رد
+        // 🖱️ موتور بی‌نقص Drag & Drop و Resize
         // ==========================================
-        async function approveSchedule() {
+        let isDragging = false;
+        let isResizing = false;
+        let activeBlock = null;
+        let activeIndex = -1;
+        let startY = 0;
+        let initialTop = 0;
+        let initialHeight = 0;
+
+        function handleMouseDown(e) {
+            if (e.button !== 0) return; // فقط کلیک چپ
+            if (e.target.classList.contains('event-delete')) return; // روی دکمه حذف عمل نکند
+
+            activeBlock = e.currentTarget;
+            activeIndex = parseInt(activeBlock.dataset.index);
+            startY = e.clientY;
+            
+            initialTop = parseInt(activeBlock.style.top) || 0;
+            initialHeight = parseInt(activeBlock.style.height) || 0;
+
+            if (e.target.classList.contains('resizer')) {
+                isResizing = true;
+            } else {
+                isDragging = true;
+            }
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleMouseMove(e) {
+            if (!activeBlock) return;
+
+            let dy = e.clientY - startY;
+
+            if (isResizing) {
+                // منطق تغییر سایز (حداقل 15 دقیقه)
+                let newHeight = initialHeight + dy;
+                newHeight = Math.round(newHeight / 15) * 15; // آهنربای ۱۵ دقیقه‌ای
+                if (newHeight < 15) newHeight = 15;
+                activeBlock.style.height = `${newHeight}px`;
+                updateBlockTimeVisual(activeBlock, initialTop, newHeight);
+            } 
+            else if (isDragging) {
+                // منطق جابجایی عمودی
+                let newTop = initialTop + dy;
+                newTop = Math.round(newTop / 15) * 15;
+                if (newTop < 0) newTop = 0;
+                activeBlock.style.top = `${newTop}px`;
+                updateBlockTimeVisual(activeBlock, newTop, initialHeight);
+
+                // منطق جابجایی افقی (تشخیص ستون روز)
+                const gridRect = document.getElementById('daysGrid').getBoundingClientRect();
+                const colWidth = gridRect.width / 7;
+                let mouseX = e.clientX - gridRect.left;
+                
+                if (mouseX >= 0 && mouseX <= gridRect.width) {
+                    let hoveredColIndex = Math.floor(mouseX / colWidth);
+                    // اگر روز عوض شد، DOM رو به ستون جدید منتقل کن
+                    const currentParentId = activeBlock.parentElement.id;
+                    if (currentParentId !== `col-${hoveredColIndex}`) {
+                        document.getElementById(`col-${hoveredColIndex}`).appendChild(activeBlock);
+                    }
+                }
+            }
+        }
+
+        function handleMouseUp(e) {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            if (activeBlock && activeIndex !== -1) {
+                // ذخیره تغییرات در آرایه اصلی (Live Sync)
+                let finalTop = parseInt(activeBlock.style.top);
+                let finalHeight = parseInt(activeBlock.style.height);
+                let finalColIndex = parseInt(activeBlock.parentElement.dataset.dayindex);
+
+                let startMins = finalTop + 360;
+                let endMins = startMins + finalHeight;
+
+                scheduleDataArray[activeIndex].day = daysArr[finalColIndex];
+                scheduleDataArray[activeIndex].start_time = minsToTimeStr(startMins);
+                scheduleDataArray[activeIndex].end_time = minsToTimeStr(endMins);
+
+                activeBlock = null;
+                isDragging = false;
+                isResizing = false;
+            }
+        }
+
+        // آپدیت متنِ ساعت روی بلوک در حین کشیدن
+        function updateBlockTimeVisual(block, top, height) {
+            let sMins = top + 360;
+            let eMins = sMins + height;
+            block.querySelector('.event-time').innerText = `${minsToTimeStr(sMins)} - ${minsToTimeStr(eMins)}`;
+        }
+
+        // ==========================================
+        // ➕ توابع عملیاتی (حذف و اضافه)
+        // ==========================================
+        function deleteBlock(index) {
+            if(confirm("آیا از حذف این پارت اطمینان دارید؟")) {
+                scheduleDataArray.splice(index, 1);
+                renderAllBlocks(); // رندر مجدد برای آپدیت ایندکس‌ها
+            }
+        }
+
+        function addNewBlock() {
+            let day = document.getElementById('newDay').value;
+            let timeStr = document.getElementById('newTime').value;
+            let subject = document.getElementById('newSubject').value;
+            let duration = parseInt(document.getElementById('newDuration').value);
+
+            if(!subject) { alert("نام درس را وارد کنید!"); return; }
+
+            let startMins = timeStrToMins(timeStr);
+            let endMins = startMins + duration;
+
+            let typeClass = "default";
+            if(subject.includes("زیست")) typeClass = "bio";
+            else if(subject.includes("ریاضی")) typeClass = "math";
+            else if(subject.includes("شیمی")) typeClass = "chem";
+            else if(subject.includes("فیزیک")) typeClass = "phys";
+            else if(subject.includes("آزمون")) typeClass = "exam";
+
+            scheduleDataArray.push({
+                day: day,
+                start_time: minsToTimeStr(startMins),
+                end_time: minsToTimeStr(endMins),
+                subject: subject,
+                topic: "اضافه شده توسط مدیریت",
+                type: typeClass
+            });
+
+            // خالی کردن فرم و رندر مجدد
+            document.getElementById('newSubject').value = "";
+            renderAllBlocks();
+        }
+
+        // ==========================================
+        // ✅ توابع دیتابیس (تأیید و ذخیره نهایی)
+        // ==========================================
+        async function saveAndApprove() {
             const btn = document.getElementById('btnApprove');
-            btn.innerHTML = 'در حال ثبت... ⏳';
+            btn.innerHTML = 'در حال ذخیره و ارسال... ⏳';
             btn.disabled = true;
 
             try {
+                // آپدیت آرایه ویرایش‌شده تو دیتابیس و تغییر وضعیت به تایید شده
                 const { error } = await supabaseClient
                     .from('ai_schedules')
-                    .update({ status: 'approved' })
+                    .update({ 
+                        raw_plan: scheduleDataArray,
+                        status: 'approved' 
+                    })
                     .eq('id', currentScheduleId);
 
                 if (error) throw error;
                 
-                alert("مُهر تأیید زده شد! تقویم مستقیماً برای دانش‌آموز ارسال گردید.");
+                alert("برنامه با موفقیت ذخیره و برای دانش‌آموز ارسال شد! 🚀");
                 window.location.replace('quarantine.html');
             } catch (err) {
-                alert("خطا در تأیید: " + err.message);
+                alert("خطا در ثبت نهایی: " + err.message);
                 btn.innerHTML = '✅ تأیید و ارسال برنامه';
                 btn.disabled = false;
             }
         }
 
         async function rejectSchedule() {
-            if(confirm("آیا مطمئن هستید که این برنامه رد شود و به سطل زباله برود؟")) {
+            if(confirm("آیا مطمئن هستید که این برنامه کاملاً پاک شود؟")) {
                 const btn = document.getElementById('btnReject');
                 btn.innerHTML = 'در حال حذف... ⏳';
                 btn.disabled = true;
-
                 try {
                     const { error } = await supabaseClient
                         .from('ai_schedules')
-                        .update({ status: 'rejected' })
+                        .delete()
                         .eq('id', currentScheduleId);
 
                     if (error) throw error;
                     window.location.replace('quarantine.html');
                 } catch (err) {
-                    alert("خطا در رد برنامه: " + err.message);
-                    btn.innerHTML = '❌ رد برنامه و بازگشت';
+                    alert("خطا در حذف: " + err.message);
+                    btn.innerHTML = '❌ رد و حذف برنامه';
                     btn.disabled = false;
                 }
             }
         }
+
         // ==========================================
-        // 🖱️ سیستم Drag & Drop (مانند گوگل کلندر)
+        // 🧮 توابع کمکی محاسبات زمان
         // ==========================================
-        let draggedBlock = null;
-        let startY = 0;
-        let originalTop = 0;
-
-        // این تابع بعد از رسم شدن بلوک‌ها باید فراخوانی شود
-        function initDragAndDrop() {
-            const blocks = document.querySelectorAll('.event-block');
-            
-            blocks.forEach(block => {
-                block.onmousedown = function(e) {
-                    // فقط با کلیک چپ کار کند
-                    if (e.button !== 0) return; 
-                    
-                    draggedBlock = this;
-                    startY = e.clientY;
-                    originalTop = parseInt(this.style.top || 0);
-                    
-                    this.style.zIndex = 1000;
-                    this.style.cursor = 'grabbing';
-                    this.style.opacity = '0.9';
-                    this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
-                };
-            });
-
-            document.onmousemove = function(e) {
-                if (!draggedBlock) return;
-                
-                // محاسبه میزان جابجایی موس
-                let dy = e.clientY - startY;
-                let newTop = originalTop + dy;
-                
-                // خاصیت آهنربایی: چسبیدن به فواصل ۱۵ پیکسلی (۱۵ دقیقه‌ای)
-                newTop = Math.round(newTop / 15) * 15;
-                
-                // جلوگیری از خروج از تقویم (قبل از ۶ صبح)
-                if (newTop < 0) newTop = 0; 
-                
-                draggedBlock.style.top = newTop + 'px';
-                
-                // آپدیت زنده ساعت روی بلوک
-                updateBlockTimeText(draggedBlock, newTop);
-            };
-
-            document.onmouseup = function() {
-                if (draggedBlock) {
-                    draggedBlock.style.zIndex = '';
-                    draggedBlock.style.cursor = 'pointer';
-                    draggedBlock.style.opacity = '1';
-                    draggedBlock.style.boxShadow = '';
-                    
-                    // در نسخه نهایی باید این تغییر رو تو آرایه‌ی JSON ذخیره کنیم
-                    console.log("پارت جابجا شد! ساعت جدید:", draggedBlock.querySelector('.event-time').innerText);
-                    
-                    draggedBlock = null;
-                }
-            };
+        function timeStrToMins(timeStr) {
+            if(!timeStr) return 0;
+            let parts = timeStr.split(':');
+            return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
         }
 
-        // ==========================================
-        // ⏱️ تبدیل پیکسل به ساعت (محاسبه زنده)
-        // ==========================================
-        function updateBlockTimeText(block, topPx) {
-            // ساعت 6 صبح = 360 دقیقه از نیمه‌شب
-            let totalMinutesStart = 360 + topPx;
-            let duration = parseInt(block.style.height); // ارتفاع بلوک مساوی با دقیقه است
-            let totalMinutesEnd = totalMinutesStart + duration;
-
-            let sh = Math.floor(totalMinutesStart / 60);
-            let sm = totalMinutesStart % 60;
-            let eh = Math.floor(totalMinutesEnd / 60);
-            let em = totalMinutesEnd % 60;
-
-            // فرمت کردن به شکل 00:00
-            let timeStr = `${sh.toString().padStart(2,'0')}:${sm.toString().padStart(2,'0')} - ${eh.toString().padStart(2,'0')}:${em.toString().padStart(2,'0')}`;
-            block.querySelector('.event-time').innerText = timeStr;
+        function minsToTimeStr(mins) {
+            let h = Math.floor(mins / 60);
+            let m = Math.floor(mins % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
         }
     </script>
 </body>
