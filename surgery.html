@@ -278,6 +278,8 @@
 
                 targetColumn.innerHTML += blockHTML;
             });
+            // بعد از اینکه تمام HTML بلوک‌ها ساخته و به صفحه اضافه شد:
+initDragAndDrop();
         }
 
         // ==========================================
@@ -325,6 +327,85 @@
                     btn.disabled = false;
                 }
             }
+        }
+        // ==========================================
+        // 🖱️ سیستم Drag & Drop (مانند گوگل کلندر)
+        // ==========================================
+        let draggedBlock = null;
+        let startY = 0;
+        let originalTop = 0;
+
+        // این تابع بعد از رسم شدن بلوک‌ها باید فراخوانی شود
+        function initDragAndDrop() {
+            const blocks = document.querySelectorAll('.event-block');
+            
+            blocks.forEach(block => {
+                block.onmousedown = function(e) {
+                    // فقط با کلیک چپ کار کند
+                    if (e.button !== 0) return; 
+                    
+                    draggedBlock = this;
+                    startY = e.clientY;
+                    originalTop = parseInt(this.style.top || 0);
+                    
+                    this.style.zIndex = 1000;
+                    this.style.cursor = 'grabbing';
+                    this.style.opacity = '0.9';
+                    this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+                };
+            });
+
+            document.onmousemove = function(e) {
+                if (!draggedBlock) return;
+                
+                // محاسبه میزان جابجایی موس
+                let dy = e.clientY - startY;
+                let newTop = originalTop + dy;
+                
+                // خاصیت آهنربایی: چسبیدن به فواصل ۱۵ پیکسلی (۱۵ دقیقه‌ای)
+                newTop = Math.round(newTop / 15) * 15;
+                
+                // جلوگیری از خروج از تقویم (قبل از ۶ صبح)
+                if (newTop < 0) newTop = 0; 
+                
+                draggedBlock.style.top = newTop + 'px';
+                
+                // آپدیت زنده ساعت روی بلوک
+                updateBlockTimeText(draggedBlock, newTop);
+            };
+
+            document.onmouseup = function() {
+                if (draggedBlock) {
+                    draggedBlock.style.zIndex = '';
+                    draggedBlock.style.cursor = 'pointer';
+                    draggedBlock.style.opacity = '1';
+                    draggedBlock.style.boxShadow = '';
+                    
+                    // در نسخه نهایی باید این تغییر رو تو آرایه‌ی JSON ذخیره کنیم
+                    console.log("پارت جابجا شد! ساعت جدید:", draggedBlock.querySelector('.event-time').innerText);
+                    
+                    draggedBlock = null;
+                }
+            };
+        }
+
+        // ==========================================
+        // ⏱️ تبدیل پیکسل به ساعت (محاسبه زنده)
+        // ==========================================
+        function updateBlockTimeText(block, topPx) {
+            // ساعت 6 صبح = 360 دقیقه از نیمه‌شب
+            let totalMinutesStart = 360 + topPx;
+            let duration = parseInt(block.style.height); // ارتفاع بلوک مساوی با دقیقه است
+            let totalMinutesEnd = totalMinutesStart + duration;
+
+            let sh = Math.floor(totalMinutesStart / 60);
+            let sm = totalMinutesStart % 60;
+            let eh = Math.floor(totalMinutesEnd / 60);
+            let em = totalMinutesEnd % 60;
+
+            // فرمت کردن به شکل 00:00
+            let timeStr = `${sh.toString().padStart(2,'0')}:${sm.toString().padStart(2,'0')} - ${eh.toString().padStart(2,'0')}:${em.toString().padStart(2,'0')}`;
+            block.querySelector('.event-time').innerText = timeStr;
         }
     </script>
 </body>
