@@ -453,6 +453,7 @@
             setTimeout(() => { loader.style.opacity = '1'; }, 10);
 
             try {
+                try {
                 // ۱. استخراج لیست دروس برای پرامپت
                 let subjectsByDay = {};
                 scheduleDataArray.forEach(p => {
@@ -482,33 +483,26 @@ ${JSON.stringify(subjectsByDay)}
   }
 }`;
 
-                let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+                // ۳. اتصال به گوگل اسکریپت (بدون نیاز به فیلترشکن)
+                const GAS_WEBAPP = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
                 
-                let aiResponse = await fetch(geminiUrl, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
+                let response = await fetch(GAS_WEBAPP, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.7, response_mime_type: "application/json" }
+                        action: 'generate_motivation',
+                        prompt: prompt
                     })
                 });
                 
-                let aiResult = await aiResponse.json();
-
-                // ✨ سیستم رهگیری دقیق خطاهای گوگل (جدید)
-                if (!aiResponse.ok || aiResult.error) {
-                    let googleError = aiResult.error ? aiResult.error.message : "خطای نامشخص از سمت گوگل";
-                    throw new Error("ارور سرور گوگل: " + googleError);
-                }
+                let result = await response.json();
                 
-                if (!aiResult.candidates || aiResult.candidates.length === 0) {
-                    throw new Error("جمینای پاسخی نداد (احتمالاً به دلیل حساسیت کلمات یا قوانین Safety).");
-                }
-
-                let motivationData = JSON.parse(aiResult.candidates[0].content.parts[0].text);
+                if (!result.success) throw new Error(result.error);
+                let motivationData = result.motivation;
 
                 document.getElementById('aiStatus').innerText = "ثبت نهایی در پایگاه داده...";
 
-                // ۳. آپدیت دیتابیس
+                // ۴. آپدیت دیتابیس
                 const { error } = await supabaseClient
                     .from('ai_schedules')
                     .update({ 
@@ -524,14 +518,6 @@ ${JSON.stringify(subjectsByDay)}
                 window.location.replace('quarantine.html');
 
             } catch (err) {
-                console.error(err);
-                alert("❌ خطا در پردازش هوشمند:\n" + err.message);
-                btn.innerHTML = '✅ تولید محتوای هوشمند و ارسال';
-                btn.disabled = false;
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
-            }
-        }
         async function rejectSchedule() {
             if(confirm("آیا مطمئن هستید که این برنامه کاملاً پاک شود؟")) {
                 const btn = document.getElementById('btnReject');
