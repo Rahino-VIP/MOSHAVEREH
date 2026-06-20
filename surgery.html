@@ -36,6 +36,11 @@
         .ai-assistant::before { content: '💬 یادداشت دانش‌آموز'; position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--warning); font-weight: bold; }
         .ai-text { font-size: 12px; color: var(--text-main); line-height: 1.6; }
 
+        /* باکس جدید برای گزارش بودجه‌بندی و هوش مصنوعی */
+        .ai-consultant-box { background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); padding: 15px; border-radius: 12px; position: relative; margin-top: 5px; }
+        .ai-consultant-box::before { content: '📊 گزارش بودجه و تحلیل هوشمند'; position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--success); font-weight: bold; }
+        .ai-consultant-text { font-size: 12px; color: var(--text-main); line-height: 1.8; white-space: pre-wrap; }
+
         .add-block-form { background: var(--surface-light); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; }
         .form-title { font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); display: flex; justify-content: space-between; }
         .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -110,6 +115,10 @@
                 <div class="ai-text" id="stNote">در حال پردازش...</div>
             </div>
 
+            <div class="ai-consultant-box">
+                <div class="ai-consultant-text" id="aiConsultantReport">در حال دریافت گزارش سیستم...</div>
+            </div>
+
             <div class="add-block-form">
                 <div class="form-title"><span>➕ افزودن پارت دستی</span></div>
                 <div class="form-row">
@@ -164,13 +173,13 @@
 
     <script>
         // ---------------------------------------------------------
-        // اتصال دیتابیس (لینک‌های خودت رو اینجا بگذار)
+        // اتصال دیتابیس
         // ---------------------------------------------------------
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // لینک وب‌اپلیکیشن گوگل اسکریپت (بدون نیاز به فیلترشکن)
+        // لینک وب‌اپلیکیشن گوگل اسکریپت
         const GAS_WEBAPP = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
         let currentScheduleId = null;
@@ -214,6 +223,9 @@
                 
                 let note = schData.student_note && schData.student_note.trim() !== '' ? schData.student_note : 'بدون یادداشت.';
                 document.getElementById('stNote').innerText = note;
+
+                // 🌟 تزریق گزارش بودجه‌بندی و هوش مصنوعی به پنل 🌟
+                document.getElementById('aiConsultantReport').innerText = schData.ai_consultant_report || "گزارش بودجه‌بندی و هوش مصنوعی برای این برنامه ثبت نشده است.";
 
                 scheduleDataArray = schData.raw_plan || [];
                 renderAllBlocks();
@@ -401,7 +413,7 @@
         }
 
         // ==========================================
-        // 🧠 درخواست محتوای هوشمند از گوگل اسکریپت (ضدفیلتر و ضدکرش)
+        // 🧠 درخواست محتوای هوشمند از گوگل اسکریپت
         // ==========================================
         async function saveAndApproveWithAI() {
             const btn = document.getElementById('btnApprove');
@@ -442,7 +454,6 @@ ${JSON.stringify(subjectsByDay)}
   }
 }`;
 
-                // ارسال درخواست به گوگل اسکریپت به جای ارتباط مستقیم با جمینای
                 let response = await fetch(GAS_WEBAPP, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -454,7 +465,6 @@ ${JSON.stringify(subjectsByDay)}
                 
                 let result = await response.json();
                 
-                // بررسی خطای دریافتی از سرور گوگل اسکریپت
                 if (!result.success) {
                     throw new Error(result.error || "خطای ناشناخته از سمت سرور");
                 }
