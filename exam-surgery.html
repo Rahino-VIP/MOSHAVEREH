@@ -160,9 +160,10 @@
         };
 
         async function loadPendingExams() {
+            // 🌟 آپدیت مهم: حذف exam_title و اضافه کردن period_start و period_end
             const { data, error } = await supabaseClient
                 .from('exam_results')
-                .select('id, chat_id, exam_title, student_reflection, extracted_data, consultant_analysis, created_at, exam_file_base64, file_type, total_taraz')
+                .select('id, chat_id, period_start, period_end, student_reflection, extracted_data, consultant_analysis, created_at, exam_file_base64, file_type, total_taraz')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false });
 
@@ -187,9 +188,11 @@
 
                 const dateFa = new Intl.DateTimeFormat('fa-IR', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' }).format(new Date(exam.created_at));
 
+                // 🌟 نمایش بازه زمانی تو کارت‌های سایدبار
                 queueList.innerHTML += `
                     <div class="queue-item" id="queue_${exam.id}" onclick="openExamEditor('${exam.id}')">
                         <div class="student-name">${exam.full_name}</div>
+                        <div class="exam-date" style="color:var(--accent); margin-bottom:4px;">بازه: ${exam.period_start || '-'} تا ${exam.period_end || '-'}</div>
                         <div class="exam-date">ارسال شده: ${dateFa}</div>
                     </div>
                 `;
