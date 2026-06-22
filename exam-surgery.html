@@ -2,313 +2,163 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جراحی کارنامه | راهینو VIP</title>
+    <title>پنل مدیریت ProMax</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
-        :root { 
-            --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
-            --accent: #8b5cf6; --accent-glow: rgba(139, 92, 246, 0.2);
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --text-main: #f8fafc; --text-muted: #94a3b8;
-        }
-
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-
-        /* 📁 سایدبار */
-        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
-        .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
-        .brand span { color: #3b82f6; }
+        body { font-family: 'Vazirmatn', sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: auto; }
         
-        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
-        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
-        .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
-
-        /* 🖥️ محتوای اصلی */
-        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; display: flex; gap: 20px; }
+        .list-section { width: 30%; background: #1e293b; padding: 15px; border-radius: 12px; height: 90vh; overflow-y: auto; }
+        .detail-section { width: 70%; background: #1e293b; padding: 20px; border-radius: 12px; display: none; height: 90vh; overflow-y: auto; }
         
-        /* لیست کارنامه‌های در انتظار */
-        .queue-panel { width: 350px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
-        .queue-header { padding: 20px; background: var(--surface-light); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; color: var(--accent); display: flex; justify-content: space-between; }
-        .queue-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .queue-item { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .queue-item:hover, .queue-item.active { border-color: var(--accent); background: var(--accent-glow); }
-        .student-name { font-weight: bold; font-size: 14px; color: var(--text-main); margin-bottom: 5px; }
-        .exam-date { font-size: 11px; color: var(--text-muted); }
-
-        /* میز جراحی (پنل ویرایش) */
-        .editor-panel { flex: 1; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; display: none; }
-        .editor-header { padding: 20px; background: var(--surface-light); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
-        .editor-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .card { background: #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid #475569; }
+        .card:hover { border-color: #8b5cf6; }
         
-        /* باکس اعترافات */
-        .reflection-box { background: rgba(245, 158, 11, 0.05); border: 1px dashed var(--warning); padding: 15px; border-radius: 12px; margin-bottom: 25px; position: relative; }
-        .reflection-box::before { content: '💬 اعترافات دانش‌آموز'; position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--warning); font-weight: bold; }
-        .reflection-text { font-size: 13px; color: var(--text-main); line-height: 1.6; }
-
-        /* جدول ویرایش داده‌ها */
-        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        .data-table th, .data-table td { padding: 10px; text-align: center; border: 1px solid var(--border-color); font-size: 13px; }
-        .data-table th { background: var(--surface-light); color: var(--text-muted); font-weight: bold; }
-        .data-input { width: 60px; padding: 5px; text-align: center; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; outline: none; }
-        .data-input:focus { border-color: var(--accent); }
-        .lesson-name { width: 120px; text-align: right !important; }
-
-        /* ویرایشگر تحلیل مشاور */
-        .analysis-editor { width: 100%; height: 200px; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); font-size: 14px; line-height: 1.8; resize: none; outline: none; transition: 0.3s; margin-bottom: 20px; }
-        .analysis-editor:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
-
-        /* دکمه‌های عملیات */
-        .action-bar { display: flex; gap: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
-        .btn { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn-approve { background: linear-gradient(135deg, var(--success), #059669); color: white; }
-        .btn-approve:hover { box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); transform: translateY(-2px); }
-        .btn-reject { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-        .btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
-
-        .loader-overlay { position: fixed; inset: 0; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .box { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #475569; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { padding: 8px; border: 1px solid #475569; text-align: center; }
+        th { background: #334155; }
+        
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; color: white; margin-left: 10px; }
+        .btn-approve { background: #10b981; }
+        .btn-reject { background: #ef4444; }
     </style>
 </head>
 <body>
 
-    <div class="loader-overlay" id="mainLoader">
-        <h3 style="color: var(--accent);">در حال بارگذاری میز جراحی...</h3>
-    </div>
+    <h2>پنل تایید کارنامه‌های AI ProMax</h2>
 
-    <div class="sidebar">
-        <div class="brand">قطب‌نمای <span>راهینو</span></div>
-        <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
-        <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
-        <a href="quarantine.html" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
-        <a href="exam-surgery.html" class="nav-item active"><span>🔬</span> جراحی کارنامه (AI)</a>
-        <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات هسته</a>
-    </div>
-
-    <div class="main-content">
-        
-        <!-- لیست کارنامه‌های در انتظار -->
-        <div class="queue-panel">
-            <div class="queue-header">
-                <span>صندوق کارنامه‌های جدید</span>
-                <span id="queueCount" style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">۰</span>
-            </div>
-            <div class="queue-list" id="queueList">
-                <!-- آیتم‌ها توسط جاوااسکریپت تولید می‌شوند -->
-            </div>
+    <div class="container">
+        <div class="list-section" id="pendingList">
+            <h3>پرونده‌های در انتظار ⏳</h3>
+            <div id="listContent">در حال بارگذاری...</div>
         </div>
 
-        <!-- میز جراحی و ویرایشگر -->
-        <div class="editor-panel" id="editorPanel">
-            <div class="editor-header">
-                <span id="currentStudentName">نام دانش‌آموز</span>
-                <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;" id="currentExamDate">...</span>
+        <div class="detail-section" id="detailArea">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="studentInfo">بررسی پرونده</h3>
+                <div>
+                    <button class="btn btn-reject" onclick="handleDecision('rejected')">❌ رد کارنامه</button>
+                    <button class="btn btn-approve" onclick="handleDecision('approved')">✅ تایید و حذف عکس</button>
+                </div>
             </div>
-            
-            <div class="editor-body">
-                <div class="reflection-box">
-                    <div class="reflection-text" id="reflectionText">متن اعترافات دانش‌آموز اینجا نمایش داده می‌شود...</div>
+
+            <div class="grid-2">
+                <div class="box">
+                    <h4 style="margin-bottom:10px;">فایل اصلی (عکس/PDF)</h4>
+                    <div id="fileViewer" style="text-align: center;"></div>
                 </div>
 
-                <h3 style="font-size: 14px; margin-bottom: 15px; color: var(--text-main);">📊 ویرایش داده‌های استخراج شده (در صورت خطا)</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th class="lesson-name">نام درس</th>
-                            <th>تعداد درست</th>
-                            <th>تعداد غلط</th>
-                            <th>تعداد نزده</th>
-                            <th>درصد / تراز</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTableBody">
-                        <!-- ردیف‌های جدول اینجا تولید می‌شوند -->
-                    </tbody>
-                </table>
-
-                <h3 style="font-size: 14px; margin-bottom: 15px; color: var(--text-main);">📝 ویرایشگر تحلیل مشاور (نمایش به دانش‌آموز)</h3>
-                <textarea class="analysis-editor" id="consultantAnalysisText"></textarea>
-
-                <div class="action-bar">
-                    <button class="btn btn-approve" onclick="approveAnalysis()">✅ تایید نهایی و ارسال به دانش‌آموز</button>
-                    <button class="btn btn-reject" onclick="rejectAnalysis()">❌ عکس ناخوانا است (درخواست آپلود مجدد)</button>
+                <div class="box">
+                    <h4 style="margin-bottom:10px;">داده‌های استخراج شده AI</h4>
+                    <p style="font-size:12px; color:#f59e0b;">اعتراف: <span id="viewReflection" style="color:#fff;"></span></p>
+                    <table id="aiTable">
+                        <thead><tr><th>درس</th><th>درست</th><th>غلط</th><th>تراز/درصد</th></tr></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                    <h4 style="margin-top:15px; font-size: 13px;">تحلیل مشاورانه:</h4>
+                    <p id="aiAnalysis" style="font-size: 13px; color:#94a3b8;"></p>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
-        // ==========================================
-        // 🔗 تنظیمات اتصال سوپابیس
-        // ==========================================
+        // 🔗 کلیدهای سوپابیس (حتماً پر شود)
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let pendingExams = [];
-        let activeExamId = null;
+        let currentExamId = null;
 
         window.onload = async function() {
-            document.getElementById('mainLoader').style.display = 'none';
-            await loadPendingExams();
+            loadPendingExams();
         };
 
-        // ۱. دریافت کارنامه‌های در انتظار از دیتابیس
+        // دریافت لیست
         async function loadPendingExams() {
-            // در اینجا از جدول exam_results داده‌ها رو می‌خونیم
-            const { data, error } = await supabaseClient
+            const { data, error } = await supabase
                 .from('exam_results')
-                .select('id, chat_id, exam_title, student_reflection, extracted_data, consultant_analysis, created_at')
+                .select('*')
                 .eq('status', 'pending')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: true });
 
-            if (error) {
-                console.error(error); return;
-            }
+            const listContent = document.getElementById('listContent');
+            listContent.innerHTML = '';
 
-            pendingExams = data || [];
-            document.getElementById('queueCount').innerText = pendingExams.length;
-
-            const queueList = document.getElementById('queueList');
-            queueList.innerHTML = '';
-
-            if (pendingExams.length === 0) {
-                queueList.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted);">صندوق ورودی خالی است! 🎉</div>';
-                document.getElementById('editorPanel').style.display = 'none';
+            if (!data || data.length === 0) {
+                listContent.innerHTML = '<p style="color:#94a3b8; text-align:center;">پرونده‌ای در صف نیست.</p>';
                 return;
             }
 
-            // برای دریافت نام دانش‌آموزان بر اساس chat_id
-            for (let i = 0; i < pendingExams.length; i++) {
-                const exam = pendingExams[i];
-                // واکشی نام دانش آموز (در دنیای واقعی این کار با join تو سوپابیس انجام میشه ولی اینجا ساده پیاده کردیم)
-                const { data: stData } = await supabaseClient.from('students').select('full_name').eq('chat_id', exam.chat_id).single();
-                exam.full_name = stData ? stData.full_name : 'دانش‌آموز ناشناس';
-
-                const dateFa = new Intl.DateTimeFormat('fa-IR', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' }).format(new Date(exam.created_at));
-
-                queueList.innerHTML += `
-                    <div class="queue-item" id="queue_${exam.id}" onclick="openExamEditor('${exam.id}')">
-                        <div class="student-name">${exam.full_name}</div>
-                        <div class="exam-date">ارسال شده: ${dateFa}</div>
+            data.forEach(exam => {
+                listContent.innerHTML += `
+                    <div class="card" onclick='openDetail(${JSON.stringify(exam)})'>
+                        <strong>بازه:</strong> ${exam.period_start} تا ${exam.period_end}<br>
+                        <span style="font-size:11px; color:#94a3b8;">آیدی چت: ${exam.chat_id}</span>
                     </div>
                 `;
-            }
+            });
         }
 
-        // ۲. باز کردن یک پرونده روی میز جراحی
-        function openExamEditor(id) {
-            // آپدیت UI لیست
-            document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`queue_${id}`).classList.add('active');
+        // نمایش جزئیات
+        function openDetail(exam) {
+            currentExamId = exam.id;
+            document.getElementById('detailArea').style.display = 'block';
+            document.getElementById('studentInfo').innerText = `پرونده چت آیدی: ${exam.chat_id}`;
+            document.getElementById('viewReflection').innerText = exam.student_reflection;
+            document.getElementById('aiAnalysis').innerText = exam.consultant_analysis;
 
-            const exam = pendingExams.find(e => e.id === id);
-            if(!exam) return;
+            // نمایش فایل (PDF یا عکس)
+            const viewer = document.getElementById('fileViewer');
+            if (!exam.exam_file_base64) {
+                viewer.innerHTML = '<p>بدون فایل ضمیمه (هفته روتین)</p>';
+            } else if (exam.file_type === 'application/pdf') {
+                viewer.innerHTML = `<iframe src="data:application/pdf;base64,${exam.exam_file_base64}" width="100%" height="400px" style="border:none; border-radius:8px;"></iframe>`;
+            } else {
+                viewer.innerHTML = `<img src="data:${exam.file_type || 'image/jpeg'};base64,${exam.exam_file_base64}" style="max-width:100%; border-radius:8px;">`;
+            }
 
-            activeExamId = exam.id;
-            document.getElementById('editorPanel').style.display = 'flex';
-            document.getElementById('currentStudentName').innerText = exam.full_name;
-            document.getElementById('currentExamDate').innerText = "کد پرونده: " + exam.id.substring(0,8);
-            document.getElementById('reflectionText').innerText = exam.student_reflection || "بدون یادداشت.";
-            document.getElementById('consultantAnalysisText').value = exam.consultant_analysis || "";
-
-            // رندر کردن جدول ویرایش داده‌ها
-            const tbody = document.getElementById('dataTableBody');
+            // پر کردن جدول
+            const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
+            let lessons = typeof exam.extracted_data === 'string' ? JSON.parse(exam.extracted_data) : exam.extracted_data;
             
-            let lessons = [];
-            if(typeof exam.extracted_data === 'string') lessons = JSON.parse(exam.extracted_data);
-            else lessons = exam.extracted_data || [];
-
-            lessons.forEach((lesson, index) => {
-                tbody.innerHTML += `
-                    <tr data-index="${index}">
-                        <td class="lesson-name"><input type="text" class="data-input" style="width:100%; text-align:right;" value="${lesson.name}"></td>
-                        <td><input type="number" class="data-input correct-val" value="${lesson.correct}"></td>
-                        <td><input type="number" class="data-input incorrect-val" value="${lesson.incorrect}"></td>
-                        <td><input type="number" class="data-input unattempted-val" value="${lesson.unattempted}"></td>
-                        <td><input type="number" class="data-input taraz-val" value="${lesson.taraz}"></td>
-                    </tr>
-                `;
-            });
-        }
-
-        // جمع‌آوری اطلاعات آپدیت شده از جدول
-        function getUpdatedExtractedData() {
-            const rows = document.querySelectorAll('#dataTableBody tr');
-            let updatedData = [];
-            rows.forEach(row => {
-                updatedData.push({
-                    name: row.querySelector('.lesson-name input').value,
-                    correct: parseInt(row.querySelector('.correct-val').value) || 0,
-                    incorrect: parseInt(row.querySelector('.incorrect-val').value) || 0,
-                    unattempted: parseInt(row.querySelector('.unattempted-val').value) || 0,
-                    taraz: parseInt(row.querySelector('.taraz-val').value) || 0
+            if(lessons && lessons.length > 0) {
+                lessons.forEach(l => {
+                    tbody.innerHTML += `<tr><td>${l.name}</td><td>${l.correct}</td><td>${l.incorrect}</td><td>${l.taraz}</td></tr>`;
                 });
-            });
-            return updatedData;
-        }
-
-        // ۳. تایید نهایی و ارسال
-        async function approveAnalysis() {
-            if(!activeExamId) return;
-            
-            const updatedData = getUpdatedExtractedData();
-            const updatedText = document.getElementById('consultantAnalysisText').value.trim();
-
-            if(updatedText.length < 10) {
-                alert("متن تحلیل نمی‌تواند خالی باشد!"); return;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4">دیتای درسی استخراج نشده است</td></tr>`;
             }
-
-            const btn = document.querySelector('.btn-approve');
-            btn.innerHTML = 'در حال ثبت... ⏳'; btn.disabled = true;
-
-            const { error } = await supabaseClient
-                .from('exam_results')
-                .update({ 
-                    extracted_data: updatedData,
-                    consultant_analysis: updatedText,
-                    status: 'approved' 
-                })
-                .eq('id', activeExamId);
-
-            btn.innerHTML = '✅ تایید نهایی و ارسال به دانش‌آموز'; btn.disabled = false;
-
-            if(error) { alert("خطا در ذخیره‌سازی!"); console.error(error); return; }
-
-            alert("تحلیل با موفقیت تایید و به داشبورد دانش‌آموز ارسال شد!");
-            document.getElementById('editorPanel').style.display = 'none';
-            await loadPendingExams(); // ریفرش کردن لیست
         }
 
-        // ۴. رد کردن کامل کارنامه
-        async function rejectAnalysis() {
-            if(!activeExamId) return;
-
-            if(confirm("آیا مطمئن هستید؟ با این کار این پرونده حذف شده و از دانش‌آموز خواسته می‌شود کارنامه را مجدد آپلود کند.")) {
+        // تایید یا رد
+        async function handleDecision(decision) {
+            if (!currentExamId) return;
+            
+            if(confirm(`آیا از ${decision === 'approved' ? 'تایید' : 'رد'} این کارنامه مطمئن هستید؟`)) {
                 
-                const btn = document.querySelector('.btn-reject');
-                btn.innerHTML = 'در حال رد کردن... ⏳'; btn.disabled = true;
-
-                // تغییر استاتوس به rejected 
-                const { error } = await supabaseClient
+                // 💣 جادوی خودتخریب‌گر: در صورت تصمیم‌گیری، فایل‌ها از دیتابیس Null (پاک) می‌شوند!
+                const { error } = await supabase
                     .from('exam_results')
-                    .update({ status: 'rejected' })
-                    .eq('id', activeExamId);
+                    .update({ 
+                        status: decision,
+                        exam_file_base64: null, 
+                        file_type: null 
+                    })
+                    .eq('id', currentExamId);
 
-                btn.innerHTML = '❌ عکس ناخوانا است (درخواست آپلود مجدد)'; btn.disabled = false;
-
-                if(error) { alert("خطا در عملیات!"); return; }
-
-                // (در اینجا می‌توانید کدی اضافه کنید که به ربات تلگرام پیام ارسال کند که عکس ناخوانا بود)
-                
-                alert("پرونده رد شد و از صندوق شما خارج گردید.");
-                document.getElementById('editorPanel').style.display = 'none';
-                await loadPendingExams();
+                if(error) {
+                    alert('خطا در ثبت: ' + error.message);
+                } else {
+                    alert('با موفقیت ثبت شد و عکس از دیتابیس پاک گردید.');
+                    document.getElementById('detailArea').style.display = 'none';
+                    loadPendingExams(); // رفرش لیست
+                }
             }
         }
     </script>
