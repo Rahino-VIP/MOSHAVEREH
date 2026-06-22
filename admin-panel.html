@@ -170,7 +170,8 @@
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 🌟 تغییر: نام متغیر به supabaseClient تغییر یافت تا تداخل نکند
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let examsList = [];
         let currentSelectedExam = null;
@@ -180,7 +181,7 @@
         // ۱. دریافت پرونده‌های Pending
         async function fetchPendingExams() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('exam_results')
                     .select('*')
                     .eq('status', 'pending')
@@ -218,7 +219,6 @@
                 card.className = `exam-card ${currentSelectedExam && currentSelectedExam.id === exam.id ? 'active' : ''}`;
                 card.onclick = () => openWorkspace(exam);
                 
-                // فرمت تاریخ ساده
                 const dateStr = new Date(exam.created_at).toLocaleDateString('fa-IR');
 
                 card.innerHTML = `
@@ -238,19 +238,17 @@
         // ۳. باز کردن یک پرونده روی میز کار
         function openWorkspace(exam) {
             currentSelectedExam = exam;
-            renderList(); // برای آپدیت کلاس active در لیست
+            renderList(); 
             
             document.getElementById('emptyWorkspace').style.display = 'none';
             document.getElementById('workspace').style.display = 'block';
 
-            // اطلاعات پایه
             document.getElementById('wsChatId').innerText = `پرونده دانش‌آموز: ${exam.chat_id}`;
             document.getElementById('wsDate').innerText = `اسپرینت: ${exam.period_start} الی ${exam.period_end}`;
             document.getElementById('wsReflection').innerText = exam.student_reflection || 'چیزی ننوشته است.';
             document.getElementById('wsAnalysis').innerText = exam.consultant_analysis || 'بدون تحلیل';
             document.getElementById('wsTotalTaraz').innerText = exam.total_taraz || 0;
 
-            // ساخت جدول درصدها
             const tbody = document.getElementById('wsTableBody');
             tbody.innerHTML = '';
             let lessons = [];
@@ -271,7 +269,6 @@
                 tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted)">دیتایی استخراج نشده (احتمالاً هفته روتین)</td></tr>`;
             }
 
-            // لود کردن فایل (شاهکار تبدیل Base64 به Blob برای جلوگیری از کرش PDF)
             const viewer = document.getElementById('wsFileViewer');
             viewer.innerHTML = '<div style="color:var(--text-muted)">در حال لود فایل...</div>';
             
@@ -280,7 +277,6 @@
             } else {
                 try {
                     const blobUrl = base64ToBlobUrl(exam.exam_file_base64, exam.file_type || 'image/jpeg');
-                    
                     if (exam.file_type === 'application/pdf') {
                         viewer.innerHTML = `<iframe src="${blobUrl}"></iframe>`;
                     } else {
@@ -292,7 +288,7 @@
             }
         }
 
-        // تابع کمکی قدرتمند برای پردازش فایل‌های حجیم در مرورگر
+        // تابع کمکی
         function base64ToBlobUrl(base64, mimeType) {
             const byteCharacters = atob(base64);
             const byteArrays = [];
@@ -309,7 +305,7 @@
             return URL.createObjectURL(blob);
         }
 
-        // ۴. ثبت تصمیم نهایی (تایید یا رد)
+        // ۴. ثبت تصمیم نهایی
         async function processDecision(decision) {
             if (!currentSelectedExam) return;
             
@@ -320,8 +316,8 @@
             document.getElementById('loader').style.display = 'block';
 
             try {
-                // آپدیت دیتابیس (اگر تایید/رد شد، فایل کلا NULL میشه تا فضا آزاد بشه)
-                const { error } = await supabase
+                // آپدیت دیتابیس با متغیر اصلاح‌شده
+                const { error } = await supabaseClient
                     .from('exam_results')
                     .update({ 
                         status: decision,
@@ -332,7 +328,6 @@
 
                 if (error) throw error;
 
-                // حذف از لیست محلی و رفرش
                 examsList = examsList.filter(e => e.id !== currentSelectedExam.id);
                 currentSelectedExam = null;
                 
@@ -346,5 +341,3 @@
             }
         }
     </script>
-</body>
-</html>
