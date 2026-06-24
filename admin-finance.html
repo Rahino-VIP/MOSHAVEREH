@@ -3,190 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت مالی و پذیرش | قطب‌نمای راهینو</title>
+    <title>مدیریت مالی و پذیرش | داشبورد راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <style>
+        /* ==========================================
+           🎨 پالت رنگی و استایل‌های پایه (منطبق بر داشبورد)
+           ========================================== */
         :root { 
-            --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #334155;
-            --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --gold: #f59e0b;
+            --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
+            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --gold: #f59e0b;
             --text-main: #f8fafc; --text-muted: #94a3b8;
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 👑 هدر و تب‌ها */
-        .top-nav { background: var(--surface-dark); border-bottom: 1px solid var(--border-color); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .nav-brand { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+        /* 👑 سایدبار (منوی کناری داشبورد) */
+        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 100; flex-shrink: 0; }
+        .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
+        .brand span { color: var(--accent); }
+        
+        .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+        .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
+        
+        .logout-btn { margin-top: auto; color: var(--danger); border-top: 1px solid var(--border-color); padding-top: 20px; }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* 🖥️ محتوای اصلی */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        
+        /* هدر تب‌ها */
+        .top-nav { background: var(--surface-dark); border-bottom: 1px solid var(--border-color); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .nav-title { font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
         .tabs { display: flex; background: var(--bg-dark); padding: 5px; border-radius: 12px; border: 1px solid var(--border-color); }
         .tab-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); transition: 0.3s; border: none; background: transparent; }
         .tab-btn.active { background: var(--accent); color: white; }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
-        .tab-content { display: none; height: 100%; animation: fadeIn 0.3s; }
+        .tab-container { flex: 1; overflow-y: auto; padding: 25px 30px; }
+        .tab-content { display: none; height: 100%; animation: fadeIn 0.4s ease-out; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* =======================================
-           🗂️ تب ۱: کانبان و کالبدشکافی (Split View)
+           🗂️ تب ۱: کانبان برد و کالبدشکافی
            ======================================= */
-        .split-view { display: flex; height: 100%; gap: 20px; }
+        .split-view { display: flex; height: 100%; gap: 25px; align-items: flex-start; }
         
-        /* کانبان برد */
-        .kanban-board { flex: 1; display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
-        .kanban-col { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); border-radius: 16px; min-width: 280px; flex: 1; display: flex; flex-direction: column; }
-        .kanban-header { padding: 15px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
-        .kanban-cards { padding: 15px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        /* ستون‌های کانبان */
+        .kanban-board { flex: 1; display: flex; gap: 20px; height: 100%; overflow-x: auto; padding-bottom: 10px; }
+        .kanban-col { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-color); border-radius: 16px; min-width: 300px; flex: 1; display: flex; flex-direction: column; max-height: 100%; }
+        .kanban-header { padding: 18px 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: 16px 16px 0 0; }
+        .k-badge { background: var(--surface-light); color: var(--text-main); padding: 4px 10px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border-color); }
         
-        .k-card { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; border-right: 4px solid var(--text-muted); }
-        .k-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .kanban-cards { padding: 15px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .kanban-cards::-webkit-scrollbar { width: 6px; }
+        .kanban-cards::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        
+        .k-card { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; cursor: pointer; transition: 0.2s; border-right: 4px solid var(--text-muted); position: relative; }
+        .k-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .k-card.draft { border-right-color: var(--text-muted); }
         .k-card.pending { border-right-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
         .k-card.active { border-right-color: var(--success); }
         
-        .k-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
-        .k-detail { font-size: 11px; color: var(--text-muted); }
+        .k-name { font-size: 15px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); }
+        .k-detail { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .k-duration { position: absolute; top: 15px; left: 15px; font-size: 11px; background: var(--surface-light); padding: 3px 8px; border-radius: 8px; font-weight: bold; color: var(--accent); border: 1px solid var(--border-color); }
 
         /* پنل کالبدشکافی (سمت چپ) */
-        .details-panel { width: 400px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; display: none; }
-        .dp-header { padding: 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .dp-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 2; }
-        .dp-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 8px 0; }
-        .dp-row span:last-child { font-weight: bold; color: var(--accent); }
+        .details-panel { width: 420px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; display: none; height: 100%; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
+        .dp-header { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; color: var(--accent); }
+        .dp-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.8; }
+        .dp-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 12px 0; }
+        .dp-row span:first-child { color: var(--text-muted); }
+        .dp-row span:last-child { font-weight: bold; color: var(--text-main); text-align: left; max-width: 65%; word-wrap: break-word; }
         
-        .dp-receipt { width: 100%; height: 200px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 15px; cursor: zoom-in; background: #000; }
-        .dp-actions { padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
-        .btn-green { background: var(--success); } .btn-green:hover { filter: brightness(1.1); }
-        .btn-red { background: var(--danger); } .btn-red:hover { filter: brightness(1.1); }
+        .dp-receipt-box { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); text-align: center; }
+        .dp-receipt { width: 100%; max-height: 250px; object-fit: contain; border-radius: 12px; border: 2px dashed var(--border-color); cursor: zoom-in; background: #000; padding: 5px; }
+        
+        .dp-actions { padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: rgba(0,0,0,0.2); }
+        .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; color: white; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-green { background: var(--success); } .btn-green:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .btn-red { background: var(--danger); } .btn-red:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
 
         /* =======================================
            🗺️ تب ۲: نقشه صندلی‌ها و آمار
            ======================================= */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; height: 100%; }
-        .panel-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; overflow-y: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%; }
+        .panel-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; overflow-y: auto; }
         
-        .seat-map-container { display: flex; flex-direction: column; gap: 30px; }
-        .seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px; margin-top: 15px; }
-        .seat { width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; color: white; }
-        .seat.empty { background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success); color: var(--success); }
-        .seat.taken { background: rgba(239, 68, 68, 0.2); border: 1px solid var(--danger); color: var(--danger); }
+        .seat-map-container { display: flex; flex-direction: column; gap: 40px; margin-top: 10px; }
+        .seat-section-title { font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 12px; }
+        .seat { width: 45px; height: 45px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: 900; color: white; transition: 0.3s; }
+        .seat.empty { background: rgba(16, 185, 129, 0.1); border: 2px solid var(--success); color: var(--success); }
+        .seat.taken { background: rgba(239, 68, 68, 0.2); border: 2px solid var(--danger); color: var(--danger); box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.5); }
 
-        .promo-list { list-style: none; margin-top: 15px; }
-        .promo-list li { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border: 1px solid var(--border-color); }
-        .promo-code { font-weight: bold; color: var(--gold); }
+        .promo-list { list-style: none; margin-top: 20px; }
+        .promo-list li { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); transition: 0.2s; }
+        .promo-list li:hover { border-color: var(--gold); background: rgba(245, 158, 11, 0.05); }
+        .promo-code { font-weight: 900; color: var(--gold); font-size: 16px; letter-spacing: 1px; }
 
         /* =======================================
            ⏳ تب ۳: رادار اقساط و هشدار ریزش
            ======================================= */
-        .radar-box { background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-        .radar-list { margin-top: 15px; }
-        .radar-item { display: flex; justify-content: space-between; background: var(--surface-dark); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-right: 4px solid var(--danger); font-size: 13px; }
+        .radar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%; }
+        
+        .radar-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; overflow-y: auto; position: relative; }
+        .radar-box.danger { border-top: 4px solid var(--danger); }
+        .radar-box.warning { border-top: 4px solid var(--warning); }
+        
+        .radar-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .radar-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+        
+        .radar-list { display: flex; flex-direction: column; gap: 12px; }
+        .radar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 16px 20px; border-radius: 12px; border: 1px solid var(--border-color); transition: 0.2s; }
+        .radar-item:hover { background: rgba(255,255,255,0.02); }
+        .radar-item.critical { border-right: 4px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .radar-item.upcoming { border-right: 4px solid var(--warning); }
+        
+        .r-info strong { color: var(--text-main); font-size: 14px; display: block; margin-bottom: 4px; }
+        .r-info span { color: var(--text-muted); font-size: 11px; }
+        .r-date { text-align: left; }
+        .r-date strong { font-size: 15px; display: block; margin-bottom: 4px; }
+        .r-date span { font-size: 11px; background: var(--surface-light); padding: 2px 8px; border-radius: 6px; }
 
-        .loader-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 1000; display: flex; justify-content: center; align-items: center; transition: 0.3s opacity; }
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.4s opacity; }
+        .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="loader-overlay" id="mainLoader"><h2 style="color: var(--accent);">در حال همگام‌سازی با هسته مرکزی... ⏳</h2></div>
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner"></div>
+        <h2 style="color: var(--text-main); font-size: 16px;">در حال همگام‌سازی با هسته مالی...</h2>
+    </div>
 
-    <div class="top-nav">
-        <div class="nav-brand">🛡️ اتاق مانیتورینگ مالی و پذیرش</div>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tab-kanban', this)">🗂️ بورد تاییدات</button>
-            <button class="tab-btn" onclick="switchTab('tab-seats', this)">🗺️ نقشه سالن و آمار</button>
-            <button class="tab-btn" onclick="switchTab('tab-radar', this)">⏳ رادار مالی و ریزش</button>
-            <button class="tab-btn" onclick="window.location.href='dashboard.html'" style="color: var(--danger);">بازگشت به داشبورد</button>
-        </div>
+    <div class="sidebar">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        
+        <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
+        <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
+        <a href="#" class="nav-item active"><span>💳</span> مدیریت مالی و پذیرش</a>
+        <a href="quarantine.html" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
+        <a href="exam-surgery.html" class="nav-item"><span>🔬</span> جراحی کارنامه (AI)</a>
+        <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
+        
+        <a href="#" class="nav-item logout-btn" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
 
     <div class="main-content">
-
-        <div id="tab-kanban" class="tab-content active">
-            <div class="split-view">
-                
-                <div class="kanban-board">
-                    <div class="kanban-col">
-                        <div class="kanban-header">📝 لیدهای خام (فرم ناقص) <span class="badge" id="cntDraft">0</span></div>
-                        <div class="kanban-cards" id="colDraft"></div>
-                    </div>
-                    <div class="kanban-col">
-                        <div class="kanban-header" style="color: var(--warning);">⏳ در انتظار تایید فیش <span class="badge" id="cntPending">0</span></div>
-                        <div class="kanban-cards" id="colPending"></div>
-                    </div>
-                    <div class="kanban-col">
-                        <div class="kanban-header" style="color: var(--success);">✅ تایید شده‌های اخیر <span class="badge" id="cntActive">0</span></div>
-                        <div class="kanban-cards" id="colActive"></div>
-                    </div>
-                </div>
-
-                <div class="details-panel" id="detailsPanel">
-                    <div class="dp-header">
-                        <span>🔍 جزئیات پرونده</span>
-                        <button style="background:transparent; border:none; color:white; cursor:pointer;" onclick="closeDetails()">❌</button>
-                    </div>
-                    <div class="dp-body" id="dpBody">
-                        </div>
-                    <div class="dp-actions" id="dpActions" style="display: none;">
-                        <button class="btn btn-green" onclick="approveStudent()">✅ تایید فیش و فعال‌سازی</button>
-                        <button class="btn btn-red" onclick="rejectStudent()">❌ رد کردن</button>
-                    </div>
-                </div>
-
+        
+        <div class="top-nav">
+            <div class="nav-title">🛡️ مانیتورینگ مالی و عملیاتی</div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-kanban', this)">🗂️ بورد پذیرش (Kanban)</button>
+                <button class="tab-btn" onclick="switchTab('tab-seats', this)">🗺️ نقشه سالن و آمارها</button>
+                <button class="tab-btn" onclick="switchTab('tab-radar', this)">⏳ رادار مالی و ریزش</button>
             </div>
         </div>
 
-        <div id="tab-seats" class="tab-content">
-            <div class="stats-grid">
-                
-                <div class="panel-box">
-                    <h3 style="color: var(--accent); margin-bottom: 20px;">🗺️ وضعیت زنده صندلی‌های سالن</h3>
-                    
-                    <div class="seat-map-container">
-                        <div>
-                            <div style="font-size: 14px; font-weight: bold; color: var(--gold);">✨ بخش CIP (۴ ظرفیت) - پر شده: <span id="cipCount">0</span></div>
-                            <div class="seat-grid" id="cipSeats"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 14px; font-weight: bold; color: var(--success);">🌟 بخش VIP (۲۲ ظرفیت) - پر شده: <span id="vipCount">0</span></div>
-                            <div class="seat-grid" id="vipSeats"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel-box">
-                    <h3 style="color: var(--success); margin-bottom: 20px;">🎟️ مانیتورینگ کدهای تخفیف (ROI)</h3>
-                    <p style="font-size: 12px; color: var(--text-muted);">تحلیل عملکرد کمپین‌های تبلیغاتی و درآمد تولید شده:</p>
-                    <ul class="promo-list" id="promoList">
-                        </ul>
-                </div>
-
-            </div>
-        </div>
-
-        <div id="tab-radar" class="tab-content">
+        <div class="tab-container">
             
-            <div class="radar-box">
-                <h3 style="color: var(--danger); margin-bottom: 10px;">🔥 هشدار ریزش (تمدیدهای ۵ روز آینده)</h3>
-                <p style="font-size: 12px; color: var(--text-muted);">دانش‌آموزانی که قراردادشان رو به اتمام است. نیازمند تماس فوری منشی جهت تمدید:</p>
-                <div class="radar-list" id="churnList">
+            <div id="tab-kanban" class="tab-content active">
+                <div class="split-view">
+                    
+                    <div class="kanban-board">
+                        <div class="kanban-col">
+                            <div class="kanban-header">
+                                <span style="color: var(--text-main);">📝 لیدهای خام (ناقص)</span>
+                                <span class="k-badge" id="cntDraft">0</span>
+                            </div>
+                            <div class="kanban-cards" id="colDraft"></div>
+                        </div>
+                        <div class="kanban-col">
+                            <div class="kanban-header">
+                                <span style="color: var(--warning);">⏳ در انتظار تایید فیش</span>
+                                <span class="k-badge" id="cntPending">0</span>
+                            </div>
+                            <div class="kanban-cards" id="colPending"></div>
+                        </div>
+                        <div class="kanban-col">
+                            <div class="kanban-header">
+                                <span style="color: var(--success);">✅ تایید شده و فعال</span>
+                                <span class="k-badge" id="cntActive">0</span>
+                            </div>
+                            <div class="kanban-cards" id="colActive"></div>
+                        </div>
                     </div>
+
+                    <div class="details-panel" id="detailsPanel">
+                        <div class="dp-header">
+                            <span>🔍 پرونده و فاکتور</span>
+                            <button style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;" onclick="closeDetails()">✖</button>
+                        </div>
+                        <div class="dp-body" id="dpBody">
+                            </div>
+                        <div class="dp-actions" id="dpActions" style="display: none;">
+                            <button class="btn btn-green" onclick="approveStudent()">✅ تایید فیش و فعال‌سازی</button>
+                            <button class="btn btn-red" onclick="rejectStudent()">❌ رد کردن</button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="radar-box" style="background: rgba(59, 130, 246, 0.05); border-color: var(--accent);">
-                <h3 style="color: var(--accent); margin-bottom: 10px;">💳 رادار مالی و اقساط (به زودی)</h3>
-                <p style="font-size: 12px; color: var(--text-muted);">بخش رهگیری چک‌های صیادی و اقساط ماهانه در نسخه بعدی متصل خواهد شد.</p>
+            <div id="tab-seats" class="tab-content">
+                <div class="stats-grid">
+                    
+                    <div class="panel-box">
+                        <h3 style="color: var(--accent); margin-bottom: 25px; font-size: 18px;">🗺️ وضعیت زنده صندلی‌های سالن</h3>
+                        
+                        <div class="seat-map-container">
+                            <div>
+                                <div class="seat-section-title">
+                                    <span style="color: var(--gold);">✨ بخش CIP (ظرفیت: ۴)</span>
+                                    <span style="font-size: 12px; color: var(--text-muted);">پر شده: <b id="cipCount" style="color:var(--text-main)">0</b></span>
+                                </div>
+                                <div class="seat-grid" id="cipSeats"></div>
+                            </div>
+                            <div>
+                                <div class="seat-section-title">
+                                    <span style="color: var(--success);">🌟 بخش VIP (ظرفیت: ۲۲)</span>
+                                    <span style="font-size: 12px; color: var(--text-muted);">پر شده: <b id="vipCount" style="color:var(--text-main)">0</b></span>
+                                </div>
+                                <div class="seat-grid" id="vipSeats"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-box">
+                        <h3 style="color: var(--success); margin-bottom: 5px; font-size: 18px;">🎟️ مانیتورینگ کدهای تخفیف (ROI)</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">تحلیل عملکرد کمپین‌های تبلیغاتی و محاسبه درآمد تولید شده:</p>
+                        <ul class="promo-list" id="promoList">
+                            </ul>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="tab-radar" class="tab-content">
+                <div class="radar-grid">
+                    
+                    <div class="radar-box warning">
+                        <div class="radar-title" style="color: var(--warning);">💳 رادار اقساط و چک‌های صیادی</div>
+                        <div class="radar-desc">دانش‌آموزانی که در ۱۵ روز آینده موعد پاس شدن چک/قسط آن‌ها فرا می‌رسد.</div>
+                        <div class="radar-list" id="installmentRadarList">
+                            </div>
+                    </div>
+
+                    <div class="radar-box danger">
+                        <div class="radar-title" style="color: var(--danger);">🔥 هشدار ریزش (تمدیدهای ۵ روز آینده)</div>
+                        <div class="radar-desc">دانش‌آموزانی که قراردادشان رو به اتمام است. نیازمند تماس فوری منشی جهت تمدید.</div>
+                        <div class="radar-list" id="churnList">
+                            </div>
+                    </div>
+
+                </div>
             </div>
 
         </div>
-
     </div>
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات سوپابیس
+        // 🔗 تنظیمات اتصال سوپابیس
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
@@ -200,12 +285,17 @@
             await loadData();
         };
 
-        // تب سوئیچر
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             btnElement.classList.add('active');
+        }
+
+        async function handleLogout() {
+            if(confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
+                window.location.replace('index.html');
+            }
         }
 
         // ==========================================
@@ -224,27 +314,32 @@
                 renderKanban();
                 renderSeatMap();
                 renderPromoStats();
-                renderChurnRadar();
+                renderRadars(); // رندر همزمان رادار ریزش و اقساط
 
-                document.getElementById('mainLoader').style.display = 'none';
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 400);
             } catch (err) {
-                alert("خطا در دریافت اطلاعات: " + err.message);
+                alert("خطا در دریافت اطلاعات دیتابیس: " + err.message);
             }
         }
 
         // ==========================================
-        // 🗂️ رندر کانبان برد
+        // 🗂️ رندر کانبان برد (با نمایش مدت قرارداد)
         // ==========================================
         function renderKanban() {
             let draftHtml = '', pendingHtml = '', activeHtml = '';
             let dCnt = 0, pCnt = 0, aCnt = 0;
 
             allStudents.forEach(st => {
+                let durationText = st.duration_months ? (st.duration_months == 10 ? 'تا کنکور' : `${st.duration_months} ماهه`) : 'نامشخص';
+                let planText = st.plan_type || 'ثبت نشده';
+
                 let card = `
                     <div class="k-card ${st.status}" onclick="openDetails('${st.national_id}')">
+                        <div class="k-duration">${durationText}</div>
                         <div class="k-name">${st.full_name || 'کاربر ناشناس'}</div>
-                        <div class="k-detail">پایه: ${st.grade || '-'}</div>
-                        <div class="k-detail" style="margin-top:5px; color:var(--accent);">${st.plan_type || 'طرح انتخاب نشده'}</div>
+                        <div class="k-detail"><span>پایه:</span> <b style="color:var(--text-main)">${st.grade || '-'}</b></div>
+                        <div class="k-detail"><span>طرح:</span> <b style="color:var(--accent)">${planText.substring(0, 30)}...</b></div>
                     </div>
                 `;
                 
@@ -253,9 +348,9 @@
                 else if(st.status === 'active') { activeHtml += card; aCnt++; }
             });
 
-            document.getElementById('colDraft').innerHTML = draftHtml;
-            document.getElementById('colPending').innerHTML = pendingHtml;
-            document.getElementById('colActive').innerHTML = activeHtml;
+            document.getElementById('colDraft').innerHTML = draftHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
+            document.getElementById('colPending').innerHTML = pendingHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
+            document.getElementById('colActive').innerHTML = activeHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             
             document.getElementById('cntDraft').innerText = dCnt;
             document.getElementById('cntPending').innerText = pCnt;
@@ -263,7 +358,7 @@
         }
 
         // ==========================================
-        // 🔬 کالبدشکافی پرونده (Split View)
+        // 🔬 پنل کالبدشکافی (Split View)
         // ==========================================
         function openDetails(nid) {
             currentStudent = allStudents.find(s => s.national_id === nid);
@@ -272,19 +367,33 @@
             let imgHtml = '';
             if(st.receipt_base64) {
                 let src = st.receipt_base64.startsWith('data:') ? st.receipt_base64 : `data:${st.file_type || 'image/jpeg'};base64,${st.receipt_base64}`;
-                imgHtml = `<img src="${src}" class="dp-receipt" onclick="window.open('${src}')">`;
+                imgHtml = `
+                    <div class="dp-receipt-box">
+                        <span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی پیش‌پرداخت:</span>
+                        <img src="${src}" class="dp-receipt" onclick="window.open('${src}')">
+                    </div>`;
             }
 
+            let durationText = st.duration_months ? (st.duration_months == 10 ? 'تا کنکور (۱۰ ماهه)' : `${st.duration_months} ماهه`) : 'نامشخص';
+
             document.getElementById('dpBody').innerHTML = `
-                <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
+                <div class="dp-row"><span>نام دانش‌آموز:</span><span>${st.full_name || '-'}</span></div>
                 <div class="dp-row"><span>کد ملی:</span><span>${st.national_id}</span></div>
-                <div class="dp-row"><span>موبایل:</span><span>${st.phone_number || '-'}</span></div>
+                <div class="dp-row"><span>موبایل تماس:</span><span>${st.phone_number || '-'}</span></div>
+                <div class="dp-row"><span>موبایل بله:</span><span>${st.bale_number || '-'}</span></div>
+                <div class="dp-row"><span>پایه تحصیلی:</span><span>${st.grade || '-'}</span></div>
+                <div class="dp-row" style="background:rgba(59,130,246,0.1); padding:10px; border-radius:8px; margin-top:10px;">
+                    <span style="color:var(--accent);">مدت قرارداد:</span>
+                    <span style="color:var(--accent); font-size:15px;">${durationText}</span>
+                </div>
                 <div class="dp-row"><span>طرح انتخابی:</span><span>${st.plan_type || '-'}</span></div>
-                <div class="dp-row"><span>فاکتور ثبت شده:</span><span style="font-size:11px; white-space:pre-wrap; text-align:left;">${st.invoice_details || '-'}</span></div>
+                <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border-color);">
+                    <div style="color:var(--success); font-weight:bold; margin-bottom:10px; font-size:14px;">🧾 متن فاکتور سیستم:</div>
+                    <div style="white-space:pre-wrap; font-family:monospace; color:var(--text-muted); font-size:12px;">${st.invoice_details || 'فاکتور ثبت نشده است.'}</div>
+                </div>
                 ${imgHtml}
             `;
 
-            // فقط اگه وضعیت pending بود دکمه‌های تایید رو نشون بده
             document.getElementById('dpActions').style.display = st.status === 'pending' ? 'flex' : 'none';
             document.getElementById('detailsPanel').style.display = 'flex';
         }
@@ -293,11 +402,11 @@
             document.getElementById('detailsPanel').style.display = 'none';
         }
 
-        // 🌟 تایید هوشمند + محاسبه تاریخ پایان
+        // تایید هوشمند + ثبت پایان قرارداد
         async function approveStudent() {
-            if(!confirm('تایید و فعال‌سازی نهایی؟')) return;
+            if(!confirm('آیا از تایید فیش و فعال‌سازی این دانش‌آموز اطمینان دارید؟')) return;
             
-            // محاسبه تاریخ پایان قرارداد برای رادار ریزش
+            // محاسبه تاریخ پایان قرارداد 
             let duration = currentStudent.duration_months || 1;
             let startDate = currentStudent.start_date ? new Date(currentStudent.start_date) : new Date();
             let endDate = new Date(startDate);
@@ -307,17 +416,18 @@
             try {
                 await supabaseClient.from('students').update({ 
                     status: 'active', 
-                    end_date: endDateStr, // تاریخ پایان آپدیت شد
-                    receipt_base64: null // پاک کردن عکس برای سبکی دیتابیس
+                    end_date: endDateStr, 
+                    receipt_base64: null 
                 }).eq('national_id', currentStudent.national_id);
                 
-                alert('✅ دانش‌آموز فعال شد.');
+                alert('✅ دانش‌آموز فعال شد و تاریخ پایان قرارداد در دیتابیس ثبت گردید.');
                 closeDetails();
-                loadData(); // رفرش کل داشبورد
-            } catch(e) { alert(e.message); }
+                loadData(); 
+            } catch(e) { alert("خطا در ارتباط با سرور: " + e.message); }
         }
 
         async function rejectStudent() {
+            if(!confirm('آیا قصد رد کردن این فیش را دارید؟')) return;
             try {
                 await supabaseClient.from('students').update({ status: 'rejected', receipt_base64: null }).eq('national_id', currentStudent.national_id);
                 closeDetails(); loadData();
@@ -328,13 +438,12 @@
         // 🗺️ نقشه سینمایی صندلی‌ها
         // ==========================================
         function renderSeatMap() {
-            let cipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.includes('cip')).length;
-            let vipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.includes('vip')).length;
+            let cipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.toLowerCase().includes('cip')).length;
+            let vipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.toLowerCase().includes('vip')).length;
 
             document.getElementById('cipCount').innerText = cipActive;
             document.getElementById('vipCount').innerText = vipActive;
 
-            // ساخت 4 صندلی CIP
             let cipHtml = '';
             for(let i=1; i<=4; i++) {
                 let cls = i <= cipActive ? 'taken' : 'empty';
@@ -342,7 +451,6 @@
             }
             document.getElementById('cipSeats').innerHTML = cipHtml;
 
-            // ساخت 22 صندلی VIP
             let vipHtml = '';
             for(let i=1; i<=22; i++) {
                 let cls = i <= vipActive ? 'taken' : 'empty';
@@ -352,50 +460,97 @@
         }
 
         // ==========================================
-        // 🎟️ آمار کدهای تخفیف
+        // 🎟️ آمار کدهای تخفیف (ROI)
         // ==========================================
         function renderPromoStats() {
             let html = '';
             allPromos.forEach(p => {
+                let moneyFormatted = Math.round(p.total_revenue || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 html += `
                     <li>
-                        <span class="promo-code">${p.code} (${p.discount_percent}%)</span>
+                        <span class="promo-code">${p.code} <span style="font-size:11px; color:var(--text-muted);">(${p.discount_percent}%)</span></span>
                         <div style="text-align:left;">
-                            <div>استفاده: <b style="color:var(--text-main);">${p.usage_count || 0} بار</b></div>
-                            <div style="color:var(--success); font-size:11px;">درآمد: ${p.total_revenue || 0} تومان</div>
+                            <div style="font-size:12px; color:var(--text-muted);">دفعات استفاده: <b style="color:var(--text-main);">${p.usage_count || 0} بار</b></div>
+                            <div style="color:var(--success); font-size:13px; font-weight:bold; margin-top:3px;">درآمد: ${moneyFormatted} تومان</div>
                         </div>
                     </li>
                 `;
             });
-            document.getElementById('promoList').innerHTML = html || '<div style="color:gray;">کدی ثبت نشده است.</div>';
+            document.getElementById('promoList').innerHTML = html || '<div style="color:gray; padding:20px; text-align:center;">کد تخفیفی تعریف نشده است.</div>';
         }
 
         // ==========================================
-        // ⏳ رادار ریزش (Churn Alerts)
+        // ⏳ موتور رادارهای دوگانه (ریزش + اقساط)
         // ==========================================
-        function renderChurnRadar() {
+        function renderRadars() {
             let today = new Date();
-            let html = '';
-            
-            allStudents.filter(s => s.status === 'active' && s.end_date).forEach(st => {
-                let endDate = new Date(st.end_date);
-                let diffTime = endDate - today;
-                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            let churnHtml = '';
+            let instHtml = '';
+            const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+
+            allStudents.filter(s => s.status === 'active').forEach(st => {
                 
-                if(diffDays <= 5 && diffDays >= 0) {
-                    html += `
-                        <div class="radar-item">
-                            <div><b>${st.full_name}</b> <br> <span style="color:var(--text-muted);">پایه: ${st.grade} | موبایل: ${st.phone_number}</span></div>
-                            <div style="text-align:left;">
-                                <div style="color:var(--danger); font-weight:bold;">${diffDays} روز تا پایان</div>
-                                <div style="font-size:11px; color:var(--text-muted);">تاریخ: ${st.end_date}</div>
+                // --- ۱. پردازش رادار ریزش (قراردادهای رو به اتمام) ---
+                if (st.end_date) {
+                    let endDate = new Date(st.end_date);
+                    let diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays <= 5 && diffDays >= 0) {
+                        churnHtml += `
+                            <div class="radar-item critical">
+                                <div class="r-info"><strong>${st.full_name}</strong><span>پایه: ${st.grade} | موبایل: ${st.phone_number}</span></div>
+                                <div class="r-date"><strong style="color:var(--danger);">${diffDays === 0 ? 'امروز!' : diffDays + ' روز تا پایان'}</strong><span>قرارداد: ${st.duration_months} ماهه</span></div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    }
+                }
+
+                // --- ۲. پردازش رادار اقساط (بر اساس روش پرداخت و تاریخ شروع) ---
+                // فرض می‌کنیم در invoice_details یا متغیر payment_method ثبت شده باشد. 
+                // از آنجا که ما payment_method رو در جدول نساختیم، با استفاده از طول قرارداد شبیه‌سازی دقیق می‌کنیم:
+                if (st.start_date && st.duration_months > 1) { 
+                    // فقط بالای 1 ماه قسط دارند
+                    let isInstallment = st.invoice_details && st.invoice_details.includes('اقساط');
+                    
+                    if(isInstallment) {
+                        let startDate = new Date(st.start_date);
+                        let checkDates = [];
+
+                        if (st.duration_months == 3) {
+                            let d1 = new Date(startDate); d1.setDate(d1.getDate() + 45);
+                            checkDates.push({ label: 'چک ۴۵ روزه', date: d1 });
+                        } else if (st.duration_months == 10) {
+                            let d1 = new Date(startDate); d1.setMonth(d1.getMonth() + 2);
+                            let d2 = new Date(startDate); d2.setMonth(d2.getMonth() + 4);
+                            let d3 = new Date(startDate); d3.setMonth(d3.getMonth() + 6);
+                            checkDates.push({ label: 'چک اول (۲ ماهه)', date: d1 });
+                            checkDates.push({ label: 'چک دوم (۴ ماهه)', date: d2 });
+                            checkDates.push({ label: 'چک سوم (۶ ماهه)', date: d3 });
+                        }
+
+                        // بررسی اینکه آیا چکی در 15 روز آینده سررسید می‌شود؟
+                        checkDates.forEach(chk => {
+                            let diffDays = Math.ceil((chk.date - today) / (1000 * 60 * 60 * 24));
+                            if (diffDays <= 15 && diffDays >= -5) { // تا 5 روز بعد از موعد هم آلارم میده
+                                let colorCls = diffDays < 0 ? 'critical' : 'upcoming';
+                                let dayText = diffDays < 0 ? 'موعد گذشته ❌' : (diffDays === 0 ? 'موعد امروز!' : diffDays + ' روز تا سررسید');
+                                let dateColor = diffDays <= 3 ? 'var(--danger)' : 'var(--warning)';
+
+                                instHtml += `
+                                    <div class="radar-item ${colorCls}">
+                                        <div class="r-info"><strong>${st.full_name}</strong><span>طرح: ${st.plan_type ? st.plan_type.substring(0,15) : '-'}</span></div>
+                                        <div class="r-date"><strong style="color:${dateColor};">${dayText}</strong><span>${chk.label} | ${formatter.format(chk.date)}</span></div>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
                 }
             });
 
-            document.getElementById('churnList').innerHTML = html || '<div style="color:var(--success); padding:10px;">🎉 در حال حاضر خطری برای ریزش وجود ندارد.</div>';
+            document.getElementById('churnList').innerHTML = churnHtml || '<div style="color:var(--success); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">🎉 در حال حاضر هیچ قراردادی رو به اتمام نیست.</div>';
+            
+            document.getElementById('installmentRadarList').innerHTML = instHtml || '<div style="color:var(--text-muted); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">در ۱۵ روز آینده موعد هیچ چکی فرا نمی‌رسد.</div>';
         }
     </script>
 </body>
