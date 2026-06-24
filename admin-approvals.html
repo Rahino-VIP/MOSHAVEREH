@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت | تایید ثبت‌نام‌ها</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --bg-color: #0f172a; --surface: #1e293b; --surface-hover: #334155;
+            --primary: #3b82f6; --accent: #f59e0b; --text-main: #f8fafc;
+            --text-muted: #94a3b8; --border: #334155; --success: #10b981; --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        
+        body { background: var(--bg-color); color: var(--text-main); padding: 30px; }
+
+        /* 👑 هدر پنل */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { font-size: 24px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .stats-badge { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; color: var(--primary); }
+
+        /* 🗂️ گرید کارت‌ها */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        
+        .student-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .student-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.2); }
+        .student-card::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: var(--accent); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .student-name { font-size: 18px; font-weight: 900; color: var(--text-main); }
+        .student-grade { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 3px 8px; border-radius: 10px; margin-top: 5px; display: inline-block; }
+        .plan-badge { background: rgba(245, 158, 11, 0.1); color: var(--accent); font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .card-info { font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-bottom: 15px; }
+        .card-info span { font-weight: bold; color: var(--text-main); }
+
+        /* 🪟 مدال بررسی کامل (کالبدشکافی) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal { background: var(--surface); border-radius: 24px; width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; animation: zoomIn 0.3s ease-out; }
+        @media (min-width: 768px) { .modal { flex-direction: row; } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .modal-details { padding: 30px; flex: 1; border-left: 1px solid var(--border); }
+        .modal-receipt { padding: 30px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-color); }
+        
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding: 10px 0; font-size: 14px; }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { font-weight: bold; color: var(--text-main); text-align: left; }
+
+        .receipt-img { max-width: 100%; max-height: 400px; border-radius: 16px; border: 2px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.3); object-fit: contain; cursor: zoom-in; }
+
+        /* دکمه‌های اکشن */
+        .action-bar { display: flex; gap: 15px; margin-top: 30px; }
+        .btn { flex: 1; padding: 15px; border-radius: 14px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-success { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+        .btn-success:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        .btn-danger { background: linear-gradient(135deg, #b91c1c, #ef4444); color: white; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        .btn-close { background: transparent; border: 2px solid var(--border); color: var(--text-main); margin-top: 15px; width: 100%; }
+        .btn-close:hover { background: var(--surface-hover); }
+
+        .loader { text-align: center; font-size: 18px; color: var(--primary); padding: 50px; font-weight: bold; }
+        .empty-state { text-align: center; padding: 100px 20px; color: var(--text-muted); font-size: 18px; font-weight: bold; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛡️ مرکز فرماندهی و تاییدات</h1>
+        <div class="stats-badge" id="statsBadge">در حال بررسی... ⏳</div>
+    </div>
+
+    <div class="grid-container" id="studentsGrid">
+        <div class="loader">در حال ارتباط با پایگاه داده... ⏳</div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-details" id="modalDetailsContent">
+                <h2 style="color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px;">پرونده کامل دانش‌آموز</h2>
+                <div id="detailsContainer"></div>
+                
+                <div class="action-bar">
+                    <button class="btn btn-success" id="btnApprove" onclick="approveStudent()">✅ تایید و فعال‌سازی</button>
+                    <button class="btn btn-danger" id="btnReject" onclick="rejectStudent()">❌ رد فیش</button>
+                </div>
+                <button class="btn btn-close" onclick="closeModal()">بستن پنجره</button>
+            </div>
+            
+            <div class="modal-receipt">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">💳 فیش واریزی</h3>
+                <img id="receiptImage" class="receipt-img" src="" alt="فیش آپلود نشده است">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 15px; text-align: center;">
+                    💡 نکته امنیتی: با زدن دکمه «تایید»، این تصویر برای همیشه از دیتابیس پاک می‌شود تا فضای سرور اشغال نشود.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let pendingStudents = [];
+        let currentViewingStudent = null;
+
+        // 🔐 قفل ورود ساده برای ادمین
+        window.onload = function() {
+            const pass = prompt("رمز عبور مدیریت را وارد کنید:");
+            if (pass !== "1234") { // رمز دلخواهت رو اینجا بذار
+                document.body.innerHTML = "<h1 style='text-align:center; color:red; margin-top:100px;'>دسترسی غیرمجاز ⛔</h1>";
+                return;
+            }
+            fetchPendingStudents();
+        };
+
+        // ==========================================
+        // 📥 دریافت لیست در انتظارها (مستقیم از سوپابیس)
+        // ==========================================
+        async function fetchPendingStudents() {
+            const grid = document.getElementById('studentsGrid');
+            grid.innerHTML = '<div class="loader">در حال استخراج داده‌ها از هسته مرکزی... ⏳</div>';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('students')
+                    .select('*')
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                pendingStudents = data || [];
+                renderGrid();
+                
+                document.getElementById('statsBadge').innerText = `تعداد در صف: ${pendingStudents.length} نفر`;
+
+            } catch (err) {
+                grid.innerHTML = `<div class="empty-state" style="color:red;">خطا در دریافت اطلاعات: ${err.message}</div>`;
+            }
+        }
+
+        // ==========================================
+        // 🃏 ساخت کارت‌های سه‌بعدی
+        // ==========================================
+        function renderGrid() {
+            const grid = document.getElementById('studentsGrid');
+            grid.innerHTML = '';
+
+            if (pendingStudents.length === 0) {
+                grid.innerHTML = '<div class="empty-state">🎉 هیچ ثبت‌نام جدیدی در صف انتظار نیست!</div>';
+                return;
+            }
+
+            pendingStudents.forEach(st => {
+                const planName = st.plan_type ? st.plan_type : 'نامشخص';
+                
+                grid.innerHTML += `
+                    <div class="student-card" onclick="openModal('${st.national_id}')">
+                        <div class="card-header">
+                            <div>
+                                <div class="student-name">${st.full_name || 'بدون نام'}</div>
+                                <div class="student-grade">${st.grade || '-'} | ${st.major || '-'}</div>
+                            </div>
+                            <div class="plan-badge">${planName}</div>
+                        </div>
+                        <div class="card-info">
+                            <div>💳 کد ملی: <span>${st.national_id}</span></div>
+                            <div>📱 موبایل: <span>${st.phone_number || 'ندارد'}</span></div>
+                            <div>📅 تاریخ تمایل شروع: <span style="color: var(--accent);">${st.start_date || 'نامشخص'}</span></div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--primary); text-align: left; font-weight: bold;">
+                            🔍 بررسی کامل و فیش ⬅️
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ==========================================
+        // 🪟 باز کردن کالبدشکافی
+        // ==========================================
+        function openModal(nationalId) {
+            currentViewingStudent = pendingStudents.find(s => s.national_id === nationalId);
+            if (!currentViewingStudent) return;
+            const st = currentViewingStudent;
+
+            // ساخت لیست مشخصات
+            const detailsHtml = `
+                <div class="detail-row"><span class="detail-label">نام و نام خانوادگی</span><span class="detail-value">${st.full_name}</span></div>
+                <div class="detail-row"><span class="detail-label">کد ملی</span><span class="detail-value">${st.national_id}</span></div>
+                <div class="detail-row"><span class="detail-label">تاریخ تولد</span><span class="detail-value">${st.birthdate || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">موبایل دانش‌آموز</span><span class="detail-value">${st.phone_number}</span></div>
+                <div class="detail-row"><span class="detail-label">موبایل پدر / مادر</span><span class="detail-value" style="font-size: 12px;">پ: ${st.father_phone || '-'} | م: ${st.mother_phone || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">استان و شهر</span><span class="detail-value">${st.province || '-'} - ${st.city || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">مدرسه</span><span class="detail-value">${st.school_name || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">پایه و رشته</span><span class="detail-value">${st.grade} - ${st.major}</span></div>
+                <div class="detail-row"><span class="detail-label">نحوه آشنایی</span><span class="detail-value">${st.referral_source || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label" style="color:var(--accent);">طرح انتخابی</span><span class="detail-value" style="color:var(--accent);">${st.plan_type} (${st.duration_months} ماهه)</span></div>
+                <div class="detail-row"><span class="detail-label">تاریخ شروع</span><span class="detail-value">${st.start_date}</span></div>
+            `;
+            document.getElementById('detailsContainer').innerHTML = detailsHtml;
+
+            // نمایش فیش (اگر فرمت خاصی نداشتیم همون jpeg فرض میکنیم)
+            const imgEl = document.getElementById('receiptImage');
+            if (st.receipt_base64) {
+                // ترفند: اگر پیشوند data:image رو داشت که هیچ، وگرنه بهش اضافه می‌کنیم
+                let imgSrc = st.receipt_base64;
+                if (!imgSrc.startsWith('data:image')) {
+                    imgSrc = `data:${st.file_type || 'image/jpeg'};base64,${st.receipt_base64}`;
+                }
+                imgEl.src = imgSrc;
+                imgEl.style.display = 'block';
+            } else {
+                imgEl.src = '';
+                imgEl.style.display = 'none';
+            }
+
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+            currentViewingStudent = null;
+        }
+
+        // ==========================================
+        // ✅ تایید یا ❌ رد درخواست (ارتباط مستقیم و رعدآسا با سوپابیس)
+        // ==========================================
+        function setButtonsLoading(isLoading) {
+            document.getElementById('btnApprove').disabled = isLoading;
+            document.getElementById('btnReject').disabled = isLoading;
+        }
+
+        async function approveStudent() {
+            if (!currentViewingStudent) return;
+            if (!confirm("آیا از تایید و فعال‌سازی این اکانت اطمینان دارید؟")) return;
+            
+            setButtonsLoading(true);
+            try {
+                // آپدیت وضعیت به active و 🌟 پاک کردن کدهای سنگینِ عکس برای سبک نگه داشتن دیتابیس
+                const { error } = await supabaseClient
+                    .from('students')
+                    .update({ 
+                        status: 'active', 
+                        receipt_base64: null, 
+                        file_type: null 
+                    })
+                    .eq('national_id', currentViewingStudent.national_id);
+
+                if (error) throw error;
+
+                alert("✅ دانش‌آموز با موفقیت تایید و اکانت وی فعال شد.");
+                closeModal();
+                fetchPendingStudents(); // رفرش لیست
+
+            } catch (err) {
+                alert("خطا در تایید: " + err.message);
+            }
+            setButtonsLoading(false);
+        }
+
+        async function rejectStudent() {
+            if (!currentViewingStudent) return;
+            const reason = prompt("علت رد فیش را بنویسید (اختیاری):");
+            if (reason === null) return; // اگر دکمه انصراف رو زد
+            
+            setButtonsLoading(true);
+            try {
+                // آپدیت وضعیت به rejected و پاک کردن عکس
+                const { error } = await supabaseClient
+                    .from('students')
+                    .update({ 
+                        status: 'rejected', 
+                        receipt_base64: null, 
+                        file_type: null 
+                    })
+                    .eq('national_id', currentViewingStudent.national_id);
+
+                if (error) throw error;
+
+                alert("❌ فیش با موفقیت رد شد.");
+                closeModal();
+                fetchPendingStudents(); // رفرش لیست
+
+            } catch (err) {
+                alert("خطا در رد کردن: " + err.message);
+            }
+            setButtonsLoading(false);
+        }
+    </script>
+</body>
+</html>
