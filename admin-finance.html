@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت مالی و پذیرش | قطب‌نمای راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --bg-dark: #0f172a; --surface-dark: #1e293b; --surface-light: #334155; --border-color: #334155;
+            --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --gold: #f59e0b;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* 👑 هدر و تب‌ها */
+        .top-nav { background: var(--surface-dark); border-bottom: 1px solid var(--border-color); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .nav-brand { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+        .tabs { display: flex; background: var(--bg-dark); padding: 5px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .tab-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); transition: 0.3s; border: none; background: transparent; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        .tab-content { display: none; height: 100%; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* =======================================
+           🗂️ تب ۱: کانبان و کالبدشکافی (Split View)
+           ======================================= */
+        .split-view { display: flex; height: 100%; gap: 20px; }
+        
+        /* کانبان برد */
+        .kanban-board { flex: 1; display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
+        .kanban-col { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); border-radius: 16px; min-width: 280px; flex: 1; display: flex; flex-direction: column; }
+        .kanban-header { padding: 15px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+        .kanban-cards { padding: 15px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        
+        .k-card { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; border-right: 4px solid var(--text-muted); }
+        .k-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .k-card.draft { border-right-color: var(--text-muted); }
+        .k-card.pending { border-right-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+        .k-card.active { border-right-color: var(--success); }
+        
+        .k-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .k-detail { font-size: 11px; color: var(--text-muted); }
+
+        /* پنل کالبدشکافی (سمت چپ) */
+        .details-panel { width: 400px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; display: none; }
+        .dp-header { padding: 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .dp-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 2; }
+        .dp-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 8px 0; }
+        .dp-row span:last-child { font-weight: bold; color: var(--accent); }
+        
+        .dp-receipt { width: 100%; height: 200px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 15px; cursor: zoom-in; background: #000; }
+        .dp-actions { padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-green { background: var(--success); } .btn-green:hover { filter: brightness(1.1); }
+        .btn-red { background: var(--danger); } .btn-red:hover { filter: brightness(1.1); }
+
+        /* =======================================
+           🗺️ تب ۲: نقشه صندلی‌ها و آمار
+           ======================================= */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; height: 100%; }
+        .panel-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; overflow-y: auto; }
+        
+        .seat-map-container { display: flex; flex-direction: column; gap: 30px; }
+        .seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px; margin-top: 15px; }
+        .seat { width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; color: white; }
+        .seat.empty { background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success); color: var(--success); }
+        .seat.taken { background: rgba(239, 68, 68, 0.2); border: 1px solid var(--danger); color: var(--danger); }
+
+        .promo-list { list-style: none; margin-top: 15px; }
+        .promo-list li { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border: 1px solid var(--border-color); }
+        .promo-code { font-weight: bold; color: var(--gold); }
+
+        /* =======================================
+           ⏳ تب ۳: رادار اقساط و هشدار ریزش
+           ======================================= */
+        .radar-box { background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .radar-list { margin-top: 15px; }
+        .radar-item { display: flex; justify-content: space-between; background: var(--surface-dark); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-right: 4px solid var(--danger); font-size: 13px; }
+
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 1000; display: flex; justify-content: center; align-items: center; transition: 0.3s opacity; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader"><h2 style="color: var(--accent);">در حال همگام‌سازی با هسته مرکزی... ⏳</h2></div>
+
+    <div class="top-nav">
+        <div class="nav-brand">🛡️ اتاق مانیتورینگ مالی و پذیرش</div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-kanban', this)">🗂️ بورد تاییدات</button>
+            <button class="tab-btn" onclick="switchTab('tab-seats', this)">🗺️ نقشه سالن و آمار</button>
+            <button class="tab-btn" onclick="switchTab('tab-radar', this)">⏳ رادار مالی و ریزش</button>
+            <button class="tab-btn" onclick="window.location.href='dashboard.html'" style="color: var(--danger);">بازگشت به داشبورد</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div id="tab-kanban" class="tab-content active">
+            <div class="split-view">
+                
+                <div class="kanban-board">
+                    <div class="kanban-col">
+                        <div class="kanban-header">📝 لیدهای خام (فرم ناقص) <span class="badge" id="cntDraft">0</span></div>
+                        <div class="kanban-cards" id="colDraft"></div>
+                    </div>
+                    <div class="kanban-col">
+                        <div class="kanban-header" style="color: var(--warning);">⏳ در انتظار تایید فیش <span class="badge" id="cntPending">0</span></div>
+                        <div class="kanban-cards" id="colPending"></div>
+                    </div>
+                    <div class="kanban-col">
+                        <div class="kanban-header" style="color: var(--success);">✅ تایید شده‌های اخیر <span class="badge" id="cntActive">0</span></div>
+                        <div class="kanban-cards" id="colActive"></div>
+                    </div>
+                </div>
+
+                <div class="details-panel" id="detailsPanel">
+                    <div class="dp-header">
+                        <span>🔍 جزئیات پرونده</span>
+                        <button style="background:transparent; border:none; color:white; cursor:pointer;" onclick="closeDetails()">❌</button>
+                    </div>
+                    <div class="dp-body" id="dpBody">
+                        </div>
+                    <div class="dp-actions" id="dpActions" style="display: none;">
+                        <button class="btn btn-green" onclick="approveStudent()">✅ تایید فیش و فعال‌سازی</button>
+                        <button class="btn btn-red" onclick="rejectStudent()">❌ رد کردن</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="tab-seats" class="tab-content">
+            <div class="stats-grid">
+                
+                <div class="panel-box">
+                    <h3 style="color: var(--accent); margin-bottom: 20px;">🗺️ وضعیت زنده صندلی‌های سالن</h3>
+                    
+                    <div class="seat-map-container">
+                        <div>
+                            <div style="font-size: 14px; font-weight: bold; color: var(--gold);">✨ بخش CIP (۴ ظرفیت) - پر شده: <span id="cipCount">0</span></div>
+                            <div class="seat-grid" id="cipSeats"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: bold; color: var(--success);">🌟 بخش VIP (۲۲ ظرفیت) - پر شده: <span id="vipCount">0</span></div>
+                            <div class="seat-grid" id="vipSeats"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <h3 style="color: var(--success); margin-bottom: 20px;">🎟️ مانیتورینگ کدهای تخفیف (ROI)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">تحلیل عملکرد کمپین‌های تبلیغاتی و درآمد تولید شده:</p>
+                    <ul class="promo-list" id="promoList">
+                        </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="tab-radar" class="tab-content">
+            
+            <div class="radar-box">
+                <h3 style="color: var(--danger); margin-bottom: 10px;">🔥 هشدار ریزش (تمدیدهای ۵ روز آینده)</h3>
+                <p style="font-size: 12px; color: var(--text-muted);">دانش‌آموزانی که قراردادشان رو به اتمام است. نیازمند تماس فوری منشی جهت تمدید:</p>
+                <div class="radar-list" id="churnList">
+                    </div>
+            </div>
+
+            <div class="radar-box" style="background: rgba(59, 130, 246, 0.05); border-color: var(--accent);">
+                <h3 style="color: var(--accent); margin-bottom: 10px;">💳 رادار مالی و اقساط (به زودی)</h3>
+                <p style="font-size: 12px; color: var(--text-muted);">بخش رهگیری چک‌های صیادی و اقساط ماهانه در نسخه بعدی متصل خواهد شد.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔗 تنظیمات سوپابیس
+        // ==========================================
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let allStudents = [];
+        let allPromos = [];
+        let currentStudent = null;
+
+        window.onload = async function() {
+            await loadData();
+        };
+
+        // تب سوئیچر
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // ==========================================
+        // 📥 دریافت و پردازش داده‌ها
+        // ==========================================
+        async function loadData() {
+            try {
+                const [stRes, prRes] = await Promise.all([
+                    supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
+                    supabaseClient.from('promo_codes').select('*')
+                ]);
+
+                allStudents = stRes.data || [];
+                allPromos = prRes.data || [];
+
+                renderKanban();
+                renderSeatMap();
+                renderPromoStats();
+                renderChurnRadar();
+
+                document.getElementById('mainLoader').style.display = 'none';
+            } catch (err) {
+                alert("خطا در دریافت اطلاعات: " + err.message);
+            }
+        }
+
+        // ==========================================
+        // 🗂️ رندر کانبان برد
+        // ==========================================
+        function renderKanban() {
+            let draftHtml = '', pendingHtml = '', activeHtml = '';
+            let dCnt = 0, pCnt = 0, aCnt = 0;
+
+            allStudents.forEach(st => {
+                let card = `
+                    <div class="k-card ${st.status}" onclick="openDetails('${st.national_id}')">
+                        <div class="k-name">${st.full_name || 'کاربر ناشناس'}</div>
+                        <div class="k-detail">پایه: ${st.grade || '-'}</div>
+                        <div class="k-detail" style="margin-top:5px; color:var(--accent);">${st.plan_type || 'طرح انتخاب نشده'}</div>
+                    </div>
+                `;
+                
+                if(st.status === 'draft') { draftHtml += card; dCnt++; }
+                else if(st.status === 'pending') { pendingHtml += card; pCnt++; }
+                else if(st.status === 'active') { activeHtml += card; aCnt++; }
+            });
+
+            document.getElementById('colDraft').innerHTML = draftHtml;
+            document.getElementById('colPending').innerHTML = pendingHtml;
+            document.getElementById('colActive').innerHTML = activeHtml;
+            
+            document.getElementById('cntDraft').innerText = dCnt;
+            document.getElementById('cntPending').innerText = pCnt;
+            document.getElementById('cntActive').innerText = aCnt;
+        }
+
+        // ==========================================
+        // 🔬 کالبدشکافی پرونده (Split View)
+        // ==========================================
+        function openDetails(nid) {
+            currentStudent = allStudents.find(s => s.national_id === nid);
+            const st = currentStudent;
+            
+            let imgHtml = '';
+            if(st.receipt_base64) {
+                let src = st.receipt_base64.startsWith('data:') ? st.receipt_base64 : `data:${st.file_type || 'image/jpeg'};base64,${st.receipt_base64}`;
+                imgHtml = `<img src="${src}" class="dp-receipt" onclick="window.open('${src}')">`;
+            }
+
+            document.getElementById('dpBody').innerHTML = `
+                <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
+                <div class="dp-row"><span>کد ملی:</span><span>${st.national_id}</span></div>
+                <div class="dp-row"><span>موبایل:</span><span>${st.phone_number || '-'}</span></div>
+                <div class="dp-row"><span>طرح انتخابی:</span><span>${st.plan_type || '-'}</span></div>
+                <div class="dp-row"><span>فاکتور ثبت شده:</span><span style="font-size:11px; white-space:pre-wrap; text-align:left;">${st.invoice_details || '-'}</span></div>
+                ${imgHtml}
+            `;
+
+            // فقط اگه وضعیت pending بود دکمه‌های تایید رو نشون بده
+            document.getElementById('dpActions').style.display = st.status === 'pending' ? 'flex' : 'none';
+            document.getElementById('detailsPanel').style.display = 'flex';
+        }
+
+        function closeDetails() {
+            document.getElementById('detailsPanel').style.display = 'none';
+        }
+
+        // 🌟 تایید هوشمند + محاسبه تاریخ پایان
+        async function approveStudent() {
+            if(!confirm('تایید و فعال‌سازی نهایی؟')) return;
+            
+            // محاسبه تاریخ پایان قرارداد برای رادار ریزش
+            let duration = currentStudent.duration_months || 1;
+            let startDate = currentStudent.start_date ? new Date(currentStudent.start_date) : new Date();
+            let endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + parseInt(duration));
+            let endDateStr = endDate.toISOString().split('T')[0];
+
+            try {
+                await supabaseClient.from('students').update({ 
+                    status: 'active', 
+                    end_date: endDateStr, // تاریخ پایان آپدیت شد
+                    receipt_base64: null // پاک کردن عکس برای سبکی دیتابیس
+                }).eq('national_id', currentStudent.national_id);
+                
+                alert('✅ دانش‌آموز فعال شد.');
+                closeDetails();
+                loadData(); // رفرش کل داشبورد
+            } catch(e) { alert(e.message); }
+        }
+
+        async function rejectStudent() {
+            try {
+                await supabaseClient.from('students').update({ status: 'rejected', receipt_base64: null }).eq('national_id', currentStudent.national_id);
+                closeDetails(); loadData();
+            } catch(e) { alert(e.message); }
+        }
+
+        // ==========================================
+        // 🗺️ نقشه سینمایی صندلی‌ها
+        // ==========================================
+        function renderSeatMap() {
+            let cipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.includes('cip')).length;
+            let vipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.includes('vip')).length;
+
+            document.getElementById('cipCount').innerText = cipActive;
+            document.getElementById('vipCount').innerText = vipActive;
+
+            // ساخت 4 صندلی CIP
+            let cipHtml = '';
+            for(let i=1; i<=4; i++) {
+                let cls = i <= cipActive ? 'taken' : 'empty';
+                cipHtml += `<div class="seat ${cls}">${i}</div>`;
+            }
+            document.getElementById('cipSeats').innerHTML = cipHtml;
+
+            // ساخت 22 صندلی VIP
+            let vipHtml = '';
+            for(let i=1; i<=22; i++) {
+                let cls = i <= vipActive ? 'taken' : 'empty';
+                vipHtml += `<div class="seat ${cls}">${i}</div>`;
+            }
+            document.getElementById('vipSeats').innerHTML = vipHtml;
+        }
+
+        // ==========================================
+        // 🎟️ آمار کدهای تخفیف
+        // ==========================================
+        function renderPromoStats() {
+            let html = '';
+            allPromos.forEach(p => {
+                html += `
+                    <li>
+                        <span class="promo-code">${p.code} (${p.discount_percent}%)</span>
+                        <div style="text-align:left;">
+                            <div>استفاده: <b style="color:var(--text-main);">${p.usage_count || 0} بار</b></div>
+                            <div style="color:var(--success); font-size:11px;">درآمد: ${p.total_revenue || 0} تومان</div>
+                        </div>
+                    </li>
+                `;
+            });
+            document.getElementById('promoList').innerHTML = html || '<div style="color:gray;">کدی ثبت نشده است.</div>';
+        }
+
+        // ==========================================
+        // ⏳ رادار ریزش (Churn Alerts)
+        // ==========================================
+        function renderChurnRadar() {
+            let today = new Date();
+            let html = '';
+            
+            allStudents.filter(s => s.status === 'active' && s.end_date).forEach(st => {
+                let endDate = new Date(st.end_date);
+                let diffTime = endDate - today;
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if(diffDays <= 5 && diffDays >= 0) {
+                    html += `
+                        <div class="radar-item">
+                            <div><b>${st.full_name}</b> <br> <span style="color:var(--text-muted);">پایه: ${st.grade} | موبایل: ${st.phone_number}</span></div>
+                            <div style="text-align:left;">
+                                <div style="color:var(--danger); font-weight:bold;">${diffDays} روز تا پایان</div>
+                                <div style="font-size:11px; color:var(--text-muted);">تاریخ: ${st.end_date}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('churnList').innerHTML = html || '<div style="color:var(--success); padding:10px;">🎉 در حال حاضر خطری برای ریزش وجود ندارد.</div>';
+        }
+    </script>
+</body>
+</html>
