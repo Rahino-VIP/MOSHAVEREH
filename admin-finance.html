@@ -332,14 +332,19 @@
 
             allStudents.forEach(st => {
                 let durationText = st.duration_months ? (st.duration_months == 10 ? 'تا کنکور' : `${st.duration_months} ماهه`) : 'نامشخص';
-                let planText = st.plan_type || 'ثبت نشده';
+                
+                // 🌟 ساخت اسم طرح از روی ستون‌های تفکیک شده
+                let planParts = [];
+                if (st.pansion_tier && st.pansion_tier !== 'none') planParts.push(`پانسیون ${st.pansion_tier}`);
+                if (st.consult_tier && st.consult_tier !== 'none') planParts.push(`مشاوره ${st.consult_tier}`);
+                let planText = planParts.length > 0 ? planParts.join(' + ') : (st.plan_type || 'ثبت نشده');
 
                 let card = `
                     <div class="k-card ${st.status}" onclick="openDetails('${st.national_id}')">
                         <div class="k-duration">${durationText}</div>
                         <div class="k-name">${st.full_name || 'کاربر ناشناس'}</div>
                         <div class="k-detail"><span>پایه:</span> <b style="color:var(--text-main)">${st.grade || '-'}</b></div>
-                        <div class="k-detail"><span>طرح:</span> <b style="color:var(--accent)">${planText.substring(0, 30)}...</b></div>
+                        <div class="k-detail"><span>طرح:</span> <b style="color:var(--accent)">${planText.substring(0, 30)}</b></div>
                     </div>
                 `;
                 
@@ -356,7 +361,6 @@
             document.getElementById('cntPending').innerText = pCnt;
             document.getElementById('cntActive').innerText = aCnt;
         }
-
         // ==========================================
         // 🔬 پنل کالبدشکافی (Split View)
         // ==========================================
@@ -369,27 +373,28 @@
                 let src = st.receipt_base64.startsWith('data:') ? st.receipt_base64 : `data:${st.file_type || 'image/jpeg'};base64,${st.receipt_base64}`;
                 imgHtml = `
                     <div class="dp-receipt-box">
-                        <span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی پیش‌پرداخت:</span>
+                        <span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی:</span>
                         <img src="${src}" class="dp-receipt" onclick="window.open('${src}')">
                     </div>`;
             }
 
             let durationText = st.duration_months ? (st.duration_months == 10 ? 'تا کنکور (۱۰ ماهه)' : `${st.duration_months} ماهه`) : 'نامشخص';
+            let planParts = [];
+            if (st.pansion_tier && st.pansion_tier !== 'none') planParts.push(`پانسیون ${st.pansion_tier}`);
+            if (st.consult_tier && st.consult_tier !== 'none') planParts.push(`مشاوره ${st.consult_tier}`);
+            let planText = planParts.length > 0 ? planParts.join(' و ') : (st.plan_type || '-');
 
             document.getElementById('dpBody').innerHTML = `
-                <div class="dp-row"><span>نام دانش‌آموز:</span><span>${st.full_name || '-'}</span></div>
+                <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
                 <div class="dp-row"><span>کد ملی:</span><span>${st.national_id}</span></div>
                 <div class="dp-row"><span>موبایل تماس:</span><span>${st.phone_number || '-'}</span></div>
-                <div class="dp-row"><span>موبایل بله:</span><span>${st.bale_number || '-'}</span></div>
-                <div class="dp-row"><span>پایه تحصیلی:</span><span>${st.grade || '-'}</span></div>
                 <div class="dp-row" style="background:rgba(59,130,246,0.1); padding:10px; border-radius:8px; margin-top:10px;">
-                    <span style="color:var(--accent);">مدت قرارداد:</span>
-                    <span style="color:var(--accent); font-size:15px;">${durationText}</span>
+                    <span style="color:var(--accent);">طرح انتخابی:</span>
+                    <span style="color:var(--accent); font-size:14px; font-weight:bold;">${planText} (${durationText})</span>
                 </div>
-                <div class="dp-row"><span>طرح انتخابی:</span><span>${st.plan_type || '-'}</span></div>
                 <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border-color);">
-                    <div style="color:var(--success); font-weight:bold; margin-bottom:10px; font-size:14px;">🧾 متن فاکتور سیستم:</div>
-                    <div style="white-space:pre-wrap; font-family:monospace; color:var(--text-muted); font-size:12px;">${st.invoice_details || 'فاکتور ثبت نشده است.'}</div>
+                    <div style="color:var(--success); font-weight:bold; margin-bottom:10px; font-size:14px;">🧾 متن فاکتور و تعهدات:</div>
+                    <div style="white-space:pre-wrap; font-family:monospace; color:var(--text-muted); font-size:12px; line-height:2;">${st.invoice_details || 'فاکتور ثبت نشده است.'}</div>
                 </div>
                 ${imgHtml}
             `;
@@ -397,30 +402,47 @@
             document.getElementById('dpActions').style.display = st.status === 'pending' ? 'flex' : 'none';
             document.getElementById('detailsPanel').style.display = 'flex';
         }
-
+        
         function closeDetails() {
             document.getElementById('detailsPanel').style.display = 'none';
         }
 
         // تایید هوشمند + ثبت پایان قرارداد
         async function approveStudent() {
-            if(!confirm('آیا از تایید فیش و فعال‌سازی این دانش‌آموز اطمینان دارید؟')) return;
+            if(!confirm('آیا از تایید فیش و فعال‌سازی این قرارداد اطمینان دارید؟')) return;
             
-            // محاسبه تاریخ پایان قرارداد 
-            let duration = currentStudent.duration_months || 1;
-            let startDate = currentStudent.start_date ? new Date(currentStudent.start_date) : new Date();
-            let endDate = new Date(startDate);
-            endDate.setMonth(endDate.getMonth() + parseInt(duration));
-            let endDateStr = endDate.toISOString().split('T')[0];
-
             try {
-                await supabaseClient.from('students').update({ 
+                // ۱. محاسبه تاریخ‌های مجزا برای پانسیون و مشاوره
+                let updatePayload = { 
                     status: 'active', 
-                    end_date: endDateStr, 
-                    receipt_base64: null 
-                }).eq('national_id', currentStudent.national_id);
+                    receipt_base64: null // 🧹 پاکسازی دیتابیس از عکس
+                };
                 
-                alert('✅ دانش‌آموز فعال شد و تاریخ پایان قرارداد در دیتابیس ثبت گردید.');
+                let dur = parseInt(currentStudent.duration_months || 1);
+                
+                if (currentStudent.pansion_tier && currentStudent.pansion_tier !== 'none') {
+                    let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + dur);
+                    updatePayload.pansion_end_date = pEnd.toISOString().split('T')[0];
+                }
+                
+                if (currentStudent.consult_tier && currentStudent.consult_tier !== 'none') {
+                    let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + dur);
+                    updatePayload.consult_end_date = cEnd.toISOString().split('T')[0];
+                }
+
+                // ۲. شارژ کیف پول شخص معرف (اگر وجود داشت) 🎁
+                if (currentStudent.referrer_id) {
+                    let { data: refUser } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', currentStudent.referrer_id).single();
+                    if (refUser) {
+                        let newBal = (refUser.wallet_balance || 0) + 200000;
+                        await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', currentStudent.referrer_id);
+                    }
+                }
+
+                // ۳. آپدیت نهایی دانش‌آموز فعلی
+                await supabaseClient.from('students').update(updatePayload).eq('national_id', currentStudent.national_id);
+                
+                alert('✅ فیش تایید شد!\nتاریخ‌ها به صورت مجزا تنظیم شد و قرارداد فعال گردید.');
                 closeDetails();
                 loadData(); 
             } catch(e) { alert("خطا در ارتباط با سرور: " + e.message); }
@@ -484,73 +506,65 @@
         // ==========================================
         function renderRadars() {
             let today = new Date();
-            let churnHtml = '';
-            let instHtml = '';
+            let churnHtml = ''; let instHtml = '';
             const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
 
             allStudents.filter(s => s.status === 'active').forEach(st => {
                 
-                // --- ۱. پردازش رادار ریزش (قراردادهای رو به اتمام) ---
-                if (st.end_date) {
-                    let endDate = new Date(st.end_date);
-                    let diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays <= 5 && diffDays >= 0) {
+                // --- ۱. رادار ریزش (بررسی تاریخ پانسیون و مشاوره مجزا) ---
+                let checkChurn = (dateStr, typeName) => {
+                    if (!dateStr) return;
+                    let diff = Math.ceil((new Date(dateStr) - today) / (1000 * 60 * 60 * 24));
+                    if (diff <= 5 && diff >= 0) {
                         churnHtml += `
                             <div class="radar-item critical">
-                                <div class="r-info"><strong>${st.full_name}</strong><span>پایه: ${st.grade} | موبایل: ${st.phone_number}</span></div>
-                                <div class="r-date"><strong style="color:var(--danger);">${diffDays === 0 ? 'امروز!' : diffDays + ' روز تا پایان'}</strong><span>قرارداد: ${st.duration_months} ماهه</span></div>
+                                <div class="r-info"><strong>${st.full_name}</strong><span>موبایل: ${st.phone_number}</span></div>
+                                <div class="r-date"><strong style="color:var(--danger);">${diff === 0 ? 'امروز!' : diff + ' روز تا پایان'}</strong><span>اتمام ${typeName}</span></div>
                             </div>
                         `;
                     }
-                }
+                };
+                
+                checkChurn(st.pansion_end_date, 'پانسیون');
+                checkChurn(st.consult_end_date, 'مشاوره');
 
-                // --- ۲. پردازش رادار اقساط (بر اساس روش پرداخت و تاریخ شروع) ---
-                // فرض می‌کنیم در invoice_details یا متغیر payment_method ثبت شده باشد. 
-                // از آنجا که ما payment_method رو در جدول نساختیم، با استفاده از طول قرارداد شبیه‌سازی دقیق می‌کنیم:
-                if (st.start_date && st.duration_months > 1) { 
-                    // فقط بالای 1 ماه قسط دارند
-                    let isInstallment = st.invoice_details && st.invoice_details.includes('اقساط');
-                    
-                    if(isInstallment) {
-                        let startDate = new Date(st.start_date);
-                        let checkDates = [];
+                // --- ۲. رادار اقساط (موعد آپلود فیش) ---
+                if (st.start_date && st.duration_months > 1 && st.invoice_details && st.invoice_details.includes('اقساط')) { 
+                    let startDate = new Date(st.start_date);
+                    let checkDates = [];
 
-                        if (st.duration_months == 3) {
-                            let d1 = new Date(startDate); d1.setDate(d1.getDate() + 45);
-                            checkDates.push({ label: 'چک ۴۵ روزه', date: d1 });
-                        } else if (st.duration_months == 10) {
-                            let d1 = new Date(startDate); d1.setMonth(d1.getMonth() + 2);
-                            let d2 = new Date(startDate); d2.setMonth(d2.getMonth() + 4);
-                            let d3 = new Date(startDate); d3.setMonth(d3.getMonth() + 6);
-                            checkDates.push({ label: 'چک اول (۲ ماهه)', date: d1 });
-                            checkDates.push({ label: 'چک دوم (۴ ماهه)', date: d2 });
-                            checkDates.push({ label: 'چک سوم (۶ ماهه)', date: d3 });
-                        }
-
-                        // بررسی اینکه آیا چکی در 15 روز آینده سررسید می‌شود؟
-                        checkDates.forEach(chk => {
-                            let diffDays = Math.ceil((chk.date - today) / (1000 * 60 * 60 * 24));
-                            if (diffDays <= 15 && diffDays >= -5) { // تا 5 روز بعد از موعد هم آلارم میده
-                                let colorCls = diffDays < 0 ? 'critical' : 'upcoming';
-                                let dayText = diffDays < 0 ? 'موعد گذشته ❌' : (diffDays === 0 ? 'موعد امروز!' : diffDays + ' روز تا سررسید');
-                                let dateColor = diffDays <= 3 ? 'var(--danger)' : 'var(--warning)';
-
-                                instHtml += `
-                                    <div class="radar-item ${colorCls}">
-                                        <div class="r-info"><strong>${st.full_name}</strong><span>طرح: ${st.plan_type ? st.plan_type.substring(0,15) : '-'}</span></div>
-                                        <div class="r-date"><strong style="color:${dateColor};">${dayText}</strong><span>${chk.label} | ${formatter.format(chk.date)}</span></div>
-                                    </div>
-                                `;
-                            }
-                        });
+                    if (st.duration_months == 3) {
+                        let d1 = new Date(startDate); d1.setDate(d1.getDate() + 45);
+                        checkDates.push({ label: 'موعد قسط دوم', date: d1 });
+                    } else if (st.duration_months == 10) {
+                        let d1 = new Date(startDate); d1.setMonth(d1.getMonth() + 2);
+                        let d2 = new Date(startDate); d2.setMonth(d2.getMonth() + 4);
+                        let d3 = new Date(startDate); d3.setMonth(d3.getMonth() + 6);
+                        checkDates.push({ label: 'قسط اول (۲ ماهه)', date: d1 });
+                        checkDates.push({ label: 'قسط دوم (۴ ماهه)', date: d2 });
+                        checkDates.push({ label: 'قسط سوم (۶ ماهه)', date: d3 });
                     }
+
+                    checkDates.forEach(chk => {
+                        let diffDays = Math.ceil((chk.date - today) / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 15 && diffDays >= -5) { 
+                            let colorCls = diffDays < 0 ? 'critical' : 'upcoming';
+                            let dayText = diffDays < 0 ? 'گذشته ❌' : (diffDays === 0 ? 'موعد امروز!' : diffDays + ' روز مانده');
+                            let dateColor = diffDays <= 3 ? 'var(--danger)' : 'var(--warning)';
+
+                            instHtml += `
+                                <div class="radar-item ${colorCls}">
+                                    <div class="r-info"><strong>${st.full_name}</strong><span>منتظر واریز فیش</span></div>
+                                    <div class="r-date"><strong style="color:${dateColor};">${dayText}</strong><span>${chk.label} | ${formatter.format(chk.date)}</span></div>
+                                </div>
+                            `;
+                        }
+                    });
                 }
             });
 
-            document.getElementById('churnList').innerHTML = churnHtml || '<div style="color:var(--success); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">🎉 در حال حاضر هیچ قراردادی رو به اتمام نیست.</div>';
-            
-            document.getElementById('installmentRadarList').innerHTML = instHtml || '<div style="color:var(--text-muted); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">در ۱۵ روز آینده موعد هیچ چکی فرا نمی‌رسد.</div>';
+            document.getElementById('churnList').innerHTML = churnHtml || '<div style="color:var(--success); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">🎉 هیچ قراردادی رو به اتمام نیست.</div>';
+            document.getElementById('installmentRadarList').innerHTML = instHtml || '<div style="color:var(--text-muted); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">در ۱۵ روز آینده موعد هیچ قسطی فرا نمی‌رسد.</div>';
         }
     </script>
 </body>
