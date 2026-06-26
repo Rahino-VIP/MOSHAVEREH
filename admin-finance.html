@@ -21,7 +21,7 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 👑 سایدبار (منوی کناری داشبورد) */
+        /* 👑 سایدبار */
         .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 100; flex-shrink: 0; }
         .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
         .brand span { color: var(--accent); }
@@ -29,14 +29,12 @@
         .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
         .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
         .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
-        
         .logout-btn { margin-top: auto; color: var(--danger); border-top: 1px solid var(--border-color); padding-top: 20px; }
         .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
         /* 🖥️ محتوای اصلی */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         
-        /* هدر تب‌ها */
         .top-nav { background: var(--surface-dark); border-bottom: 1px solid var(--border-color); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .nav-title { font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
         .tabs { display: flex; background: var(--bg-dark); padding: 5px; border-radius: 12px; border: 1px solid var(--border-color); }
@@ -49,11 +47,9 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* =======================================
-           🗂️ تب ۱: کانبان برد و کالبدشکافی
+           🗂️ کانبان برد
            ======================================= */
         .split-view { display: flex; height: 100%; gap: 25px; align-items: flex-start; }
-        
-        /* ستون‌های کانبان */
         .kanban-board { flex: 1; display: flex; gap: 20px; height: 100%; overflow-x: auto; padding-bottom: 10px; }
         .kanban-col { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-color); border-radius: 16px; min-width: 300px; flex: 1; display: flex; flex-direction: column; max-height: 100%; }
         .kanban-header { padding: 18px 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: 16px 16px 0 0; }
@@ -69,12 +65,15 @@
         .k-card.pending { border-right-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
         .k-card.active { border-right-color: var(--success); }
         
-        .k-name { font-size: 15px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); }
-        .k-detail { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
-        .k-duration { position: absolute; top: 15px; left: 15px; font-size: 11px; background: var(--surface-light); padding: 3px 8px; border-radius: 8px; font-weight: bold; color: var(--accent); border: 1px solid var(--border-color); }
+        .k-tag { position: absolute; top: 15px; left: 15px; font-size: 10px; padding: 3px 8px; border-radius: 8px; font-weight: bold; border: 1px solid var(--border-color); }
+        .k-tag.inv { background: rgba(59, 130, 246, 0.1); color: var(--accent); border-color: var(--accent); }
+        .k-tag.inst { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
+        
+        .k-name { font-size: 15px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); margin-top: 5px; }
+        .k-detail { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
 
-        /* پنل کالبدشکافی (سمت چپ) */
-        .details-panel { width: 420px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; display: none; height: 100%; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
+        /* پنل کالبدشکافی */
+        .details-panel { width: 420px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; flex-direction: column; overflow: hidden; display: none; height: 100%; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
         .dp-header { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; color: var(--accent); }
         .dp-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.8; }
         .dp-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 12px 0; }
@@ -90,38 +89,16 @@
         .btn-red { background: var(--danger); } .btn-red:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
 
         /* =======================================
-           🗺️ تب ۲: نقشه صندلی‌ها و آمار
+           🗺️ آمار و رادارها
            ======================================= */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%; }
-        .panel-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; overflow-y: auto; }
-        
-        .seat-map-container { display: flex; flex-direction: column; gap: 40px; margin-top: 10px; }
-        .seat-section-title { font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
-        .seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 12px; }
-        .seat { width: 45px; height: 45px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: 900; color: white; transition: 0.3s; }
-        .seat.empty { background: rgba(16, 185, 129, 0.1); border: 2px solid var(--success); color: var(--success); }
-        .seat.taken { background: rgba(239, 68, 68, 0.2); border: 2px solid var(--danger); color: var(--danger); box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.5); }
-
-        .promo-list { list-style: none; margin-top: 20px; }
-        .promo-list li { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); transition: 0.2s; }
-        .promo-list li:hover { border-color: var(--gold); background: rgba(245, 158, 11, 0.05); }
-        .promo-code { font-weight: 900; color: var(--gold); font-size: 16px; letter-spacing: 1px; }
-
-        /* =======================================
-           ⏳ تب ۳: رادار اقساط و هشدار ریزش
-           ======================================= */
-        .radar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%; }
-        
-        .radar-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; overflow-y: auto; position: relative; }
+        .stats-grid, .radar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%; }
+        .panel-box, .radar-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; overflow-y: auto; }
         .radar-box.danger { border-top: 4px solid var(--danger); }
         .radar-box.warning { border-top: 4px solid var(--warning); }
         
         .radar-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
         .radar-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
-        
-        .radar-list { display: flex; flex-direction: column; gap: 12px; }
-        .radar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 16px 20px; border-radius: 12px; border: 1px solid var(--border-color); transition: 0.2s; }
-        .radar-item:hover { background: rgba(255,255,255,0.02); }
+        .radar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 16px 20px; border-radius: 12px; border: 1px solid var(--border-color); transition: 0.2s; margin-bottom: 12px; }
         .radar-item.critical { border-right: 4px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
         .radar-item.upcoming { border-right: 4px solid var(--warning); }
         
@@ -145,44 +122,37 @@
 
     <div class="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
-        
         <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
         <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
         <a href="#" class="nav-item active"><span>💳</span> مدیریت مالی و پذیرش</a>
         <a href="quarantine.html" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
-        <a href="exam-surgery.html" class="nav-item"><span>🔬</span> جراحی کارنامه (AI)</a>
-        <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
-        
         <a href="#" class="nav-item logout-btn" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
 
     <div class="main-content">
-        
         <div class="top-nav">
-            <div class="nav-title">🛡️ مانیتورینگ مالی و عملیاتی</div>
+            <div class="nav-title">🛡️ مانیتورینگ مالی و عملیاتی (ERP)</div>
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('tab-kanban', this)">🗂️ بورد پذیرش (Kanban)</button>
-                <button class="tab-btn" onclick="switchTab('tab-seats', this)">🗺️ نقشه سالن و آمارها</button>
                 <button class="tab-btn" onclick="switchTab('tab-radar', this)">⏳ رادار مالی و ریزش</button>
             </div>
         </div>
 
         <div class="tab-container">
-            
+            <!-- تب ۱: کانبان -->
             <div id="tab-kanban" class="tab-content active">
                 <div class="split-view">
-                    
                     <div class="kanban-board">
                         <div class="kanban-col">
                             <div class="kanban-header">
-                                <span style="color: var(--text-main);">📝 لیدهای خام (ناقص)</span>
+                                <span style="color: var(--text-main);">📝 لیدهای خام (بدون فاکتور)</span>
                                 <span class="k-badge" id="cntDraft">0</span>
                             </div>
                             <div class="kanban-cards" id="colDraft"></div>
                         </div>
                         <div class="kanban-col">
                             <div class="kanban-header">
-                                <span style="color: var(--warning);">⏳ در انتظار تایید فیش</span>
+                                <span style="color: var(--warning);">⏳ در انتظار تایید مالی</span>
                                 <span class="k-badge" id="cntPending">0</span>
                             </div>
                             <div class="kanban-cards" id="colPending"></div>
@@ -198,92 +168,46 @@
 
                     <div class="details-panel" id="detailsPanel">
                         <div class="dp-header">
-                            <span>🔍 پرونده و فاکتور</span>
+                            <span id="dpTitle">🔍 پرونده و فاکتور</span>
                             <button style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;" onclick="closeDetails()">✖</button>
                         </div>
-                        <div class="dp-body" id="dpBody">
-                            </div>
-                        <div class="dp-actions" id="dpActions" style="display: none;">
-                            <button class="btn btn-green" onclick="approveStudent()">✅ تایید فیش و فعال‌سازی</button>
-                            <button class="btn btn-red" onclick="rejectStudent()">❌ رد کردن</button>
-                        </div>
+                        <div class="dp-body" id="dpBody"></div>
+                        <div class="dp-actions" id="dpActions" style="display: none;"></div>
                     </div>
-
                 </div>
             </div>
 
-            <div id="tab-seats" class="tab-content">
-                <div class="stats-grid">
-                    
-                    <div class="panel-box">
-                        <h3 style="color: var(--accent); margin-bottom: 25px; font-size: 18px;">🗺️ وضعیت زنده صندلی‌های سالن</h3>
-                        
-                        <div class="seat-map-container">
-                            <div>
-                                <div class="seat-section-title">
-                                    <span style="color: var(--gold);">✨ بخش CIP (ظرفیت: ۴)</span>
-                                    <span style="font-size: 12px; color: var(--text-muted);">پر شده: <b id="cipCount" style="color:var(--text-main)">0</b></span>
-                                </div>
-                                <div class="seat-grid" id="cipSeats"></div>
-                            </div>
-                            <div>
-                                <div class="seat-section-title">
-                                    <span style="color: var(--success);">🌟 بخش VIP (ظرفیت: ۲۲)</span>
-                                    <span style="font-size: 12px; color: var(--text-muted);">پر شده: <b id="vipCount" style="color:var(--text-main)">0</b></span>
-                                </div>
-                                <div class="seat-grid" id="vipSeats"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="panel-box">
-                        <h3 style="color: var(--success); margin-bottom: 5px; font-size: 18px;">🎟️ مانیتورینگ کدهای تخفیف (ROI)</h3>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">تحلیل عملکرد کمپین‌های تبلیغاتی و محاسبه درآمد تولید شده:</p>
-                        <ul class="promo-list" id="promoList">
-                            </ul>
-                    </div>
-
-                </div>
-            </div>
-
+            <!-- تب ۲: رادار -->
             <div id="tab-radar" class="tab-content">
                 <div class="radar-grid">
-                    
                     <div class="radar-box warning">
-                        <div class="radar-title" style="color: var(--warning);">💳 رادار اقساط و چک‌های صیادی</div>
-                        <div class="radar-desc">دانش‌آموزانی که در ۱۵ روز آینده موعد پاس شدن چک/قسط آن‌ها فرا می‌رسد.</div>
-                        <div class="radar-list" id="installmentRadarList">
-                            </div>
+                        <div class="radar-title" style="color: var(--warning);">💳 رادار اقساط (منتظر آپلود فیش)</div>
+                        <div class="radar-desc">اقساطی که موعد آن‌ها نزدیک است و دانش‌آموز هنوز فیشی آپلود نکرده است.</div>
+                        <div class="radar-list" id="installmentRadarList"></div>
                     </div>
 
                     <div class="radar-box danger">
                         <div class="radar-title" style="color: var(--danger);">🔥 هشدار ریزش (تمدیدهای ۵ روز آینده)</div>
-                        <div class="radar-desc">دانش‌آموزانی که قراردادشان رو به اتمام است. نیازمند تماس فوری منشی جهت تمدید.</div>
-                        <div class="radar-list" id="churnList">
-                            </div>
+                        <div class="radar-desc">قراردادهایی (اشتراک‌ها) که در حال اتمام هستند.</div>
+                        <div class="radar-list" id="churnList"></div>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات اتصال سوپابیس
+        // 🔗 اتصال به دیتابیس (معماری ۷ جدولی جدید)
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let allStudents = [];
-        let allPromos = [];
-        let currentStudent = null;
+        let db = { students: [], invoices: [], installments: [], subscriptions: [] };
+        let currentSelection = { type: null, data: null }; // برای مدیریت اینکه روی فاکتور کلیک شده یا قسط
 
-        window.onload = async function() {
-            await loadData();
-        };
+        window.onload = async function() { await loadData(); };
 
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -292,279 +216,268 @@
             btnElement.classList.add('active');
         }
 
-        async function handleLogout() {
-            if(confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
-                window.location.replace('index.html');
-            }
-        }
+        async function handleLogout() { if(confirm('خروج از سیستم؟')) window.location.replace('index.html'); }
 
         // ==========================================
-        // 📥 دریافت و پردازش داده‌ها
+        // 📥 دریافت داده‌های یکپارچه از جداول جدید
         // ==========================================
         async function loadData() {
             try {
-                const [stRes, prRes] = await Promise.all([
+                // استفاده از Joins برای استخراج نام دانش‌آموز از جدول students همراه با فاکتورها
+                const [stRes, invRes, instRes, subRes] = await Promise.all([
                     supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('promo_codes').select('*')
+                    supabaseClient.from('invoices').select('*, students(full_name, phone_number, invited_by)').order('created_at', { ascending: false }),
+                    supabaseClient.from('installments').select('*, students(full_name, phone_number)').order('due_date', { ascending: true }),
+                    supabaseClient.from('subscriptions').select('*, students(full_name, phone_number)').order('end_date', { ascending: true })
                 ]);
 
-                allStudents = stRes.data || [];
-                allPromos = prRes.data || [];
+                db.students = stRes.data || [];
+                db.invoices = invRes.data || [];
+                db.installments = instRes.data || [];
+                db.subscriptions = subRes.data || [];
 
                 renderKanban();
-                renderSeatMap();
-                renderPromoStats();
-                renderRadars(); // رندر همزمان رادار ریزش و اقساط
+                renderRadars();
 
                 document.getElementById('mainLoader').style.opacity = '0';
                 setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 400);
-            } catch (err) {
-                alert("خطا در دریافت اطلاعات دیتابیس: " + err.message);
-            }
+            } catch (err) { alert("خطا در دریافت اطلاعات هسته: " + err.message); }
         }
 
+        function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
         // ==========================================
-        // 🗂️ رندر کانبان برد (با نمایش مدت قرارداد)
+        // 🗂️ رندر کانبان برد (ترکیب فاکتورها و اقساط)
         // ==========================================
         function renderKanban() {
             let draftHtml = '', pendingHtml = '', activeHtml = '';
             let dCnt = 0, pCnt = 0, aCnt = 0;
 
-            allStudents.forEach(st => {
-                let durationText = st.duration_months ? (st.duration_months == 10 ? 'تا کنکور' : `${st.duration_months} ماهه`) : 'نامشخص';
-                
-                // 🌟 ساخت اسم طرح از روی ستون‌های تفکیک شده
-                let planParts = [];
-                if (st.pansion_tier && st.pansion_tier !== 'none') planParts.push(`پانسیون ${st.pansion_tier}`);
-                if (st.consult_tier && st.consult_tier !== 'none') planParts.push(`مشاوره ${st.consult_tier}`);
-                let planText = planParts.length > 0 ? planParts.join(' + ') : (st.plan_type || 'ثبت نشده');
+            // ۱. لیدهای خام (دانش‌آموزانی که فاکتوری ندارند یا draft هستند)
+            db.students.filter(s => s.status === 'draft').forEach(st => {
+                draftHtml += `
+                    <div class="k-card draft" onclick="openDetails('student', '${st.national_id}')">
+                        <div class="k-name">${st.full_name || 'کاربر'}</div>
+                        <div class="k-detail"><span>پایه:</span> <b>${st.grade || '-'}</b></div>
+                        <div class="k-detail"><span>وضعیت:</span> <b>منتظر تکمیل فرم خرید</b></div>
+                    </div>`;
+                dCnt++;
+            });
 
-                let card = `
-                    <div class="k-card ${st.status}" onclick="openDetails('${st.national_id}')">
-                        <div class="k-duration">${durationText}</div>
-                        <div class="k-name">${st.full_name || 'کاربر ناشناس'}</div>
-                        <div class="k-detail"><span>پایه:</span> <b style="color:var(--text-main)">${st.grade || '-'}</b></div>
-                        <div class="k-detail"><span>طرح:</span> <b style="color:var(--accent)">${planText.substring(0, 30)}</b></div>
-                    </div>
-                `;
-                
-                if(st.status === 'draft') { draftHtml += card; dCnt++; }
-                else if(st.status === 'pending') { pendingHtml += card; pCnt++; }
-                else if(st.status === 'active') { activeHtml += card; aCnt++; }
+            // ۲. در انتظار تایید (شامل فاکتورهای جدید + فیش‌های اقساطی آپلود شده)
+            db.invoices.filter(i => i.status === 'pending').forEach(inv => {
+                pendingHtml += `
+                    <div class="k-card pending" onclick="openDetails('invoice', '${inv.id}')">
+                        <div class="k-tag inv">🧾 فاکتور جدید</div>
+                        <div class="k-name">${inv.students ? inv.students.full_name : 'ناشناس'}</div>
+                        <div class="k-detail"><span>طرح:</span> <b>${inv.invoice_type || '-'}</b></div>
+                        <div class="k-detail"><span>مبلغ واریزی:</span> <b style="color:var(--success)">${formatMoney(inv.paid_upfront)} تومان</b></div>
+                    </div>`;
+                pCnt++;
+            });
+
+            db.installments.filter(i => i.status === 'pending_approval').forEach(inst => {
+                pendingHtml += `
+                    <div class="k-card pending" style="border-right-color: var(--accent);" onclick="openDetails('installment', '${inst.id}')">
+                        <div class="k-tag inst">💳 فیش قسط #${inst.installment_number}</div>
+                        <div class="k-name">${inst.students ? inst.students.full_name : 'ناشناس'}</div>
+                        <div class="k-detail"><span>سررسید:</span> <b>${inst.due_date}</b></div>
+                        <div class="k-detail"><span>مبلغ قسط:</span> <b style="color:var(--accent)">${formatMoney(inst.amount)} تومان</b></div>
+                    </div>`;
+                pCnt++;
+            });
+
+            // ۳. دانش‌آموزان فعال
+            db.students.filter(s => s.status === 'active').forEach(st => {
+                activeHtml += `
+                    <div class="k-card active" onclick="openDetails('student', '${st.national_id}')">
+                        <div class="k-name">${st.full_name || 'کاربر'}</div>
+                        <div class="k-detail"><span>موبایل:</span> <b>${st.phone_number || '-'}</b></div>
+                        <div class="k-detail"><span>کد ملی:</span> <b>${st.national_id}</b></div>
+                    </div>`;
+                aCnt++;
             });
 
             document.getElementById('colDraft').innerHTML = draftHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             document.getElementById('colPending').innerHTML = pendingHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             document.getElementById('colActive').innerHTML = activeHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             
-            document.getElementById('cntDraft').innerText = dCnt;
-            document.getElementById('cntPending').innerText = pCnt;
-            document.getElementById('cntActive').innerText = aCnt;
+            document.getElementById('cntDraft').innerText = dCnt; document.getElementById('cntPending').innerText = pCnt; document.getElementById('cntActive').innerText = aCnt;
         }
+
         // ==========================================
-        // 🔬 پنل کالبدشکافی (Split View)
+        // 🔬 پنل کالبدشکافی داینامیک
         // ==========================================
-        function openDetails(nid) {
-            currentStudent = allStudents.find(s => s.national_id === nid);
-            const st = currentStudent;
+        function openDetails(type, id) {
+            currentSelection = { type, id };
+            const dpBody = document.getElementById('dpBody');
+            const dpActions = document.getElementById('dpActions');
+            document.getElementById('dpTitle').innerText = type === 'invoice' ? '🧾 بررسی فاکتور اصلی' : (type === 'installment' ? '💳 بررسی فیش قسط' : '👤 پرونده دانش‌آموز');
             
-            let imgHtml = '';
-            if(st.receipt_base64) {
-                let src = st.receipt_base64.startsWith('data:') ? st.receipt_base64 : `data:${st.file_type || 'image/jpeg'};base64,${st.receipt_base64}`;
-                imgHtml = `
-                    <div class="dp-receipt-box">
-                        <span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی:</span>
-                        <img src="${src}" class="dp-receipt" onclick="window.open('${src}')">
-                    </div>`;
+            let html = '';
+            
+            if (type === 'invoice') {
+                let inv = db.invoices.find(i => i.id === id);
+                let st = inv.students || {};
+                
+                let imgHtml = inv.receipt_base64 ? `<div class="dp-receipt-box"><span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش پیش‌پرداخت:</span><img src="data:${inv.mime_type || 'image/jpeg'};base64,${inv.receipt_base64}" class="dp-receipt" onclick="window.open(this.src)"></div>` : '';
+                
+                html = `
+                    <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
+                    <div class="dp-row"><span>موبایل تماس:</span><span>${st.phone_number || '-'}</span></div>
+                    <div class="dp-row" style="background:rgba(59,130,246,0.1); padding:10px; border-radius:8px; margin-top:10px;">
+                        <span style="color:var(--accent);">مبلغ کل فاکتور:</span><span style="color:var(--accent); font-size:15px;">${formatMoney(inv.final_amount)} تومان</span>
+                    </div>
+                    <div class="dp-row"><span>مبلغ واریزی (پیش‌پرداخت):</span><span style="color:var(--success); font-size:14px;">${formatMoney(inv.paid_upfront)} تومان</span></div>
+                    <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border-color);">
+                        <div style="color:var(--success); font-weight:bold; margin-bottom:10px; font-size:13px;">📝 متن تعهدات و فاکتور:</div>
+                        <div style="white-space:pre-wrap; font-family:monospace; color:var(--text-muted); font-size:11px; line-height:2;">${inv.invoice_details || 'ثبت نشده'}</div>
+                    </div>
+                    ${imgHtml}
+                `;
+                
+                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInvoice()">✅ تایید فاکتور و فعال‌سازی</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
+                dpActions.style.display = 'flex';
+            } 
+            else if (type === 'installment') {
+                let inst = db.installments.find(i => i.id === id);
+                let st = inst.students || {};
+                
+                let imgHtml = inst.receipt_base64 ? `<div class="dp-receipt-box"><span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی قسط:</span><img src="data:${inst.mime_type || 'image/jpeg'};base64,${inst.receipt_base64}" class="dp-receipt" onclick="window.open(this.src)"></div>` : '';
+                
+                html = `
+                    <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
+                    <div class="dp-row"><span>قسط شماره:</span><span>${inst.installment_number}</span></div>
+                    <div class="dp-row"><span>تاریخ سررسید:</span><span>${inst.due_date}</span></div>
+                    <div class="dp-row" style="background:rgba(245,158,11,0.1); padding:10px; border-radius:8px; margin-top:10px;">
+                        <span style="color:var(--warning);">مبلغ قسط:</span><span style="color:var(--warning); font-size:15px;">${formatMoney(inst.amount)} تومان</span>
+                    </div>
+                    ${imgHtml}
+                `;
+                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInstallment()">✅ تایید وصول قسط</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن فیش</button>`;
+                dpActions.style.display = 'flex';
+            }
+            else {
+                // نمایش پرونده خام یا فعال
+                let st = db.students.find(s => s.national_id === id);
+                html = `
+                    <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
+                    <div class="dp-row"><span>کد ملی:</span><span>${st.national_id}</span></div>
+                    <div class="dp-row"><span>موبایل:</span><span>${st.phone_number}</span></div>
+                    <div class="dp-row"><span>پایه تحصیلی:</span><span>${st.grade} - ${st.major}</span></div>
+                    <div class="dp-row"><span>شهر:</span><span>${st.province} - ${st.city}</span></div>
+                    <div class="dp-row"><span>کیف پول:</span><span style="color:var(--success)">${formatMoney(st.wallet_balance || 0)} تومان</span></div>
+                `;
+                dpActions.style.display = 'none';
             }
 
-            let durationText = st.duration_months ? (st.duration_months == 10 ? 'تا کنکور (۱۰ ماهه)' : `${st.duration_months} ماهه`) : 'نامشخص';
-            let planParts = [];
-            if (st.pansion_tier && st.pansion_tier !== 'none') planParts.push(`پانسیون ${st.pansion_tier}`);
-            if (st.consult_tier && st.consult_tier !== 'none') planParts.push(`مشاوره ${st.consult_tier}`);
-            let planText = planParts.length > 0 ? planParts.join(' و ') : (st.plan_type || '-');
-
-            document.getElementById('dpBody').innerHTML = `
-                <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
-                <div class="dp-row"><span>کد ملی:</span><span>${st.national_id}</span></div>
-                <div class="dp-row"><span>موبایل تماس:</span><span>${st.phone_number || '-'}</span></div>
-                <div class="dp-row" style="background:rgba(59,130,246,0.1); padding:10px; border-radius:8px; margin-top:10px;">
-                    <span style="color:var(--accent);">طرح انتخابی:</span>
-                    <span style="color:var(--accent); font-size:14px; font-weight:bold;">${planText} (${durationText})</span>
-                </div>
-                <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border-color);">
-                    <div style="color:var(--success); font-weight:bold; margin-bottom:10px; font-size:14px;">🧾 متن فاکتور و تعهدات:</div>
-                    <div style="white-space:pre-wrap; font-family:monospace; color:var(--text-muted); font-size:12px; line-height:2;">${st.invoice_details || 'فاکتور ثبت نشده است.'}</div>
-                </div>
-                ${imgHtml}
-            `;
-
-            document.getElementById('dpActions').style.display = st.status === 'pending' ? 'flex' : 'none';
+            dpBody.innerHTML = html;
             document.getElementById('detailsPanel').style.display = 'flex';
         }
-        
-        function closeDetails() {
-            document.getElementById('detailsPanel').style.display = 'none';
-        }
+        function closeDetails() { document.getElementById('detailsPanel').style.display = 'none'; }
 
-        // تایید هوشمند + ثبت پایان قرارداد
-        async function approveStudent() {
-            if(!confirm('آیا از تایید فیش و فعال‌سازی این قرارداد اطمینان دارید؟')) return;
+        // ==========================================
+        // ⚙️ توابع هسته پردازش تایید (ERP Engine)
+        // ==========================================
+        
+        async function approveInvoice() {
+            if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
+            let inv = db.invoices.find(i => i.id === currentSelection.id);
             
             try {
-                // ۱. محاسبه تاریخ‌های مجزا برای پانسیون و مشاوره
-                let updatePayload = { 
-                    status: 'active', 
-                    receipt_base64: null // 🧹 پاکسازی دیتابیس از عکس
-                };
+                // ۱. آپدیت فاکتور (تایید و پاکسازی عکس)
+                await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
                 
-                let dur = parseInt(currentStudent.duration_months || 1);
-                
-                if (currentStudent.pansion_tier && currentStudent.pansion_tier !== 'none') {
-                    let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + dur);
-                    updatePayload.pansion_end_date = pEnd.toISOString().split('T')[0];
-                }
-                
-                if (currentStudent.consult_tier && currentStudent.consult_tier !== 'none') {
-                    let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + dur);
-                    updatePayload.consult_end_date = cEnd.toISOString().split('T')[0];
-                }
+                // ۲. اکتیو کردن دانش‌آموز در جدول اصلی
+                await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
 
-                // ۲. شارژ کیف پول شخص معرف (اگر وجود داشت) 🎁
-                if (currentStudent.referrer_id) {
-                    let { data: refUser } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', currentStudent.referrer_id).single();
-                    if (refUser) {
-                        let newBal = (refUser.wallet_balance || 0) + 200000;
-                        await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', currentStudent.referrer_id);
+                // ۳. سیستم پاداش معرف (Referral System)
+                if (inv.students && inv.students.invited_by) {
+                    let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
+                    if (refData) {
+                        let newBal = (refData.wallet_balance || 0) + 100000;
+                        await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('referral_code', inv.students.invited_by);
                     }
                 }
 
-                // ۳. آپدیت نهایی دانش‌آموز فعلی
-                await supabaseClient.from('students').update(updatePayload).eq('national_id', currentStudent.national_id);
+                // ۴. ایجاد اشتراک در جدول subscriptions برای رادار ریزش
+                // محاسبه حدودی زمان پایان بر اساس متن فاکتور (چون فعلاً ماژول انتخاب سرویس مجزا نداریم)
+                let durationMonths = inv.invoice_type.includes('3 ماهه') ? 3 : (inv.invoice_type.includes('10 ماهه') ? 10 : 1);
+                let endDate = new Date(); endDate.setMonth(endDate.getMonth() + durationMonths);
                 
-                alert('✅ فیش تایید شد!\nتاریخ‌ها به صورت مجزا تنظیم شد و قرارداد فعال گردید.');
-                closeDetails();
-                loadData(); 
-            } catch(e) { alert("خطا در ارتباط با سرور: " + e.message); }
+                await supabaseClient.from('subscriptions').insert({
+                    student_nid: inv.student_nid,
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: endDate.toISOString().split('T')[0],
+                    status: 'active'
+                });
+
+                alert('✅ فاکتور با موفقیت تایید شد.\nپرونده دانش‌آموز فعال و اشتراک وی در سیستم ثبت گردید.');
+                closeDetails(); loadData();
+            } catch(e) { alert("خطا در هسته: " + e.message); }
         }
 
-        async function rejectStudent() {
-            if(!confirm('آیا قصد رد کردن این فیش را دارید؟')) return;
+        async function approveInstallment() {
+            if(!confirm('آیا وصول این قسط را تایید می‌کنید؟')) return;
             try {
-                await supabaseClient.from('students').update({ status: 'rejected', receipt_base64: null }).eq('national_id', currentStudent.national_id);
+                await supabaseClient.from('installments').update({ status: 'paid', receipt_base64: null }).eq('id', currentSelection.id);
+                alert('✅ قسط با موفقیت در دفتر کل ثبت شد.');
+                closeDetails(); loadData();
+            } catch(e) { alert(e.message); }
+        }
+
+        async function rejectItem() {
+            if(!confirm('آیا قصد رد کردن این مورد و حذف فیش را دارید؟')) return;
+            try {
+                if(currentSelection.type === 'invoice') await supabaseClient.from('invoices').update({ status: 'rejected', receipt_base64: null }).eq('id', currentSelection.id);
+                else if(currentSelection.type === 'installment') await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', currentSelection.id);
                 closeDetails(); loadData();
             } catch(e) { alert(e.message); }
         }
 
         // ==========================================
-        // 🗺️ نقشه سینمایی صندلی‌ها
-        // ==========================================
-        function renderSeatMap() {
-            let cipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.toLowerCase().includes('cip')).length;
-            let vipActive = allStudents.filter(s => s.status === 'active' && s.plan_type && s.plan_type.toLowerCase().includes('vip')).length;
-
-            document.getElementById('cipCount').innerText = cipActive;
-            document.getElementById('vipCount').innerText = vipActive;
-
-            let cipHtml = '';
-            for(let i=1; i<=4; i++) {
-                let cls = i <= cipActive ? 'taken' : 'empty';
-                cipHtml += `<div class="seat ${cls}">${i}</div>`;
-            }
-            document.getElementById('cipSeats').innerHTML = cipHtml;
-
-            let vipHtml = '';
-            for(let i=1; i<=22; i++) {
-                let cls = i <= vipActive ? 'taken' : 'empty';
-                vipHtml += `<div class="seat ${cls}">${i}</div>`;
-            }
-            document.getElementById('vipSeats').innerHTML = vipHtml;
-        }
-
-        // ==========================================
-        // 🎟️ آمار کدهای تخفیف (ROI)
-        // ==========================================
-        function renderPromoStats() {
-            let html = '';
-            allPromos.forEach(p => {
-                let moneyFormatted = Math.round(p.total_revenue || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                html += `
-                    <li>
-                        <span class="promo-code">${p.code} <span style="font-size:11px; color:var(--text-muted);">(${p.discount_percent}%)</span></span>
-                        <div style="text-align:left;">
-                            <div style="font-size:12px; color:var(--text-muted);">دفعات استفاده: <b style="color:var(--text-main);">${p.usage_count || 0} بار</b></div>
-                            <div style="color:var(--success); font-size:13px; font-weight:bold; margin-top:3px;">درآمد: ${moneyFormatted} تومان</div>
-                        </div>
-                    </li>
-                `;
-            });
-            document.getElementById('promoList').innerHTML = html || '<div style="color:gray; padding:20px; text-align:center;">کد تخفیفی تعریف نشده است.</div>';
-        }
-
-        // ==========================================
-        // ⏳ موتور رادارهای دوگانه (ریزش + اقساط)
+        // ⏳ موتور رادارهای دوگانه (کاملا متصل به جداول جدید)
         // ==========================================
         function renderRadars() {
             let today = new Date();
-            let churnHtml = ''; let instHtml = '';
             const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
-
-            allStudents.filter(s => s.status === 'active').forEach(st => {
+            
+            // ۱. رادار اقساط (از جدول installments)
+            let instHtml = '';
+            db.installments.filter(i => i.status === 'pending_upload').forEach(inst => {
+                let dueDate = new Date(inst.due_date);
+                let diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
                 
-                // --- ۱. رادار ریزش (بررسی تاریخ پانسیون و مشاوره مجزا) ---
-                let checkChurn = (dateStr, typeName) => {
-                    if (!dateStr) return;
-                    let diff = Math.ceil((new Date(dateStr) - today) / (1000 * 60 * 60 * 24));
-                    if (diff <= 5 && diff >= 0) {
-                        churnHtml += `
-                            <div class="radar-item critical">
-                                <div class="r-info"><strong>${st.full_name}</strong><span>موبایل: ${st.phone_number}</span></div>
-                                <div class="r-date"><strong style="color:var(--danger);">${diff === 0 ? 'امروز!' : diff + ' روز تا پایان'}</strong><span>اتمام ${typeName}</span></div>
-                            </div>
-                        `;
-                    }
-                };
-                
-                checkChurn(st.pansion_end_date, 'پانسیون');
-                checkChurn(st.consult_end_date, 'مشاوره');
+                if (diffDays <= 15 && diffDays >= -10) { // تا 10 روز تاخیر هم نشون میده
+                    let colorCls = diffDays < 0 ? 'critical' : 'upcoming';
+                    let dayText = diffDays < 0 ? 'گذشته ❌' : (diffDays === 0 ? 'موعد امروز!' : diffDays + ' روز مانده');
+                    let dateColor = diffDays <= 3 ? 'var(--danger)' : 'var(--warning)';
 
-                // --- ۲. رادار اقساط (موعد آپلود فیش) ---
-                if (st.start_date && st.duration_months > 1 && st.invoice_details && st.invoice_details.includes('اقساط')) { 
-                    let startDate = new Date(st.start_date);
-                    let checkDates = [];
-
-                    if (st.duration_months == 3) {
-                        let d1 = new Date(startDate); d1.setDate(d1.getDate() + 45);
-                        checkDates.push({ label: 'موعد قسط دوم', date: d1 });
-                    } else if (st.duration_months == 10) {
-                        let d1 = new Date(startDate); d1.setMonth(d1.getMonth() + 2);
-                        let d2 = new Date(startDate); d2.setMonth(d2.getMonth() + 4);
-                        let d3 = new Date(startDate); d3.setMonth(d3.getMonth() + 6);
-                        checkDates.push({ label: 'قسط اول (۲ ماهه)', date: d1 });
-                        checkDates.push({ label: 'قسط دوم (۴ ماهه)', date: d2 });
-                        checkDates.push({ label: 'قسط سوم (۶ ماهه)', date: d3 });
-                    }
-
-                    checkDates.forEach(chk => {
-                        let diffDays = Math.ceil((chk.date - today) / (1000 * 60 * 60 * 24));
-                        if (diffDays <= 15 && diffDays >= -5) { 
-                            let colorCls = diffDays < 0 ? 'critical' : 'upcoming';
-                            let dayText = diffDays < 0 ? 'گذشته ❌' : (diffDays === 0 ? 'موعد امروز!' : diffDays + ' روز مانده');
-                            let dateColor = diffDays <= 3 ? 'var(--danger)' : 'var(--warning)';
-
-                            instHtml += `
-                                <div class="radar-item ${colorCls}">
-                                    <div class="r-info"><strong>${st.full_name}</strong><span>منتظر واریز فیش</span></div>
-                                    <div class="r-date"><strong style="color:${dateColor};">${dayText}</strong><span>${chk.label} | ${formatter.format(chk.date)}</span></div>
-                                </div>
-                            `;
-                        }
-                    });
+                    instHtml += `
+                        <div class="radar-item ${colorCls}">
+                            <div class="r-info"><strong>${inst.students ? inst.students.full_name : 'ناشناس'}</strong><span>مبلغ: ${formatMoney(inst.amount)} تومان</span></div>
+                            <div class="r-date"><strong style="color:${dateColor};">${dayText}</strong><span>قسط #${inst.installment_number} | ${formatter.format(dueDate)}</span></div>
+                        </div>`;
                 }
             });
 
-            document.getElementById('churnList').innerHTML = churnHtml || '<div style="color:var(--success); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">🎉 هیچ قراردادی رو به اتمام نیست.</div>';
+            // ۲. رادار ریزش (از جدول subscriptions)
+            let churnHtml = '';
+            db.subscriptions.filter(s => s.status === 'active').forEach(sub => {
+                let endDate = new Date(sub.end_date);
+                let diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays <= 5 && diffDays >= 0) {
+                    churnHtml += `
+                        <div class="radar-item critical">
+                            <div class="r-info"><strong>${sub.students ? sub.students.full_name : 'ناشناس'}</strong><span>موبایل: ${sub.students ? sub.students.phone_number : '-'}</span></div>
+                            <div class="r-date"><strong style="color:var(--danger);">${diffDays === 0 ? 'امروز!' : diffDays + ' روز تا پایان'}</strong><span>اتمام قرارداد</span></div>
+                        </div>`;
+                }
+            });
+
             document.getElementById('installmentRadarList').innerHTML = instHtml || '<div style="color:var(--text-muted); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">در ۱۵ روز آینده موعد هیچ قسطی فرا نمی‌رسد.</div>';
+            document.getElementById('churnList').innerHTML = churnHtml || '<div style="color:var(--success); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">🎉 در حال حاضر هیچ قراردادی رو به اتمام نیست.</div>';
         }
     </script>
 </body>
