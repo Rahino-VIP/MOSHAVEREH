@@ -204,7 +204,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let db = { students: [], invoices: [], installments: [], subscriptions: [] };
+        let db = { students: [], invoices: [], installments: [], subscriptions: [] , services: [] };
         let currentSelection = { type: null, data: null }; // برای مدیریت اینکه روی فاکتور کلیک شده یا قسط
 
         window.onload = async function() { await loadData(); };
@@ -235,6 +235,7 @@
                 db.students = stRes.data || [];
                 db.invoices = invRes.data || [];
                 db.installments = instRes.data || [];
+                db.services = srvRes.data || [];
                 db.subscriptions = subRes.data || [];
 
                 renderKanban();
@@ -395,6 +396,7 @@
 
                 // ۲. ثبت اشتراک و کسر از ظرفیت (برای پانسیون و مشاوره)
                 // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
+                // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
                 const updateCapacity = async (category, type, studentNid) => {
                     // اول رشته و پایه دانش‌آموز رو از دیتابیس درمیاریم
                     let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
@@ -403,8 +405,8 @@
                     let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
                     let stMajor = stData.major || 'all';
 
-                    // پیدا کردن دقیق ردیف سرویس در دیتابیس
-                    let service = dbData.services.find(s => 
+                    // پیدا کردن دقیق ردیف سرویس در دیتابیس (از db.services استفاده می‌کنیم)
+                    let service = db.services.find(s => 
                         s.category === category && s.type === type &&
                         (s.target_grade === stGrade || s.target_grade === 'all') &&
                         (s.target_major === stMajor || s.target_major === 'all')
