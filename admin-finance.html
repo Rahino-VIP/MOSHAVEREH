@@ -380,56 +380,63 @@
         // ⚙️ توابع هسته پردازش تایید (ERP Engine)
         // ==========================================
         
-        async function approveStudent() {
-            if(!confirm('آیا از تایید فیش و فعال‌سازی این قرارداد اطمینان دارید؟')) return;
+        async function approveInvoice() {
+            if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
+            
+            // پیدا کردن فاکتور انتخاب شده از لیست
+            let inv = db.invoices.find(i => i.id === currentSelection.id);
+            if (!inv) return alert("خطا: فاکتور یافت نشد!");
             
             try {
-                let dur = parseInt(currentStudent.duration_months || 1);
+                // ۱. آپدیت وضعیت فاکتور و پاک کردن عکس فیش برای سبکی دیتابیس
+                await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
+                
                 let todayStr = new Date().toISOString().split('T')[0];
 
-                // ۱. ثبت اشتراک پانسیون (اگر خریده باشد)
-                if (currentStudent.pansion_tier && currentStudent.pansion_tier !== 'none') {
-                    let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + dur);
+                // ۲. ثبت اشتراک پانسیون در جدول subscriptions (در صورت خرید)
+                if (inv.pansion_tier && inv.pansion_tier !== 'none') {
+                    let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + (parseInt(inv.pan_duration) || 1));
                     await supabaseClient.from('subscriptions').insert({
-                        student_nid: currentStudent.national_id,
+                        student_nid: inv.student_nid,
                         service_category: 'pansion',
-                        service_type: currentStudent.pansion_tier,
+                        service_type: inv.pansion_tier,
                         start_date: todayStr,
                         end_date: pEnd.toISOString().split('T')[0],
                         status: 'active'
                     });
                 }
                 
-                // ۲. ثبت اشتراک مشاوره (اگر خریده باشد)
-                if (currentStudent.consult_tier && currentStudent.consult_tier !== 'none') {
-                    let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + dur);
+                // ۳. ثبت اشتراک مشاوره در جدول subscriptions (در صورت خرید)
+                if (inv.consult_tier && inv.consult_tier !== 'none') {
+                    let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + (parseInt(inv.con_duration) || 1));
                     await supabaseClient.from('subscriptions').insert({
-                        student_nid: currentStudent.national_id,
+                        student_nid: inv.student_nid,
                         service_category: 'consult',
-                        service_type: currentStudent.consult_tier,
+                        service_type: inv.consult_tier,
                         start_date: todayStr,
                         end_date: cEnd.toISOString().split('T')[0],
                         status: 'active'
                     });
                 }
 
-                // ۳. جایزه ۲۰۰ هزار تومانی معرف
-                if (currentStudent.referrer_id) {
-                    let { data: refUser } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', currentStudent.referrer_id).single();
-                    if (refUser) {
-                        let newBal = (refUser.wallet_balance || 0) + 200000;
-                        await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', currentStudent.referrer_id);
+                // ۴. جایزه ۲۰۰ هزار تومانی معرف
+                if (inv.students && inv.students.invited_by) {
+                    let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
+                    if (refData) {
+                        let newBal = (refData.wallet_balance || 0) + 200000;
+                        await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('referral_code', inv.students.invited_by);
                     }
                 }
 
-                // ۴. آپدیت نهایی و اکتیو کردن پروفایل دانش‌آموز (حذف فیش)
-                await supabaseClient.from('students').update({ 
-                    status: 'active', receipt_base64: null 
-                }).eq('national_id', currentStudent.national_id);
+                // ۵. آپدیت نهایی و اکتیو کردن پروفایل دانش‌آموز در CRM
+                await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
-                alert('✅ فیش تایید شد!\nاشتراک‌های کاربر به تفکیک در دیتابیس ثبت و فعال گردید.');
-                closeDetails(); loadData(); 
-            } catch(e) { alert("خطا در ارتباط با سرور: " + e.message); }
+                alert('✅ فاکتور تایید شد!\nاشتراک‌های کاربر به تفکیک در دیتابیس ثبت و فعال گردید.');
+                closeDetails(); 
+                loadData(); // رفرش کردن خودکار داشبورد
+            } catch(e) { 
+                alert("خطا در ارتباط با سرور: " + e.message); 
+            }
         }
 
         async function approveInstallment() {
