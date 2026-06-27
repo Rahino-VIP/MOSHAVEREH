@@ -395,7 +395,7 @@
                 if (inv.students && inv.students.invited_by) {
                     let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
                     if (refData) {
-                        let newBal = (refData.wallet_balance || 0) + 100000;
+                        let newBal = (refData.wallet_balance || 0) + 200000;
                         await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('referral_code', inv.students.invited_by);
                     }
                 }
