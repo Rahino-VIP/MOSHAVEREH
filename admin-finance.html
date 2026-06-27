@@ -224,11 +224,11 @@
         async function loadData() {
             try {
                 // استفاده از Joins برای استخراج نام دانش‌آموز از جدول students همراه با فاکتورها
-                const [stRes, invRes, instRes, subRes] = await Promise.all([
+                const [stRes, invRes, instRes, srvRes, subRes] = await Promise.all([
                     supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
                     supabaseClient.from('invoices').select('*, students(full_name, phone_number, invited_by)').order('created_at', { ascending: false }),
                     supabaseClient.from('installments').select('*, students(full_name, phone_number)').order('due_date', { ascending: true }),
-                    supabaseClient.from('services').select('*')
+                    supabaseClient.from('services').select('*'),
                     supabaseClient.from('subscriptions').select('*, students(full_name, phone_number)').order('end_date', { ascending: true })
                 ]);
 
