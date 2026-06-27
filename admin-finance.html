@@ -228,6 +228,7 @@
                     supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
                     supabaseClient.from('invoices').select('*, students(full_name, phone_number, invited_by)').order('created_at', { ascending: false }),
                     supabaseClient.from('installments').select('*, students(full_name, phone_number)').order('due_date', { ascending: true }),
+                    supabaseClient.from('services').select('*')
                     supabaseClient.from('subscriptions').select('*, students(full_name, phone_number)').order('end_date', { ascending: true })
                 ]);
 
@@ -383,62 +384,62 @@
         async function approveInvoice() {
             if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
             
-            // پیدا کردن فاکتور انتخاب شده از لیست
             let inv = db.invoices.find(i => i.id === currentSelection.id);
             if (!inv) return alert("خطا: فاکتور یافت نشد!");
             
             try {
-                // ۱. آپدیت وضعیت فاکتور و پاک کردن عکس فیش برای سبکی دیتابیس
+                // ۱. تایید فاکتور
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
                 
                 let todayStr = new Date().toISOString().split('T')[0];
 
-                // ۲. ثبت اشتراک پانسیون در جدول subscriptions (در صورت خرید)
+                // ۲. ثبت اشتراک و کسر از ظرفیت (برای پانسیون و مشاوره)
+                const updateCapacity = async (category, type) => {
+                    // پیدا کردن سرویس مورد نظر
+                    let service = dbData.services.find(s => s.category === category && s.type === type);
+                    if (service && service.capacity > 0) {
+                        await supabaseClient.from('services')
+                            .update({ capacity: service.capacity - 1 })
+                            .eq('id', service.id);
+                    }
+                };
+
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
                     let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + (parseInt(inv.pan_duration) || 1));
                     await supabaseClient.from('subscriptions').insert({
-                        student_nid: inv.student_nid,
-                        service_category: 'pansion',
-                        service_type: inv.pansion_tier,
-                        start_date: todayStr,
-                        end_date: pEnd.toISOString().split('T')[0],
-                        status: 'active'
+                        student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
+                        start_date: todayStr, end_date: pEnd.toISOString().split('T')[0], status: 'active'
                     });
+                    await updateCapacity('pansion', inv.pansion_tier); // 👈 کسر از ظرفیت
                 }
                 
-                // ۳. ثبت اشتراک مشاوره در جدول subscriptions (در صورت خرید)
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
                     let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + (parseInt(inv.con_duration) || 1));
                     await supabaseClient.from('subscriptions').insert({
-                        student_nid: inv.student_nid,
-                        service_category: 'consult',
-                        service_type: inv.consult_tier,
-                        start_date: todayStr,
-                        end_date: cEnd.toISOString().split('T')[0],
-                        status: 'active'
+                        student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
+                        start_date: todayStr, end_date: cEnd.toISOString().split('T')[0], status: 'active'
                     });
+                    await updateCapacity('consult', inv.consult_tier); // 👈 کسر از ظرفیت
                 }
 
-                // ۴. جایزه ۲۰۰ هزار تومانی معرف
+                // ۳. پاداش معرف
                 if (inv.students && inv.students.invited_by) {
                     let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
                     if (refData) {
-                        let newBal = (refData.wallet_balance || 0) + 200000;
-                        await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('referral_code', inv.students.invited_by);
+                        await supabaseClient.from('students').update({ wallet_balance: (refData.wallet_balance || 0) + 200000 }).eq('referral_code', inv.students.invited_by);
                     }
                 }
 
-                // ۵. آپدیت نهایی و اکتیو کردن پروفایل دانش‌آموز در CRM
+                // ۴. اکتیو کردن پروفایل
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
-                alert('✅ فاکتور تایید شد!\nاشتراک‌های کاربر به تفکیک در دیتابیس ثبت و فعال گردید.');
-                closeDetails(); 
-                loadData(); // رفرش کردن خودکار داشبورد
+                alert('✅ فاکتور تایید و از ظرفیت طرح کسر شد.');
+                closeDetails(); loadData();
             } catch(e) { 
-                alert("خطا در ارتباط با سرور: " + e.message); 
+                alert("خطا در عملیات: " + e.message); 
             }
         }
-
+        
         async function approveInstallment() {
             if(!confirm('آیا وصول این قسط را تایید می‌کنید؟')) return;
             try {
