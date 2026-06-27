@@ -385,13 +385,41 @@
             let inv = db.invoices.find(i => i.id === currentSelection.id);
             
             try {
-                // ۱. آپدیت فاکتور (تایید و پاکسازی عکس)
+                // ۱. آپدیت فاکتور
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
                 
-                // ۲. اکتیو کردن دانش‌آموز در جدول اصلی
+                let today = new Date();
+
+                // ۲. ثبت پانسیون در جدول اشتراک‌ها (subscriptions)
+                if (inv.pansion_tier && inv.pansion_tier !== 'none') {
+                    let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + (inv.pan_duration || 1));
+                    await supabaseClient.from('subscriptions').insert({
+                        student_nid: inv.student_nid,
+                        service_category: 'pansion',  // اضافه کردن یک ستون برای تشخیص نوع سرویس (اختیاری اما مفید)
+                        service_type: inv.pansion_tier,
+                        start_date: today.toISOString().split('T')[0],
+                        end_date: pEnd.toISOString().split('T')[0],
+                        status: 'active'
+                    });
+                }
+
+                // ۳. ثبت مشاوره در جدول اشتراک‌ها (subscriptions)
+                if (inv.consult_tier && inv.consult_tier !== 'none') {
+                    let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + (inv.con_duration || 1));
+                    await supabaseClient.from('subscriptions').insert({
+                        student_nid: inv.student_nid,
+                        service_category: 'consult',
+                        service_type: inv.consult_tier,
+                        start_date: today.toISOString().split('T')[0],
+                        end_date: cEnd.toISOString().split('T')[0],
+                        status: 'active'
+                    });
+                }
+
+                // ۴. فقط وضعیت دانش‌آموز رو اکتیو می‌کنیم (بدون اضافه کردن ستون اضافی)
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
 
-                // ۳. سیستم پاداش معرف (Referral System)
+                // ۵. جایزه معرف ۲۰۰ هزار تومانی
                 if (inv.students && inv.students.invited_by) {
                     let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
                     if (refData) {
@@ -400,21 +428,9 @@
                     }
                 }
 
-                // ۴. ایجاد اشتراک در جدول subscriptions برای رادار ریزش
-                // محاسبه حدودی زمان پایان بر اساس متن فاکتور (چون فعلاً ماژول انتخاب سرویس مجزا نداریم)
-                let durationMonths = inv.invoice_type.includes('3 ماهه') ? 3 : (inv.invoice_type.includes('10 ماهه') ? 10 : 1);
-                let endDate = new Date(); endDate.setMonth(endDate.getMonth() + durationMonths);
-                
-                await supabaseClient.from('subscriptions').insert({
-                    student_nid: inv.student_nid,
-                    start_date: new Date().toISOString().split('T')[0],
-                    end_date: endDate.toISOString().split('T')[0],
-                    status: 'active'
-                });
-
-                alert('✅ فاکتور با موفقیت تایید شد.\nپرونده دانش‌آموز فعال و اشتراک وی در سیستم ثبت گردید.');
+                alert('✅ فاکتور تایید شد.\nاشتراک‌های کاربر به تفکیک در دیتابیس ثبت گردید.');
                 closeDetails(); loadData();
-            } catch(e) { alert("خطا در هسته: " + e.message); }
+            } catch(e) { alert("خطا: " + e.message); }
         }
 
         async function approveInstallment() {
