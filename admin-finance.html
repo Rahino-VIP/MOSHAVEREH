@@ -394,32 +394,45 @@
                 let todayStr = new Date().toISOString().split('T')[0];
 
                 // ۲. ثبت اشتراک و کسر از ظرفیت (برای پانسیون و مشاوره)
-                const updateCapacity = async (category, type) => {
-                    // پیدا کردن سرویس مورد نظر
-                    let service = dbData.services.find(s => s.category === category && s.type === type);
+                // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
+                const updateCapacity = async (category, type, studentNid) => {
+                    // اول رشته و پایه دانش‌آموز رو از دیتابیس درمیاریم
+                    let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
+                    if(!stData) return;
+                    
+                    let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
+                    let stMajor = stData.major || 'all';
+
+                    // پیدا کردن دقیق ردیف سرویس در دیتابیس
+                    let service = dbData.services.find(s => 
+                        s.category === category && s.type === type &&
+                        (s.target_grade === stGrade || s.target_grade === 'all') &&
+                        (s.target_major === stMajor || s.target_major === 'all')
+                    );
+
                     if (service && service.capacity > 0) {
-                        await supabaseClient.from('services')
-                            .update({ capacity: service.capacity - 1 })
-                            .eq('id', service.id);
+                        await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
                     }
                 };
 
+                // ثبت اشتراک پانسیون و کسر ظرفیت
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
                     let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + (parseInt(inv.pan_duration) || 1));
                     await supabaseClient.from('subscriptions').insert({
                         student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
                         start_date: todayStr, end_date: pEnd.toISOString().split('T')[0], status: 'active'
                     });
-                    await updateCapacity('pansion', inv.pansion_tier); // 👈 کسر از ظرفیت
+                    await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); // 👈 فراخوانی کسر ظرفیت
                 }
                 
+                // ثبت اشتراک مشاوره و کسر ظرفیت
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
                     let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + (parseInt(inv.con_duration) || 1));
                     await supabaseClient.from('subscriptions').insert({
                         student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
                         start_date: todayStr, end_date: cEnd.toISOString().split('T')[0], status: 'active'
                     });
-                    await updateCapacity('consult', inv.consult_tier); // 👈 کسر از ظرفیت
+                    await updateCapacity('consult', inv.consult_tier, inv.student_nid); // 👈 فراخوانی کسر ظرفیت
                 }
 
                 // ۳. پاداش معرف
