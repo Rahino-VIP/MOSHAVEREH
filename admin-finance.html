@@ -465,12 +465,46 @@
         }
 
         async function rejectItem() {
-            if(!confirm('آیا قصد رد کردن این مورد و حذف فیش را دارید؟')) return;
+            // ۱. دریافت دلیل رد فیش از مدیر
+            let reason = prompt('دلیل رد کردن این فیش چیست؟\n(این متن به عنوان پیام برای دانش‌آموز ارسال می‌شود):');
+            
+            if (reason === null) return; // اگر مدیر منصرف شد (دکمه Cancel رو زد)
+            if (reason.trim() === '') return alert('وارد کردن دلیل برای رد فیش الزامی است!');
+
             try {
-                if(currentSelection.type === 'invoice') await supabaseClient.from('invoices').update({ status: 'rejected', receipt_base64: null }).eq('id', currentSelection.id);
-                else if(currentSelection.type === 'installment') await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', currentSelection.id);
-                closeDetails(); loadData();
-            } catch(e) { alert(e.message); }
+                if (currentSelection.type === 'invoice') {
+                    let inv = db.invoices.find(i => i.id === currentSelection.id);
+                    
+                    // آپدیت فاکتور
+                    await supabaseClient.from('invoices').update({ status: 'rejected', receipt_base64: null }).eq('id', inv.id);
+                    
+                    // ارسال پیام به صندوق دانش‌آموز
+                    await supabaseClient.from('messages').insert({
+                        student_nid: inv.student_nid,
+                        title: '❌ رد فیش پیش‌پرداخت',
+                        body: `فیش پیش‌پرداخت شما تایید نشد. \nدلیل: ${reason}`
+                    });
+
+                } else if (currentSelection.type === 'installment') {
+                    let inst = db.installments.find(i => i.id === currentSelection.id);
+                    
+                    // برگرداندن قسط به حالت منتظر پرداخت
+                    await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', inst.id);
+                    
+                    // ارسال پیام به صندوق دانش‌آموز
+                    await supabaseClient.from('messages').insert({
+                        student_nid: inst.student_nid,
+                        title: `❌ رد فیش قسط شماره ${inst.installment_number}`,
+                        body: `فیش پرداختی شما برای قسط شماره ${inst.installment_number} تایید نشد. \nدلیل: ${reason} \nلطفاً فیش صحیح را مجدداً از بخش اقساط آپلود کنید.`
+                    });
+                }
+                
+                alert('✅ فیش رد شد و پیام با موفقیت به صندوق دانش‌آموز ارسال گردید.');
+                closeDetails(); 
+                loadData();
+            } catch(e) { 
+                alert("خطا در سیستم: " + e.message); 
+            }
         }
 
         // ==========================================
