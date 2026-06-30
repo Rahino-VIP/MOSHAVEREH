@@ -396,11 +396,10 @@
                 // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (جدید)
                 // ===============================================
                 const getSubscriptionDates = async (category, durationMonths, studentNid) => {
-                    let startDate = new Date(); // پیش‌فرض از امروز است
+                    let startDate = new Date(); 
                     
-                    // بررسی می‌کنیم آیا شخص در این دسته (پانسیون یا مشاوره) اکانت فعالی دارد؟
                     let { data: existingSub } = await supabaseClient.from('subscriptions')
-                        .select('end_date')
+                        .select('id, end_date')
                         .eq('student_nid', studentNid)
                         .eq('service_category', category)
                         .eq('status', 'active')
@@ -409,13 +408,16 @@
 
                     if (existingSub && existingSub.length > 0) {
                         let lastEndDate = new Date(existingSub[0].end_date);
-                        // اگر تاریخ پایان قرارداد قبلی از امروز جلوتر بود، شروع قرارداد جدید میشه همون روز!
                         if (lastEndDate > startDate) {
                             startDate = lastEndDate; 
                         }
+                        
+                        // 💡 جادوی حل مشکل دوگانه شدن: آپدیت وضعیت قرارداد قبلی به تمدید شده
+                        await supabaseClient.from('subscriptions')
+                            .update({ status: 'renewed' })
+                            .eq('id', existingSub[0].id);
                     }
 
-                    // محاسبه تاریخ پایان با اضافه کردن ماه‌های خریداری شده به تاریخ شروع
                     let endDate = new Date(startDate);
                     endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
 
@@ -424,7 +426,6 @@
                         endStr: endDate.toISOString().split('T')[0]
                     };
                 };
-
                 // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
                 const updateCapacity = async (category, type, studentNid) => {
                     let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
