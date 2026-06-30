@@ -485,6 +485,14 @@
             } catch(e) { 
                 alert("خطا در عملیات: " + e.message); 
             }
+            // ۵. آپدیت امن کیف پول (شارژ یا کسر بر اساس فاکتور)
+            let walletMatch = inv.description.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/);
+            if (walletMatch) {
+                let changeAmt = parseInt(walletMatch[1]);
+                let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
+                let newBal = (stData.wallet_balance || 0) + changeAmt;
+                await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
+            }
         }
         
         async function approveInstallment() {
