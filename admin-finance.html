@@ -391,21 +391,48 @@
             try {
                 // ۱. تایید فاکتور
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
-                
-                let todayStr = new Date().toISOString().split('T')[0];
 
-                // ۲. ثبت اشتراک و کسر از ظرفیت (برای پانسیون و مشاوره)
-                // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
+                // ===============================================
+                // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (جدید)
+                // ===============================================
+                const getSubscriptionDates = async (category, durationMonths, studentNid) => {
+                    let startDate = new Date(); // پیش‌فرض از امروز است
+                    
+                    // بررسی می‌کنیم آیا شخص در این دسته (پانسیون یا مشاوره) اکانت فعالی دارد؟
+                    let { data: existingSub } = await supabaseClient.from('subscriptions')
+                        .select('end_date')
+                        .eq('student_nid', studentNid)
+                        .eq('service_category', category)
+                        .eq('status', 'active')
+                        .order('end_date', { ascending: false })
+                        .limit(1);
+
+                    if (existingSub && existingSub.length > 0) {
+                        let lastEndDate = new Date(existingSub[0].end_date);
+                        // اگر تاریخ پایان قرارداد قبلی از امروز جلوتر بود، شروع قرارداد جدید میشه همون روز!
+                        if (lastEndDate > startDate) {
+                            startDate = lastEndDate; 
+                        }
+                    }
+
+                    // محاسبه تاریخ پایان با اضافه کردن ماه‌های خریداری شده به تاریخ شروع
+                    let endDate = new Date(startDate);
+                    endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
+
+                    return {
+                        startStr: startDate.toISOString().split('T')[0],
+                        endStr: endDate.toISOString().split('T')[0]
+                    };
+                };
+
                 // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
                 const updateCapacity = async (category, type, studentNid) => {
-                    // اول رشته و پایه دانش‌آموز رو از دیتابیس درمیاریم
                     let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
                     if(!stData) return;
                     
                     let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
                     let stMajor = stData.major || 'all';
 
-                    // پیدا کردن دقیق ردیف سرویس در دیتابیس (از db.services استفاده می‌کنیم)
                     let service = db.services.find(s => 
                         s.category === category && s.type === type &&
                         (s.target_grade === stGrade || s.target_grade === 'all') &&
@@ -419,22 +446,26 @@
 
                 // ثبت اشتراک پانسیون و کسر ظرفیت
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
-                    let pEnd = new Date(); pEnd.setMonth(pEnd.getMonth() + (parseInt(inv.pan_duration) || 1));
+                    // دریافت تاریخ دقیق شروع و پایان با تابع هوشمند
+                    let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid);
+                    
                     await supabaseClient.from('subscriptions').insert({
                         student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
-                        start_date: todayStr, end_date: pEnd.toISOString().split('T')[0], status: 'active'
+                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
                     });
-                    await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); // 👈 فراخوانی کسر ظرفیت
+                    await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); 
                 }
                 
                 // ثبت اشتراک مشاوره و کسر ظرفیت
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
-                    let cEnd = new Date(); cEnd.setMonth(cEnd.getMonth() + (parseInt(inv.con_duration) || 1));
+                    // دریافت تاریخ دقیق شروع و پایان با تابع هوشمند
+                    let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid);
+                    
                     await supabaseClient.from('subscriptions').insert({
                         student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
-                        start_date: todayStr, end_date: cEnd.toISOString().split('T')[0], status: 'active'
+                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
                     });
-                    await updateCapacity('consult', inv.consult_tier, inv.student_nid); // 👈 فراخوانی کسر ظرفیت
+                    await updateCapacity('consult', inv.consult_tier, inv.student_nid); 
                 }
 
                 // ۳. پاداش معرف
@@ -448,7 +479,7 @@
                 // ۴. اکتیو کردن پروفایل
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
-                alert('✅ فاکتور تایید و از ظرفیت طرح کسر شد.');
+                alert('✅ فاکتور تایید و زمانبندی/ظرفیت‌ها با موفقیت اعمال شد.');
                 closeDetails(); loadData();
             } catch(e) { 
                 alert("خطا در عملیات: " + e.message); 
