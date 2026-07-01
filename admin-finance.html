@@ -317,28 +317,22 @@
             document.getElementById('dpTitle').innerText = type === 'invoice' ? '🧾 بررسی فاکتور اصلی' : (type === 'installment' ? '💳 بررسی فیش قسط' : '👤 پرونده دانش‌آموز');
             
             let html = '';
-
-            // خطوط 359 (تقریباً): جایگزین کردن بخش dpActions.innerHTML در پنل invoice
-            if (inv.invoice_type === 'تعویض و ارتقا') {
-                dpActions.innerHTML = `<button class="btn" style="background:var(--accent);" onclick="approveTradeIn()">🔄 تایید معاوضه (Trade-in)</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
-            } else {
-                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInvoice()">✅ تایید فاکتور و فعال‌سازی</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
-            }
-            dpActions.style.display = 'flex';
             
             if (type === 'invoice') {
-                let inv = db.invoices.find(i => i.id === id);
-                let st = inv.students || {};
+                // 💡 حل باگ: تبدیل هر دو آیدی به متن برای پیدا کردن دقیق رکورد
+                let inv = db.invoices.find(i => String(i.id) === String(id));
+                if (!inv) return alert("خطا: فاکتور در حافظه یافت نشد!");
                 
-                let imgHtml = inv.receipt_base64 ? `<div class="dp-receipt-box"><span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش پیش‌پرداخت:</span><img src="data:${inv.mime_type || 'image/jpeg'};base64,${inv.receipt_base64}" class="dp-receipt" onclick="window.open(this.src)"></div>` : '';
+                let st = inv.students || {};
+                let imgHtml = inv.receipt_base64 ? `<div class="dp-receipt-box"><span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی:</span><img src="data:${inv.mime_type || 'image/jpeg'};base64,${inv.receipt_base64}" class="dp-receipt" onclick="window.open(this.src)"></div>` : '';
                 
                 html = `
                     <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
                     <div class="dp-row"><span>موبایل تماس:</span><span>${st.phone_number || '-'}</span></div>
                     <div class="dp-row" style="background:rgba(59,130,246,0.1); padding:10px; border-radius:8px; margin-top:10px;">
-                        <span style="color:var(--accent);">مبلغ کل فاکتور:</span><span style="color:var(--accent); font-size:15px;">${formatMoney(inv.final_amount)} تومان</span>
+                        <span style="color:var(--accent);">مبلغ کل فاکتور:</span><span style="color:var(--accent); font-size:15px;">${formatMoney(inv.final_amount || 0)} تومان</span>
                     </div>
-                    <div class="dp-row"><span>مبلغ واریزی (پیش‌پرداخت):</span><span style="color:var(--success); font-size:14px;">${formatMoney(inv.paid_upfront)} تومان</span></div>
+                    <div class="dp-row"><span>مبلغ واریزی (پیش‌پرداخت):</span><span style="color:var(--success); font-size:14px;">${formatMoney(inv.paid_upfront || 0)} تومان</span></div>
                     <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border-color);">
                         <div style="color:var(--success); font-weight:bold; margin-bottom:10px; font-size:13px;">📝 متن تعهدات و فاکتور:</div>
                         <div style="white-space:pre-wrap; font-family:monospace; color:var(--text-muted); font-size:11px; line-height:2;">${inv.invoice_details || 'ثبت نشده'}</div>
@@ -346,11 +340,17 @@
                     ${imgHtml}
                 `;
                 
-                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInvoice()">✅ تایید فاکتور و فعال‌سازی</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
+                // 💡 نمایش دکمه مخصوص Trade-in فقط برای فاکتورهای تعویض
+                if (inv.invoice_type === 'تعویض و ارتقا') {
+                    dpActions.innerHTML = `<button class="btn" style="background:var(--accent);" onclick="approveTradeIn()">🔄 تایید معاوضه (Trade-in)</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
+                } else {
+                    dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInvoice()">✅ تایید فاکتور و فعال‌سازی</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
+                }
                 dpActions.style.display = 'flex';
             } 
             else if (type === 'installment') {
-                let inst = db.installments.find(i => i.id === id);
+                let inst = db.installments.find(i => String(i.id) === String(id));
+                if (!inst) return;
                 let st = inst.students || {};
                 
                 let imgHtml = inst.receipt_base64 ? `<div class="dp-receipt-box"><span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی قسط:</span><img src="data:${inst.mime_type || 'image/jpeg'};base64,${inst.receipt_base64}" class="dp-receipt" onclick="window.open(this.src)"></div>` : '';
@@ -360,7 +360,7 @@
                     <div class="dp-row"><span>قسط شماره:</span><span>${inst.installment_number}</span></div>
                     <div class="dp-row"><span>تاریخ سررسید:</span><span>${inst.due_date}</span></div>
                     <div class="dp-row" style="background:rgba(245,158,11,0.1); padding:10px; border-radius:8px; margin-top:10px;">
-                        <span style="color:var(--warning);">مبلغ قسط:</span><span style="color:var(--warning); font-size:15px;">${formatMoney(inst.amount)} تومان</span>
+                        <span style="color:var(--warning);">مبلغ قسط:</span><span style="color:var(--warning); font-size:15px;">${formatMoney(inst.amount || 0)} تومان</span>
                     </div>
                     ${imgHtml}
                 `;
@@ -368,14 +368,14 @@
                 dpActions.style.display = 'flex';
             }
             else {
-                // نمایش پرونده خام یا فعال
-                let st = db.students.find(s => s.national_id === id);
+                let st = db.students.find(s => String(s.national_id) === String(id));
+                if (!st) return;
                 html = `
                     <div class="dp-row"><span>نام:</span><span>${st.full_name || '-'}</span></div>
                     <div class="dp-row"><span>کد ملی:</span><span>${st.national_id}</span></div>
                     <div class="dp-row"><span>موبایل:</span><span>${st.phone_number}</span></div>
-                    <div class="dp-row"><span>پایه تحصیلی:</span><span>${st.grade} - ${st.major}</span></div>
-                    <div class="dp-row"><span>شهر:</span><span>${st.province} - ${st.city}</span></div>
+                    <div class="dp-row"><span>پایه تحصیلی:</span><span>${st.grade || '-'} - ${st.major || '-'}</span></div>
+                    <div class="dp-row"><span>شهر:</span><span>${st.province || '-'} - ${st.city || '-'}</span></div>
                     <div class="dp-row"><span>کیف پول:</span><span style="color:var(--success)">${formatMoney(st.wallet_balance || 0)} تومان</span></div>
                 `;
                 dpActions.style.display = 'none';
@@ -391,7 +391,7 @@
         // ==========================================
         async function approveTradeIn() {
             if(!confirm('آیا از تایید این درخواست تعویض اطمینان دارید؟ قراردادهای لغو شده باطل خواهند شد.')) return;
-            let inv = db.invoices.find(i => i.id === currentSelection.id);
+            let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
             
             try {
                 // ۱. استخراج دیتای سیستمی رمزگذاری شده
@@ -463,7 +463,7 @@
         async function approveInvoice() {
             if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
             
-            let inv = db.invoices.find(i => i.id === currentSelection.id);
+            let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
             if (!inv) return alert("خطا: فاکتور یافت نشد!");
             
             try {
@@ -591,7 +591,7 @@
 
             try {
                 if (currentSelection.type === 'invoice') {
-                    let inv = db.invoices.find(i => i.id === currentSelection.id);
+                    let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
                     
                     // آپدیت فاکتور
                     await supabaseClient.from('invoices').update({ status: 'rejected', receipt_base64: null }).eq('id', inv.id);
@@ -604,8 +604,7 @@
                     });
 
                 } else if (currentSelection.type === 'installment') {
-                    let inst = db.installments.find(i => i.id === currentSelection.id);
-                    
+                    let inv = db.installments.find(i => String(i.id) === String(currentSelection.id));
                     // برگرداندن قسط به حالت منتظر پرداخت
                     await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', inst.id);
                     
