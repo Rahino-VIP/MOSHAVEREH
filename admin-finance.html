@@ -383,93 +383,88 @@
         // ==========================================
         
         async function approveInvoice() {
-            if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
+            if(!confirm('آیا از تایید این فاکتور و اعمال عملیات مالی/قراردادی اطمینان دارید؟')) return;
             
             let inv = db.invoices.find(i => i.id === currentSelection.id);
             if (!inv) return alert("خطا: فاکتور یافت نشد!");
             
             try {
-                // ۱. تایید فاکتور
+                // ۱. تایید فاکتور در دیتابیس
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
 
-                // ===============================================
-                // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (جدید)
-                // ===============================================
-                const getSubscriptionDates = async (category, durationMonths, studentNid) => {
-                    let startDate = new Date(); 
+                let details = inv.invoice_details || "";
+
+                // ۲. رمزگشایی کیف پول (استخراج از متن)
+                let walletMatch = details.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/);
+                if (walletMatch) {
+                    let changeAmt = parseInt(walletMatch[1]);
+                    let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
+                    let newBal = (stData.wallet_balance || 0) + changeAmt;
+                    await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
+                }
+
+                // ۳. رمزگشایی دیتای سیستمی قراردادها (استخراج از متن)
+                let sysMatch = details.match(/\[SYSTEM_DATA:\s*(\{.*?\})\]/);
+                let sysData = { panTier: 'none', panDur: 1, conTier: 'none', conDur: 1, isTradeIn: false };
+                if (sysMatch) {
+                    try { sysData = JSON.parse(sysMatch[1]); } catch(e){}
+                }
+
+                // ۴. موتور هوشمند مدیریت قراردادها (Trade-in و تمدید)
+                const processSubscription = async (category, type, durationMonths) => {
+                    if (!type || type === 'none' || type === 'no_change') return; // اگر لغو شده یا تغییری نکرده رد شو
+                    
+                    let startDate = new Date();
                     
                     let { data: existingSub } = await supabaseClient.from('subscriptions')
                         .select('id, end_date')
-                        .eq('student_nid', studentNid)
+                        .eq('student_nid', inv.student_nid)
                         .eq('service_category', category)
                         .eq('status', 'active')
                         .order('end_date', { ascending: false })
                         .limit(1);
 
                     if (existingSub && existingSub.length > 0) {
-                        let lastEndDate = new Date(existingSub[0].end_date);
-                        if (lastEndDate > startDate) {
-                            startDate = lastEndDate; 
+                        if (sysData.isTradeIn) {
+                            // در تعویض: قرارداد قبلی باطل (swapped) و قرارداد جدید از امروز شروع می‌شود
+                            await supabaseClient.from('subscriptions').update({ status: 'swapped' }).eq('id', existingSub[0].id);
+                        } else {
+                            // در تمدید عادی: قرارداد جدید به انتهای قرارداد قبلی می‌چسبد
+                            let lastEndDate = new Date(existingSub[0].end_date);
+                            if (lastEndDate > startDate) startDate = lastEndDate;
+                            await supabaseClient.from('subscriptions').update({ status: 'renewed' }).eq('id', existingSub[0].id);
                         }
-                        
-                        // 💡 جادوی حل مشکل دوگانه شدن: آپدیت وضعیت قرارداد قبلی به تمدید شده
-                        await supabaseClient.from('subscriptions')
-                            .update({ status: 'renewed' })
-                            .eq('id', existingSub[0].id);
                     }
 
+                    // محاسبه تاریخ پایان
                     let endDate = new Date(startDate);
-                    endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
+                    let monthsToAdd = (durationMonths === 'konkur') ? 10 : parseInt(durationMonths);
+                    endDate.setMonth(endDate.getMonth() + monthsToAdd);
 
-                    return {
-                        startStr: startDate.toISOString().split('T')[0],
-                        endStr: endDate.toISOString().split('T')[0]
-                    };
-                };
-                // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
-                const updateCapacity = async (category, type, studentNid) => {
-                    let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
-                    if(!stData) return;
-                    
-                    let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
-                    let stMajor = stData.major || 'all';
+                    // ثبت قرارداد جدید
+                    await supabaseClient.from('subscriptions').insert({
+                        student_nid: inv.student_nid, service_category: category, service_type: type,
+                        start_date: startDate.toISOString().split('T')[0], 
+                        end_date: endDate.toISOString().split('T')[0], 
+                        status: 'active'
+                    });
 
-                    let service = db.services.find(s => 
-                        s.category === category && s.type === type &&
-                        (s.target_grade === stGrade || s.target_grade === 'all') &&
-                        (s.target_major === stMajor || s.target_major === 'all')
-                    );
-
-                    if (service && service.capacity > 0) {
-                        await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
+                    // کسر از ظرفیت سرویس
+                    let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', inv.student_nid).single();
+                    if(stData) {
+                        let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
+                        let stMajor = stData.major || 'all';
+                        let service = db.services.find(s => s.category === category && s.type === type && (s.target_grade === stGrade || s.target_grade === 'all') && (s.target_major === stMajor || s.target_major === 'all'));
+                        if (service && service.capacity > 0) {
+                            await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
+                        }
                     }
                 };
 
-                // ثبت اشتراک پانسیون و کسر ظرفیت
-                if (inv.pansion_tier && inv.pansion_tier !== 'none') {
-                    // دریافت تاریخ دقیق شروع و پایان با تابع هوشمند
-                    let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid);
-                    
-                    await supabaseClient.from('subscriptions').insert({
-                        student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
-                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
-                    });
-                    await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); 
-                }
-                
-                // ثبت اشتراک مشاوره و کسر ظرفیت
-                if (inv.consult_tier && inv.consult_tier !== 'none') {
-                    // دریافت تاریخ دقیق شروع و پایان با تابع هوشمند
-                    let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid);
-                    
-                    await supabaseClient.from('subscriptions').insert({
-                        student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
-                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
-                    });
-                    await updateCapacity('consult', inv.consult_tier, inv.student_nid); 
-                }
+                await processSubscription('pansion', sysData.panTier, sysData.panDur);
+                await processSubscription('consult', sysData.conTier, sysData.conDur);
 
-                // ۳. پاداش معرف
+                // ۵. پاداش معرف
                 if (inv.students && inv.students.invited_by) {
                     let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
                     if (refData) {
@@ -477,76 +472,15 @@
                     }
                 }
 
-                // ۴. اکتیو کردن پروفایل
+                // ۶. فعال‌سازی اکانت
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
-                alert('✅ فاکتور تایید و زمانبندی/ظرفیت‌ها با موفقیت اعمال شد.');
+                alert('✅ فاکتور تایید شد. قراردادها و کیف پول با موفقیت تنظیم گردید.');
                 closeDetails(); loadData();
             } catch(e) { 
                 alert("خطا در عملیات: " + e.message); 
             }
-            // ۵. آپدیت امن کیف پول (شارژ یا کسر بر اساس فاکتور)
-            let walletMatch = inv.description.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/);
-            if (walletMatch) {
-                let changeAmt = parseInt(walletMatch[1]);
-                let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
-                let newBal = (stData.wallet_balance || 0) + changeAmt;
-                await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
-            }
         }
-        
-        async function approveInstallment() {
-            if(!confirm('آیا وصول این قسط را تایید می‌کنید؟')) return;
-            try {
-                await supabaseClient.from('installments').update({ status: 'paid', receipt_base64: null }).eq('id', currentSelection.id);
-                alert('✅ قسط با موفقیت در دفتر کل ثبت شد.');
-                closeDetails(); loadData();
-            } catch(e) { alert(e.message); }
-        }
-
-        async function rejectItem() {
-            // ۱. دریافت دلیل رد فیش از مدیر
-            let reason = prompt('دلیل رد کردن این فیش چیست؟\n(این متن به عنوان پیام برای دانش‌آموز ارسال می‌شود):');
-            
-            if (reason === null) return; // اگر مدیر منصرف شد (دکمه Cancel رو زد)
-            if (reason.trim() === '') return alert('وارد کردن دلیل برای رد فیش الزامی است!');
-
-            try {
-                if (currentSelection.type === 'invoice') {
-                    let inv = db.invoices.find(i => i.id === currentSelection.id);
-                    
-                    // آپدیت فاکتور
-                    await supabaseClient.from('invoices').update({ status: 'rejected', receipt_base64: null }).eq('id', inv.id);
-                    
-                    // ارسال پیام به صندوق دانش‌آموز
-                    await supabaseClient.from('messages').insert({
-                        student_nid: inv.student_nid,
-                        title: '❌ رد فیش پیش‌پرداخت',
-                        body: `فیش پیش‌پرداخت شما تایید نشد. \nدلیل: ${reason}`
-                    });
-
-                } else if (currentSelection.type === 'installment') {
-                    let inst = db.installments.find(i => i.id === currentSelection.id);
-                    
-                    // برگرداندن قسط به حالت منتظر پرداخت
-                    await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', inst.id);
-                    
-                    // ارسال پیام به صندوق دانش‌آموز
-                    await supabaseClient.from('messages').insert({
-                        student_nid: inst.student_nid,
-                        title: `❌ رد فیش قسط شماره ${inst.installment_number}`,
-                        body: `فیش پرداختی شما برای قسط شماره ${inst.installment_number} تایید نشد. \nدلیل: ${reason} \nلطفاً فیش صحیح را مجدداً از بخش اقساط آپلود کنید.`
-                    });
-                }
-                
-                alert('✅ فیش رد شد و پیام با موفقیت به صندوق دانش‌آموز ارسال گردید.');
-                closeDetails(); 
-                loadData();
-            } catch(e) { 
-                alert("خطا در سیستم: " + e.message); 
-            }
-        }
-
         // ==========================================
         // ⏳ موتور رادارهای دوگانه (کاملا متصل به جداول جدید)
         // ==========================================
