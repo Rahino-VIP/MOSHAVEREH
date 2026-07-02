@@ -36,10 +36,15 @@
         .ai-assistant::before { content: '💬 یادداشت دانش‌آموز'; position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--warning); font-weight: bold; }
         .ai-text { font-size: 12px; color: var(--text-main); line-height: 1.6; }
 
-        /* باکس جدید برای گزارش بودجه‌بندی و هوش مصنوعی */
-        .ai-consultant-box { background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); padding: 15px; border-radius: 12px; position: relative; margin-top: 5px; }
-        .ai-consultant-box::before { content: '📊 گزارش بودجه و تحلیل هوشمند'; position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--success); font-weight: bold; }
-        .ai-consultant-text { font-size: 12px; color: var(--text-main); line-height: 1.8; white-space: pre-wrap; }
+        /* 🟨 نیمکت ذخیره‌ها */
+        .bench-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px; margin-top: 5px; }
+        .bench-title { font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .bench-item { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer;}
+        .bench-item:hover { border-color: var(--warning); transform: translateX(-5px); }
+        .bench-info { flex: 1; }
+        .bench-subj { font-size: 12px; font-weight: bold; color: var(--text-main); }
+        .bench-topic { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+        .bench-add-btn { background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
 
         .add-block-form { background: var(--surface-light); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; }
         .form-title { font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); display: flex; justify-content: space-between; }
@@ -115,8 +120,10 @@
                 <div class="ai-text" id="stNote">در حال پردازش...</div>
             </div>
 
-            <div class="ai-consultant-box">
-                <div class="ai-consultant-text" id="aiConsultantReport">در حال دریافت گزارش سیستم...</div>
+            <div class="bench-box">
+                <div class="bench-title">🟨 نیمکت ذخیره‌ها (باکس‌های جامانده)</div>
+                <div id="benchContainer">
+                    </div>
             </div>
 
             <div class="add-block-form">
@@ -143,7 +150,7 @@
         </div>
 
         <div class="panel-footer">
-            <button class="btn-action btn-approve" id="btnApprove" onclick="saveAndApproveWithAI()">✅ تولید محتوای هوشمند و ارسال</button>
+            <button class="btn-action btn-approve" id="btnApprove" onclick="saveAndApproveWithAI()">✅ تأیید و ارسال برنامه به دانش‌آموز</button>
             <button class="btn-action btn-reject" id="btnReject" onclick="rejectSchedule()">❌ رد و حذف برنامه</button>
         </div>
     </div>
@@ -179,9 +186,6 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // لینک وب‌اپلیکیشن گوگل اسکریپت
-        const GAS_WEBAPP = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
-
         let currentScheduleId = null;
         let scheduleDataArray = [];
         
@@ -215,17 +219,15 @@
                     .from('ai_schedules').select('*').eq('id', currentScheduleId).single();
                 if (schErr) throw schErr;
 
+                // 💡 اصلاح شد: جستجو با کد ملی
                 const { data: stData } = await supabaseClient
-                    .from('students').select('full_name, grade, major').eq('chat_id', schData.chat_id).single();
+                    .from('students').select('full_name, grade, major').eq('national_id', schData.national_id).single();
 
                 document.getElementById('stName').innerText = stData ? stData.full_name : 'ناشناس';
                 document.getElementById('stMeta').innerText = stData ? `${stData.grade} ${stData.major}` : 'اطلاعات نامشخص';
                 
-                let note = schData.student_note && schData.student_note.trim() !== '' ? schData.student_note : 'بدون یادداشت.';
+                let note = schData.student_note && schData.student_note.trim() !== '' ? schData.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
                 document.getElementById('stNote').innerText = note;
-
-                // 🌟 تزریق گزارش بودجه‌بندی و هوش مصنوعی به پنل 🌟
-                document.getElementById('aiConsultantReport').innerText = schData.ai_consultant_report || "گزارش بودجه‌بندی و هوش مصنوعی برای این برنامه ثبت نشده است.";
 
                 scheduleDataArray = schData.raw_plan || [];
                 renderAllBlocks();
@@ -242,40 +244,76 @@
         }
 
         function renderAllBlocks() {
+            // پاک کردن تقویم و نیمکت
             for(let i=0; i<=6; i++) document.getElementById(`col-${i}`).innerHTML = '';
+            document.getElementById('benchContainer').innerHTML = '';
+
+            let benchCount = 0;
 
             scheduleDataArray.forEach((part, index) => {
-                let colIndex = dayMap[part.day];
-                if (colIndex === undefined) return;
+                // 🌟 اگر روزش bench باشه، میره تو نیمکت
+                if (part.day === 'bench' || !part.day) {
+                    let benchHtml = `
+                        <div class="bench-item" onclick="injectFromBench(${index})">
+                            <div class="bench-info">
+                                <div class="bench-subj">${part.subject}</div>
+                                <div class="bench-topic">${part.topic || 'بدون مبحث'} | ⏱ ${part.duration || 90} دقیقه</div>
+                            </div>
+                            <div class="bench-add-btn">➕ تقویم</div>
+                        </div>
+                    `;
+                    document.getElementById('benchContainer').innerHTML += benchHtml;
+                    benchCount++;
+                } else {
+                    // رندر تو تقویم
+                    let colIndex = dayMap[part.day];
+                    if (colIndex === undefined) return;
 
-                let startMins = timeStrToMins(part.start_time);
-                let endMins = timeStrToMins(part.end_time);
-                let topPx = Math.round((startMins - 360) * PIXELS_PER_MIN); 
-                let heightPx = Math.round((endMins - startMins) * PIXELS_PER_MIN);
+                    let startMins = timeStrToMins(part.start_time);
+                    let endMins = timeStrToMins(part.end_time);
+                    let topPx = Math.round((startMins - 360) * PIXELS_PER_MIN); 
+                    let heightPx = Math.round((endMins - startMins) * PIXELS_PER_MIN);
 
-                let typeClass = "event-default";
-                if(part.type) typeClass = `event-${part.type}`;
+                    let typeClass = "event-default";
+                    if(part.type) typeClass = `event-${part.type}`;
 
-                const block = document.createElement('div');
-                block.className = `event-block ${typeClass}`;
-                block.style.top = `${topPx}px`;
-                block.style.height = `${heightPx}px`;
-                block.dataset.index = index; 
+                    const block = document.createElement('div');
+                    block.className = `event-block ${typeClass}`;
+                    block.style.top = `${topPx}px`;
+                    block.style.height = `${heightPx}px`;
+                    block.dataset.index = index; 
 
-                block.innerHTML = `
-                    <div class="event-actions">
-                        <div class="action-btn" title="حذف" onclick="deleteBlock(${index}, event)">🗑️</div>
-                        <div class="action-btn" title="کپی" onclick="cloneBlock(${index}, event)">📋</div>
-                    </div>
-                    <div class="event-time">${part.start_time} - ${part.end_time}</div>
-                    <div class="event-title">${part.subject}</div>
-                    <div class="event-desc">${part.topic || ''}</div>
-                    <div class="resizer"></div>
-                `;
+                    block.innerHTML = `
+                        <div class="event-actions">
+                            <div class="action-btn" title="حذف" onclick="deleteBlock(${index}, event)">🗑️</div>
+                            <div class="action-btn" title="کپی" onclick="cloneBlock(${index}, event)">📋</div>
+                        </div>
+                        <div class="event-time">${part.start_time} - ${part.end_time}</div>
+                        <div class="event-title">${part.subject}</div>
+                        <div class="event-desc">${part.topic || ''}</div>
+                        <div class="resizer"></div>
+                    `;
 
-                block.addEventListener('mousedown', handleMouseDown);
-                document.getElementById(`col-${colIndex}`).appendChild(block);
+                    block.addEventListener('mousedown', handleMouseDown);
+                    document.getElementById(`col-${colIndex}`).appendChild(block);
+                }
             });
+
+            if(benchCount === 0) {
+                document.getElementById('benchContainer').innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center;">نیمکت خالی است.</div>';
+            }
+        }
+
+        // 💉 تابع تزریق از نیمکت به تقویم
+        function injectFromBench(index) {
+            scheduleDataArray[index].day = 'شنبه'; // می‌ندازیم شنبه تا ادمین راحت خودش درگ کنه
+            scheduleDataArray[index].start_time = '16:00';
+            
+            let duration = scheduleDataArray[index].duration || 90;
+            let endMins = timeStrToMins('16:00') + duration;
+            scheduleDataArray[index].end_time = minsToTimeStr(endMins);
+            
+            renderAllBlocks(); // رندر مجدد
         }
 
         let isDragging = false; let isResizing = false;
@@ -385,7 +423,6 @@
             let subject = document.getElementById('newSubject').value;
             let duration = parseInt(document.getElementById('newDuration').value);
             let topic = document.getElementById('newTopic').value;
-            let tests = parseInt(document.getElementById('newTests').value);
 
             if(!subject) { alert("نام درس را وارد کنید!"); return; }
 
@@ -399,12 +436,9 @@
             else if(subject.includes("فیزیک")) typeClass = "phys";
             else if(subject.includes("آزمون")) typeClass = "exam";
 
-            let finalTopic = topic;
-            if(tests > 0) finalTopic += ` | 🎯 هدف: ${tests} تست`;
-
             scheduleDataArray.push({
                 day: day, start_time: minsToTimeStr(startMins), end_time: minsToTimeStr(endMins),
-                subject: subject, topic: finalTopic, type: typeClass
+                subject: subject, topic: topic, type: typeClass, duration: duration
             });
 
             document.getElementById('newSubject').value = "";
@@ -413,86 +447,33 @@
         }
 
         // ==========================================
-        // 🧠 درخواست محتوای هوشمند از گوگل اسکریپت
+        // 🧠 درخواست تایید و ارسال به دیتابیس
         // ==========================================
         async function saveAndApproveWithAI() {
             const btn = document.getElementById('btnApprove');
-            btn.innerHTML = 'در حال ارتباط با مغز مصنوعی... ⏳';
+            btn.innerHTML = 'در حال ذخیره و فعال‌سازی... ⏳';
             btn.disabled = true;
 
-            const loader = document.getElementById('mainLoader');
-            document.getElementById('loaderTitle').innerText = "دستیار هوشمند در حال نوشتن پیام‌های انگیزشی است...";
-            document.getElementById('aiStatus').innerText = "این عملیات ممکن است چند ثانیه طول بکشد...";
-            loader.style.display = 'flex';
-            setTimeout(() => { loader.style.opacity = '1'; }, 10);
-
             try {
-                let subjectsByDay = {};
-                scheduleDataArray.forEach(p => {
-                    if(!subjectsByDay[p.day]) subjectsByDay[p.day] = [];
-                    if(!subjectsByDay[p.day].includes(p.subject) && !p.type.includes("break")) {
-                        subjectsByDay[p.day].push(p.subject);
-                    }
-                });
-
-                let prompt = `شما یک مشاور تحصیلی دلسوز، پرانرژی و رفیق هستید. یک برنامه درسی برای دانش‌آموزی تنظیم کرده‌ایم.
-یادداشت دانش‌آموز: "${document.getElementById('stNote').innerText}"
-دروس هر روز او به این شکل است:
-${JSON.stringify(subjectsByDay)}
-
-لطفاً دقیقاً یک فایل JSON با ساختار زیر برگردان و هیچ متن اضافه‌ای ننویس:
-{
-  "weekly_motivation": "یک پاراگراف پرانرژی و خفن برای کل هفته",
-  "daily_motivations": {
-    "شنبه": "یک جمله کوتاه انگیزشی با توجه به دروس این روز",
-    "یکشنبه": "...",
-    "دوشنبه": "...",
-    "سه‌شنبه": "...",
-    "چهارشنبه": "...",
-    "پنجشنبه": "...",
-    "جمعه": "..."
-  }
-}`;
-
-                let response = await fetch(GAS_WEBAPP, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({
-                        action: 'generate_motivation',
-                        prompt: prompt
-                    })
-                });
-                
-                let result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.error || "خطای ناشناخته از سمت سرور");
-                }
-                
-                let motivationData = result.motivation;
-                document.getElementById('aiStatus').innerText = "ثبت نهایی در پایگاه داده...";
-
+                // دیگه نیازی به ربات نیست، مستقیم تو دیتابیس آپدیت میکنیم و به کاربر نشون میدیم
                 const { error } = await supabaseClient
                     .from('ai_schedules')
                     .update({ 
                         raw_plan: scheduleDataArray,
-                        ai_motivations: motivationData,
                         status: 'approved' 
                     })
                     .eq('id', currentScheduleId);
 
                 if (error) throw error;
                 
-                alert("برنامه همراه با پیام‌های هوشمند ذخیره و ارسال شد! 🚀");
+                alert("برنامه نهایی تایید و برای دانش‌آموز فعال شد! 🚀");
                 window.location.replace('quarantine.html');
 
             } catch (err) {
                 console.error(err);
-                alert("❌ خطا در پردازش هوشمند:\n" + err.message);
-                btn.innerHTML = '✅ تولید محتوای هوشمند و ارسال';
+                alert("❌ خطا در ثبت اطلاعات:\n" + err.message);
+                btn.innerHTML = '✅ تأیید و ارسال برنامه به دانش‌آموز';
                 btn.disabled = false;
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
             }
         }
 
