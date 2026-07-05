@@ -96,6 +96,14 @@
         .event-exam { background: linear-gradient(135deg, #ef4444, #dc2626); } 
         .event-break { background: linear-gradient(135deg, #475569, #334155); color: #cbd5e1; border: 1px dashed #94a3b8; } 
         .event-default { background: linear-gradient(135deg, #64748b, #475569); } 
+        /* رنگ‌های اختصاصی دروس انسانی و عمومی */
+        .event-literature { background: rgba(236, 72, 153, 0.1); border-right: 4px solid #ec4899; } /* صورتی */
+        .event-arabic { background: rgba(20, 184, 166, 0.1); border-right: 4px solid #14b8a6; } /* فیروزه‌ای */
+        .event-religion { background: rgba(16, 185, 129, 0.1); border-right: 4px solid #10b981; } /* سبز زمردی */
+        .event-english { background: rgba(99, 102, 241, 0.1); border-right: 4px solid #6366f1; } /* نیلی */
+        .event-social { background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; } /* کهربایی */
+        .event-philosophy { background: rgba(139, 92, 246, 0.1); border-right: 4px solid #8b5cf6; } /* بنفش */
+        .event-makeup { background: rgba(239, 68, 68, 0.1); border-right: 4px solid #ef4444; } /* قرمز برای جبرانی */
     </style>
 </head>
 <body>
@@ -248,24 +256,21 @@
             for(let i=0; i<=6; i++) document.getElementById(`col-${i}`).innerHTML = '';
             document.getElementById('benchContainer').innerHTML = '';
 
+            // 🌟 متغیرهای جدید برای گروه‌بندی نیمکت
+            let groupedBench = {};
             let benchCount = 0;
 
             scheduleDataArray.forEach((part, index) => {
-                // 🌟 اگر روزش bench باشه، میره تو نیمکت
+                // اگر روزش bench باشه، میره تو لیست گروه‌بندی نیمکت
                 if (part.day === 'bench' || !part.day) {
-                    let benchHtml = `
-                        <div class="bench-item" onclick="injectFromBench(${index})">
-                            <div class="bench-info">
-                                <div class="bench-subj">${part.subject}</div>
-                                <div class="bench-topic">${part.topic || 'بدون مبحث'} | ⏱ ${part.duration || 90} دقیقه</div>
-                            </div>
-                            <div class="bench-add-btn">➕ تقویم</div>
-                        </div>
-                    `;
-                    document.getElementById('benchContainer').innerHTML += benchHtml;
+                    if (!groupedBench[part.subject]) {
+                        groupedBench[part.subject] = { count: 0, type: part.type || 'default', indices: [] };
+                    }
+                    groupedBench[part.subject].count++;
+                    groupedBench[part.subject].indices.push(index); // ذخیره ایندکس‌ها برای دکمه‌های تزریق
                     benchCount++;
                 } else {
-                    // رندر تو تقویم
+                    // رندر تو تقویم (مثل قبل)
                     let colIndex = dayMap[part.day];
                     if (colIndex === undefined) return;
 
@@ -285,6 +290,7 @@
 
                     block.innerHTML = `
                         <div class="event-actions">
+                            ${part.type !== 'break' && part.type !== 'class' ? `<div class="action-btn" title="انتقال به نیمکت" onclick="moveToBench(${index}, event)">🔽</div>` : ''}
                             <div class="action-btn" title="حذف" onclick="deleteBlock(${index}, event)">🗑️</div>
                             <div class="action-btn" title="کپی" onclick="cloneBlock(${index}, event)">📋</div>
                         </div>
@@ -299,11 +305,30 @@
                 }
             });
 
+            // 🌟 رندر کردن نیمکت به صورت گروه‌بندی شده و شیک
             if(benchCount === 0) {
                 document.getElementById('benchContainer').innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center;">نیمکت خالی است.</div>';
+            } else {
+                for (let subject in groupedBench) {
+                    let group = groupedBench[subject];
+                    let firstIndex = group.indices[0]; // گرفتن آیدی اولین باکس برای تزریق
+
+                    let benchHtml = `
+                        <div class="bench-item event-${group.type}" style="border-right: 4px solid var(--primary); padding: 10px; margin-bottom: 10px; border-radius: 8px; background: rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;">
+                            <div class="bench-info">
+                                <div class="bench-subj" style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${subject}</div>
+                                <div class="bench-topic" style="font-size: 12px; color: #666;">📚 ${group.count} باکس تو صف موندن</div>
+                            </div>
+                            <div class="bench-actions" style="display: flex; gap: 5px; flex-direction: column;">
+                                <div class="action-btn" style="cursor: pointer; background: #fff; border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; font-size: 11px; text-align: center;" onclick="injectFromBench(${firstIndex})">➕ تقویم</div>
+                                <div class="action-btn" style="cursor: pointer; color: red; background: #fff; border: 1px solid #f8d7da; padding: 4px 8px; border-radius: 4px; font-size: 11px; text-align: center;" onclick="deleteGroupFromBench('${subject}')">🗑️ حذف کل درس</div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('benchContainer').innerHTML += benchHtml;
+                }
             }
         }
-
         // 💉 تابع تزریق از نیمکت به تقویم
         function injectFromBench(index) {
             scheduleDataArray[index].day = 'شنبه'; // می‌ندازیم شنبه تا ادمین راحت خودش درگ کنه
@@ -400,6 +425,26 @@
             if(confirm("پارت حذف شود؟")) {
                 scheduleDataArray.splice(index, 1);
                 renderAllBlocks(); 
+            }
+        }
+
+        // 🌟 تابع انتقال یک پارت از تقویم به نیمکت
+        function moveToBench(index, e) {
+            e.stopPropagation(); // برای اینکه موقع کلیک، عملیات درگ فعال نشه
+            if(confirm("این پارت به نیمکت منتقل شود؟")) {
+                scheduleDataArray[index].day = 'bench';
+                scheduleDataArray[index].start_time = '';
+                scheduleDataArray[index].end_time = '';
+                renderAllBlocks(); 
+            }
+        }
+
+        // 🌟 تابع حذف یکجای کل یک درس از نیمکت
+        function deleteGroupFromBench(subjectName) {
+            if(confirm(`مطمئنی می‌خوای کل باکس‌های "${subjectName}" رو از نیمکت حذف کنی؟`)) {
+                // تمام آیتم‌هایی که هم تو نیمکت هستن و هم اسمشون با این درس یکیه رو فیلتر می‌کنیم
+                scheduleDataArray = scheduleDataArray.filter(part => !(part.day === 'bench' && part.subject === subjectName));
+                renderAllBlocks();
             }
         }
 
