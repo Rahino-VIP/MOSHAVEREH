@@ -112,6 +112,14 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // ==========================================
+        // 🚪 تابع خروج از سیستم
+        // ==========================================
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.replace('index.html');
+        }
+
         window.onload = async function() {
             try {
                 // ۱. چک کردن دسترسی ادمین
@@ -138,15 +146,18 @@
         // ==========================================
         // 📥 تابع دریافت و رندر برنامه‌های قرنطینه
         // ==========================================
-        // ==========================================
+       // ==========================================
         // 📥 بارگذاری برنامه‌های در انتظار (قرنطینه)
         // ==========================================
         async function loadQuarantineSchedules() {
-            const container = document.getElementById('quarantineList');
-            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 40px;">در حال اسکن اتاق قرنطینه... ⏳</div>';
+            // 💡 آیدی اصلاح شد: quarantineGrid
+            const container = document.getElementById('quarantineGrid');
+            const pendingCountSpan = document.getElementById('pendingCount');
+            
+            container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال اسکن پایگاه داده و دریافت برنامه‌ها... ⏳</div>';
 
             try {
-                // ۱. مشکل یادداشت: student_note به لیست دریافت اضافه شد
+                // ۱. استخراج برنامه‌ها به همراه یادداشت دانش‌آموز (student_note)
                 const { data, error } = await supabaseClient
                     .from('ai_schedules')
                     .select('id, created_at, national_id, week_label, status, raw_plan, student_note')
@@ -155,87 +166,83 @@
 
                 if (error) throw error;
 
-                document.getElementById('pendingCount').innerText = data.length;
+                pendingCountSpan.innerText = data.length;
 
                 if (data.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align:center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--border-color);">
-                            <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">☕</div>
-                            <h3 style="color: var(--text-muted); font-weight: 400;">اتاق قرنطینه خالی است!</h3>
-                            <p style="font-size: 14px; color: #64748b; margin-top: 10px;">فعلاً هیچ درخواست جدیدی نیومده.</p>
+                        <div style="background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--success); padding: 40px; text-align: center; border-radius: 16px;">
+                            <span style="font-size: 40px; display: block; margin-bottom: 10px;">✅</span>
+                            <h3 style="color: var(--success);">قرنطینه پاکسازی شده است!</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;">هیچ برنامه‌ی در انتظار تاییدی وجود ندارد.</p>
                         </div>
                     `;
                     return;
                 }
 
-                const cardsHtml = await Promise.all(data.map(async (item) => {
-                    const dateObj = new Date(item.created_at);
-                    const pDate = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(dateObj);
+                container.innerHTML = ''; 
 
+                for (let sch of data) {
+                    // دریافت اسم، پایه و رشته با استفاده از کد ملی (national_id)
                     const { data: stData } = await supabaseClient
-                        .from('students').select('full_name, grade, major').eq('national_id', item.national_id).single();
+                        .from('students')
+                        .select('full_name, grade, major')
+                        .eq('national_id', sch.national_id)
+                        .single();
 
-                    let planArr = typeof item.raw_plan === 'string' ? JSON.parse(item.raw_plan) : item.raw_plan;
+                    const studentName = stData ? stData.full_name : 'دانش‌آموز ناشناس';
+                    // ۲. رفع مشکل نامشخص: پایه و رشته در کنار هم
+                    const studentGrade = stData ? `${stData.grade} ${stData.major}` : 'پایه و رشته نامشخص';
+                    const noteText = (sch.student_note && sch.student_note.trim() !== '') ? sch.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
                     
-                    // ۳. مشکل آمار: فیلتر کردن پارت‌های متفرقه و محاسبه مجموع تست‌ها
+                    let planArr = typeof sch.raw_plan === 'string' ? JSON.parse(sch.raw_plan) : sch.raw_plan;
+                    
+                    // ۳. فیلتر کردن پارت‌های غیردرسی و محاسبه مجموع تست هدف
                     let studyBlocks = [];
                     let totalTests = 0;
                     
                     if (planArr && Array.isArray(planArr)) {
                         studyBlocks = planArr.filter(b => b.type !== 'class' && b.type !== 'break' && b.type !== 'makeup');
-                        // جمع زدن تعداد تست‌ها از روی فیلد tests
                         totalTests = studyBlocks.reduce((sum, b) => sum + (parseInt(b.tests) || 0), 0);
                     }
 
-                    // جایگذاری یادداشت
-                    let note = item.student_note && item.student_note.trim() !== '' ? item.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
-
-                    return `
-                        <div class="q-card" id="card-${item.id}">
-                            <div class="q-header">
-                                <div class="student-info">
-                                    <div class="avatar">${stData ? stData.full_name.charAt(0) : '?'}</div>
+                    const cardHTML = `
+                        <div class="q-card" id="card-${sch.id}">
+                            <div class="q-info">
+                                <div class="s-header">
                                     <div>
-                                        <div class="st-name">${stData ? stData.full_name : 'دانش‌آموز ناشناس'}</div>
-                                        <div class="st-date">درخواست در: ${pDate}</div>
+                                        <div class="s-name">${studentName}</div>
+                                        <div class="s-tags">
+                                            <span class="s-tag">🎓 ${studentGrade}</span>
+                                            <span class="s-tag">📅 آزمون ${sch.week_label ? sch.week_label.replace('آمادگی آزمون ', '') : ''}</span>
+                                        </div>
                                     </div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">شناسه: ${sch.id.substring(0,6)}</div>
                                 </div>
-                                <div class="q-status status-pending">نیاز به جراحی ✂️</div>
-                            </div>
-                            
-                            <div class="q-body">
-                                <div class="q-meta">
-                                    <span>📅 آزمون ${item.week_label.replace('آمادگی آزمون ', '')}</span>
-                                    <span>🎓 ${stData ? stData.grade + ' ' + stData.major : 'پایه و رشته نامشخص'}</span>
-                                </div>
-                                
-                                <div class="q-meta" style="margin-top: 10px;">
-                                    <span style="background: rgba(59, 130, 246, 0.1); color: var(--accent);">📚 ${studyBlocks.length} پارت درسی</span>
-                                    <span style="background: rgba(16, 185, 129, 0.1); color: var(--success);">🎯 ${totalTests} تست هدف</span>
-                                </div>
-                                
-                                <div class="q-note">
-                                    <strong>📝 یادداشت دانش‌آموز:</strong><br>
-                                    ${note}
+                                <div class="s-note">
+                                    <span>💬 پیام ضمیمه شده:</span>
+                                    "${noteText}"
                                 </div>
                             </div>
                             
+                            <div class="q-ai-status">
+                                <div class="ai-label">آنالیز ساختار برنامه:</div>
+                                <div class="ai-metric good"><span>پارت درسی خالص:</span> <span>📚 ${studyBlocks.length} پارت</span></div>
+                                <div class="ai-metric"><span>مجموع تست هدف:</span> <span>🎯 ${totalTests} تست</span></div>
+                            </div>
+
                             <div class="q-actions">
-                                <button class="btn btn-primary" onclick="window.location.href='surgery.html?schedule_id=${item.id}'">
-                                    <span>ورود به اتاق جراحی</span>
-                                    <span>🩺</span>
-                                </button>
-                                <button class="btn btn-outline" onclick="quickApprove('${item.id}')" title="تایید سریع بدون تغییر">✅</button>
+                                <a href="surgery.html?schedule_id=${sch.id}" class="btn btn-surgery">مشاهده و جراحی 🔬</a>
+                                <button class="btn btn-quick" onclick="quickApprove('${sch.id}')">تأیید سریع (ارسال) ✅</button>
                             </div>
                         </div>
                     `;
-                }));
+                    
+                    container.insertAdjacentHTML('beforeend', cardHTML);
+                }
 
-                container.innerHTML = cardsHtml.join('');
-
-            } catch (err) {
-                console.error(err);
-                container.innerHTML = `<div style="text-align:center; color: var(--danger); padding: 20px;">❌ خطا در دریافت اطلاعات: ${err.message}</div>`;
+            } catch (error) {
+                console.error("Database Fetch Error:", error);
+                container.innerHTML = '<div style="color: var(--danger); text-align: center; padding: 20px; border: 1px solid var(--danger); border-radius: 12px;">خطا در دریافت اطلاعات. لطفاً کنسول مرورگر را بررسی کنید.</div>';
             }
         }
 
