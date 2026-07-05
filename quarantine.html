@@ -147,15 +147,16 @@
        // ==========================================
         // 📥 بارگذاری برنامه‌های در انتظار (قرنطینه)
         // ==========================================
+        // ==========================================
+        // 📥 بارگذاری برنامه‌های در انتظار (قرنطینه)
+        // ==========================================
         async function loadQuarantineSchedules() {
-            // 💡 آیدی اصلاح شد: quarantineGrid
             const container = document.getElementById('quarantineGrid');
             const pendingCountSpan = document.getElementById('pendingCount');
             
             container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">در حال اسکن پایگاه داده و دریافت برنامه‌ها... ⏳</div>';
 
             try {
-                // ۱. استخراج برنامه‌ها به همراه یادداشت دانش‌آموز (student_note)
                 const { data, error } = await supabaseClient
                     .from('ai_schedules')
                     .select('id, created_at, national_id, week_label, status, raw_plan, student_note')
@@ -180,7 +181,6 @@
                 container.innerHTML = ''; 
 
                 for (let sch of data) {
-                    // دریافت اسم، پایه و رشته با استفاده از کد ملی (national_id)
                     const { data: stData } = await supabaseClient
                         .from('students')
                         .select('full_name, grade, major')
@@ -188,19 +188,26 @@
                         .single();
 
                     const studentName = stData ? stData.full_name : 'دانش‌آموز ناشناس';
-                    // ۲. رفع مشکل نامشخص: پایه و رشته در کنار هم
                     const studentGrade = stData ? `${stData.grade} ${stData.major}` : 'پایه و رشته نامشخص';
                     const noteText = (sch.student_note && sch.student_note.trim() !== '') ? sch.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
                     
                     let planArr = typeof sch.raw_plan === 'string' ? JSON.parse(sch.raw_plan) : sch.raw_plan;
                     
-                    // ۳. فیلتر کردن پارت‌های غیردرسی و محاسبه مجموع تست هدف
                     let studyBlocks = [];
                     let totalTests = 0;
                     
                     if (planArr && Array.isArray(planArr)) {
-                        studyBlocks = planArr.filter(b => b.type !== 'class' && b.type !== 'break' && b.type !== 'makeup');
-                        totalTests = studyBlocks.reduce((sum, b) => sum + (parseInt(b.tests) || 0), 0);
+                        // حذف کلاس‌ها، تایم غذا، جبرانی‌ها و باکس‌های مونده رو نیمکت
+                        studyBlocks = planArr.filter(b => b.type !== 'class' && b.type !== 'break' && b.type !== 'makeup' && b.day !== 'bench');
+                        
+                        // 🌟 منطق جدید محاسبه تست
+                        studyBlocks.forEach(b => {
+                            if (b.topic && b.topic.includes('(باکس تست‌زنی)')) {
+                                totalTests += 30; // باکس‌های اختصاصی تست = ۳۰ تا
+                            } else {
+                                totalTests += (parseInt(b.tests) || 0); // باکس‌های عادی = خواندن عدد گراف دانش
+                            }
+                        });
                     }
 
                     const cardHTML = `
@@ -243,7 +250,6 @@
                 container.innerHTML = '<div style="color: var(--danger); text-align: center; padding: 20px; border: 1px solid var(--danger); border-radius: 12px;">خطا در دریافت اطلاعات. لطفاً کنسول مرورگر را بررسی کنید.</div>';
             }
         }
-
         // ==========================================
         // ✅ تابع تایید سریع
         // ==========================================
