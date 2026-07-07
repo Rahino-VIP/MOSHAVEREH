@@ -422,8 +422,24 @@
 
         function deleteBlock(index, e) {
             e.stopPropagation();
-            if(confirm("پارت حذف شود؟")) {
-                scheduleDataArray.splice(index, 1);
+            if(confirm("پارت حذف شود؟ (جای آن با بانک جبرانی پر خواهد شد)")) {
+                let origBlock = scheduleDataArray[index];
+
+                // خلق پارت جبرانی با مشخصات زمانیِ پارتِ در حال حذف
+                let makeupBlock = {
+                    day: origBlock.day,
+                    type: 'makeup',
+                    subject: 'بانک جبرانی',
+                    topic: 'جایگزینی دروس جا مانده',
+                    start_time: origBlock.start_time,
+                    end_time: origBlock.end_time,
+                    duration: origBlock.duration || 90,
+                    status: 'pending',
+                    block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
+                };
+
+                // به جای حذف کامل، پارت جبرانی رو دقیقاً در همون ایندکس جایگزین می‌کنیم
+                scheduleDataArray.splice(index, 1, makeupBlock);
                 renderAllBlocks(); 
             }
         }
@@ -431,10 +447,30 @@
         // 🌟 تابع انتقال یک پارت از تقویم به نیمکت
         function moveToBench(index, e) {
             e.stopPropagation(); // برای اینکه موقع کلیک، عملیات درگ فعال نشه
-            if(confirm("این پارت به نیمکت منتقل شود؟")) {
+            if(confirm("این پارت به نیمکت منتقل شود؟ (جای آن با بانک جبرانی پر خواهد شد)")) {
+                let origBlock = scheduleDataArray[index];
+
+                // خلق پارت جبرانی تو همون زمان و روزِ قبلی
+                let makeupBlock = {
+                    day: origBlock.day,
+                    type: 'makeup',
+                    subject: 'بانک جبرانی',
+                    topic: 'جایگزینی دروس جا مانده',
+                    start_time: origBlock.start_time,
+                    end_time: origBlock.end_time,
+                    duration: origBlock.duration || 90,
+                    status: 'pending',
+                    block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
+                };
+
+                // انتقال پارت اصلی به نیمکت (تغییر ماهیتش تو همون ایندکس)
                 scheduleDataArray[index].day = 'bench';
                 scheduleDataArray[index].start_time = '';
                 scheduleDataArray[index].end_time = '';
+                scheduleDataArray[index].is_benched = true;
+
+                // تزریق پارت جبرانی به لیست کل برنامه‌ها
+                scheduleDataArray.push(makeupBlock);
                 renderAllBlocks(); 
             }
         }
