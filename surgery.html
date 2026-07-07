@@ -420,37 +420,55 @@
             block.querySelector('.event-time').innerText = `${minsToTimeStr(sMins)} - ${minsToTimeStr(eMins)}`;
         }
 
+        // 🗑️ تابع حذف پارت با درک تفاوت درس عادی و جبرانی
         function deleteBlock(index, e) {
             e.stopPropagation();
-            if(confirm("پارت حذف شود؟ (جای آن با بانک جبرانی پر خواهد شد)")) {
-                let origBlock = scheduleDataArray[index];
+            
+            let origBlock = scheduleDataArray[index];
+            // بررسی اینکه آیا این باکس، جبرانیه؟
+            let isMakeup = (origBlock.type === 'makeup' || origBlock.subject.includes('جبرانی'));
+            
+            // پیام داینامیک بر اساس نوع باکس
+            let confirmMsg = isMakeup 
+                ? "آیا از حذف این باکس جبرانی مطمئن هستید؟ (جای آن روی تقویم خالی می‌ماند)" 
+                : "پارت حذف شود؟ (جای آن با بانک جبرانی پر خواهد شد)";
 
-                // خلق پارت جبرانی با مشخصات زمانیِ پارتِ در حال حذف
-                let makeupBlock = {
-                    day: origBlock.day,
-                    type: 'makeup',
-                    subject: 'بانک جبرانی',
-                    topic: 'جایگزینی دروس جا مانده',
-                    start_time: origBlock.start_time,
-                    end_time: origBlock.end_time,
-                    duration: origBlock.duration || 90,
-                    status: 'pending',
-                    block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
-                };
-
-                // به جای حذف کامل، پارت جبرانی رو دقیقاً در همون ایندکس جایگزین می‌کنیم
-                scheduleDataArray.splice(index, 1, makeupBlock);
+            if(confirm(confirmMsg)) {
+                if (isMakeup) {
+                    // 🌟 تبصره: اگر خودش جبرانی بود، بدون جایگزین کلاً پاکش کن
+                    scheduleDataArray.splice(index, 1);
+                } else {
+                    // اگر درس عادی بود، جاش یه جبرانی بکار
+                    let makeupBlock = {
+                        day: origBlock.day,
+                        type: 'makeup',
+                        subject: 'بانک جبرانی',
+                        topic: 'جایگزینی دروس جا مانده',
+                        start_time: origBlock.start_time,
+                        end_time: origBlock.end_time,
+                        duration: origBlock.duration || 90,
+                        status: 'pending',
+                        block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
+                    };
+                    scheduleDataArray.splice(index, 1, makeupBlock);
+                }
                 renderAllBlocks(); 
             }
         }
 
-        // 🌟 تابع انتقال یک پارت از تقویم به نیمکت
+        // 🌟 تابع انتقال به نیمکت (با مسدود کردن انتقال جبرانی‌ها)
         function moveToBench(index, e) {
-            e.stopPropagation(); // برای اینکه موقع کلیک، عملیات درگ فعال نشه
-            if(confirm("این پارت به نیمکت منتقل شود؟ (جای آن با بانک جبرانی پر خواهد شد)")) {
-                let origBlock = scheduleDataArray[index];
+            e.stopPropagation(); 
+            
+            let origBlock = scheduleDataArray[index];
+            
+            // 🌟 تبصره: باکس جبرانی نباید بره رو نیمکت (چون بدهی نیست)
+            if (origBlock.type === 'makeup' || origBlock.subject.includes('جبرانی')) {
+                alert("⚠️ باکس جبرانی رو که نمی‌تونی بفرستی رو نیمکت! اگر بهش نیاز نداری، از دکمه «حذف» استفاده کن.");
+                return; // عملیات رو همینجا متوقف می‌کنیم
+            }
 
-                // خلق پارت جبرانی تو همون زمان و روزِ قبلی
+            if(confirm("این پارت به نیمکت منتقل شود؟ (جای آن با بانک جبرانی پر خواهد شد)")) {
                 let makeupBlock = {
                     day: origBlock.day,
                     type: 'makeup',
@@ -463,18 +481,15 @@
                     block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
                 };
 
-                // انتقال پارت اصلی به نیمکت (تغییر ماهیتش تو همون ایندکس)
                 scheduleDataArray[index].day = 'bench';
                 scheduleDataArray[index].start_time = '';
                 scheduleDataArray[index].end_time = '';
                 scheduleDataArray[index].is_benched = true;
 
-                // تزریق پارت جبرانی به لیست کل برنامه‌ها
                 scheduleDataArray.push(makeupBlock);
                 renderAllBlocks(); 
             }
         }
-
         // 🌟 تابع حذف یکجای کل یک درس از نیمکت
         function deleteGroupFromBench(subjectName) {
             if(confirm(`مطمئنی می‌خوای کل باکس‌های "${subjectName}" رو از نیمکت حذف کنی؟`)) {
