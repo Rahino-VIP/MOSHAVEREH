@@ -124,14 +124,18 @@
         </div>
 
         <div class="panel-body">
+            <div class="ai-assistant" style="background: rgba(139, 92, 246, 0.05); border-color: var(--purple); margin-bottom: 5px;">
+                <div style="position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--purple); font-weight: bold;">🤖 تحلیل هوش مصنوعی</div>
+                <div class="ai-text" id="aiReportText">در حال دریافت گزارش...</div>
+            </div>
+
             <div class="ai-assistant">
                 <div class="ai-text" id="stNote">در حال پردازش...</div>
             </div>
 
             <div class="bench-box">
                 <div class="bench-title">🟨 نیمکت ذخیره‌ها (باکس‌های جامانده)</div>
-                <div id="benchContainer">
-                    </div>
+                <div id="benchContainer"></div>
             </div>
 
             <div class="add-block-form">
@@ -158,11 +162,11 @@
         </div>
 
         <div class="panel-footer">
-            <button class="btn-action btn-approve" id="btnApprove" onclick="saveAndApproveWithAI()">✅ تأیید و ارسال برنامه به دانش‌آموز</button>
+            <textarea id="advisorNote" class="input-css" rows="2" style="margin-bottom: 10px; border-color: var(--success);" placeholder="نکته برای هوش مصنوعی (مثلاً: بگو این هفته رو فیزیک تمرکز کنه)"></textarea>
+            
+            <button class="btn-action btn-approve" id="btnApprove" onclick="saveAndApproveWithAI()">✅ تأیید و تولید پیام انگیزشی</button>
             <button class="btn-action btn-reject" id="btnReject" onclick="rejectSchedule()">❌ رد و حذف برنامه</button>
         </div>
-    </div>
-
     <div class="calendar-container">
         <div class="calendar-header">
             <div class="time-spacer"></div>
@@ -236,6 +240,9 @@
                 
                 let note = schData.student_note && schData.student_note.trim() !== '' ? schData.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
                 document.getElementById('stNote').innerText = note;
+
+                let report = schData.ai_consultant_report && schData.ai_consultant_report.trim() !== '' ? schData.ai_consultant_report : 'تحلیلی برای این برنامه ثبت نشده است.';
+                document.getElementById('aiReportText').innerText = report;
 
                 scheduleDataArray = schData.raw_plan || [];
                 renderAllBlocks();
@@ -543,36 +550,66 @@
         }
 
         // ==========================================
-        // 🧠 درخواست تایید و ارسال به دیتابیس
+        // 🧠 درخواست تایید، تولید انگیزه و ارسال به دیتابیس
         // ==========================================
+        // ⚠️ آدرس وب‌اپ گوگل اسکریپت خودت رو اینجا بذار:
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
+
         async function saveAndApproveWithAI() {
             const btn = document.getElementById('btnApprove');
-            btn.innerHTML = 'در حال ذخیره و فعال‌سازی... ⏳';
+            const advNote = document.getElementById('advisorNote').value;
+            const studentName = document.getElementById('stName').innerText;
+            
+            btn.innerHTML = 'در حال ساخت پیام انگیزشی... ⏳';
             btn.disabled = true;
 
             try {
-                // دیگه نیازی به ربات نیست، مستقیم تو دیتابیس آپدیت میکنیم و به کاربر نشون میدیم
+                // ۱. درخواست ساخت پیام انگیزشی از گوگل اسکریپت
+                const aiResponse = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'generate_motivation', // باید تو تابع doPost سرورت این اکشن رو هندل کنی
+                        student_name: studentName,
+                        advisor_note: advNote
+                    })
+                });
+                
+                const aiResult = await aiResponse.json();
+                let generatedMotivations = {};
+                
+                if (aiResult.success) {
+                    generatedMotivations = aiResult.motivation;
+                } else {
+                    console.warn("خطا در تولید انگیزه:", aiResult.error);
+                    // پیام پیش‌فرض در صورت قطعی اینترنت
+                    generatedMotivations = { weekly_motivation: "با قدرت پیش برو!", daily_motivations: {} };
+                }
+
+                btn.innerHTML = 'در حال ذخیره نهایی... 💾';
+
+                // ۲. ذخیره برنامه جراحی شده و پیام‌ها در سوپابیس
                 const { error } = await supabaseClient
                     .from('ai_schedules')
                     .update({ 
                         raw_plan: scheduleDataArray,
+                        ai_motivations: generatedMotivations, // ذخیره JSON تولید شده
                         status: 'approved' 
                     })
                     .eq('id', currentScheduleId);
 
                 if (error) throw error;
                 
-                alert("برنامه نهایی تایید و برای دانش‌آموز فعال شد! 🚀");
+                alert("برنامه نهایی تایید و پیام‌های انگیزشی تولید شد! 🚀");
                 window.location.replace('quarantine.html');
 
             } catch (err) {
                 console.error(err);
                 alert("❌ خطا در ثبت اطلاعات:\n" + err.message);
-                btn.innerHTML = '✅ تأیید و ارسال برنامه به دانش‌آموز';
+                btn.innerHTML = '✅ تأیید و تولید پیام انگیزشی';
                 btn.disabled = false;
             }
         }
-
         function rejectSchedule() {
             if(confirm("آیا مطمئن هستید که این برنامه کاملاً پاک شود؟")) {
                 const btn = document.getElementById('btnReject');
