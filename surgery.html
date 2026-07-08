@@ -124,9 +124,25 @@
         </div>
 
         <div class="panel-body">
-            <div class="ai-assistant" style="background: rgba(139, 92, 246, 0.05); border-color: var(--purple); margin-bottom: 5px;">
-                <div style="position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--purple); font-weight: bold;">🤖 تحلیل هوش مصنوعی</div>
-                <div class="ai-text" id="aiReportText">در حال دریافت گزارش...</div>
+            <div class="ai-assistant" style="background: rgba(59, 130, 246, 0.05); border-color: var(--accent); margin-bottom: 5px;">
+                <div style="position: absolute; top: -10px; right: 15px; background: var(--surface-dark); padding: 0 10px; font-size: 11px; color: var(--accent); font-weight: bold;">📊 وضعیت و توان مطالعاتی</div>
+                
+                <div id="studentStatsContent" style="display: flex; flex-direction: column; gap: 10px; padding-top: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                        <span style="color: var(--text-muted);">میانگین ساعت مطالعه:</span>
+                        <strong style="color: var(--text-main); font-size: 15px;" id="uiAvgStudy">...</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                        <span style="color: var(--text-muted);">میانگین تعداد تست:</span>
+                        <strong style="color: var(--text-main); font-size: 15px;" id="uiAvgTest">...</strong>
+                    </div>
+                    
+                    <div style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">تنظیمات و سوئیچ‌های فعال این هفته:</div>
+                        <div id="uiSwitches" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            </div>
+                    </div>
+                </div>
             </div>
 
             <div class="ai-assistant">
@@ -241,9 +257,27 @@
                 let note = schData.student_note && schData.student_note.trim() !== '' ? schData.student_note : 'دانش‌آموز یادداشتی ثبت نکرده است.';
                 document.getElementById('stNote').innerText = note;
 
-                let report = schData.ai_consultant_report && schData.ai_consultant_report.trim() !== '' ? schData.ai_consultant_report : 'تحلیلی برای این برنامه ثبت نشده است.';
-                document.getElementById('aiReportText').innerText = report;
+                // 📊 رندر کردن دیتای داشبورد مشاور از دیتابیس
+                let dashboardData = { switches: [], avgStudy: 0, avgTest: 0 };
+                try {
+                    if (schData.ai_consultant_report && schData.ai_consultant_report.startsWith('{')) {
+                        dashboardData = JSON.parse(schData.ai_consultant_report);
+                    }
+                } catch(e) {
+                    console.warn("خطا در پارس کردن اطلاعات داشبورد");
+                }
 
+                document.getElementById('uiAvgStudy').innerText = (dashboardData.avgStudy || 0) + ' ساعت در روز';
+                document.getElementById('uiAvgTest').innerText = (dashboardData.avgTest || 0) + ' تست در روز';
+                
+                const switchesContainer = document.getElementById('uiSwitches');
+                if (dashboardData.switches && dashboardData.switches.length > 0) {
+                    switchesContainer.innerHTML = dashboardData.switches.map(sw => 
+                        `<span style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; border: 1px solid var(--success);">${sw}</span>`
+                    ).join('');
+                } else {
+                    switchesContainer.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">سوئیچ خاصی روشن نیست</span>';
+                }
                 scheduleDataArray = schData.raw_plan || [];
                 renderAllBlocks();
 
