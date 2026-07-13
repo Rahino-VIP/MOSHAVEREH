@@ -392,6 +392,10 @@
         // ==========================================
         // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
         // ==========================================
+        // ==========================================
+        // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
+        // آپدیت شده: ابطال خودکار اقساط معوقه طرح‌های قبلی
+        // ==========================================
         async function approveTradeIn() {
             if(!confirm('آیا از تایید این درخواست تعویض اطمینان دارید؟ قراردادهای لغو شده باطل خواهند شد.')) return;
             let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
@@ -402,6 +406,16 @@
                 let sysData = JSON.parse(match[1]);
 
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
+
+                // 🎯 جدید: ابطال چک‌ها و اقساط معوقه فاکتورهای قبلی در دیتابیس
+                if (sysData.void_invoice_ids && sysData.void_invoice_ids.length > 0) {
+                    for (let vId of sysData.void_invoice_ids) {
+                        await supabaseClient.from('installments')
+                            .update({ status: 'cancelled' })
+                            .eq('invoice_id', vId)
+                            .in('status', ['pending_upload', 'pending_approval']);
+                    }
+                }
 
                 if (sysData.walletChange !== 0) {
                     let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
@@ -429,11 +443,9 @@
                         let endD = new Date();
                         endD.setMonth(endD.getMonth() + (actionData.dur === 'konkur' ? 10 : parseInt(actionData.dur)));
                         
-                        // 🎯 استخراج مقادیر مالی متناسب با سرویس
                         let baseVal = category === 'pansion' ? inv.pan_base_value : inv.con_base_value;
                         let actualVal = category === 'pansion' ? inv.pan_actual_value : inv.con_actual_value;
 
-                        // 🎯 ثبت قرارداد جدید همراه با ستون‌های مالی
                         await supabaseClient.from('subscriptions').insert({
                             invoice_id: inv.id,
                             base_total_value: baseVal || 0,
@@ -459,7 +471,7 @@
 
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
-                alert('✅ عملیات تعویض با موفقیت انجام شد. قراردادها، کیف پول و ظرفیت‌ها جایگزین شدند.');
+                alert('✅ عملیات تعویض با موفقیت انجام شد. قراردادها، کیف پول و اقساط جایگزین شدند.');
                 closeDetails(); loadData();
             } catch(e) { alert("خطا: " + e.message); }
         }
