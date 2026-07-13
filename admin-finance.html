@@ -388,12 +388,6 @@
 
         // ==========================================
         // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
-        // ==========================================
-        // ==========================================
-        // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
-        // ==========================================
-        // ==========================================
-        // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
         // آپدیت شده: ابطال خودکار اقساط معوقه طرح‌های قبلی
         // ==========================================
         async function approveTradeIn() {
@@ -616,7 +610,7 @@
             // ۱. دریافت دلیل رد فیش از مدیر
             let reason = prompt('دلیل رد کردن این فیش چیست؟\n(این متن به عنوان پیام برای دانش‌آموز ارسال می‌شود):');
             
-            if (reason === null) return; // اگر مدیر منصرف شد (دکمه Cancel رو زد)
+            if (reason === null) return; 
             if (reason.trim() === '') return alert('وارد کردن دلیل برای رد فیش الزامی است!');
 
             try {
@@ -634,7 +628,9 @@
                     });
 
                 } else if (currentSelection.type === 'installment') {
-                    let inv = db.installments.find(i => String(i.id) === String(currentSelection.id));
+                    // 🎯 خطای تایپی اینجا بود: متغیر باید inst تعریف بشه
+                    let inst = db.installments.find(i => String(i.id) === String(currentSelection.id));
+                    
                     // برگرداندن قسط به حالت منتظر پرداخت
                     await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', inst.id);
                     
