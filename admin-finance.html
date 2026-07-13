@@ -389,37 +389,35 @@
         // ==========================================
         // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
         // ==========================================
+        // ==========================================
+        // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
+        // ==========================================
         async function approveTradeIn() {
             if(!confirm('آیا از تایید این درخواست تعویض اطمینان دارید؟ قراردادهای لغو شده باطل خواهند شد.')) return;
             let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
             
             try {
-                // ۱. استخراج دیتای سیستمی رمزگذاری شده
                 let match = inv.invoice_details ? inv.invoice_details.match(/\[TRADE_IN_DATA:\s*(\{.*?\})\]/) : null;
                 if (!match) return alert("خطا: دیتای سیستمی (Trade-in) یافت نشد! این فاکتور قابل پردازش خودکار نیست.");
                 let sysData = JSON.parse(match[1]);
 
-                // ۲. تایید فاکتور در دیتابیس
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
 
-                // ۳. آپدیت ایمن کیف پول
                 if (sysData.walletChange !== 0) {
                     let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
                     let newBal = (stData.wallet_balance || 0) + sysData.walletChange;
                     await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
                 }
 
-                // ۴. موتور تعویض قراردادها و بازگردانی ظرفیت
                 const handleTradeInSub = async (category, actionData) => {
-                    if (actionData.action === 'no_change') return; // اگر بدون تغییر بود عبور کن
+                    if (actionData.action === 'no_change') return; 
 
                     let today = new Date().toISOString().split('T')[0];
 
-                    // الف) باطل کردن قرارداد فعلی و بازگرداندن ظرفیت
                     let { data: oldSubs } = await supabaseClient.from('subscriptions').select('id, service_type').eq('student_nid', inv.student_nid).eq('service_category', category).eq('status', 'active');
                     if (oldSubs && oldSubs.length > 0) {
                         await supabaseClient.from('subscriptions').update({ status: 'swapped' }).eq('id', oldSubs[0].id);
-                        // بازگردانی ۱ ظرفیت به طرح قدیم
+                        
                         let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', inv.student_nid).single();
                         let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
                         let stMajor = stData.major || 'all';
@@ -427,17 +425,27 @@
                         if (oldSrv) await supabaseClient.from('services').update({ capacity: oldSrv.capacity + 1 }).eq('id', oldSrv.id);
                     }
 
-                    // ب) ایجاد قرارداد جدید و کسر ظرفیت
                     if (actionData.action === 'change') {
                         let endD = new Date();
                         endD.setMonth(endD.getMonth() + (actionData.dur === 'konkur' ? 10 : parseInt(actionData.dur)));
                         
+                        // 🎯 استخراج مقادیر مالی متناسب با سرویس
+                        let baseVal = category === 'pansion' ? inv.pan_base_value : inv.con_base_value;
+                        let actualVal = category === 'pansion' ? inv.pan_actual_value : inv.con_actual_value;
+
+                        // 🎯 ثبت قرارداد جدید همراه با ستون‌های مالی
                         await supabaseClient.from('subscriptions').insert({
-                            student_nid: inv.student_nid, service_category: category, service_type: actionData.type,
-                            start_date: today, end_date: endD.toISOString().split('T')[0], status: 'active'
+                            invoice_id: inv.id,
+                            base_total_value: baseVal || 0,
+                            actual_paid_value: actualVal || 0,
+                            student_nid: inv.student_nid, 
+                            service_category: category, 
+                            service_type: actionData.type,
+                            start_date: today, 
+                            end_date: endD.toISOString().split('T')[0], 
+                            status: 'active'
                         });
 
-                        // کسر ۱ ظرفیت از طرح جدید
                         let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', inv.student_nid).single();
                         let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
                         let stMajor = stData.major || 'all';
@@ -449,7 +457,6 @@
                 await handleTradeInSub('pansion', sysData.pansion);
                 await handleTradeInSub('consult', sysData.consult);
 
-                // ۵. فعال‌سازی مجدد اکانت دانش‌آموز
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
                 alert('✅ عملیات تعویض با موفقیت انجام شد. قراردادها، کیف پول و ظرفیت‌ها جایگزین شدند.');
@@ -458,8 +465,8 @@
         }
         // ==========================================
         // ⚙️ توابع هسته پردازش تایید (ERP Engine)
+        // آپدیت شده: انتقال مقادیر تفکیک‌شده مالی به جدول اشتراک‌ها
         // ==========================================
-        
         async function approveInvoice() {
             if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
             
@@ -490,7 +497,6 @@
                             startDate = lastEndDate; 
                         }
                         
-                        // 💡 جادوی حل مشکل دوگانه شدن: آپدیت وضعیت قرارداد قبلی به تمدید شده
                         await supabaseClient.from('subscriptions')
                             .update({ status: 'renewed' })
                             .eq('id', existingSub[0].id);
@@ -504,7 +510,7 @@
                         endStr: endDate.toISOString().split('T')[0]
                     };
                 };
-                // ۲. موتور هوشمند کسر ظرفیت (با در نظر گرفتن رشته و پایه)
+
                 const updateCapacity = async (category, type, studentNid) => {
                     let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
                     if(!stData) return;
@@ -523,26 +529,38 @@
                     }
                 };
 
-                // ثبت اشتراک پانسیون و کسر ظرفیت
+                // 🎯 ثبت اشتراک پانسیون (همراه با ستون‌های مالی جدید)
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
-                    // دریافت تاریخ دقیق شروع و پایان با تابع هوشمند
                     let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid);
                     
                     await supabaseClient.from('subscriptions').insert({
-                        student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
-                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
+                        invoice_id: inv.id,                               // 👈 ثبت آیدی فاکتور
+                        base_total_value: inv.pan_base_value || 0,        // 👈 ثبت ارزش خام
+                        actual_paid_value: inv.pan_actual_value || 0,     // 👈 ثبت پرداختی واقعی
+                        student_nid: inv.student_nid, 
+                        service_category: 'pansion', 
+                        service_type: inv.pansion_tier,
+                        start_date: dates.startStr, 
+                        end_date: dates.endStr, 
+                        status: 'active'
                     });
                     await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); 
                 }
                 
-                // ثبت اشتراک مشاوره و کسر ظرفیت
+                // 🎯 ثبت اشتراک مشاوره (همراه با ستون‌های مالی جدید)
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
-                    // دریافت تاریخ دقیق شروع و پایان با تابع هوشمند
                     let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid);
                     
                     await supabaseClient.from('subscriptions').insert({
-                        student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
-                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
+                        invoice_id: inv.id,                               // 👈 ثبت آیدی فاکتور
+                        base_total_value: inv.con_base_value || 0,        // 👈 ثبت ارزش خام
+                        actual_paid_value: inv.con_actual_value || 0,     // 👈 ثبت پرداختی واقعی
+                        student_nid: inv.student_nid, 
+                        service_category: 'consult', 
+                        service_type: inv.consult_tier,
+                        start_date: dates.startStr, 
+                        end_date: dates.endStr, 
+                        status: 'active'
                     });
                     await updateCapacity('consult', inv.consult_tier, inv.student_nid); 
                 }
@@ -563,8 +581,8 @@
             } catch(e) { 
                 alert("خطا در عملیات: " + e.message); 
             }
-            // ۵. آپدیت امن کیف پول (شارژ یا کسر بر اساس فاکتور)
-            let walletMatch = inv.description.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/);
+            // ۵. آپدیت امن کیف پول
+            let walletMatch = inv.description ? inv.description.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/) : null;
             if (walletMatch) {
                 let changeAmt = parseInt(walletMatch[1]);
                 let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
