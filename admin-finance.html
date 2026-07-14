@@ -8,9 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ==========================================
-           🎨 پالت رنگی و استایل‌های پایه (منطبق بر داشبورد)
-           ========================================== */
         :root { 
             --bg-dark: #090e17; --surface-dark: #121b29; --surface-light: #1e293b; --border-color: #334155;
             --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.2);
@@ -51,8 +48,8 @@
            ======================================= */
         .split-view { display: flex; height: 100%; gap: 25px; align-items: flex-start; }
         .kanban-board { flex: 1; display: flex; gap: 20px; height: 100%; overflow-x: auto; padding-bottom: 10px; }
-        .kanban-col { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-color); border-radius: 16px; min-width: 300px; flex: 1; display: flex; flex-direction: column; max-height: 100%; }
-        .kanban-header { padding: 18px 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: 16px 16px 0 0; }
+        .kanban-col { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-color); border-radius: 16px; min-width: 280px; flex: 1; display: flex; flex-direction: column; max-height: 100%; }
+        .kanban-header { padding: 18px 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: 16px 16px 0 0; }
         .k-badge { background: var(--surface-light); color: var(--text-main); padding: 4px 10px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border-color); }
         
         .kanban-cards { padding: 15px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
@@ -64,13 +61,15 @@
         .k-card.draft { border-right-color: var(--text-muted); }
         .k-card.pending { border-right-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
         .k-card.active { border-right-color: var(--success); }
+        .k-card.withdraw { border-right-color: var(--accent); background: rgba(59, 130, 246, 0.05); }
         
         .k-tag { position: absolute; top: 15px; left: 15px; font-size: 10px; padding: 3px 8px; border-radius: 8px; font-weight: bold; border: 1px solid var(--border-color); }
         .k-tag.inv { background: rgba(59, 130, 246, 0.1); color: var(--accent); border-color: var(--accent); }
         .k-tag.inst { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
+        .k-tag.with { background: rgba(59, 130, 246, 0.1); color: var(--accent); border-color: var(--accent); }
         
-        .k-name { font-size: 15px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); margin-top: 5px; }
-        .k-detail { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .k-name { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); margin-top: 5px; }
+        .k-detail { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
 
         /* پنل کالبدشکافی */
         .details-panel { width: 420px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; flex-direction: column; overflow: hidden; display: none; height: 100%; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
@@ -83,8 +82,8 @@
         .dp-receipt-box { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); text-align: center; }
         .dp-receipt { width: 100%; max-height: 250px; object-fit: contain; border-radius: 12px; border: 2px dashed var(--border-color); cursor: zoom-in; background: #000; padding: 5px; }
         
-        .dp-actions { padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: rgba(0,0,0,0.2); }
-        .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; color: white; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .dp-actions { padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: rgba(0,0,0,0.2); flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 150px; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; color: white; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-green { background: var(--success); } .btn-green:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .btn-red { background: var(--danger); } .btn-red:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
 
@@ -145,21 +144,31 @@
                     <div class="kanban-board">
                         <div class="kanban-col">
                             <div class="kanban-header">
-                                <span style="color: var(--text-main);">📝 لیدهای خام (بدون فاکتور)</span>
+                                <span style="color: var(--text-main);">📝 لیدهای خام</span>
                                 <span class="k-badge" id="cntDraft">0</span>
                             </div>
                             <div class="kanban-cards" id="colDraft"></div>
                         </div>
                         <div class="kanban-col">
                             <div class="kanban-header">
-                                <span style="color: var(--warning);">⏳ در انتظار تایید مالی</span>
+                                <span style="color: var(--warning);">⏳ تایید مالی/فیش</span>
                                 <span class="k-badge" id="cntPending">0</span>
                             </div>
                             <div class="kanban-cards" id="colPending"></div>
                         </div>
+                        
+                        <!-- 🚀 ستون جدید درخواست‌های برداشت وجه -->
                         <div class="kanban-col">
                             <div class="kanban-header">
-                                <span style="color: var(--success);">✅ تایید شده و فعال</span>
+                                <span style="color: var(--accent);">💸 درخواست تسویه</span>
+                                <span class="k-badge" id="cntWithdraw">0</span>
+                            </div>
+                            <div class="kanban-cards" id="colWithdraw"></div>
+                        </div>
+
+                        <div class="kanban-col">
+                            <div class="kanban-header">
+                                <span style="color: var(--success);">✅ تایید و فعال</span>
                                 <span class="k-badge" id="cntActive">0</span>
                             </div>
                             <div class="kanban-cards" id="colActive"></div>
@@ -198,14 +207,24 @@
 
     <script>
         // ==========================================
-        // 🔗 اتصال به دیتابیس (معماری ۷ جدولی جدید)
+        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+
+        // ==========================================
+        // 🔗 اتصال به دیتابیس
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let db = { students: [], invoices: [], installments: [], subscriptions: [] , services: [] };
-        let currentSelection = { type: null, data: null }; // برای مدیریت اینکه روی فاکتور کلیک شده یا قسط
+        let db = { students: [], invoices: [], installments: [], subscriptions: [], services: [], withdrawals: [] };
+        let currentSelection = { type: null, data: null };
 
         window.onload = async function() { await loadData(); };
 
@@ -219,17 +238,20 @@
         async function handleLogout() { if(confirm('خروج از سیستم؟')) window.location.replace('index.html'); }
 
         // ==========================================
-        // 📥 دریافت داده‌های یکپارچه از جداول جدید
+        // 📥 دریافت داده‌های یکپارچه
         // ==========================================
         async function loadData() {
             try {
-                // استفاده از Joins برای استخراج نام دانش‌آموز از جدول students همراه با فاکتورها
-                const [stRes, invRes, instRes, srvRes, subRes] = await Promise.all([
+                // دریافت جدول تسویه درون بلاک try جداگانه تا اگر ساخته نشده بود گیر نکند
+                let wrResPromise = supabaseClient.from('withdraw_requests').select('*, students(full_name, phone_number)').order('created_at', { ascending: false }).catch(() => ({data: []}));
+
+                const [stRes, invRes, instRes, srvRes, subRes, wrRes] = await Promise.all([
                     supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
                     supabaseClient.from('invoices').select('*, students(full_name, phone_number, invited_by)').order('created_at', { ascending: false }),
                     supabaseClient.from('installments').select('*, students(full_name, phone_number)').order('due_date', { ascending: true }),
                     supabaseClient.from('services').select('*'),
-                    supabaseClient.from('subscriptions').select('*, students(full_name, phone_number)').order('end_date', { ascending: true })
+                    supabaseClient.from('subscriptions').select('*, students(full_name, phone_number)').order('end_date', { ascending: true }),
+                    wrResPromise
                 ]);
 
                 db.students = stRes.data || [];
@@ -237,43 +259,47 @@
                 db.installments = instRes.data || [];
                 db.services = srvRes.data || [];
                 db.subscriptions = subRes.data || [];
+                db.withdrawals = wrRes.data || [];
 
                 renderKanban();
                 renderRadars();
 
                 document.getElementById('mainLoader').style.opacity = '0';
                 setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 400);
-            } catch (err) { alert("خطا در دریافت اطلاعات هسته: " + err.message); }
+            } catch (err) { 
+                console.error("System Error (Load ERP):", err);
+                alert("⚠️ خطا در همگام‌سازی با سرور."); 
+            }
         }
 
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
         // ==========================================
-        // 🗂️ رندر کانبان برد (ترکیب فاکتورها و اقساط)
+        // 🗂️ رندر کانبان برد (ترکیب فاکتورها، اقساط و تسویه‌ها)
         // ==========================================
         function renderKanban() {
-            let draftHtml = '', pendingHtml = '', activeHtml = '';
-            let dCnt = 0, pCnt = 0, aCnt = 0;
+            let draftHtml = '', pendingHtml = '', withdrawHtml = '', activeHtml = '';
+            let dCnt = 0, pCnt = 0, wCnt = 0, aCnt = 0;
 
-            // ۱. لیدهای خام (دانش‌آموزانی که فاکتوری ندارند یا draft هستند)
+            // ۱. لیدهای خام
             db.students.filter(s => s.status === 'draft').forEach(st => {
                 draftHtml += `
                     <div class="k-card draft" onclick="openDetails('student', '${st.national_id}')">
                         <div class="k-name">${st.full_name || 'کاربر'}</div>
                         <div class="k-detail"><span>پایه:</span> <b>${st.grade || '-'}</b></div>
-                        <div class="k-detail"><span>وضعیت:</span> <b>منتظر تکمیل فرم خرید</b></div>
+                        <div class="k-detail"><span>وضعیت:</span> <b>منتظر تکمیل خرید</b></div>
                     </div>`;
                 dCnt++;
             });
 
-            // ۲. در انتظار تایید (شامل فاکتورهای جدید + فیش‌های اقساطی آپلود شده)
+            // ۲. در انتظار تایید مالی (فاکتور + فیش قسط)
             db.invoices.filter(i => i.status === 'pending').forEach(inv => {
                 pendingHtml += `
                     <div class="k-card pending" onclick="openDetails('invoice', '${inv.id}')">
                         <div class="k-tag inv">🧾 فاکتور جدید</div>
                         <div class="k-name">${inv.students ? inv.students.full_name : 'ناشناس'}</div>
                         <div class="k-detail"><span>طرح:</span> <b>${inv.invoice_type || '-'}</b></div>
-                        <div class="k-detail"><span>مبلغ واریزی:</span> <b style="color:var(--success)">${formatMoney(inv.paid_upfront)} تومان</b></div>
+                        <div class="k-detail"><span>مبلغ וاریزی:</span> <b style="color:var(--success)">${formatMoney(inv.paid_upfront)} تومان</b></div>
                     </div>`;
                 pCnt++;
             });
@@ -289,7 +315,18 @@
                 pCnt++;
             });
 
-            // ۳. دانش‌آموزان فعال
+            // ۳. درخواست‌های تسویه کیف پول
+            db.withdrawals.filter(w => w.status === 'pending').forEach(wr => {
+                withdrawHtml += `
+                    <div class="k-card withdraw" onclick="openDetails('withdraw', '${wr.id}')">
+                        <div class="k-tag with">💸 درخواست تسویه</div>
+                        <div class="k-name">${wr.students ? wr.students.full_name : 'ناشناس'}</div>
+                        <div class="k-detail"><span>مبلغ درخواستی:</span> <b style="color:var(--danger)">${formatMoney(wr.amount)} تومان</b></div>
+                    </div>`;
+                wCnt++;
+            });
+
+            // ۴. دانش‌آموزان فعال
             db.students.filter(s => s.status === 'active').forEach(st => {
                 activeHtml += `
                     <div class="k-card active" onclick="openDetails('student', '${st.national_id}')">
@@ -302,9 +339,13 @@
 
             document.getElementById('colDraft').innerHTML = draftHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             document.getElementById('colPending').innerHTML = pendingHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
+            document.getElementById('colWithdraw').innerHTML = withdrawHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             document.getElementById('colActive').innerHTML = activeHtml || '<div style="color:var(--text-muted); font-size:12px; text-align:center;">خالی</div>';
             
-            document.getElementById('cntDraft').innerText = dCnt; document.getElementById('cntPending').innerText = pCnt; document.getElementById('cntActive').innerText = aCnt;
+            document.getElementById('cntDraft').innerText = dCnt; 
+            document.getElementById('cntPending').innerText = pCnt; 
+            document.getElementById('cntWithdraw').innerText = wCnt; 
+            document.getElementById('cntActive').innerText = aCnt;
         }
 
         // ==========================================
@@ -314,14 +355,13 @@
             currentSelection = { type, id };
             const dpBody = document.getElementById('dpBody');
             const dpActions = document.getElementById('dpActions');
-            document.getElementById('dpTitle').innerText = type === 'invoice' ? '🧾 بررسی فاکتور اصلی' : (type === 'installment' ? '💳 بررسی فیش قسط' : '👤 پرونده دانش‌آموز');
             
             let html = '';
             
             if (type === 'invoice') {
-                // 💡 حل باگ: تبدیل هر دو آیدی به متن برای پیدا کردن دقیق رکورد
+                document.getElementById('dpTitle').innerText = '🧾 بررسی فاکتور اصلی';
                 let inv = db.invoices.find(i => String(i.id) === String(id));
-                if (!inv) return alert("خطا: فاکتور در حافظه یافت نشد!");
+                if (!inv) return;
                 
                 let st = inv.students || {};
                 let imgHtml = inv.receipt_base64 ? `<div class="dp-receipt-box"><span style="display:block; margin-bottom:10px; color:var(--text-muted); font-size:12px;">فیش واریزی:</span><img src="data:${inv.mime_type || 'image/jpeg'};base64,${inv.receipt_base64}" class="dp-receipt" onclick="window.open(this.src)"></div>` : '';
@@ -340,15 +380,15 @@
                     ${imgHtml}
                 `;
                 
-                // 💡 نمایش دکمه مخصوص Trade-in فقط برای فاکتورهای تعویض
                 if (inv.invoice_type === 'تعویض و ارتقا') {
-                    dpActions.innerHTML = `<button class="btn" style="background:var(--accent);" onclick="approveTradeIn()">🔄 تایید معاوضه (Trade-in)</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
+                    dpActions.innerHTML = `<button class="btn" style="background:var(--accent);" onclick="approveTradeIn()">🔄 تایید معاوضه</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
                 } else {
-                    dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInvoice()">✅ تایید فاکتور و فعال‌سازی</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
+                    dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInvoice()">✅ تایید و فعال‌سازی</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن</button>`;
                 }
                 dpActions.style.display = 'flex';
             } 
             else if (type === 'installment') {
+                document.getElementById('dpTitle').innerText = '💳 بررسی فیش قسط';
                 let inst = db.installments.find(i => String(i.id) === String(id));
                 if (!inst) return;
                 let st = inst.students || {};
@@ -364,10 +404,30 @@
                     </div>
                     ${imgHtml}
                 `;
-                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInstallment()">✅ تایید وصول قسط</button><button class="btn btn-red" onclick="rejectItem()">❌ رد کردن فیش</button>`;
+                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveInstallment()">✅ تایید وصول قسط</button><button class="btn btn-red" onclick="rejectItem()">❌ رد فیش</button>`;
+                dpActions.style.display = 'flex';
+            }
+            else if (type === 'withdraw') {
+                document.getElementById('dpTitle').innerText = '💸 بررسی درخواست تسویه';
+                let wr = db.withdrawals.find(w => String(w.id) === String(id));
+                if (!wr) return;
+                let st = wr.students || {};
+                
+                html = `
+                    <div class="dp-row"><span>نام دانش‌آموز:</span><span>${st.full_name || '-'}</span></div>
+                    <div class="dp-row"><span>شماره تماس:</span><span>${st.phone_number || '-'}</span></div>
+                    <div class="dp-row"><span>صاحب حساب:</span><span style="color:var(--accent);">${wr.account_holder || st.full_name}</span></div>
+                    <div class="dp-row"><span>شماره کارت:</span><span style="direction: ltr; font-family: monospace; font-size:16px;">${wr.card_number}</span></div>
+                    ${wr.shaba_number ? `<div class="dp-row"><span>شماره شبا:</span><span style="direction: ltr; font-family: monospace; font-size:14px;">IR${wr.shaba_number}</span></div>` : ''}
+                    <div class="dp-row" style="background:rgba(239,68,68,0.1); padding:10px; border-radius:8px; margin-top:15px; border:1px solid var(--danger);">
+                        <span style="color:var(--danger);">مبلغ پرداختی به کاربر:</span><span style="color:var(--danger); font-size:18px;">${formatMoney(wr.amount || 0)} تومان</span>
+                    </div>
+                `;
+                dpActions.innerHTML = `<button class="btn btn-green" onclick="approveWithdraw()">✅ تایید و اعلام واریز</button><button class="btn btn-red" onclick="rejectWithdraw()">❌ رد و برگشت وجه</button>`;
                 dpActions.style.display = 'flex';
             }
             else {
+                document.getElementById('dpTitle').innerText = '👤 پرونده دانش‌آموز';
                 let st = db.students.find(s => String(s.national_id) === String(id));
                 if (!st) return;
                 html = `
@@ -384,11 +444,68 @@
             dpBody.innerHTML = html;
             document.getElementById('detailsPanel').style.display = 'flex';
         }
+        
         function closeDetails() { document.getElementById('detailsPanel').style.display = 'none'; }
 
         // ==========================================
-        // 🔄 موتور کاملاً مجزا برای تایید معاوضه و ارتقا
-        // آپدیت شده: ابطال خودکار اقساط معوقه طرح‌های قبلی
+        // 💳 توابع تایید و رد تسویه کیف پول
+        // ==========================================
+        async function approveWithdraw() {
+            if(!confirm('آیا وجه را به حساب کاربر واریز کرده‌اید؟ پس از تایید، پیامک واریز برای کاربر ارسال می‌شود.')) return;
+            let wr = db.withdrawals.find(w => String(w.id) === String(currentSelection.id));
+            
+            try {
+                // آپدیت وضعیت به approved
+                await supabaseClient.from('withdraw_requests').update({ status: 'approved' }).eq('id', wr.id);
+                
+                // ارسال پیام
+                await supabaseClient.from('messages').insert({
+                    student_nid: wr.student_nid,
+                    title: '💳 واریز موفق',
+                    body: `درخواست تسویه شما با موفقیت انجام شد و مبلغ ${formatMoney(wr.amount)} تومان به حساب شما (${wr.account_holder || 'صاحب کارت'}) واریز گردید.`
+                });
+                
+                alert('✅ عملیات تایید و پیام واریز برای کاربر ارسال شد.');
+                closeDetails(); loadData();
+            } catch(e) {
+                console.error("System Error (Approve Withdraw):", e);
+                alert("⚠️ خطا در ارتباط با سرور دیتابیس.");
+            }
+        }
+
+        async function rejectWithdraw() {
+            let reason = prompt('دلیل رد درخواست چیست؟ (این مبلغ بلافاصله به کیف پول کاربر برمی‌گردد):');
+            if (reason === null) return;
+            if (reason.trim() === '') return alert('وارد کردن دلیل الزامی است!');
+            
+            let wr = db.withdrawals.find(w => String(w.id) === String(currentSelection.id));
+            
+            try {
+                // ۱. تغییر وضعیت به Rejected
+                await supabaseClient.from('withdraw_requests').update({ status: 'rejected' }).eq('id', wr.id);
+                
+                // ۲. بازگرداندن پول به کیف پول
+                let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', wr.student_nid).single();
+                let newBal = (stData.wallet_balance || 0) + wr.amount;
+                await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', wr.student_nid);
+                
+                // ۳. ارسال پیام
+                await supabaseClient.from('messages').insert({
+                    student_nid: wr.student_nid,
+                    title: '❌ رد درخواست برداشت',
+                    body: `درخواست برداشت وجه شما تایید نشد و مبلغ ${formatMoney(wr.amount)} تومان مجدداً به کیف پول شما بازگشت. دلیل پشتیبانی: ${reason}`
+                });
+                
+                alert('✅ درخواست رد شد و مبلغ به کیف پول کاربر بازگشت.');
+                closeDetails(); loadData();
+            } catch(e) {
+                console.error("System Error (Reject Withdraw):", e);
+                alert("⚠️ خطا در پردازش درخواست بازگشت وجه.");
+            }
+        }
+
+        // ==========================================
+        // 🔄 موتور تایید معاوضه (Trade-in)
         // ==========================================
         async function approveTradeIn() {
             if(!confirm('آیا از تایید این درخواست تعویض اطمینان دارید؟ قراردادهای لغو شده باطل خواهند شد.')) return;
@@ -401,13 +518,9 @@
 
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
 
-                // 🎯 جدید: ابطال چک‌ها و اقساط معوقه فاکتورهای قبلی در دیتابیس
                 if (sysData.void_invoice_ids && sysData.void_invoice_ids.length > 0) {
                     for (let vId of sysData.void_invoice_ids) {
-                        await supabaseClient.from('installments')
-                            .update({ status: 'cancelled' })
-                            .eq('invoice_id', vId)
-                            .in('status', ['pending_upload', 'pending_approval']);
+                        await supabaseClient.from('installments').update({ status: 'cancelled' }).eq('invoice_id', vId).in('status', ['pending_upload', 'pending_approval']);
                     }
                 }
 
@@ -441,15 +554,9 @@
                         let actualVal = category === 'pansion' ? inv.pan_actual_value : inv.con_actual_value;
 
                         await supabaseClient.from('subscriptions').insert({
-                            invoice_id: inv.id,
-                            base_total_value: baseVal || 0,
-                            actual_paid_value: actualVal || 0,
-                            student_nid: inv.student_nid, 
-                            service_category: category, 
-                            service_type: actionData.type,
-                            start_date: today, 
-                            end_date: endD.toISOString().split('T')[0], 
-                            status: 'active'
+                            invoice_id: inv.id, base_total_value: baseVal || 0, actual_paid_value: actualVal || 0,
+                            student_nid: inv.student_nid, service_category: category, service_type: actionData.type,
+                            start_date: today, end_date: endD.toISOString().split('T')[0], status: 'active'
                         });
 
                         let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', inv.student_nid).single();
@@ -467,134 +574,80 @@
                 
                 alert('✅ عملیات تعویض با موفقیت انجام شد. قراردادها، کیف پول و اقساط جایگزین شدند.');
                 closeDetails(); loadData();
-            } catch(e) { alert("خطا: " + e.message); }
+            } catch(e) { console.error(e); alert("⚠️ خطا در پردازش سیستمی فاکتور تعویض."); }
         }
+
         // ==========================================
-        // ⚙️ توابع هسته پردازش تایید (ERP Engine)
-        // آپدیت شده: انتقال مقادیر تفکیک‌شده مالی به جدول اشتراک‌ها
+        // ⚙️ توابع هسته پردازش فاکتور و اقساط
         // ==========================================
         async function approveInvoice() {
             if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
-            
             let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
-            if (!inv) return alert("خطا: فاکتور یافت نشد!");
             
             try {
-                // ۱. تایید فاکتور
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
 
-                // ===============================================
-                // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (جدید)
-                // ===============================================
                 const getSubscriptionDates = async (category, durationMonths, studentNid) => {
                     let startDate = new Date(); 
-                    
-                    let { data: existingSub } = await supabaseClient.from('subscriptions')
-                        .select('id, end_date')
-                        .eq('student_nid', studentNid)
-                        .eq('service_category', category)
-                        .eq('status', 'active')
-                        .order('end_date', { ascending: false })
-                        .limit(1);
+                    let { data: existingSub } = await supabaseClient.from('subscriptions').select('id, end_date').eq('student_nid', studentNid).eq('service_category', category).eq('status', 'active').order('end_date', { ascending: false }).limit(1);
 
                     if (existingSub && existingSub.length > 0) {
                         let lastEndDate = new Date(existingSub[0].end_date);
-                        if (lastEndDate > startDate) {
-                            startDate = lastEndDate; 
-                        }
-                        
-                        await supabaseClient.from('subscriptions')
-                            .update({ status: 'renewed' })
-                            .eq('id', existingSub[0].id);
+                        if (lastEndDate > startDate) startDate = lastEndDate; 
+                        await supabaseClient.from('subscriptions').update({ status: 'renewed' }).eq('id', existingSub[0].id);
                     }
-
                     let endDate = new Date(startDate);
                     endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
-
-                    return {
-                        startStr: startDate.toISOString().split('T')[0],
-                        endStr: endDate.toISOString().split('T')[0]
-                    };
+                    return { startStr: startDate.toISOString().split('T')[0], endStr: endDate.toISOString().split('T')[0] };
                 };
 
                 const updateCapacity = async (category, type, studentNid) => {
                     let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
                     if(!stData) return;
-                    
                     let stGrade = ['دهم', 'یازدهم'].includes(stData.grade) ? stData.grade : 'دوازدهم';
                     let stMajor = stData.major || 'all';
-
-                    let service = db.services.find(s => 
-                        s.category === category && s.type === type &&
-                        (s.target_grade === stGrade || s.target_grade === 'all') &&
-                        (s.target_major === stMajor || s.target_major === 'all')
-                    );
-
-                    if (service && service.capacity > 0) {
-                        await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
-                    }
+                    let service = db.services.find(s => s.category === category && s.type === type && (s.target_grade === stGrade || s.target_grade === 'all') && (s.target_major === stMajor || s.target_major === 'all'));
+                    if (service && service.capacity > 0) await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
                 };
 
-                // 🎯 ثبت اشتراک پانسیون (همراه با ستون‌های مالی جدید)
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
                     let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid);
-                    
                     await supabaseClient.from('subscriptions').insert({
-                        invoice_id: inv.id,                               // 👈 ثبت آیدی فاکتور
-                        base_total_value: inv.pan_base_value || 0,        // 👈 ثبت ارزش خام
-                        actual_paid_value: inv.pan_actual_value || 0,     // 👈 ثبت پرداختی واقعی
-                        student_nid: inv.student_nid, 
-                        service_category: 'pansion', 
-                        service_type: inv.pansion_tier,
-                        start_date: dates.startStr, 
-                        end_date: dates.endStr, 
-                        status: 'active'
+                        invoice_id: inv.id, base_total_value: inv.pan_base_value || 0, actual_paid_value: inv.pan_actual_value || 0,
+                        student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
+                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
                     });
                     await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); 
                 }
                 
-                // 🎯 ثبت اشتراک مشاوره (همراه با ستون‌های مالی جدید)
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
                     let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid);
-                    
                     await supabaseClient.from('subscriptions').insert({
-                        invoice_id: inv.id,                               // 👈 ثبت آیدی فاکتور
-                        base_total_value: inv.con_base_value || 0,        // 👈 ثبت ارزش خام
-                        actual_paid_value: inv.con_actual_value || 0,     // 👈 ثبت پرداختی واقعی
-                        student_nid: inv.student_nid, 
-                        service_category: 'consult', 
-                        service_type: inv.consult_tier,
-                        start_date: dates.startStr, 
-                        end_date: dates.endStr, 
-                        status: 'active'
+                        invoice_id: inv.id, base_total_value: inv.con_base_value || 0, actual_paid_value: inv.con_actual_value || 0,
+                        student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
+                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
                     });
                     await updateCapacity('consult', inv.consult_tier, inv.student_nid); 
                 }
 
-                // ۳. پاداش معرف
                 if (inv.students && inv.students.invited_by) {
                     let { data: refData } = await supabaseClient.from('students').select('wallet_balance').eq('referral_code', inv.students.invited_by).single();
-                    if (refData) {
-                        await supabaseClient.from('students').update({ wallet_balance: (refData.wallet_balance || 0) + 200000 }).eq('referral_code', inv.students.invited_by);
-                    }
+                    if (refData) await supabaseClient.from('students').update({ wallet_balance: (refData.wallet_balance || 0) + 200000 }).eq('referral_code', inv.students.invited_by);
                 }
 
-                // ۴. اکتیو کردن پروفایل
                 await supabaseClient.from('students').update({ status: 'active' }).eq('national_id', inv.student_nid);
                 
+                let walletMatch = inv.description ? inv.description.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/) : null;
+                if (walletMatch) {
+                    let changeAmt = parseInt(walletMatch[1]);
+                    let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
+                    let newBal = (stData.wallet_balance || 0) + changeAmt;
+                    await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
+                }
+
                 alert('✅ فاکتور تایید و زمانبندی/ظرفیت‌ها با موفقیت اعمال شد.');
                 closeDetails(); loadData();
-            } catch(e) { 
-                alert("خطا در عملیات: " + e.message); 
-            }
-            // ۵. آپدیت امن کیف پول
-            let walletMatch = inv.description ? inv.description.match(/\[WALLET_CHANGE:\s*([\+\-]?\d+)\]/) : null;
-            if (walletMatch) {
-                let changeAmt = parseInt(walletMatch[1]);
-                let { data: stData } = await supabaseClient.from('students').select('wallet_balance').eq('national_id', inv.student_nid).single();
-                let newBal = (stData.wallet_balance || 0) + changeAmt;
-                await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
-            }
+            } catch(e) { console.error("System Error (Approve Invoice):", e); alert("⚠️ خطای سیستمی رخ داد."); }
         }
         
         async function approveInstallment() {
@@ -603,67 +656,42 @@
                 await supabaseClient.from('installments').update({ status: 'paid', receipt_base64: null }).eq('id', currentSelection.id);
                 alert('✅ قسط با موفقیت در دفتر کل ثبت شد.');
                 closeDetails(); loadData();
-            } catch(e) { alert(e.message); }
+            } catch(e) { console.error(e); alert("⚠️ خطا در ثبت وصول قسط."); }
         }
 
         async function rejectItem() {
-            // ۱. دریافت دلیل رد فیش از مدیر
             let reason = prompt('دلیل رد کردن این فیش چیست؟\n(این متن به عنوان پیام برای دانش‌آموز ارسال می‌شود):');
-            
             if (reason === null) return; 
             if (reason.trim() === '') return alert('وارد کردن دلیل برای رد فیش الزامی است!');
 
             try {
                 if (currentSelection.type === 'invoice') {
                     let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
-                    
-                    // آپدیت فاکتور
                     await supabaseClient.from('invoices').update({ status: 'rejected', receipt_base64: null }).eq('id', inv.id);
-                    
-                    // ارسال پیام به صندوق دانش‌آموز
-                    await supabaseClient.from('messages').insert({
-                        student_nid: inv.student_nid,
-                        title: '❌ رد فیش پیش‌پرداخت',
-                        body: `فیش پیش‌پرداخت شما تایید نشد. \nدلیل: ${reason}`
-                    });
-
+                    await supabaseClient.from('messages').insert({ student_nid: inv.student_nid, title: '❌ رد فیش پیش‌پرداخت', body: `فیش پیش‌پرداخت شما تایید نشد. \nدلیل: ${reason}` });
                 } else if (currentSelection.type === 'installment') {
-                    // 🎯 خطای تایپی اینجا بود: متغیر باید inst تعریف بشه
                     let inst = db.installments.find(i => String(i.id) === String(currentSelection.id));
-                    
-                    // برگرداندن قسط به حالت منتظر پرداخت
                     await supabaseClient.from('installments').update({ status: 'pending_upload', receipt_base64: null }).eq('id', inst.id);
-                    
-                    // ارسال پیام به صندوق دانش‌آموز
-                    await supabaseClient.from('messages').insert({
-                        student_nid: inst.student_nid,
-                        title: `❌ رد فیش قسط شماره ${inst.installment_number}`,
-                        body: `فیش پرداختی شما برای قسط شماره ${inst.installment_number} تایید نشد. \nدلیل: ${reason} \nلطفاً فیش صحیح را مجدداً از بخش اقساط آپلود کنید.`
-                    });
+                    await supabaseClient.from('messages').insert({ student_nid: inst.student_nid, title: `❌ رد فیش قسط شماره ${inst.installment_number}`, body: `فیش پرداختی شما برای قسط شماره ${inst.installment_number} تایید نشد. \nدلیل: ${reason} \nلطفاً فیش صحیح را مجدداً آپلود کنید.` });
                 }
-                
-                alert('✅ فیش رد شد و پیام با موفقیت به صندوق دانش‌آموز ارسال گردید.');
-                closeDetails(); 
-                loadData();
-            } catch(e) { 
-                alert("خطا در سیستم: " + e.message); 
-            }
+                alert('✅ فیش رد شد و پیام با موفقیت ارسال گردید.');
+                closeDetails(); loadData();
+            } catch(e) { console.error(e); alert("⚠️ خطا در رد فیش و ارسال پیام."); }
         }
 
         // ==========================================
-        // ⏳ موتور رادارهای دوگانه (کاملا متصل به جداول جدید)
+        // ⏳ موتور رادارهای دوگانه
         // ==========================================
         function renderRadars() {
             let today = new Date();
             const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
             
-            // ۱. رادار اقساط (از جدول installments)
             let instHtml = '';
             db.installments.filter(i => i.status === 'pending_upload').forEach(inst => {
                 let dueDate = new Date(inst.due_date);
                 let diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
                 
-                if (diffDays <= 15 && diffDays >= -10) { // تا 10 روز تاخیر هم نشون میده
+                if (diffDays <= 15 && diffDays >= -10) {
                     let colorCls = diffDays < 0 ? 'critical' : 'upcoming';
                     let dayText = diffDays < 0 ? 'گذشته ❌' : (diffDays === 0 ? 'موعد امروز!' : diffDays + ' روز مانده');
                     let dateColor = diffDays <= 3 ? 'var(--danger)' : 'var(--warning)';
@@ -676,7 +704,6 @@
                 }
             });
 
-            // ۲. رادار ریزش (از جدول subscriptions)
             let churnHtml = '';
             db.subscriptions.filter(s => s.status === 'active').forEach(sub => {
                 let endDate = new Date(sub.end_date);
