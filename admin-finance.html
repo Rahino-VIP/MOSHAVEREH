@@ -243,7 +243,16 @@
         async function loadData() {
             try {
                 // دریافت جدول تسویه درون بلاک try جداگانه تا اگر ساخته نشده بود گیر نکند
-                let wrResPromise = supabaseClient.from('withdraw_requests').select('*, students(full_name, phone_number)').order('created_at', { ascending: false }).catch(() => ({data: []}));
+                let wrResPromise = (async () => {
+    try {
+        const result = await supabaseClient.from('withdraw_requests').select('*, students(full_name, phone_number)').order('created_at', { ascending: false });
+        // اگر دیتابیس ارور داد (مثلاً جدول هنوز ساخته نشده بود) هم گیر نده
+        if (result.error) return { data: [] };
+        return result;
+    } catch (e) {
+        return { data: [] };
+    }
+})();
 
                 const [stRes, invRes, instRes, srvRes, subRes, wrRes] = await Promise.all([
                     supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
