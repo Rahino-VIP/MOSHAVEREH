@@ -223,7 +223,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let db = { students: [], invoices: [], installments: [], subscriptions: [], services: [], withdrawals: [] };
+        let db = { students: [], invoices: [], installments: [], subscriptions: [], services: [], withdrawals: [], konkurDate: '2027-07-06' };
         let currentSelection = { type: null, data: null };
 
         window.onload = async function() { await loadData(); };
@@ -242,25 +242,31 @@
         // ==========================================
         async function loadData() {
             try {
-                // دریافت جدول تسویه درون بلاک try جداگانه تا اگر ساخته نشده بود گیر نکند
                 let wrResPromise = (async () => {
-    try {
-        const result = await supabaseClient.from('withdraw_requests').select('*, students(full_name, phone_number)').order('created_at', { ascending: false });
-        // اگر دیتابیس ارور داد (مثلاً جدول هنوز ساخته نشده بود) هم گیر نده
-        if (result.error) return { data: [] };
-        return result;
-    } catch (e) {
-        return { data: [] };
-    }
-})();
+                    try {
+                        const result = await supabaseClient.from('withdraw_requests').select('*, students(full_name, phone_number)').order('created_at', { ascending: false });
+                        if (result.error) return { data: [] };
+                        return result;
+                    } catch (e) { return { data: [] }; }
+                })();
 
-                const [stRes, invRes, instRes, srvRes, subRes, wrRes] = await Promise.all([
+                // 🎯 گرفتن تاریخ دقیق کنکور از جدول system_settings
+                let sysResPromise = (async () => {
+                    try {
+                        const result = await supabaseClient.from('system_settings').select('konkur_date').limit(1);
+                        if (result.error) return { data: [] };
+                        return result;
+                    } catch (e) { return { data: [] }; }
+                })();
+
+                const [stRes, invRes, instRes, srvRes, subRes, wrRes, sysRes] = await Promise.all([
                     supabaseClient.from('students').select('*').order('created_at', { ascending: false }),
                     supabaseClient.from('invoices').select('*, students(full_name, phone_number, invited_by)').order('created_at', { ascending: false }),
                     supabaseClient.from('installments').select('*, students(full_name, phone_number)').order('due_date', { ascending: true }),
                     supabaseClient.from('services').select('*'),
                     supabaseClient.from('subscriptions').select('*, students(full_name, phone_number)').order('end_date', { ascending: true }),
-                    wrResPromise
+                    wrResPromise,
+                    sysResPromise // 👈 اضافه شد
                 ]);
 
                 db.students = stRes.data || [];
@@ -269,6 +275,11 @@
                 db.services = srvRes.data || [];
                 db.subscriptions = subRes.data || [];
                 db.withdrawals = wrRes.data || [];
+                
+                // مقداردهی تاریخ کنکور
+                if (sysRes.data && sysRes.data.length > 0 && sysRes.data[0].konkur_date) {
+                    db.konkurDate = sysRes.data[0].konkur_date;
+                }
 
                 renderKanban();
                 renderRadars();
@@ -556,8 +567,15 @@
                     }
 
                     if (actionData.action === 'change') {
-                        let endD = new Date();
-                        endD.setMonth(endD.getMonth() + (actionData.dur === 'konkur' ? 10 : parseInt(actionData.dur)));
+                        let endD;
+                        // 🎯 استفاده از تاریخ دقیق دیتابیس برای تعویض‌های "تا کنکور"
+                        if (actionData.dur === 'konkur') {
+                            endD = new Date(db.konkurDate);
+                        } else {
+                            endD = new Date();
+                            let days = Math.round(parseFloat(actionData.dur) * 30.416);
+                            endD.setDate(endD.getDate() + days);
+                        }
                         
                         let baseVal = category === 'pansion' ? inv.pan_base_value : inv.con_base_value;
                         let actualVal = category === 'pansion' ? inv.pan_actual_value : inv.con_actual_value;
@@ -596,20 +614,46 @@
             try {
                 await supabaseClient.from('invoices').update({ status: 'approved', receipt_base64: null }).eq('id', inv.id);
 
-                const getSubscriptionDates = async (category, durationMonths, studentNid) => {
+                // ===============================================
+                // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (متصل به دیتابیس)
+                // ===============================================
+                const getSubscriptionDates = async (category, durationMonths, studentNid, invoiceDetails) => {
                     let startDate = new Date(); 
-                    let { data: existingSub } = await supabaseClient.from('subscriptions').select('id, end_date').eq('student_nid', studentNid).eq('service_category', category).eq('status', 'active').order('end_date', { ascending: false }).limit(1);
+                    
+                    let { data: existingSub } = await supabaseClient.from('subscriptions')
+                        .select('id, end_date')
+                        .eq('student_nid', studentNid)
+                        .eq('service_category', category)
+                        .eq('status', 'active')
+                        .order('end_date', { ascending: false })
+                        .limit(1);
 
                     if (existingSub && existingSub.length > 0) {
                         let lastEndDate = new Date(existingSub[0].end_date);
-                        if (lastEndDate > startDate) startDate = lastEndDate; 
-                        await supabaseClient.from('subscriptions').update({ status: 'renewed' }).eq('id', existingSub[0].id);
+                        if (lastEndDate > startDate) {
+                            startDate = lastEndDate; 
+                        }
+                        await supabaseClient.from('subscriptions')
+                            .update({ status: 'renewed' })
+                            .eq('id', existingSub[0].id);
                     }
-                    let endDate = new Date(startDate);
-                    endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
-                    return { startStr: startDate.toISOString().split('T')[0], endStr: endDate.toISOString().split('T')[0] };
-                };
 
+                    let endDate;
+                    // 🎯 اگر کاربر "تا کنکور" رو انتخاب کرده بود، تاریخ رو دقیقاً از دیتابیس بخون
+                    if (invoiceDetails && invoiceDetails.includes('تا کنکور')) {
+                        endDate = new Date(db.konkurDate);
+                    } else {
+                        endDate = new Date(startDate);
+                        // استفاده از روز به جای ماه برای جلوگیری از گرد شدن‌های اشتباه
+                        let totalDays = Math.round(parseFloat(durationMonths) * 30.416);
+                        endDate.setDate(endDate.getDate() + totalDays);
+                    }
+
+                    return {
+                        startStr: startDate.toISOString().split('T')[0],
+                        endStr: endDate.toISOString().split('T')[0]
+                    };
+                };
                 const updateCapacity = async (category, type, studentNid) => {
                     let { data: stData } = await supabaseClient.from('students').select('grade, major').eq('national_id', studentNid).single();
                     if(!stData) return;
@@ -619,8 +663,9 @@
                     if (service && service.capacity > 0) await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
                 };
 
+                // 🎯 ثبت اشتراک پانسیون 
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
-                    let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid);
+                    let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid, inv.invoice_details); // 👈 inv.invoice_details اضافه شد
                     await supabaseClient.from('subscriptions').insert({
                         invoice_id: inv.id, base_total_value: inv.pan_base_value || 0, actual_paid_value: inv.pan_actual_value || 0,
                         student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
@@ -629,8 +674,9 @@
                     await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); 
                 }
                 
+                // 🎯 ثبت اشتراک مشاوره 
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
-                    let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid);
+                    let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid, inv.invoice_details); // 👈 inv.invoice_details اضافه شد
                     await supabaseClient.from('subscriptions').insert({
                         invoice_id: inv.id, base_total_value: inv.con_base_value || 0, actual_paid_value: inv.con_actual_value || 0,
                         student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
