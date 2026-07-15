@@ -617,9 +617,6 @@
                 // ===============================================
                 // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (متصل به دیتابیس)
                 // ===============================================
-                // ===============================================
-                // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (متصل به دیتابیس)
-                // ===============================================
                 const getSubscriptionDates = async (category, durationMonths, studentNid, invoiceDetails, tier) => {
                     let startDate = new Date(); 
                     
@@ -644,29 +641,31 @@
                     let endDate;
                     let isKonkur = false;
                     
-                    // 🎯 موتور تشخیص فوق‌دقیق "تا کنکور" برای هر سرویس مجزا
+                    // 🎯 موتور تشخیص فوق‌دقیق و تفکیک‌شده "تا کنکور"
                     if (invoiceDetails) {
-                        // ۱. بررسی فاکتورهای تمدید (که هر سرویس در یک خط مجزاست)
-                        let lines = invoiceDetails.split('\n');
-                        for(let line of lines) {
-                            if (category === 'pansion' && line.includes('پانسیون') && line.includes('کنکور')) isKonkur = true;
-                            if (category === 'consult' && line.includes('مشاوره') && line.includes('کنکور')) isKonkur = true;
-                        }
+                        let serviceStr = "";
                         
-                        // ۲. بررسی فاکتورهای ثبت‌نام جدید (که پشت سر هم نوشته شده‌اند)
-                        if (!isKonkur && invoiceDetails.includes('طرح انتخابی:')) {
-                             let matchStr = category === 'pansion' ? `پانسیون ${tier}` : `مشاوره ${tier}`;
-                             let idx = invoiceDetails.indexOf(matchStr);
-                             if (idx !== -1) {
-                                 let nextIdx = category === 'pansion' ? invoiceDetails.indexOf('مشاوره') : invoiceDetails.indexOf('\n', idx);
-                                 if (nextIdx === -1) nextIdx = invoiceDetails.length;
-                                 let substr = invoiceDetails.substring(idx, nextIdx);
-                                 if (substr.includes('کنکور')) isKonkur = true;
-                             }
+                        // اگر فاکتور ثبت‌نام اولیه است (طرح‌ها در یک خط نوشته شده‌اند)
+                        if (invoiceDetails.includes('طرح انتخابی:')) {
+                            let parts = invoiceDetails.split('مشاوره');
+                            if (category === 'pansion') {
+                                serviceStr = parts[0]; // فقط متن قبل از کلمه مشاوره را بررسی کن
+                            } else {
+                                serviceStr = parts.length > 1 ? parts[1] : invoiceDetails; // فقط متن بعد از کلمه مشاوره
+                            }
+                        } 
+                        // اگر فاکتور تمدید/ارتقا است (هر طرح در خط جداگانه است)
+                        else {
+                            let lines = invoiceDetails.split('\n');
+                            let targetLine = lines.find(l => l.includes(category === 'pansion' ? 'پانسیون' : 'مشاوره'));
+                            if (targetLine) serviceStr = targetLine;
                         }
+
+                        // حالا فقط در متن مخصوصِ همون سرویس دنبال کلمه کنکور می‌گردیم
+                        if (serviceStr.includes('کنکور')) isKonkur = true;
                     }
 
-                    // 🔒 قفل کردن تاریخ روی دیتابیس (بدون توجه به عدد ماه)
+                    // 🔒 قفل کردن تاریخ روی دیتابیس
                     if (isKonkur) {
                         endDate = new Date(db.konkurDate);
                     } else {
