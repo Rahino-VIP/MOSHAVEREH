@@ -617,6 +617,9 @@
                 // ===============================================
                 // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (متصل به دیتابیس)
                 // ===============================================
+                // ===============================================
+                // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (متصل به دیتابیس)
+                // ===============================================
                 const getSubscriptionDates = async (category, durationMonths, studentNid, invoiceDetails, tier) => {
                     let startDate = new Date(); 
                     
@@ -639,19 +642,35 @@
                     }
 
                     let endDate;
-                    
-                    // 🎯 رفع باگ: بررسی دقیق اینکه آیا "دقیقاً همین سرویس" تا کنکور است یا نه!
                     let isKonkur = false;
+                    
+                    // 🎯 موتور تشخیص فوق‌دقیق "تا کنکور" برای هر سرویس مجزا
                     if (invoiceDetails) {
-                        if (category === 'pansion' && invoiceDetails.includes(`پانسیون ${tier} (تا کنکور`)) isKonkur = true;
-                        if (category === 'consult' && invoiceDetails.includes(`مشاوره ${tier} (تا کنکور`)) isKonkur = true;
+                        // ۱. بررسی فاکتورهای تمدید (که هر سرویس در یک خط مجزاست)
+                        let lines = invoiceDetails.split('\n');
+                        for(let line of lines) {
+                            if (category === 'pansion' && line.includes('پانسیون') && line.includes('کنکور')) isKonkur = true;
+                            if (category === 'consult' && line.includes('مشاوره') && line.includes('کنکور')) isKonkur = true;
+                        }
+                        
+                        // ۲. بررسی فاکتورهای ثبت‌نام جدید (که پشت سر هم نوشته شده‌اند)
+                        if (!isKonkur && invoiceDetails.includes('طرح انتخابی:')) {
+                             let matchStr = category === 'pansion' ? `پانسیون ${tier}` : `مشاوره ${tier}`;
+                             let idx = invoiceDetails.indexOf(matchStr);
+                             if (idx !== -1) {
+                                 let nextIdx = category === 'pansion' ? invoiceDetails.indexOf('مشاوره') : invoiceDetails.indexOf('\n', idx);
+                                 if (nextIdx === -1) nextIdx = invoiceDetails.length;
+                                 let substr = invoiceDetails.substring(idx, nextIdx);
+                                 if (substr.includes('کنکور')) isKonkur = true;
+                             }
+                        }
                     }
 
+                    // 🔒 قفل کردن تاریخ روی دیتابیس (بدون توجه به عدد ماه)
                     if (isKonkur) {
                         endDate = new Date(db.konkurDate);
                     } else {
                         endDate = new Date(startDate);
-                        // استفاده از روز به جای ماه برای جلوگیری از خطای اعشار
                         let totalDays = Math.round(parseFloat(durationMonths) * 30.416);
                         endDate.setDate(endDate.getDate() + totalDays);
                     }
@@ -723,9 +742,18 @@
                     await supabaseClient.from('students').update({ wallet_balance: newBal }).eq('national_id', inv.student_nid);
                 }
 
-                alert('✅ فاکتور تایید و زمانبندی/ظرفیت‌ها با موفقیت اعمال شد.');
+                // 📩 ارسال پیام خودکار تایید برای دانش‌آموز
+                await supabaseClient.from('messages').insert({
+                    student_nid: inv.student_nid,
+                    title: '✅ تایید فاکتور و فعال‌سازی اشتراک',
+                    body: `دانش‌آموز عزیز، پرداخت شما توسط مدیریت تایید و اشتراک شما با موفقیت در سیستم فعال/تمدید شد.\nمی‌توانید تاریخ دقیق اعتبار طرح‌های خود را در بخش پروفایل مشاهده کنید.`
+                });
+
+                alert('✅ فاکتور تایید، زمانبندی اعمال و پیام تایید برای دانش‌آموز ارسال شد.');
                 closeDetails(); loadData();
-            } catch(e) { console.error("System Error (Approve Invoice):", e); alert("⚠️ خطای سیستمی رخ داد."); }
+            } catch(e) { 
+                alert("خطا در عملیات: " + e.message); 
+            }
         }
         
         async function approveInstallment() {
