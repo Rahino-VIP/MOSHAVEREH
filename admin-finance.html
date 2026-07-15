@@ -617,7 +617,7 @@
                 // ===============================================
                 // 💡 موتور هوشمند محاسبه تاریخ شروع و پایان (متصل به دیتابیس)
                 // ===============================================
-                const getSubscriptionDates = async (category, durationMonths, studentNid, invoiceDetails) => {
+                const getSubscriptionDates = async (category, durationMonths, studentNid, invoiceDetails, tier) => {
                     let startDate = new Date(); 
                     
                     let { data: existingSub } = await supabaseClient.from('subscriptions')
@@ -639,12 +639,19 @@
                     }
 
                     let endDate;
-                    // 🎯 اگر کاربر "تا کنکور" رو انتخاب کرده بود، تاریخ رو دقیقاً از دیتابیس بخون
-                    if (invoiceDetails && invoiceDetails.includes('تا کنکور')) {
+                    
+                    // 🎯 رفع باگ: بررسی دقیق اینکه آیا "دقیقاً همین سرویس" تا کنکور است یا نه!
+                    let isKonkur = false;
+                    if (invoiceDetails) {
+                        if (category === 'pansion' && invoiceDetails.includes(`پانسیون ${tier} (تا کنکور`)) isKonkur = true;
+                        if (category === 'consult' && invoiceDetails.includes(`مشاوره ${tier} (تا کنکور`)) isKonkur = true;
+                    }
+
+                    if (isKonkur) {
                         endDate = new Date(db.konkurDate);
                     } else {
                         endDate = new Date(startDate);
-                        // استفاده از روز به جای ماه برای جلوگیری از گرد شدن‌های اشتباه
+                        // استفاده از روز به جای ماه برای جلوگیری از خطای اعشار
                         let totalDays = Math.round(parseFloat(durationMonths) * 30.416);
                         endDate.setDate(endDate.getDate() + totalDays);
                     }
@@ -663,24 +670,40 @@
                     if (service && service.capacity > 0) await supabaseClient.from('services').update({ capacity: service.capacity - 1 }).eq('id', service.id);
                 };
 
-                // 🎯 ثبت اشتراک پانسیون 
+               // 🎯 ثبت اشتراک پانسیون (همراه با ستون‌های مالی جدید)
                 if (inv.pansion_tier && inv.pansion_tier !== 'none') {
-                    let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid, inv.invoice_details); // 👈 inv.invoice_details اضافه شد
+                    // 👈 inv.pansion_tier به عنوان پارامتر پنجم اضافه شد
+                    let dates = await getSubscriptionDates('pansion', inv.pan_duration || 1, inv.student_nid, inv.invoice_details, inv.pansion_tier); 
+                    
                     await supabaseClient.from('subscriptions').insert({
-                        invoice_id: inv.id, base_total_value: inv.pan_base_value || 0, actual_paid_value: inv.pan_actual_value || 0,
-                        student_nid: inv.student_nid, service_category: 'pansion', service_type: inv.pansion_tier,
-                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
+                        invoice_id: inv.id,
+                        base_total_value: inv.pan_base_value || 0,
+                        actual_paid_value: inv.pan_actual_value || 0,
+                        student_nid: inv.student_nid, 
+                        service_category: 'pansion', 
+                        service_type: inv.pansion_tier,
+                        start_date: dates.startStr, 
+                        end_date: dates.endStr, 
+                        status: 'active'
                     });
                     await updateCapacity('pansion', inv.pansion_tier, inv.student_nid); 
                 }
                 
-                // 🎯 ثبت اشتراک مشاوره 
+                // 🎯 ثبت اشتراک مشاوره (همراه با ستون‌های مالی جدید)
                 if (inv.consult_tier && inv.consult_tier !== 'none') {
-                    let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid, inv.invoice_details); // 👈 inv.invoice_details اضافه شد
+                    // 👈 inv.consult_tier به عنوان پارامتر پنجم اضافه شد
+                    let dates = await getSubscriptionDates('consult', inv.con_duration || 1, inv.student_nid, inv.invoice_details, inv.consult_tier); 
+                    
                     await supabaseClient.from('subscriptions').insert({
-                        invoice_id: inv.id, base_total_value: inv.con_base_value || 0, actual_paid_value: inv.con_actual_value || 0,
-                        student_nid: inv.student_nid, service_category: 'consult', service_type: inv.consult_tier,
-                        start_date: dates.startStr, end_date: dates.endStr, status: 'active'
+                        invoice_id: inv.id,
+                        base_total_value: inv.con_base_value || 0,
+                        actual_paid_value: inv.con_actual_value || 0,
+                        student_nid: inv.student_nid, 
+                        service_category: 'consult', 
+                        service_type: inv.consult_tier,
+                        start_date: dates.startStr, 
+                        end_date: dates.endStr, 
+                        status: 'active'
                     });
                     await updateCapacity('consult', inv.consult_tier, inv.student_nid); 
                 }
