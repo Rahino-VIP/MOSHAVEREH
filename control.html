@@ -148,7 +148,9 @@
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 🛠️ تغییر نام به supabaseClient برای جلوگیری از تداخل
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         window.onload = async function() {
             await fetchCalendar();
@@ -164,7 +166,7 @@
 
         // ۱. دریافت تقویم هفته‌ها
         async function fetchCalendar() {
-            const { data, error } = await supabase.from('week_status_calendar').select('*').order('start_date', { ascending: true });
+            const { data, error } = await supabaseClient.from('week_status_calendar').select('*').order('start_date', { ascending: true });
             const container = document.getElementById('calendarList');
             if (error || !data || data.length === 0) {
                 container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
@@ -188,7 +190,7 @@
 
         // ۲. دریافت سوییچ‌های پویا
         async function fetchSwitches() {
-            const { data, error } = await supabase.from('dynamic_switches').select('*').order('id', { ascending: true });
+            const { data, error } = await supabaseClient.from('dynamic_switches').select('*').order('id', { ascending: true });
             const container = document.getElementById('switchesList');
             if (error || !data || data.length === 0) {
                 container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
@@ -215,13 +217,13 @@
 
         // آپدیت سریع وضعیت سوییچ در دیتابیس
         async function toggleSwitch(id, newState) {
-            const { error } = await supabase.from('dynamic_switches').update({ is_active: newState }).eq('id', id);
+            const { error } = await supabaseClient.from('dynamic_switches').update({ is_active: newState }).eq('id', id);
             if(error) alert('خطا در ذخیره‌سازی تغییرات!');
         }
 
         // ۳. دریافت برنامه‌های ثابت
         async function fetchFixedEvents() {
-            const { data, error } = await supabase.from('fixed_schedule_events').select('*').order('day_of_week', { ascending: true });
+            const { data, error } = await supabaseClient.from('fixed_schedule_events').select('*').order('day_of_week', { ascending: true });
             const container = document.getElementById('fixedEventsList');
             if (error || !data || data.length === 0) {
                 container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
