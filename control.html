@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -18,20 +19,18 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* سایدبار (دقیقاً مشابه داشبورد) */
+        /* سایدبار */
         .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
         .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
         .brand span { color: var(--accent); }
-        
         .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
         .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
         .nav-item.active { background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%); color: var(--accent); border-right-color: var(--accent); }
-        
         .logout-btn { margin-top: auto; color: var(--danger); border-top: 1px solid var(--border-color); padding-top: 20px; }
         .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
         /* محتوای اصلی */
-        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
         .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
         .page-title { font-size: 24px; font-weight: 900; }
         
@@ -39,17 +38,20 @@
         .section-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 30px; overflow: hidden; }
         .section-header { background: var(--surface-light); padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .section-title { font-size: 16px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        
         .list-header { background: rgba(255,255,255,0.02); padding: 15px 20px; font-size: 13px; font-weight: bold; display: flex; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
         .list-row { padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; transition: 0.2s; }
         .list-row:hover { background: rgba(255,255,255,0.02); }
         
-        /* دکمه‌ها و فرم‌ها */
-        .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        /* دکمه‌ها */
+        .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 5px; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-primary:hover { filter: brightness(1.1); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-gray { background: var(--surface-light); color: var(--text-muted); border: 1px solid var(--border-color); }
+        .btn-gray:hover { background: var(--border-color); color: var(--text-main); }
         
-        /* کلید روشن/خاموش (Toggle Switch) */
+        /* کلید روشن/خاموش */
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--surface-light); border: 1px solid var(--border-color); transition: .4s; border-radius: 24px; }
@@ -65,6 +67,22 @@
 
         /* ستون‌های گرید */
         .col-2 { flex: 2; } .col-3 { flex: 3; } .col-1 { flex: 1; }
+
+        /* استایل‌های Modal (پاپ‌آپ) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal { background: var(--surface-dark); border: 1px solid var(--border-color); width: 100%; max-width: 500px; border-radius: 16px; overflow: hidden; transform: translateY(20px); transition: 0.3s; }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal-header { padding: 20px; background: var(--surface-light); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .modal-close { cursor: pointer; color: var(--text-muted); font-size: 20px; }
+        .modal-close:hover { color: var(--danger); }
+        .modal-body { padding: 20px; display: grid; gap: 15px; }
+        .modal-footer { padding: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        .form-control { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; }
+        .form-control:focus { border-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -93,14 +111,14 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">📅 تقویم وضعیت هفته‌ها (۱ ماه آینده)</div>
-                <button class="btn btn-primary">+ ثبت هفته جدید</button>
+                <button class="btn btn-primary" onclick="openCalModal()">+ ثبت هفته جدید</button>
             </div>
             <div class="list-header">
                 <div class="col-2">عنوان هفته</div>
                 <div class="col-2">بازه زمانی</div>
                 <div class="col-1">پایه هدف</div>
                 <div class="col-2">نوع چرخه (وضعیت)</div>
-                <div class="col-1">عملیات</div>
+                <div class="col-2" style="text-align:center;">عملیات</div>
             </div>
             <div id="calendarList">
                 <div class="list-row" style="color: var(--text-muted); justify-content: center;">در حال بارگذاری...</div>
@@ -111,13 +129,14 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">🎛️ سوییچ‌های استراتژیک (قوانین پویا)</div>
-                <button class="btn btn-primary">+ قانون جدید</button>
+                <button class="btn btn-primary" onclick="openSwitchModal()">+ قانون جدید</button>
             </div>
             <div class="list-header">
-                <div class="col-3">عنوان قانون / استراتژی</div>
+                <div class="col-2">عنوان قانون / استراتژی</div>
                 <div class="col-1">پایه هدف</div>
                 <div class="col-1">آزمون هدف</div>
-                <div class="col-1" style="text-align: left;">وضعیت (فعال/غیرفعال)</div>
+                <div class="col-1" style="text-align: center;">وضعیت</div>
+                <div class="col-2" style="text-align: center;">عملیات</div>
             </div>
             <div id="switchesList">
                 <div class="list-row" style="color: var(--text-muted); justify-content: center;">در حال بارگذاری...</div>
@@ -128,7 +147,7 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">🧩 روتین‌ها و برنامه‌های ثابت تزریقی</div>
-                <button class="btn btn-primary">+ افزودن روتین</button>
+                <button class="btn btn-primary" onclick="openEventModal()">+ افزودن روتین</button>
             </div>
             <div class="list-header">
                 <div class="col-2">عنوان برنامه</div>
@@ -136,21 +155,205 @@
                 <div class="col-1">ساعت اجرا</div>
                 <div class="col-2">تزریق در هفته‌های</div>
                 <div class="col-1">پایه / آزمون</div>
-                <div class="col-1">عملیات</div>
+                <div class="col-2" style="text-align: center;">عملیات</div>
             </div>
             <div id="fixedEventsList">
                 <div class="list-row" style="color: var(--text-muted); justify-content: center;">در حال بارگذاری...</div>
             </div>
         </div>
-
     </div>
+
+    <!-- ==================== Modals ==================== -->
+    
+    <!-- Modal: Calendar -->
+    <div class="modal-overlay" id="calModal" onclick="closeModal(event, 'calModal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="calModalTitle">ثبت هفته جدید</span>
+                <span class="modal-close" onclick="closeModal(null, 'calModal')">&times;</span>
+            </div>
+            <form onsubmit="saveCalendar(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="calId">
+                    <div class="form-group">
+                        <label>عنوان هفته (مثال: هفته اول مرداد)</label>
+                        <input type="text" id="calTitle" class="form-control" required>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>تاریخ شروع</label>
+                            <input type="date" id="calStart" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>تاریخ پایان</label>
+                            <input type="date" id="calEnd" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>پایه هدف</label>
+                        <select id="calGrade" class="form-control">
+                            <option value="all">همه پایه‌ها (all)</option>
+                            <option value="دهم">دهم</option>
+                            <option value="یازدهم">یازدهم</option>
+                            <option value="دوازدهم">دوازدهم</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>نوع چرخه (وضعیت هفته)</label>
+                        <select id="calType" class="form-control">
+                            <option value="advance_1">پیشروی ۱</option>
+                            <option value="advance_2">پیشروی ۲</option>
+                            <option value="advance_3">پیشروی ۳</option>
+                            <option value="advance_4">پیشروی ۴</option>
+                            <option value="exam">هفته آزمون</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-gray" onclick="closeModal(null, 'calModal')">انصراف</button>
+                    <button type="submit" class="btn btn-primary">ذخیره اطلاعات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Switch -->
+    <div class="modal-overlay" id="switchModal" onclick="closeModal(event, 'switchModal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="switchModalTitle">قانون / سوییچ جدید</span>
+                <span class="modal-close" onclick="closeModal(null, 'switchModal')">&times;</span>
+            </div>
+            <form onsubmit="saveSwitch(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="switchId">
+                    <div class="form-group">
+                        <label>عنوان استراتژی / قانون</label>
+                        <input type="text" id="switchTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>کلید عملیاتی (Action Key - انگلیسی و بدون فاصله)</label>
+                        <input type="text" id="switchKey" class="form-control" placeholder="مثال: school_exams_focus" style="direction:ltr;" required>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>پایه هدف</label>
+                            <select id="switchGrade" class="form-control">
+                                <option value="all">همه (all)</option>
+                                <option value="دهم">دهم</option>
+                                <option value="یازدهم">یازدهم</option>
+                                <option value="دوازدهم">دوازدهم</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>آزمون هدف</label>
+                            <select id="switchExam" class="form-control">
+                                <option value="all">همه (all)</option>
+                                <option value="قلم‌چی">قلم‌چی</option>
+                                <option value="ماز">ماز</option>
+                                <option value="گزینه دو">گزینه دو</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-gray" onclick="closeModal(null, 'switchModal')">انصراف</button>
+                    <button type="submit" class="btn btn-primary">ذخیره اطلاعات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Event -->
+    <div class="modal-overlay" id="eventModal" onclick="closeModal(event, 'eventModal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="eventModalTitle">افزودن روتین ثابت</span>
+                <span class="modal-close" onclick="closeModal(null, 'eventModal')">&times;</span>
+            </div>
+            <form onsubmit="saveEvent(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="eventId">
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:2;">
+                            <label>عنوان برنامه (مثال: آزمون اصلی)</label>
+                            <input type="text" id="eventTitle" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>دسته بندی موضوع</label>
+                            <input type="text" id="eventSubject" class="form-control" required>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>روز هفته</label>
+                            <select id="eventDay" class="form-control">
+                                <option value="شنبه">شنبه</option><option value="یکشنبه">یکشنبه</option>
+                                <option value="دوشنبه">دوشنبه</option><option value="سه‌شنبه">سه‌شنبه</option>
+                                <option value="چهارشنبه">چهارشنبه</option><option value="پنجشنبه">پنجشنبه</option>
+                                <option value="جمعه">جمعه</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>ساعت شروع</label>
+                            <input type="time" id="eventStart" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>ساعت پایان</label>
+                            <input type="time" id="eventEnd" class="form-control" required>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>نوع برنامه (رنگ‌بندی)</label>
+                            <select id="eventType" class="form-control">
+                                <option value="default">عادی (default)</option>
+                                <option value="exam">آزمون (exam)</option>
+                                <option value="class">کلاس (class)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>تزریق در هفته‌های</label>
+                            <select id="eventWeekType" class="form-control">
+                                <option value="all">همه هفته‌ها (all)</option>
+                                <option value="week2">فقط هفته آزمون (week2)</option>
+                                <option value="week1">فقط پیشروی (week1)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>پایه هدف</label>
+                            <input type="text" id="eventGrade" class="form-control" value="all" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>آزمون هدف</label>
+                            <input type="text" id="eventTargetExam" class="form-control" value="all" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>طرح هدف</label>
+                            <input type="text" id="eventPlan" class="form-control" value="all" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-gray" onclick="closeModal(null, 'eventModal')">انصراف</button>
+                    <button type="submit" class="btn btn-primary">ذخیره اطلاعات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        
-        // 🛠️ تغییر نام به supabaseClient برای جلوگیری از تداخل
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // آرایه‌های محلی برای نگهداری دیتا و ویرایش سریع
+        let calendarsData = [];
+        let switchesData = [];
+        let eventsData = [];
 
         window.onload = async function() {
             await fetchCalendar();
@@ -158,22 +361,31 @@
             await fetchFixedEvents();
         };
 
-        // فرمت کردن تاریخ برای نمایش زیباتر
         function formatDate(dateString) {
             if(!dateString) return '-';
             return new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }).format(new Date(dateString));
         }
 
-        // ۱. دریافت تقویم هفته‌ها
+        function closeModal(event, modalId) {
+            if (event && event.target.id !== modalId) return;
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ==========================================
+        // ۱. تقویم وضعیت هفته‌ها
+        // ==========================================
         async function fetchCalendar() {
             const { data, error } = await supabaseClient.from('week_status_calendar').select('*').order('start_date', { ascending: true });
             const container = document.getElementById('calendarList');
-            if (error || !data || data.length === 0) {
+            if (error) return;
+            
+            calendarsData = data || [];
+            if (calendarsData.length === 0) {
                 container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
             }
 
             let html = '';
-            data.forEach(item => {
+            calendarsData.forEach(item => {
                 let badgeClass = item.week_type === 'exam' ? 'badge-orange' : 'badge-blue';
                 let typeName = item.week_type.replace('advance_', 'پیشروی ').replace('exam', 'هفته آزمون');
                 html += `
@@ -182,57 +394,152 @@
                         <div class="col-2" style="color: var(--text-muted);">${formatDate(item.start_date)} تا ${formatDate(item.end_date)}</div>
                         <div class="col-1"><span class="badge badge-gray">${item.target_grade}</span></div>
                         <div class="col-2"><span class="badge ${badgeClass}">${typeName}</span></div>
-                        <div class="col-1"><button class="btn badge-gray">ویرایش</button></div>
-                    </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        // ۲. دریافت سوییچ‌های پویا
-        async function fetchSwitches() {
-            const { data, error } = await supabaseClient.from('dynamic_switches').select('*').order('id', { ascending: true });
-            const container = document.getElementById('switchesList');
-            if (error || !data || data.length === 0) {
-                container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
-            }
-
-            let html = '';
-            data.forEach(item => {
-                let isChecked = item.is_active ? 'checked' : '';
-                html += `
-                    <div class="list-row">
-                        <div class="col-3" style="font-weight: bold; color: var(--text-main);">${item.title}</div>
-                        <div class="col-1"><span class="badge badge-gray">${item.target_grade}</span></div>
-                        <div class="col-1"><span class="badge badge-gray">${item.target_exam}</span></div>
-                        <div class="col-1" style="text-align: left;">
-                            <label class="switch">
-                                <input type="checkbox" ${isChecked} onchange="toggleSwitch(${item.id}, this.checked)">
-                                <span class="slider"></span>
-                            </label>
+                        <div class="col-2" style="text-align:center; display:flex; gap:5px; justify-content:center;">
+                            <button class="btn btn-gray" onclick="openCalModal(${item.id})">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteRecord('week_status_calendar', ${item.id}, fetchCalendar)">🗑️</button>
                         </div>
                     </div>`;
             });
             container.innerHTML = html;
         }
 
-        // آپدیت سریع وضعیت سوییچ در دیتابیس
-        async function toggleSwitch(id, newState) {
-            const { error } = await supabaseClient.from('dynamic_switches').update({ is_active: newState }).eq('id', id);
-            if(error) alert('خطا در ذخیره‌سازی تغییرات!');
+        function openCalModal(id = null) {
+            const modal = document.getElementById('calModal');
+            document.getElementById('calId').value = id || '';
+            document.getElementById('calModalTitle').innerText = id ? 'ویرایش هفته' : 'ثبت هفته جدید';
+            
+            if (id) {
+                let item = calendarsData.find(x => x.id === id);
+                document.getElementById('calTitle').value = item.title;
+                document.getElementById('calStart').value = item.start_date;
+                document.getElementById('calEnd').value = item.end_date;
+                document.getElementById('calGrade').value = item.target_grade;
+                document.getElementById('calType').value = item.week_type;
+            } else {
+                document.getElementById('calTitle').value = '';
+                document.getElementById('calStart').value = '';
+                document.getElementById('calEnd').value = '';
+                document.getElementById('calGrade').value = 'all';
+                document.getElementById('calType').value = 'advance_1';
+            }
+            modal.classList.add('active');
         }
 
-        // ۳. دریافت برنامه‌های ثابت
-        async function fetchFixedEvents() {
-            const { data, error } = await supabaseClient.from('fixed_schedule_events').select('*').order('day_of_week', { ascending: true });
-            const container = document.getElementById('fixedEventsList');
-            if (error || !data || data.length === 0) {
+        async function saveCalendar(e) {
+            e.preventDefault();
+            const id = document.getElementById('calId').value;
+            const payload = {
+                title: document.getElementById('calTitle').value,
+                start_date: document.getElementById('calStart').value,
+                end_date: document.getElementById('calEnd').value,
+                target_grade: document.getElementById('calGrade').value,
+                week_type: document.getElementById('calType').value
+            };
+
+            let res;
+            if (id) res = await supabaseClient.from('week_status_calendar').update(payload).eq('id', id);
+            else res = await supabaseClient.from('week_status_calendar').insert([payload]);
+
+            if (res.error) alert('خطا در ذخیره‌سازی!');
+            else { closeModal(null, 'calModal'); fetchCalendar(); }
+        }
+
+        // ==========================================
+        // ۲. سوییچ‌های پویا
+        // ==========================================
+        async function fetchSwitches() {
+            const { data, error } = await supabaseClient.from('dynamic_switches').select('*').order('id', { ascending: true });
+            const container = document.getElementById('switchesList');
+            if (error) return;
+
+            switchesData = data || [];
+            if (switchesData.length === 0) {
                 container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
             }
 
             let html = '';
-            data.forEach(item => {
+            switchesData.forEach(item => {
+                let isChecked = item.is_active ? 'checked' : '';
+                html += `
+                    <div class="list-row">
+                        <div class="col-2" style="font-weight: bold; color: var(--text-main);">${item.title}</div>
+                        <div class="col-1"><span class="badge badge-gray">${item.target_grade}</span></div>
+                        <div class="col-1"><span class="badge badge-gray">${item.target_exam}</span></div>
+                        <div class="col-1" style="text-align: center;">
+                            <label class="switch">
+                                <input type="checkbox" ${isChecked} onchange="toggleSwitchState(${item.id}, this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="col-2" style="text-align:center; display:flex; gap:5px; justify-content:center;">
+                            <button class="btn btn-gray" onclick="openSwitchModal(${item.id})">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteRecord('dynamic_switches', ${item.id}, fetchSwitches)">🗑️</button>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function toggleSwitchState(id, newState) {
+            await supabaseClient.from('dynamic_switches').update({ is_active: newState }).eq('id', id);
+        }
+
+        function openSwitchModal(id = null) {
+            const modal = document.getElementById('switchModal');
+            document.getElementById('switchId').value = id || '';
+            document.getElementById('switchModalTitle').innerText = id ? 'ویرایش قانون' : 'ثبت قانون جدید';
+            
+            if (id) {
+                let item = switchesData.find(x => x.id === id);
+                document.getElementById('switchTitle').value = item.title;
+                document.getElementById('switchKey').value = item.action_key;
+                document.getElementById('switchGrade').value = item.target_grade;
+                document.getElementById('switchExam').value = item.target_exam;
+            } else {
+                document.getElementById('switchTitle').value = '';
+                document.getElementById('switchKey').value = '';
+                document.getElementById('switchGrade').value = 'all';
+                document.getElementById('switchExam').value = 'all';
+            }
+            modal.classList.add('active');
+        }
+
+        async function saveSwitch(e) {
+            e.preventDefault();
+            const id = document.getElementById('switchId').value;
+            const payload = {
+                title: document.getElementById('switchTitle').value,
+                action_key: document.getElementById('switchKey').value,
+                target_grade: document.getElementById('switchGrade').value,
+                target_exam: document.getElementById('switchExam').value,
+                is_active: id ? undefined : true // در حالت ساخت جدید پیش‌فرض فعال است
+            };
+
+            let res;
+            if (id) res = await supabaseClient.from('dynamic_switches').update(payload).eq('id', id);
+            else res = await supabaseClient.from('dynamic_switches').insert([payload]);
+
+            if (res.error) alert('خطا در ذخیره‌سازی!');
+            else { closeModal(null, 'switchModal'); fetchSwitches(); }
+        }
+
+        // ==========================================
+        // ۳. برنامه‌های ثابت (روتین‌ها)
+        // ==========================================
+        async function fetchFixedEvents() {
+            const { data, error } = await supabaseClient.from('fixed_schedule_events').select('*').order('day_of_week', { ascending: true });
+            const container = document.getElementById('fixedEventsList');
+            if (error) return;
+
+            eventsData = data || [];
+            if (eventsData.length === 0) {
+                container.innerHTML = `<div class="list-row" style="justify-content:center;">داده‌ای یافت نشد.</div>`; return;
+            }
+
+            let html = '';
+            eventsData.forEach(item => {
                 let timeStr = `${item.start_time.substring(0,5)} الی ${item.end_time.substring(0,5)}`;
-                let weekTypeStr = item.week_type === 'all' ? 'همه هفته‌ها' : (item.week_type === 'week2' ? 'فقط هفته آزمون' : 'فقط هفته پیشروی');
+                let weekTypeStr = item.week_type === 'all' ? 'همه هفته‌ها' : (item.week_type === 'week2' ? 'فقط هفته آزمون' : 'فقط پیشروی');
                 
                 html += `
                     <div class="list-row">
@@ -241,10 +548,80 @@
                         <div class="col-1" style="color: var(--text-muted); font-family: monospace;">${timeStr}</div>
                         <div class="col-2"><span class="badge badge-blue">${weekTypeStr}</span></div>
                         <div class="col-1"><span class="badge badge-gray">${item.target_grade}</span></div>
-                        <div class="col-1"><button class="btn badge-gray">ویرایش</button></div>
+                        <div class="col-2" style="text-align:center; display:flex; gap:5px; justify-content:center;">
+                            <button class="btn btn-gray" onclick="openEventModal(${item.id})">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteRecord('fixed_schedule_events', ${item.id}, fetchFixedEvents)">🗑️</button>
+                        </div>
                     </div>`;
             });
             container.innerHTML = html;
+        }
+
+        function openEventModal(id = null) {
+            const modal = document.getElementById('eventModal');
+            document.getElementById('eventId').value = id || '';
+            document.getElementById('eventModalTitle').innerText = id ? 'ویرایش روتین' : 'افزودن روتین ثابت';
+            
+            if (id) {
+                let item = eventsData.find(x => x.id === id);
+                document.getElementById('eventTitle').value = item.title;
+                document.getElementById('eventSubject').value = item.subject;
+                document.getElementById('eventDay').value = item.day_of_week;
+                document.getElementById('eventStart').value = item.start_time;
+                document.getElementById('eventEnd').value = item.end_time;
+                document.getElementById('eventType').value = item.event_type;
+                document.getElementById('eventWeekType').value = item.week_type;
+                document.getElementById('eventGrade').value = item.target_grade;
+                document.getElementById('eventTargetExam').value = item.target_exam;
+                document.getElementById('eventPlan').value = item.target_plan;
+            } else {
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventSubject').value = '';
+                document.getElementById('eventDay').value = 'شنبه';
+                document.getElementById('eventStart').value = '';
+                document.getElementById('eventEnd').value = '';
+                document.getElementById('eventType').value = 'default';
+                document.getElementById('eventWeekType').value = 'all';
+                document.getElementById('eventGrade').value = 'all';
+                document.getElementById('eventTargetExam').value = 'all';
+                document.getElementById('eventPlan').value = 'all';
+            }
+            modal.classList.add('active');
+        }
+
+        async function saveEvent(e) {
+            e.preventDefault();
+            const id = document.getElementById('eventId').value;
+            const payload = {
+                title: document.getElementById('eventTitle').value,
+                subject: document.getElementById('eventSubject').value,
+                day_of_week: document.getElementById('eventDay').value,
+                start_time: document.getElementById('eventStart').value,
+                end_time: document.getElementById('eventEnd').value,
+                event_type: document.getElementById('eventType').value,
+                week_type: document.getElementById('eventWeekType').value,
+                target_grade: document.getElementById('eventGrade').value,
+                target_exam: document.getElementById('eventTargetExam').value,
+                target_plan: document.getElementById('eventPlan').value
+            };
+
+            let res;
+            if (id) res = await supabaseClient.from('fixed_schedule_events').update(payload).eq('id', id);
+            else res = await supabaseClient.from('fixed_schedule_events').insert([payload]);
+
+            if (res.error) alert('خطا در ذخیره‌سازی!');
+            else { closeModal(null, 'eventModal'); fetchFixedEvents(); }
+        }
+
+        // ==========================================
+        // عملیات حذف مشترک
+        // ==========================================
+        async function deleteRecord(table, id, callback) {
+            if (confirm('آیا از حذف این مورد اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) {
+                const { error } = await supabaseClient.from(table).delete().eq('id', id);
+                if (error) alert('خطا در حذف اطلاعات!');
+                else callback();
+            }
         }
     </script>
 </body>
