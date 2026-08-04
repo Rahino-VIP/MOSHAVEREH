@@ -9,39 +9,46 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
     <style>
+        /* 🎨 پالت رنگی اختصاصی مدیریت راهینو */
         :root { 
-            --bg-dark: #05080f; 
-            --surface: #0f172a; 
-            --border: #1e293b;
-            --accent: #3b82f6; 
-            --accent-hover: #2563eb;
-            --text-main: #f8fafc; 
-            --text-muted: #94a3b8;
+            --bg-dark: #0a0f0d; 
+            --surface: #121a18; 
+            --border: #263633;
+            
+            --primary: #639889; 
+            --primary-hover: #4d7a6e;
+            --primary-glow: rgba(99, 152, 137, 0.25);
+            
+            --text-main: #f1f5f9; 
+            --text-muted: #8b9d99;
             --danger: #ef4444;
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; position: relative; }
 
-        /* افکت‌های پس‌زمینه */
-        .glow { position: absolute; width: 400px; height: 400px; background: rgba(59, 130, 246, 0.15); filter: blur(100px); border-radius: 50%; z-index: 0; }
+        /* افکت‌های نوری پس‌زمینه */
+        .glow { position: absolute; width: 450px; height: 450px; background: var(--primary-glow); filter: blur(120px); border-radius: 50%; z-index: 0; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
-        .login-card { background: var(--surface); border: 1px solid var(--border); width: 100%; max-width: 400px; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 1; position: relative; }
+        /* کارت شیشه‌ای لاگین */
+        .login-card { background: rgba(18, 26, 24, 0.8); backdrop-filter: blur(20px); border: 1px solid var(--border); width: 100%; max-width: 420px; padding: 45px 40px; border-radius: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); z-index: 1; position: relative; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
-        .brand { text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; }
-        .brand span { color: var(--accent); }
-        .subtitle { text-align: center; font-size: 13px; color: var(--text-muted); margin-bottom: 30px; }
+        .brand { text-align: center; font-size: 26px; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; }
+        .brand span { color: var(--primary); }
+        .subtitle { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 35px; letter-spacing: 2px; text-transform: uppercase; font-family: monospace;}
 
-        .input-group { margin-bottom: 20px; }
+        .input-group { margin-bottom: 22px; }
         .input-label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
-        .modern-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; text-align: left; direction: ltr; }
-        .modern-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .modern-input { width: 100%; padding: 16px 20px; border-radius: 14px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 15px; outline: none; transition: 0.3s; text-align: left; direction: ltr; }
+        .modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); background: rgba(0,0,0,0.4); }
 
-        .btn-login { background: var(--accent); color: white; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-login:hover { background: var(--accent-hover); }
+        .btn-login { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px; box-shadow: 0 10px 25px var(--primary-glow); }
+        .btn-login:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 35px var(--primary-glow); }
         .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-top: 15px; display: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-top: 20px; display: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 10px; border: 1px dashed rgba(239, 68, 68, 0.3); animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
         .loader { display: none; margin: 0 auto; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid white; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -66,80 +73,74 @@
         </div>
 
         <button class="btn-login" id="loginBtn" onclick="handleLogin()">
-            <span id="btnText">ورود به سیستم</span>
+            <span id="btnText">ورود به سیستم مرکزی</span>
             <div class="loader" id="btnLoader"></div>
         </button>
 
-        <div class="error-msg" id="errorBox">ایمیل یا رمز عبور اشتباه است.</div>
+        <div class="error-msg" id="errorBox">دسترسی غیرمجاز! ایمیل یا رمز عبور اشتباه است.</div>
     </div>
 
     <script>
         // ==========================================
         // 🔗 تنظیمات اتصال سوپابیس
         // ==========================================
-    const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
                
-    // تغییر نام متغیر از supabase به supabaseClient برای جلوگیری از ارور تداخل
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // بررسی اینکه آیا ادمین قبلاً لاگین کرده یا نه
-    window.onload = async function() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            // اگر سشن فعال بود، مستقیم بره به داشبورد
-            window.location.replace('dashboard.html');
+        // بررسی اینکه آیا ادمین قبلاً لاگین کرده یا نه
+        window.onload = async function() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.replace('dashboard.html');
+            }
+        };
+
+        async function handleLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('btnLoader');
+            const errorBox = document.getElementById('errorBox');
+
+            if (!email || !password) {
+                errorBox.innerText = "لطفاً ایمیل و رمز عبور را وارد کنید.";
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            errorBox.style.display = 'none';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+
+                // لاگین موفقیت‌آمیز
+                window.location.replace('dashboard.html');
+
+            } catch (error) {
+                console.error(error);
+                btn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+                
+                errorBox.innerText = "دسترسی غیرمجاز! ایمیل یا رمز عبور اشتباه است.";
+                errorBox.style.display = 'block';
+            }
         }
-    };
 
-    async function handleLogin() {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const btn = document.getElementById('loginBtn');
-        const btnText = document.getElementById('btnText');
-        const loader = document.getElementById('btnLoader');
-        const errorBox = document.getElementById('errorBox');
-
-        if (!email || !password) {
-            errorBox.innerText = "لطفاً ایمیل و رمز عبور را وارد کنید.";
-            errorBox.style.display = 'block';
-            return;
-        }
-
-        // استایل دکمه در حالت لودینگ
-        btn.disabled = true;
-        btnText.style.display = 'none';
-        loader.style.display = 'block';
-        errorBox.style.display = 'none';
-
-        try {
-            // ارسال درخواست لاگین به سوپابیس با متغیر جدید
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (error) throw error;
-
-            // لاگین موفقیت‌آمیز
-            window.location.replace('dashboard.html');
-
-        } catch (error) {
-            // لاگین ناموفق
-            console.error(error);
-            btn.disabled = false;
-            btnText.style.display = 'block';
-            loader.style.display = 'none';
-            
-            errorBox.innerText = "دسترسی غیرمجاز! ایمیل یا رمز عبور اشتباه است.";
-            errorBox.style.display = 'block';
-        }
-    }
-
-    // ورود با زدن دکمه Enter
-    document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') handleLogin();
-    });
-</script>
-        
-       
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+    </script>
+</body>
+</html>
