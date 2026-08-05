@@ -191,17 +191,24 @@
         const normalizeForMatch = (str) => {
             if (!str) return "";
             let s = String(str);
-            s = s.replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/آ/g, 'ا'); 
+            
+            // ۱. همسان‌سازی ی و ک عربی و فارسی
+            s = s.replace(/ي/g, 'ی').replace(/ك/g, 'ک'); 
+            
+            // ۲. همسان‌سازی انواع الف و همزه
+            s = s.replace(/[آأإ]/g, 'ا').replace(/ؤ/g, 'و').replace(/ة/g, 'ه');
+            
+            // ۳. تبدیل اعداد فارسی به انگلیسی
             s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); 
-            s = s.replace(/[\s\u200C\-_]/g, ''); 
+            
+            // ۴. تبدیل اعداد عربی به انگلیسی
+            s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)); 
+            
+            // ۵. حذف فاصله‌ها، نیم‌فاصله‌های نامرئی (ZWNJ و ZWJ) و خطوط تیره
+            s = s.replace(/[\s\u200C\u200D\-_]/g, ''); 
+            
             return s;
         };
-
-        // باز و بسته کردن آکاردئون
-        function toggleBody(element) {
-            const body = element.nextElementSibling;
-            body.classList.toggle('open');
-        }
 
         // ==========================================
         // 🔍 آنالیز و تطبیق
