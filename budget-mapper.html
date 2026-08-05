@@ -114,8 +114,11 @@
         </div>
 
         <!-- نمایش آمار کلی -->
-        <div id="statsSummary" style="margin-bottom: 20px; font-size: 14px; font-weight: bold; color: var(--text-muted); display: none;">
-            نتیجه اسکن: <span id="statSuccess" style="color: var(--success);">۰</span> کتاب موفق | <span id="statError" style="color: var(--danger);">۰</span> کتاب دارای خطا (بدون مبحث)
+        <div id="statsSummary" style="margin-bottom: 20px; font-size: 14px; font-weight: bold; color: var(--text-muted); display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color);">
+            <div style="display:flex; justify-content: space-between;">
+                <span>تعداد کل مباحث دیتابیس: <b id="kgCount" style="color:var(--accent);">0</b> مبحث</span>
+                <span>نتیجه اسکن: <b id="statSuccess" style="color: var(--success);">۰</b> کتاب موفق | <b id="statError" style="color: var(--danger);">۰</b> کتاب دارای خطا</span>
+            </div>
         </div>
 
         <div class="match-grid" id="matchResults">
@@ -151,7 +154,7 @@
         };
 
         async function handleLogout() {
-            if(confirm('آیا مطمئن هستید؟')) {
+            if(confirm('آیا مطمئن هستید که می‌خواهید از اتاق فرمان خارج شوید؟')) {
                 await supabaseClient.auth.signOut();
                 window.location.replace('login.html');
             }
@@ -174,10 +177,27 @@
                     selectEl.appendChild(option);
                 });
 
-                // ۲. دریافت کل گراف دانش
-                const { data: kg, error: kErr } = await supabaseClient.from('knowledge_graph').select('*');
-                if (kErr) throw kErr;
-                knowledgeGraph = kg || [];
+                // ۲. دریافت کل گراف دانش با دور زدن محدودیت ۱۰۰۰ تایی سوپابیس (Pagination)
+                let allKg = [];
+                let from = 0;
+                let step = 1000;
+                
+                while (true) {
+                    const { data, error } = await supabaseClient.from('knowledge_graph')
+                        .select('*')
+                        .range(from, from + step - 1);
+                        
+                    if (error) throw error;
+                    if (!data || data.length === 0) break;
+                    
+                    allKg = allKg.concat(data);
+                    
+                    if (data.length < step) break; // رسیدن به انتهای دیتابیس
+                    from += step;
+                }
+                
+                knowledgeGraph = allKg;
+                document.getElementById('kgCount').innerText = knowledgeGraph.length;
 
             } catch (error) {
                 console.error("Error loading data:", error);
@@ -186,7 +206,7 @@
         }
 
         // ==========================================
-        // 🧠 شبیه‌ساز منطق نرمال‌سازی سیستم اصلی
+        // 🧠 موتور نرمال‌سازی عمیق
         // ==========================================
         const normalizeForMatch = (str) => {
             if (!str) return "";
@@ -209,6 +229,12 @@
             
             return s;
         };
+
+        // باز و بسته کردن آکاردئون
+        function toggleBody(element) {
+            const body = element.nextElementSibling;
+            body.classList.toggle('open');
+        }
 
         // ==========================================
         // 🔍 آنالیز و تطبیق
@@ -235,16 +261,16 @@
                 let bEnd = parseInt(bItem.end, 10);
                 let normalizedBudgetBook = normalizeForMatch(bItem.book);
 
-                // جستجو در گراف دانش (دقیقاً مشابه هسته برنامه ریز)
+                // جستجو در کل گراف دانش که حالا کامل دانلود شده
                 knowledgeGraph.forEach(topic => {
-                    // فقط مباحث رشته مربوطه را چک کن
+                    // فیلتر کردن مباحث بر اساس رشته‌ی دانش‌آموز (نه لزوماً پایه)
                     if(topic.major !== targetMajor && topic.major !== 'all') return;
 
                     let normalizedKgBook = normalizeForMatch(topic.book_name);
                     let tStart = parseInt(topic.start_page, 10);
                     let tEnd = parseInt(topic.end_page, 10);
 
-                    // شرط تطابق: اسم کتاب‌ها یکی باشد و صفحات همپوشانی داشته باشند
+                    // شرط تطابق: اسم نرمال‌شده یکی باشد و صفحات همپوشانی داشته باشند
                     if ((normalizedKgBook === normalizedBudgetBook) && (tStart <= bEnd) && (tEnd >= bStart)) {
                         matchedTopics.push(topic);
                     }
