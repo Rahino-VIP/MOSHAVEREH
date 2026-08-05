@@ -29,18 +29,17 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 👑 سایدبار یکپارچه */
+        /* 👑 سایدبار */
         .sidebar { width: 280px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 100; flex-shrink: 0; box-shadow: -5px 0 25px rgba(0,0,0,0.2); }
         .brand { text-align: center; font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 40px; letter-spacing: 1px; }
         .brand span { color: var(--primary); }
-        
         .nav-item { padding: 16px 30px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; transition: 0.3s; border-right: 4px solid transparent; text-decoration: none; }
         .nav-item:hover { background: rgba(99, 152, 137, 0.05); color: var(--text-main); }
         .nav-item.active { background: linear-gradient(90deg, var(--primary-glow) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
         .logout-btn { margin-top: auto; color: var(--accent); border-top: 1px solid var(--border-color); padding-top: 20px; }
 
         /* 🖥️ محتوای اصلی */
-        .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); }
+        .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); position: relative; }
         .page-header { margin-bottom: 35px; display: flex; justify-content: space-between; align-items: center; }
         .page-title { font-size: 26px; font-weight: 900; color: var(--text-main); }
         
@@ -53,8 +52,12 @@
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; height: 46px; }
         .btn-primary:hover { box-shadow: 0 5px 15px var(--primary-glow); transform: translateY(-2px); }
 
+        /* دکمه شناور ذخیره */
+        .floating-save-btn { position: fixed; bottom: 40px; left: 50px; background: var(--success); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); transition: 0.3s; display: none; z-index: 1000; align-items: center; gap: 10px; }
+        .floating-save-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(16, 185, 129, 0.6); filter: brightness(1.1); }
+
         /* کارت‌های تطبیق */
-        .match-grid { display: flex; flex-direction: column; gap: 15px; }
+        .match-grid { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
         .match-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: 0.3s; }
         .match-card.error { border-right: 4px solid var(--danger); }
         .match-card.success { border-right: 4px solid var(--success); }
@@ -71,11 +74,17 @@
         .mc-body { padding: 20px; display: none; background: var(--bg-dark); }
         .mc-body.open { display: block; }
         
-        .topic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
-        .topic-item { background: var(--surface-light); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 10px; font-size: 12px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
-        .topic-pages { color: var(--primary); font-family: monospace; font-weight: bold; }
+        /* استایل چک‌باکس‌ها */
+        .topic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .topic-item { background: var(--surface-light); border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 12px; font-size: 13px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; }
+        .topic-item:hover { border-color: var(--primary); }
+        .topic-item.selected { background: rgba(99, 152, 137, 0.1); border-color: var(--primary); }
+        
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; cursor: pointer; width: 100%; }
+        .checkbox-wrapper input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+        .topic-pages { color: var(--accent); font-family: monospace; font-weight: bold; font-size: 12px; flex-shrink: 0;}
 
-        .loader-overlay { position: fixed; inset: 0; background: rgba(10, 15, 13, 0.9); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; transition: 0.3s; }
+        .loader-overlay { position: fixed; inset: 0; background: rgba(10, 15, 13, 0.9); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s; }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -84,40 +93,34 @@
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner"></div>
-        <h3 style="color: var(--primary); font-size: 16px;">در حال بارگذاری موتور تطبیق...</h3>
+        <h3 id="loaderText" style="color: var(--primary); font-size: 16px;">در حال بارگذاری موتور تطبیق...</h3>
     </div>
 
-    <!-- سایدبار مدیریت -->
     <div class="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
-        
         <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
-        <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
-        <a href="admin-finance.html" class="nav-item"><span>💳</span> مدیریت مالی و پذیرش</a>
         <a href="quarantine.html" class="nav-item"><span>🧠</span> آزمایشگاه برنامه‌ریزی</a>
         <a href="control.html" class="nav-item"><span>⏳</span> کنترل برنامه‌ریزی</a>
         <a href="budget-mapper.html" class="nav-item active"><span>🎯</span> رادار تطبیق بودجه</a>
-        <a href="exam-surgery.html" class="nav-item"><span>🔬</span> جراحی کارنامه</a>
         <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
-        
         <a href="#" class="nav-item logout-btn" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
+
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">🎯 رادار تطبیق بودجه و گراف دانش</h1>
+            <h1 class="page-title">🎯 اتاق فرمان بودجه‌بندی آزمون‌ها</h1>
         </div>
 
         <div class="filter-panel">
             <div class="form-group">
-                <label>انتخاب آزمون (بر اساس تاریخ و رشته)</label>
+                <label>انتخاب آزمون (جهت بررسی و تأیید مباحث)</label>
                 <select id="examSelect" class="form-control">
                     <option value="">در حال دریافت لیست آزمون‌ها...</option>
                 </select>
             </div>
-            <button class="btn-primary" onclick="analyzeBudget()">آنالیز و تطبیق 🚀</button>
+            <button class="btn-primary" onclick="analyzeBudget()">اسکن مباحث 🚀</button>
         </div>
 
-        <!-- نمایش آمار کلی -->
         <div id="statsSummary" style="margin-bottom: 20px; font-size: 14px; font-weight: bold; color: var(--text-muted); display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color);">
             <div style="display:flex; justify-content: space-between;">
                 <span>تعداد کل مباحث دیتابیس: <b id="kgCount" style="color:var(--accent);">0</b> مبحث</span>
@@ -126,16 +129,21 @@
         </div>
 
         <div class="match-grid" id="matchResults">
-            <!-- نتایج اینجا تزریق می‌شود -->
             <div style="text-align:center; padding: 40px; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 16px;">
-                برای مشاهده وضعیت تطبیق، یک آزمون را انتخاب کرده و روی دکمه آنالیز کلیک کنید.
+                یک آزمون را انتخاب کرده و روی دکمه اسکن کلیک کنید تا لیست مباحث برای تایید نهایی آماده شود.
             </div>
         </div>
+
+        <!-- دکمه شناور ذخیره -->
+        <button id="saveBudgetBtn" class="floating-save-btn" onclick="saveApprovedBudget()">
+            <span>✅</span> تأیید نهایی و ثبت مباحث در دیتابیس
+        </button>
+
     </div>
 
     <script>
         // ==========================================
-        // 🔗 اتصال امنیتی به دیتابیس (دور زدن RLS)
+        // 🔗 اتصال امنیتی به دیتابیس
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
@@ -146,6 +154,7 @@
 
         let allBudgets = [];
         let knowledgeGraph = [];
+        let currentSelectedExamGrade = ''; // برای تشخیص هوشمند خرد/کلان
 
         window.onload = async function() {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -158,7 +167,7 @@
         };
 
         async function handleLogout() {
-            if(confirm('آیا مطمئن هستید که می‌خواهید از اتاق فرمان خارج شوید؟')) {
+            if(confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
                 await supabaseClient.auth.signOut();
                 window.location.replace('login.html');
             }
@@ -166,7 +175,7 @@
 
         async function loadInitialData() {
             try {
-                // ۱. دریافت تمام بودجه‌بندی‌ها
+                // ۱. دریافت لیست بودجه‌ها
                 const { data: budgets, error: bErr } = await supabaseClient.from('exam_budgets').select('*').order('exam_date', { ascending: false });
                 if (bErr) throw bErr;
                 allBudgets = budgets || [];
@@ -181,25 +190,17 @@
                     selectEl.appendChild(option);
                 });
 
-                // ۲. دریافت کل گراف دانش با دور زدن محدودیت ۱۰۰۰ تایی سوپابیس (Pagination)
+                // ۲. دریافت کل گراف دانش با دور زدن محدودیت 1000 تایی
                 let allKg = [];
-                let from = 0;
-                let step = 1000;
-                
+                let from = 0; let step = 1000;
                 while (true) {
-                    const { data, error } = await supabaseClient.from('knowledge_graph')
-                        .select('*')
-                        .range(from, from + step - 1);
-                        
+                    const { data, error } = await supabaseClient.from('knowledge_graph').select('*').range(from, from + step - 1);
                     if (error) throw error;
                     if (!data || data.length === 0) break;
-                    
                     allKg = allKg.concat(data);
-                    
-                    if (data.length < step) break; // رسیدن به انتهای دیتابیس
+                    if (data.length < step) break;
                     from += step;
                 }
-                
                 knowledgeGraph = allKg;
                 document.getElementById('kgCount').innerText = knowledgeGraph.length;
 
@@ -215,33 +216,27 @@
         const normalizeForMatch = (str) => {
             if (!str) return "";
             let s = String(str);
-            
-            // ۱. همسان‌سازی ی و ک عربی و فارسی
             s = s.replace(/ي/g, 'ی').replace(/ك/g, 'ک'); 
-            
-            // ۲. همسان‌سازی انواع الف و همزه
             s = s.replace(/[آأإ]/g, 'ا').replace(/ؤ/g, 'و').replace(/ة/g, 'ه');
-            
-            // ۳. تبدیل اعداد فارسی به انگلیسی
             s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); 
-            
-            // ۴. تبدیل اعداد عربی به انگلیسی
             s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)); 
-            
-            // ۵. حذف فاصله‌ها، نیم‌فاصله‌های نامرئی (ZWNJ و ZWJ) و خطوط تیره
             s = s.replace(/[\s\u200C\u200D\-_]/g, ''); 
-            
             return s;
         };
 
-        // باز و بسته کردن آکاردئون
         function toggleBody(element) {
             const body = element.nextElementSibling;
             body.classList.toggle('open');
         }
 
+        function toggleTopicStyle(checkbox) {
+            const wrapper = checkbox.closest('.topic-item');
+            if(checkbox.checked) wrapper.classList.add('selected');
+            else wrapper.classList.remove('selected');
+        }
+
         // ==========================================
-        // 🔍 آنالیز و تطبیق
+        // 🔍 آنالیز و رندر چک‌باکس‌ها
         // ==========================================
         function analyzeBudget() {
             const selectedId = document.getElementById('examSelect').value;
@@ -250,14 +245,13 @@
             const budgetRecord = allBudgets.find(b => String(b.id) === selectedId);
             if (!budgetRecord) return;
 
-            const budgetDataArray = typeof budgetRecord.budget_data === 'string' ? JSON.parse(budgetRecord.budget_data) : budgetRecord.budget_data;
+            currentSelectedExamGrade = budgetRecord.grade;
             const targetMajor = budgetRecord.major;
+            const budgetDataArray = typeof budgetRecord.budget_data === 'string' ? JSON.parse(budgetRecord.budget_data) : budgetRecord.budget_data;
 
             const container = document.getElementById('matchResults');
             container.innerHTML = '';
-
-            let successCount = 0;
-            let errorCount = 0;
+            let successCount = 0; let errorCount = 0;
 
             budgetDataArray.forEach(bItem => {
                 let matchedTopics = [];
@@ -265,62 +259,127 @@
                 let bEnd = parseInt(bItem.end, 10);
                 let normalizedBudgetBook = normalizeForMatch(bItem.book);
 
-                // جستجو در کل گراف دانش که حالا کامل دانلود شده
                 knowledgeGraph.forEach(topic => {
-                    // فیلتر کردن مباحث بر اساس رشته‌ی دانش‌آموز (نه لزوماً پایه)
                     if(topic.major !== targetMajor && topic.major !== 'all') return;
-
                     let normalizedKgBook = normalizeForMatch(topic.book_name);
                     let tStart = parseInt(topic.start_page, 10);
                     let tEnd = parseInt(topic.end_page, 10);
 
-                    // شرط تطابق: اسم نرمال‌شده یکی باشد و صفحات همپوشانی داشته باشند
                     if ((normalizedKgBook === normalizedBudgetBook) && (tStart <= bEnd) && (tEnd >= bStart)) {
                         matchedTopics.push(topic);
                     }
                 });
 
-                // رندر کردن کارت برای این کتاب
                 let isSuccess = matchedTopics.length > 0;
                 let cardClass = isSuccess ? 'success' : 'error';
                 let badgeHtml = isSuccess 
                     ? `<span class="badge badge-success">✅ ${matchedTopics.length} مبحث یافت شد</span>`
-                    : `<span class="badge badge-danger">❌ بدون تطبیق (خطر جاماندگی)</span>`;
+                    : `<span class="badge badge-danger">❌ بدون تطبیق</span>`;
 
                 if (isSuccess) successCount++; else errorCount++;
 
-                let topicsHtml = matchedTopics.map(t => `
-                    <div class="topic-item">
-                        <span>${t.topic_name} <span style="color:var(--text-muted); font-size:10px;">(${t.plan_type === 'micro' ? 'خرد' : 'کلان'})</span></span>
-                        <span class="topic-pages">ص ${t.start_page} تا ${t.end_page}</span>
-                    </div>
-                `).join('');
+                let topicsHtml = matchedTopics.map(t => {
+                    // منطق هوشمند پیش‌فرض: اگر پایه مبحث با پایه آزمون یکی بود -> خرد، در غیر این صورت -> کلان
+                    let isCurrentGrade = (t.grade === currentSelectedExamGrade);
+                    let isChecked = false;
+                    
+                    // بررسی اینکه آیا قبلاً ذخیره شده است؟
+                    if (bItem.approved_topics && Array.isArray(bItem.approved_topics)) {
+                        isChecked = bItem.approved_topics.includes(t.id);
+                    } else {
+                        // اگر دفعه اول است، از منطق هوشمند استفاده کن
+                        if (isCurrentGrade && t.plan_type === 'micro') isChecked = true;
+                        if (!isCurrentGrade && t.plan_type === 'macro') isChecked = true;
+                    }
+
+                    let checkedStr = isChecked ? 'checked' : '';
+                    let selectedClass = isChecked ? 'selected' : '';
+
+                    return `
+                        <div class="topic-item ${selectedClass}">
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" class="topic-cb" data-book="${bItem.book}" value="${t.id}" ${checkedStr} onchange="toggleTopicStyle(this)">
+                                <span>${t.topic_name} <span style="color:var(--text-muted); font-size:10px;">(${t.plan_type === 'micro' ? 'خرد' : 'کلان'}) - پایه ${t.grade}</span></span>
+                            </label>
+                            <span class="topic-pages">ص ${t.start_page} - ${t.end_page}</span>
+                        </div>
+                    `;
+                }).join('');
 
                 if (!isSuccess) {
-                    topicsHtml = `<div style="color: var(--danger); font-size: 13px;">⚠️ هشدار: الگوریتم هیچ مبحثی برای کتاب <b>"${bItem.book}"</b> از صفحات ${bStart} تا ${bEnd} پیدا نکرد. نام کتاب در بودجه‌بندی را با نام آن در گراف دانش بررسی کنید یا صفحات را تطبیق دهید.</div>`;
+                    topicsHtml = `<div style="color: var(--danger); font-size: 13px;">⚠️ هیچ مبحثی برای کتاب <b>"${bItem.book}"</b> از صفحات ${bStart} تا ${bEnd} پیدا نشد. لطفاً نام کتاب را تصحیح کنید.</div>`;
                 }
 
                 let html = `
                     <div class="match-card ${cardClass}">
                         <div class="mc-header" onclick="toggleBody(this)">
-                            <div class="mc-title">
-                                📚 ${bItem.book}
-                                <span class="mc-pages">[ص ${bStart} الی ${bEnd}]</span>
-                            </div>
+                            <div class="mc-title">📚 ${bItem.book} <span class="mc-pages">[ص ${bStart} الی ${bEnd}]</span></div>
                             ${badgeHtml}
                         </div>
-                        <div class="mc-body">
-                            ${isSuccess ? `<div class="topic-list">${topicsHtml}</div>` : topicsHtml}
+                        <div class="mc-body ${isSuccess ? 'open' : ''}">
+                            <div class="topic-list">${topicsHtml}</div>
                         </div>
                     </div>
                 `;
                 container.insertAdjacentHTML('beforeend', html);
             });
 
-            // آپدیت آمار کلی
             document.getElementById('statSuccess').innerText = successCount;
             document.getElementById('statError').innerText = errorCount;
             document.getElementById('statsSummary').style.display = 'block';
+            
+            // نمایش دکمه شناور ذخیره
+            document.getElementById('saveBudgetBtn').style.display = 'flex';
+        }
+
+        // ==========================================
+        // 💾 ذخیره مباحث تایید شده در دیتابیس
+        // ==========================================
+        async function saveApprovedBudget() {
+            const selectedId = document.getElementById('examSelect').value;
+            if (!selectedId) return;
+
+            // نمایش لودر
+            document.getElementById('loaderText').innerText = "در حال ذخیره‌سازی در هسته مرکزی...";
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('mainLoader').style.opacity = '1';
+
+            // پیدا کردن رکورد فعلی
+            const budgetRecord = allBudgets.find(b => String(b.id) === selectedId);
+            let budgetDataArray = typeof budgetRecord.budget_data === 'string' ? JSON.parse(budgetRecord.budget_data) : budgetRecord.budget_data;
+
+            // جمع‌آوری آیدی چک‌باکس‌های فعال برای هر کتاب
+            budgetDataArray.forEach(bItem => {
+                let checkboxes = document.querySelectorAll(`.topic-cb[data-book="${bItem.book}"]`);
+                let selectedIds = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+                
+                // اضافه کردن آیدی‌های تایید شده به فایل JSON دیتابیس
+                bItem.approved_topics = selectedIds;
+            });
+
+            try {
+                // ارسال دیتای جدید به جدول exam_budgets
+                const { error } = await supabaseClient
+                    .from('exam_budgets')
+                    .update({ budget_data: JSON.stringify(budgetDataArray) })
+                    .eq('id', selectedId);
+
+                if (error) throw error;
+
+                // آپدیت آرایه محلی برای اینکه اگر دوباره کلیک کرد رفرش نشه
+                budgetRecord.budget_data = JSON.stringify(budgetDataArray);
+
+                setTimeout(() => {
+                    document.getElementById('mainLoader').style.opacity = '0';
+                    setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+                    alert('✅ مباحث تایید شده با موفقیت برای این آزمون ذخیره شدند.\nالگوریتم برنامه‌ریز از این پس مستقیماً از این مباحث استفاده خواهد کرد.');
+                }, 500);
+
+            } catch (error) {
+                console.error("Save Error:", error);
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('⚠️ خطا در ذخیره‌سازی اطلاعات.');
+            }
         }
     </script>
 </body>
