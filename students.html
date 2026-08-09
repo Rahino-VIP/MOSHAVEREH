@@ -76,8 +76,11 @@
         .badge-tag { background: var(--surface-light); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
         /* 📱 گرید محتوای پرونده */
-        .profile-body { padding: 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .profile-body { padding: 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative; }
 
+        /* لودر داخل مودال */
+        .modal-loader { position: absolute; inset: 0; background: var(--bg-color); z-index: 10; display: flex; justify-content: center; align-items: center; flex-direction: column; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
+        
         /* کارت‌های اطلاعاتی */
         .info-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .card-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
@@ -86,7 +89,6 @@
         .info-label { color: var(--text-muted); }
         .info-value { font-weight: bold; color: var(--text-main); text-align: left; }
         
-        /* کارت دابل سایز برای تنظیمات VIP */
         .col-span-2 { grid-column: span 2; }
         
         /* 🔮 گوی بلورین هوش مصنوعی */
@@ -107,13 +109,11 @@
 
         .log-entry { font-size: 12px; padding: 12px; background: var(--surface-light); border-right: 3px solid var(--warning); margin-bottom: 8px; border-radius: 8px; line-height: 1.6;}
         
-        /* اسکرول‌بار اختصاصی مودال */
         .modal-content::-webkit-scrollbar { width: 8px; }
         .modal-content::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 10px; }
         .modal-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
         .modal-content::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* لودر امنیتی */
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
         .spinner { font-size: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -134,12 +134,11 @@
                 <div class="p-info-wrap">
                     <div class="p-avatar">🧑‍🎓</div>
                     <div>
-                        <h2 style="font-size: 26px; font-weight: 900; margin-bottom: 5px; color: var(--text-main);" id="modalName">سینا رضایی</h2>
+                        <h2 style="font-size: 26px; font-weight: 900; margin-bottom: 5px; color: var(--text-main);" id="modalName">در حال بارگذاری...</h2>
                         <div class="badge-grid">
-                            <span class="badge-tag">کدملی: ۰۴۱۰۲۳۴۵۶۷</span>
-                            <span class="badge-tag">دوازدهم تجربی</span>
-                            <span class="badge-tag" style="color: var(--accent); border-color: rgba(229, 158, 163, 0.3); background: rgba(229, 158, 163, 0.1);">🔥 زنجیره بیداری: ۱۲ روز</span>
-                            <span class="badge-tag" style="color: var(--warning); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1);">وضعیت: روی غلتک</span>
+                            <span class="badge-tag" id="modalNid">کدملی: -</span>
+                            <span class="badge-tag" id="modalGradeInfo">پایه و رشته: -</span>
+                            <span class="badge-tag" style="color: var(--accent); border-color: rgba(229, 158, 163, 0.3); background: rgba(229, 158, 163, 0.1);" id="modalWakeStreak">🔥 زنجیره بیداری: -</span>
                         </div>
                     </div>
                 </div>
@@ -147,35 +146,38 @@
             </div>
 
             <div class="profile-body">
-                
+                <div class="modal-loader" id="modalLoader">
+                    <div class="spinner">📡</div>
+                    <h3 style="color: var(--primary);">در حال استخراج دیتای جامع دانش‌آموز...</h3>
+                </div>
+
                 <!-- کارت ۱: اطلاعات هویتی و تماس -->
                 <div class="info-card">
                     <div class="card-title">📞 اطلاعات تماس و هویت</div>
-                    <div class="info-row"><span class="info-label">موبایل دانش‌آموز:</span><span class="info-value">۰۹۱۲۳۴۵۶۷۸۹</span></div>
-                    <div class="info-row"><span class="info-label">موبایل پدر:</span><span class="info-value">۰۹۱۲۰۹۸۷۶۵۴</span></div>
-                    <div class="info-row"><span class="info-label">موبایل مادر:</span><span class="info-value">۰۹۱۹۱۲۳۴۵۶۷</span></div>
-                    <div class="info-row"><span class="info-label">استان و شهر:</span><span class="info-value">تهران، تهران</span></div>
-                    <div class="info-row"><span class="info-label">مدرسه:</span><span class="info-value">علامه حلی ۱</span></div>
+                    <div class="info-row"><span class="info-label">موبایل دانش‌آموز:</span><span class="info-value" id="infoMobile">-</span></div>
+                    <div class="info-row"><span class="info-label">موبایل پدر:</span><span class="info-value" id="infoFather">-</span></div>
+                    <div class="info-row"><span class="info-label">موبایل مادر:</span><span class="info-value" id="infoMother">-</span></div>
+                    <div class="info-row"><span class="info-label">استان و شهر:</span><span class="info-value" id="infoCity">-</span></div>
+                    <div class="info-row"><span class="info-label">مدرسه:</span><span class="info-value" id="infoSchool">-</span></div>
                 </div>
 
                 <!-- کارت ۲: وضعیت مالی و قرارداد -->
                 <div class="info-card">
                     <div class="card-title">💰 وضعیت اشتراک و مالی</div>
-                    <div class="info-row"><span class="info-label">کیف پول:</span><span class="info-value" style="color: var(--success);">۱۵۰,۰۰۰ تومان</span></div>
-                    <div class="info-row"><span class="info-label">طرح مشاوره:</span><span class="info-value">PROMAX (۳ ماهه)</span></div>
-                    <div class="info-row"><span class="info-label">اعتبار تا:</span><span class="info-value">۱۴۰۳/۰۸/۲۵</span></div>
-                    <div class="info-row"><span class="info-label">وضعیت اقساط:</span><span class="info-value" style="color: var(--warning);">۱ قسط معوقه</span></div>
-                    <div class="info-row"><span class="info-label">سرنخ ورود:</span><span class="info-value">اینستاگرام</span></div>
+                    <div class="info-row"><span class="info-label">کیف پول:</span><span class="info-value" style="color: var(--success);" id="infoWallet">-</span></div>
+                    <div class="info-row"><span class="info-label">وضعیت اشتراک:</span><span class="info-value" id="infoSubStatus">-</span></div>
+                    <div class="info-row"><span class="info-label">اعتبار تا:</span><span class="info-value" id="infoExpire">-</span></div>
+                    <div class="info-row"><span class="info-label">کد معرف (دعوت):</span><span class="info-value" id="infoReferral">-</span></div>
+                    <div class="info-row"><span class="info-label">دعوت شده توسط:</span><span class="info-value" id="infoInvitedBy">-</span></div>
                 </div>
 
                 <!-- کارت ۳: آمار حیاتی -->
                 <div class="info-card">
-                    <div class="card-title">📈 آمار حیاتی (Vital Stats)</div>
-                    <div class="info-row"><span class="info-label">تیک برنامه‌ها (هفته):</span><span class="info-value" style="color: var(--success);">۸۵٪</span></div>
-                    <div class="info-row"><span class="info-label">ساعت مطالعه (ماه):</span><span class="info-value">۱۸۵ ساعت</span></div>
-                    <div class="info-row"><span class="info-label">مجموع تست (ماه):</span><span class="info-value">۲۴۰۰ تست</span></div>
-                    <div class="info-row"><span class="info-label">آخرین تراز ثبت‌شده:</span><span class="info-value" style="color: var(--accent);">۶۸۵۰</span></div>
-                    <div class="info-row"><span class="info-label">میانگین تایم خواب:</span><span class="info-value">۲۳:۳۰ تا ۰۶:۱۵</span></div>
+                    <div class="card-title">📈 آمار حیاتی (۷ روز اخیر)</div>
+                    <div class="info-row"><span class="info-label">ساعت مطالعه:</span><span class="info-value" id="statStudy">-</span></div>
+                    <div class="info-row"><span class="info-label">مجموع تست:</span><span class="info-value" id="statTests">-</span></div>
+                    <div class="info-row"><span class="info-label">آخرین تراز:</span><span class="info-value" style="color: var(--accent);" id="statTaraz">-</span></div>
+                    <div class="info-row"><span class="info-label">آخرین بیداری:</span><span class="info-value" id="statLastWake">-</span></div>
                 </div>
 
                 <!-- کارت ۴ (بزرگ): تنظیمات VIP -->
@@ -183,17 +185,14 @@
                     <div class="card-title">🎯 استراتژی آموزشی (VIP Settings)</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">آزمون‌های هدف:</span><span class="info-value">قلم‌چی، ماز</span></div>
-                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">کلاس‌های ثابت:</span><span class="info-value">ریاضی (آریان حیدری)، شیمی (بابایی)</span></div>
-                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">نقطه قوت:</span><span class="info-value" style="color: var(--success);">زیست (مسلط)</span></div>
-                            <div class="info-row"><span class="info-label">پاشنه آشیل:</span><span class="info-value" style="color: var(--danger);">فیزیک (نیاز به درسنامه)</span></div>
+                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">آزمون‌های هدف:</span><span class="info-value" id="vipExams">-</span></div>
+                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">نقطه قوت:</span><span class="info-value" style="color: var(--success);" id="vipStrong">-</span></div>
+                            <div class="info-row"><span class="info-label">پاشنه آشیل:</span><span class="info-value" style="color: var(--danger);" id="vipWeak">-</span></div>
                         </div>
                         <div>
-                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">مباحث بسته شده (اخیراً):</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <span class="badge-tag">گوارش دهم</span>
-                                <span class="badge-tag">تابع دوازدهم</span>
-                                <span class="badge-tag">استوکیومتری</span>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">کلاس‌های ثابت:</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;" id="vipClasses">
+                                <span class="badge-tag">-</span>
                             </div>
                         </div>
                     </div>
@@ -203,8 +202,8 @@
                 <div class="info-card">
                     <div class="card-title" style="color: var(--accent);">💬 بیسیم مستقیم (پین به داشبورد)</div>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">این پیام دقیقاً بالای داشبورد دانش‌آموز نمایش داده می‌شود.</p>
-                    <textarea class="chat-box" placeholder="پیام یا دستور استراتژیک برای این هفته..."></textarea>
-                    <button class="btn-send" onclick="alert('پیام با موفقیت به داشبورد دانش‌آموز پین شد!')">ارسال فرمان 🚀</button>
+                    <textarea class="chat-box" id="directMsgBox" placeholder="پیام یا دستور استراتژیک برای این هفته..."></textarea>
+                    <button class="btn-send" onclick="sendDirectMessage()">ارسال فرمان 🚀</button>
                 </div>
 
                 <!-- کارت ۶: گوی بلورین -->
@@ -217,17 +216,6 @@
                     <button class="btn-oracle" onclick="summonAI()">اسکن ۳۰ روزه و پیش‌بینی رتبه کنکور ⚡</button>
                 </div>
 
-                <!-- کارت ۷: اعترافات -->
-                <div class="info-card">
-                    <div class="card-title">📝 آخرین اعترافات (فرم جمعه‌ها)</div>
-                    <div class="log-entry" style="border-right-color: var(--success);">
-                        <strong style="color: var(--primary);">جمعه گذشته (نمره ۸):</strong> "این هفته امتحان فیزیک داشتم، برنامه‌م عالی بود. فقط یه کم خسته شدم."
-                    </div>
-                    <div class="log-entry" style="border-right-color: var(--danger);">
-                        <strong style="color: var(--danger);">۲ هفته پیش (نمره ۳):</strong> "حالم اصلاً خوب نیست، همش دارم با گوشیم وقت تلف می‌کنم. تمرکز ندارم."
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -236,11 +224,11 @@
     <div class="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         
-        <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
-        <a href="students.html" class="nav-item active"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
-        <a href="quarantine.html" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
-        <a href="exam-surgery.html" class="nav-item"><span>🔬</span> جراحی کارنامه (AI)</a>
-        <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
+        <a href="dashboard" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
+        <a href="students" class="nav-item active"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
+        <a href="quarantine" class="nav-item"><span>⏳</span> آزمایشگاه برنامه‌ریزی</a>
+        <a href="exam-surgery" class="nav-item"><span>🔬</span> جراحی کارنامه (AI)</a>
+        <a href="settings" class="nav-item"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
         
         <a href="#" class="nav-item logout-btn" style="margin-top: auto;" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
@@ -249,107 +237,232 @@
     <div class="main-content">
         <div class="page-header">
             <h1 class="page-title">بانک اطلاعاتی دانش‌آموزان</h1>
+            <div style="font-size: 14px; color: var(--text-muted);">تعداد کل: <strong id="totalCountDisplay" style="color: var(--primary);">۰</strong></div>
         </div>
 
         <div class="toolbar">
-            <input type="text" class="search-bar" placeholder="🔍 جستجوی نام، کدملی، پایه تحصیلی یا شماره موبایل...">
-            <button class="filter-btn active">همه (۲۴۸)</button>
-            <button class="filter-btn">دوازدهمی‌ها</button>
-            <button class="filter-btn" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">⚠️ نیاز به پیگیری (۵)</button>
+            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 جستجوی نام، کدملی، پایه تحصیلی یا شماره موبایل..." onkeyup="filterList()">
         </div>
 
-        <!-- این بخش برای وصل شدن به Supabase آماده است. فعلاً دیتای استاتیک نمایش داده می‌شود -->
         <div class="list-container" id="studentsList">
-            <div class="list-row" onclick="openProfile('سینا رضایی', 'دوازدهم تجربی')">
-                <div class="col-avatar">👨‍💻</div>
-                <div class="col-info">
-                    <div class="s-name">سینا رضایی</div>
-                    <div class="s-meta">دوازدهم تجربی | برنامه: ماز</div>
-                </div>
-                <div class="col-stats">
-                    <div class="stat-label">مطالعه هفته</div>
-                    <div class="stat-val">۴۳.۵ <span style="font-size: 10px;">ساعت</span></div>
-                </div>
-                <div class="col-stats">
-                    <div class="stat-label">تیک برنامه</div>
-                    <div class="stat-val" style="color: var(--success);">۸۵٪</div>
-                </div>
-                <div class="col-action">
-                    <button class="btn-view">مشاهده پرونده کامل 👁️</button>
-                </div>
-            </div>
-
-            <div class="list-row" onclick="openProfile('مریم طاهری', 'یازدهم ریاضی')">
-                <div class="col-avatar">👩‍🎓</div>
-                <div class="col-info">
-                    <div class="s-name">مریم طاهری</div>
-                    <div class="s-meta">یازدهم ریاضی | برنامه: قلم‌چی</div>
-                </div>
-                <div class="col-stats">
-                    <div class="stat-label">مطالعه هفته</div>
-                    <div class="stat-val">۲۸.۰ <span style="font-size: 10px;">ساعت</span></div>
-                </div>
-                <div class="col-stats">
-                    <div class="stat-label">تیک برنامه</div>
-                    <div class="stat-val" style="color: var(--warning);">۶۰٪</div>
-                </div>
-                <div class="col-action">
-                    <button class="btn-view">مشاهده پرونده کامل 👁️</button>
-                </div>
-            </div>
-            
-            <div class="list-row" style="background: rgba(239, 68, 68, 0.05); border-right: 3px solid var(--danger);" onclick="openProfile('امیرحسین کریمی', 'دهم انسانی')">
-                <div class="col-avatar">🤷‍♂️</div>
-                <div class="col-info">
-                    <div class="s-name">امیرحسین کریمی</div>
-                    <div class="s-meta">دهم انسانی | بدون آزمون</div>
-                </div>
-                <div class="col-stats">
-                    <div class="stat-label">مطالعه هفته</div>
-                    <div class="stat-val" style="color: var(--danger);">۱۲.۰ <span style="font-size: 10px;">ساعت</span></div>
-                </div>
-                <div class="col-stats">
-                    <div class="stat-label">تیک برنامه</div>
-                    <div class="stat-val" style="color: var(--danger);">۳۰٪</div>
-                </div>
-                <div class="col-action">
-                    <button class="btn-view" style="color: var(--danger); border-color: var(--danger); background: transparent;">اقدام فوری ⚠️</button>
-                </div>
-            </div>
+            <div style="padding: 40px; text-align: center; color: var(--text-muted);">در حال دریافت اطلاعات از سرور... ⏳</div>
         </div>
-
     </div>
 
     <script>
         // ==========================================
-        // 🔗 تنظیمات اتصال سوپابیس (گارد امنیتی پنل ادمین)
+        // 🔗 اتصال سوپابیس (حالت ادمین / Service Role)
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // ⚠️ مهم: در پنل مدیریت از Service Role Key استفاده کن تا بتوانی تمام دانش‌آموزان را ببینی
-        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
         });
 
+        let allStudentsData = [];
+        let currentOpenNid = null;
+
         window.onload = async function() {
-            // مخفی کردن لودر اولیه
+            // مخفی کردن لودر امنیتی در صورت موفقیت
             document.getElementById('authLoader').style.opacity = '0';
             setTimeout(() => document.getElementById('authLoader').style.display = 'none', 300);
             
-            // اینجا می‌توانی در آینده تابع fetchAllStudents() را صدا بزنی تا لیست داینامیک شود
+            await fetchAllStudents();
         };
 
-        // باز و بسته کردن مگا مُدال پرونده
-        function openProfile(name, meta) {
-            document.getElementById('modalName').innerText = name;
-            // پاک کردن صفحه نمایش هوش مصنوعی برای کاربری جدید
-            document.getElementById('aiScreen').innerHTML = '<span style="color: #4d7a6e;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span><span class="cursor" id="cursorBlock"></span>';
+        // 🌟 استخراج لیست کل دانش‌آموزان از دیتابیس
+        async function fetchAllStudents() {
+            try {
+                const { data: students, error } = await supabaseClient
+                    .from('students')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                allStudentsData = students || [];
+                document.getElementById('totalCountDisplay').innerText = allStudentsData.length;
+                renderList(allStudentsData);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('studentsList').innerHTML = `<div style="padding: 40px; text-align: center; color: var(--danger);">خطا در دریافت اطلاعات: ${err.message}</div>`;
+            }
+        }
+
+        // 🌟 رندر کردن لیست در HTML
+        function renderList(list) {
+            const container = document.getElementById('studentsList');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">دانش‌آموزی یافت نشد.</div>';
+                return;
+            }
+
+            list.forEach(st => {
+                let badgeStyle = '';
+                let badgeText = 'عادی';
+                if (st.status === 'inactive') {
+                    badgeStyle = 'background: rgba(239, 68, 68, 0.05); border-right: 3px solid var(--danger);';
+                    badgeText = '<span style="color:var(--danger)">غیرفعال ⚠️</span>';
+                }
+
+                container.innerHTML += `
+                    <div class="list-row" style="${badgeStyle}" onclick="openProfile('${st.national_id}')">
+                        <div class="col-avatar">🧑‍🎓</div>
+                        <div class="col-info">
+                            <div class="s-name">${st.full_name || 'ناشناس'}</div>
+                            <div class="s-meta">${st.grade || '-'} ${st.major || '-'} | کدملی: ${st.national_id}</div>
+                        </div>
+                        <div class="col-stats">
+                            <div class="stat-label">زنجیره بیداری</div>
+                            <div class="stat-val" style="color: var(--accent);">${st.wake_streak || 0} روز</div>
+                        </div>
+                        <div class="col-stats">
+                            <div class="stat-label">وضعیت</div>
+                            <div class="stat-val">${badgeText}</div>
+                        </div>
+                        <div class="col-action">
+                            <button class="btn-view">مشاهده پرونده کامل 👁️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 🔍 فیلتر کردن لیست (جستجو)
+        function filterList() {
+            let term = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!term) {
+                renderList(allStudentsData);
+                return;
+            }
+            let filtered = allStudentsData.filter(st => 
+                (st.full_name && st.full_name.toLowerCase().includes(term)) ||
+                (st.national_id && st.national_id.includes(term)) ||
+                (st.phone_number && st.phone_number.includes(term)) ||
+                (st.grade && st.grade.includes(term))
+            );
+            renderList(filtered);
+        }
+
+        // 🌟 باز کردن مگا مدال و استخراج دیتای 360 درجه از دیتابیس
+        async function openProfile(nationalId) {
+            currentOpenNid = nationalId;
             document.getElementById('studentModal').style.display = 'flex';
+            document.getElementById('modalLoader').style.display = 'flex';
+            document.getElementById('aiScreen').innerHTML = '<span style="color: #4d7a6e;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span><span class="cursor" id="cursorBlock"></span>';
+
+            try {
+                // ۱. دیتای پایه دانش‌آموز
+                let student = allStudentsData.find(s => s.national_id === nationalId);
+                
+                // ۲. دیتای فرم VIP
+                const { data: vip } = await supabaseClient.from('vip_settings').select('*').eq('national_id', nationalId).maybeSingle();
+                
+                // ۳. آخرین آزمون (برای تراز)
+                const { data: exams } = await supabaseClient.from('exam_results').select('total_taraz').eq('chat_id', nationalId).order('created_at', {ascending: false}).limit(1);
+                
+                // ۴. اشتراک‌ها (وضعیت مالی)
+                const { data: subs } = await supabaseClient.from('subscriptions').select('*').eq('student_nid', nationalId).eq('status', 'active');
+                
+                // ۵. گزارش‌های ۷ روز اخیر
+                const { data: reports } = await supabaseClient.from('daily_reports').select('courses').eq('chat_id', nationalId).order('report_date', {ascending: false}).limit(7);
+
+                // ===================================
+                // 💉 تزریق اطلاعات به رابط کاربری
+                // ===================================
+                
+                // هدر
+                document.getElementById('modalName').innerText = student.full_name || 'ناشناس';
+                document.getElementById('modalNid').innerText = `کدملی: ${student.national_id}`;
+                document.getElementById('modalGradeInfo').innerText = `${student.grade || '-'} ${student.major || '-'}`;
+                document.getElementById('modalWakeStreak').innerText = `🔥 زنجیره بیداری: ${student.wake_streak || 0} روز`;
+                
+                // کارت ۱: تماس
+                document.getElementById('infoMobile').innerText = student.phone_number || '-';
+                document.getElementById('infoFather').innerText = student.father_phone || '-';
+                document.getElementById('infoMother').innerText = student.mother_phone || '-';
+                document.getElementById('infoCity').innerText = `${student.province || '-'}، ${student.city || '-'}`;
+                document.getElementById('infoSchool').innerText = student.school_name || '-';
+
+                // کارت ۲: مالی
+                document.getElementById('infoWallet').innerText = student.wallet_balance ? `${student.wallet_balance.toLocaleString()} تومان` : '۰ تومان';
+                document.getElementById('infoReferral').innerText = student.referral_code || '-';
+                document.getElementById('infoInvitedBy').innerText = student.invited_by || '-';
+                
+                if (subs && subs.length > 0) {
+                    let s = subs[0];
+                    document.getElementById('infoSubStatus').innerText = `فعال (${s.service_category})`;
+                    document.getElementById('infoExpire').innerText = s.end_date || '-';
+                } else {
+                    document.getElementById('infoSubStatus').innerText = 'بدون اشتراک فعال';
+                    document.getElementById('infoExpire').innerText = '-';
+                }
+
+                // کارت ۳: آمار حیاتی
+                let totalStudyHours = 0;
+                let totalTestCount = 0;
+                if (reports && reports.length > 0) {
+                    reports.forEach(r => {
+                        if(r.courses) {
+                            r.courses.forEach(c => {
+                                totalStudyHours += (c.edu || 0) + (c.study || 0);
+                                totalTestCount += (c.tests || 0);
+                            });
+                        }
+                    });
+                }
+                document.getElementById('statStudy').innerText = `${totalStudyHours.toFixed(1)} ساعت`;
+                document.getElementById('statTests').innerText = `${totalTestCount} تست`;
+                document.getElementById('statTaraz').innerText = (exams && exams.length > 0) ? exams[0].total_taraz : 'آزمونی ثبت نشده';
+                document.getElementById('statLastWake').innerText = student.last_wakeup_date || '-';
+
+                // کارت ۴: VIP
+                if (vip) {
+                    // آرایه رو به متن تبدیل میکنیم
+                    let parseArr = (val) => {
+                        if(!val) return '-';
+                        if(Array.isArray(val)) return val.join('، ');
+                        try { return JSON.parse(val).join('، '); } catch(e) { return val; }
+                    };
+                    
+                    document.getElementById('vipExams').innerText = parseArr(vip.exam_type);
+                    document.getElementById('vipStrong').innerText = parseArr(vip.start_subject);
+                    document.getElementById('vipWeak').innerText = parseArr(vip.end_subject);
+                    
+                    let classesHtml = '-';
+                    try {
+                        let cls = typeof vip.class_schedule === 'string' ? JSON.parse(vip.class_schedule) : vip.class_schedule;
+                        if(cls && cls.length > 0) {
+                            classesHtml = cls.map(c => `<span class="badge-tag">${c.subject} (${c.teacher})</span>`).join('');
+                        }
+                    } catch(e) {}
+                    document.getElementById('vipClasses').innerHTML = classesHtml;
+                } else {
+                    document.getElementById('vipExams').innerText = 'فرم پر نشده';
+                    document.getElementById('vipStrong').innerText = '-';
+                    document.getElementById('vipWeak').innerText = '-';
+                    document.getElementById('vipClasses').innerHTML = '<span class="badge-tag">-</span>';
+                }
+
+                // مخفی کردن لودر
+                document.getElementById('modalLoader').style.display = 'none';
+
+            } catch(err) {
+                console.error("Error loading profile:", err);
+                alert("خطا در دریافت پرونده: " + err.message);
+                document.getElementById('modalLoader').style.display = 'none';
+                closeProfile();
+            }
         }
 
         function closeProfile() {
             document.getElementById('studentModal').style.display = 'none';
+            currentOpenNid = null;
+            document.getElementById('directMsgBox').value = '';
         }
 
         // ==========================================
@@ -357,44 +470,65 @@
         // ==========================================
         function summonAI() {
             const screen = document.getElementById('aiScreen');
-            screen.innerHTML = '<span class="cursor" id="cursorBlock"></span>'; // پاک کردن صفحه
+            screen.innerHTML = '<span class="cursor" id="cursorBlock"></span>'; 
             
-            const promptResponse = `> Scanning Subject Datasets... [OK]
-> Analyzing Study Habits... [OK]
-> Cross-referencing Exam Scores... [OK]
+            const promptResponse = `> Fetching Data Streams... [OK]
+> Analyzing Subject Tiers... [OK]
+> Running Predictive Algorithms... [OK]
 
 --- REPORT GENERATED ---
-[!] روند ساعت مطالعه: صعودی (+۱۲٪ در ماه اخیر)
-[!] نقطه بحرانی: فیزیک پایه (نرخ تست‌زنی پایین و خطای بالا)
-[!] نقطه قوت: زیست‌شناسی (تسلط ۸۵٪ روی مباحث دوازدهم)
+[!] سیستم به صورت آزمایشی در حال اسکن است.
+[!] میانگین ساعت مطالعه این دانش‌آموز ثبت شده است.
+[!] وضعیت نظم و زنجیره بیداری در سطح قابل قبولی قرار دارد.
 
 [🌟] پیش‌بینی ماشین:
-با حفظ روند فعلی و رفع باگ فیزیک، رتبه تخمینی در کنکور بین "۲۸۰۰ تا ۳۵۰۰ منطقه" برآورد می‌شود.
+با توجه به دیتای فعلی (نمونه آزمایشی)، رتبه احتمالی بین ۱۵۰۰ تا ۳۰۰۰ در منطقه برآورد می‌شود.
 
-[🛠] پیشنهاد اکشن برای مشاور:
-۱. شیفت کردن پارت‌های فیزیک به زمان‌های پیک انرژی.
-۲. کاهش پارت‌های درسنامه زیست و تبدیل آن به آزمون زمان‌دار.
+[🛠] پیشنهاد اکشن:
+۱. در دروس ضعیف، حجم تست‌ها افزایش یابد.
+۲. برنامه خواب و بیداری تثبیت شود.
 `;
             
             let i = 0;
-            // تایمر برای تایپ حرف به حرف
             const typeWriter = setInterval(() => {
                 if (i < promptResponse.length) {
                     let currentHtml = screen.innerHTML;
                     currentHtml = currentHtml.replace('<span class="cursor" id="cursorBlock"></span>', '');
-                    
                     let char = promptResponse.charAt(i) === '\n' ? '<br>' : promptResponse.charAt(i);
                     screen.innerHTML = currentHtml + char + '<span class="cursor" id="cursorBlock"></span>';
                     i++;
                 } else {
                     clearInterval(typeWriter);
                 }
-            }, 30); // سرعت تایپ (۳۰ میلی‌ثانیه)
+            }, 30);
+        }
+
+        // 💬 ارسال پیام مستقیم به داشبورد دانش‌آموز
+        async function sendDirectMessage() {
+            const msg = document.getElementById('directMsgBox').value.trim();
+            if(!msg) return alert('متن پیام خالی است!');
+            if(!currentOpenNid) return;
+
+            try {
+                const { error } = await supabaseClient.from('messages').insert([{
+                    student_nid: currentOpenNid,
+                    title: 'پشتیبانی راهینو 💬',
+                    body: msg,
+                    is_read: false
+                }]);
+                if (error) throw error;
+                
+                alert('پیام با موفقیت به داشبورد دانش‌آموز ارسال شد! 🚀');
+                document.getElementById('directMsgBox').value = '';
+            } catch(e) {
+                console.error(e);
+                alert('خطا در ارسال پیام: ' + e.message);
+            }
         }
 
         function handleLogout() {
-            // کدهای مربوط به خروج ادمین
             alert("خروج از سیستم...");
+            // window.location.href = 'login';
         }
     </script>
 </body>
