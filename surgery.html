@@ -139,7 +139,7 @@
     <div class="side-panel">
         <div class="panel-header">
             <div style="display: flex; gap: 10px; align-items: center;">
-                <a href="quarantine" class="btn-back">🔙</a>
+                <a href="quarantine.html" class="btn-back">🔙</a>
                 <button class="btn-back" onclick="toggleTheme()" id="themeBtn">☀️</button>
             </div>
             <div class="student-info" style="text-align: left;">
@@ -234,12 +234,19 @@
 
     <script>
         // =========================================================
-        //  🔒 اتصال دیتابیس (استفاده از شاه‌کلید برای مدیریت)
+        //  🔒 اتصال دیتابیس (استفاده از شاه‌کلید برای مدیریت + ایزوله کردن سشن)
         // =========================================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // ⚠️ مهم: از آنجا که RLS برای همه جداول فعال شده است، در پنل ادمین از Service Role Key استفاده می‌کنیم
         const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        
+        // 🌟 کلید جادویی: قطع دسترسی کتابخانه به سشن‌های مرورگر تا RLS دور زده شود
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
+        });
         
         let currentScheduleId = null;
         let scheduleDataArray = [];
@@ -286,7 +293,7 @@
 
             if (!currentScheduleId) {
                 alert("خطا: هیچ برنامه‌ای انتخاب نشده است!");
-                window.location.replace('quarantine');
+                window.location.replace('quarantine.html');
                 return;
             }
             await fetchAndRender();
@@ -294,12 +301,20 @@
 
         async function fetchAndRender() {
             try {
+                // 🌟 استفاده از maybeSingle به جای single برای جلوگیری از کرش سیستم
                 const { data: schData, error: schErr } = await supabaseClient
-                    .from('ai_schedules').select('*').eq('id', currentScheduleId).single();
+                    .from('ai_schedules').select('*').eq('id', currentScheduleId).maybeSingle();
+                
                 if (schErr) throw schErr;
+                if (!schData) {
+                    alert("خطا: برنامه‌ای با این شناسه در دیتابیس یافت نشد.");
+                    window.location.replace('quarantine.html');
+                    return;
+                }
 
+                // 🌟 استفاده از maybeSingle برای جلوگیری از ارور
                 const { data: stData } = await supabaseClient
-                    .from('students').select('full_name, grade, major').eq('national_id', schData.national_id).single();
+                    .from('students').select('full_name, grade, major').eq('national_id', schData.national_id).maybeSingle();
 
                 document.getElementById('stName').innerText = stData ? stData.full_name : 'ناشناس';
                 document.getElementById('stMeta').innerText = stData ? `${stData.grade} ${stData.major}` : 'اطلاعات نامشخص';
@@ -338,7 +353,7 @@
 
             } catch (err) {
                 alert("خطا در بارگذاری: " + err.message);
-                window.location.replace('quarantine');
+                window.location.replace('quarantine.html');
             }
         }
 
@@ -662,7 +677,7 @@
                 if (error) throw error;
                 
                 alert("برنامه نهایی تایید و پیام‌های انگیزشی تولید شد! 🚀");
-                window.location.replace('quarantine');
+                window.location.replace('quarantine.html');
 
             } catch (err) {
                 console.error(err);
@@ -679,7 +694,7 @@
                 supabaseClient.from('ai_schedules').delete().eq('id', currentScheduleId)
                 .then(({error}) => {
                     if (error) throw error;
-                    window.location.replace('quarantine');
+                    window.location.replace('quarantine.html');
                 }).catch(err => {
                     alert("خطا در حذف: " + err.message);
                     btn.innerHTML = '❌ رد و حذف برنامه';
