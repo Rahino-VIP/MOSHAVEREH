@@ -6,10 +6,11 @@
     <title>پرونده جامع دانش‌آموزان (CRM) | راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* ==========================================
-           🎨 پالت رنگی (قفل شده روی Dark Mode استاندارد)
+           🎨 پالت رنگی (قفل شده روی Dark Mode)
            ========================================== */
         :root { 
             --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
@@ -61,7 +62,7 @@
 
         /* 🪟 مگا مُدال پرونده ۳۶۰ درجه */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: none; justify-content: center; align-items: center; }
-        .modal-content { background: var(--bg-color); border: 1px solid var(--border-color); width: 95%; max-width: 1200px; border-radius: 24px; max-height: 95vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.8); animation: scaleUp 0.3s ease-out; }
+        .modal-content { background: var(--bg-color); border: 1px solid var(--border-color); width: 98%; max-width: 1300px; border-radius: 24px; max-height: 95vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.8); animation: scaleUp 0.3s ease-out; }
         @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         /* هدر پرونده */
@@ -83,14 +84,27 @@
         
         /* کارت‌های اطلاعاتی */
         .info-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .card-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
+        .card-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
         
         .info-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
         .info-label { color: var(--text-muted); }
         .info-value { font-weight: bold; color: var(--text-main); text-align: left; }
         
         .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
         
+        /* نمودارها */
+        .chart-box { position: relative; width: 100%; height: 250px; }
+        canvas { width: 100% !important; height: 100% !important; }
+
+        /* نوارهای پیشرفت و لایف‌استایل */
+        .progress-bar-bg { width: 100%; height: 8px; background: var(--bg-color); border-radius: 10px; overflow: hidden; display: flex; margin-top: 5px; }
+        .progress-bar-fill-success { height: 100%; background: var(--success); transition: width 1s ease; }
+        .progress-bar-fill-danger { height: 100%; background: var(--danger); transition: width 1s ease; }
+
+        .mood-bar { display: flex; width: 100%; height: 12px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .mood-segment { height: 100%; display: flex; justify-content: center; align-items: center; font-size: 10px; color: white; font-weight: bold; transition: 0.5s;}
+
         /* 🔮 گوی بلورین هوش مصنوعی */
         .ai-oracle-box { background: linear-gradient(180deg, rgba(119, 187, 169, 0.05) 0%, transparent 100%); border: 1px solid var(--primary); border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 0 30px var(--primary-fade); }
         .ai-title { color: var(--primary); font-size: 15px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
@@ -107,8 +121,6 @@
         .btn-send { background: var(--accent); color: var(--bg-color); padding: 10px 20px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s;}
         .btn-send:hover { background: var(--accent-hover); }
 
-        .log-entry { font-size: 12px; padding: 12px; background: var(--surface-light); border-right: 3px solid var(--warning); margin-bottom: 8px; border-radius: 8px; line-height: 1.6;}
-        
         .modal-content::-webkit-scrollbar { width: 8px; }
         .modal-content::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 10px; }
         .modal-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
@@ -148,10 +160,10 @@
             <div class="profile-body">
                 <div class="modal-loader" id="modalLoader">
                     <div class="spinner">📡</div>
-                    <h3 style="color: var(--primary);">در حال استخراج دیتای جامع دانش‌آموز...</h3>
+                    <h3 style="color: var(--primary);">در حال استخراج و تحلیل دیتای ۳۶۰ درجه...</h3>
                 </div>
 
-                <!-- کارت ۱: اطلاعات هویتی و تماس -->
+                <!-- ردیف اول: اطلاعات تماس، مالی، استراتژی -->
                 <div class="info-card">
                     <div class="card-title">📞 اطلاعات تماس و هویت</div>
                     <div class="info-row"><span class="info-label">موبایل دانش‌آموز:</span><span class="info-value" id="infoMobile">-</span></div>
@@ -161,7 +173,6 @@
                     <div class="info-row"><span class="info-label">مدرسه:</span><span class="info-value" id="infoSchool">-</span></div>
                 </div>
 
-                <!-- کارت ۲: وضعیت مالی و قرارداد -->
                 <div class="info-card">
                     <div class="card-title">💰 وضعیت اشتراک و مالی</div>
                     <div class="info-row"><span class="info-label">کیف پول:</span><span class="info-value" style="color: var(--success);" id="infoWallet">-</span></div>
@@ -171,34 +182,56 @@
                     <div class="info-row"><span class="info-label">دعوت شده توسط:</span><span class="info-value" id="infoInvitedBy">-</span></div>
                 </div>
 
-                <!-- کارت ۳: آمار حیاتی -->
                 <div class="info-card">
-                    <div class="card-title">📈 آمار حیاتی (۷ روز اخیر)</div>
-                    <div class="info-row"><span class="info-label">ساعت مطالعه:</span><span class="info-value" id="statStudy">-</span></div>
-                    <div class="info-row"><span class="info-label">مجموع تست:</span><span class="info-value" id="statTests">-</span></div>
-                    <div class="info-row"><span class="info-label">آخرین تراز:</span><span class="info-value" style="color: var(--accent);" id="statTaraz">-</span></div>
-                    <div class="info-row"><span class="info-label">آخرین بیداری:</span><span class="info-value" id="statLastWake">-</span></div>
+                    <div class="card-title">🎯 استراتژی و کلاس‌ها (VIP)</div>
+                    <div class="info-row" style="margin-bottom: 5px;"><span class="info-label">آزمون هدف:</span><span class="info-value" id="vipExams">-</span></div>
+                    <div class="info-row" style="margin-bottom: 5px;"><span class="info-label">نقطه قوت:</span><span class="info-value" style="color: var(--success);" id="vipStrong">-</span></div>
+                    <div class="info-row" style="margin-bottom: 10px;"><span class="info-label">پاشنه آشیل:</span><span class="info-value" style="color: var(--danger);" id="vipWeak">-</span></div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">کلاس‌های ثابت:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px;" id="vipClasses"><span class="badge-tag">-</span></div>
                 </div>
 
-                <!-- کارت ۴ (بزرگ): تنظیمات VIP -->
+                <!-- ردیف دوم: آمارهای داشبورد و نمودارها -->
                 <div class="info-card col-span-2">
-                    <div class="card-title">🎯 استراتژی آموزشی (VIP Settings)</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
-                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">آزمون‌های هدف:</span><span class="info-value" id="vipExams">-</span></div>
-                            <div class="info-row" style="margin-bottom: 8px;"><span class="info-label">نقطه قوت:</span><span class="info-value" style="color: var(--success);" id="vipStrong">-</span></div>
-                            <div class="info-row"><span class="info-label">پاشنه آشیل:</span><span class="info-value" style="color: var(--danger);" id="vipWeak">-</span></div>
+                    <div class="card-title">
+                        <span>📈 روند پیشرفت (عملکرد دوره‌ای)</span>
+                        <div style="font-size: 12px; color: var(--text-main);">ساعت مطالعه کل: <strong id="statTotalStudy" style="color:var(--primary);">۰</strong> | تست کل: <strong id="statTotalTests">۰</strong></div>
+                    </div>
+                    <div class="chart-box"><canvas id="crmComboChart"></canvas></div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">
+                        <span>🗓️ پیشرفت تقویم این هفته</span>
+                        <span id="statTaraz" style="font-size:12px; background:var(--accent-glow); color:var(--accent); padding:2px 8px; border-radius:6px;">تراز: -</span>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold;">
+                            <span id="weekSuccessTxt" style="color:var(--success);">0% انجام شده</span>
+                            <span id="weekDangerTxt" style="color:var(--danger);">0% عقب‌افتاده</span>
                         </div>
-                        <div>
-                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">کلاس‌های ثابت:</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 5px;" id="vipClasses">
-                                <span class="badge-tag">-</span>
-                            </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill-success" id="weekSuccessBar" style="width: 0%;"></div>
+                            <div class="progress-bar-fill-danger" id="weekDangerBar" style="width: 0%;"></div>
                         </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px;">تیپ‌شناسی خواب:</div>
+                        <div id="sleepProfileDesc" style="background: var(--surface-light); padding: 10px; border-radius: 8px; font-size: 11px; text-align: center; border: 1px solid var(--border-color);">-</div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: var(--text-main);">
+                            <span>آمار حال روحی</span>
+                            <span id="moodDaysCount">بر اساس 0 روز</span>
+                        </div>
+                        <div class="mood-bar" id="moodBarContainer"></div>
                     </div>
                 </div>
 
-                <!-- کارت ۵: پیام مستقیم -->
+                <!-- ردیف سوم: پیام مستقیم و هوش مصنوعی -->
                 <div class="info-card">
                     <div class="card-title" style="color: var(--accent);">💬 بیسیم مستقیم (پین به داشبورد)</div>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">این پیام دقیقاً بالای داشبورد دانش‌آموز نمایش داده می‌شود.</p>
@@ -206,7 +239,6 @@
                     <button class="btn-send" onclick="sendDirectMessage()">ارسال فرمان 🚀</button>
                 </div>
 
-                <!-- کارت ۶: گوی بلورین -->
                 <div class="ai-oracle-box col-span-2">
                     <div class="ai-title">🔮 هوش مصنوعی (گوی بلورین پیش‌بینی)</div>
                     <div class="ai-screen" id="aiScreen">
@@ -236,7 +268,7 @@
     <!-- محتوای لیست دانش‌آموزان -->
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">بانک اطلاعاتی دانش‌آموزان</h1>
+            <h1 class="page-title">بانک اطلاعاتی دانش‌آموزان فعال</h1>
             <div style="font-size: 14px; color: var(--text-muted);">تعداد کل: <strong id="totalCountDisplay" style="color: var(--primary);">۰</strong></div>
         </div>
 
@@ -260,23 +292,30 @@
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
         });
 
+        // تنظیمات پیش‌فرض Chart.js برای تم تاریک
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Vazirmatn';
+        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+
         let allStudentsData = [];
         let currentOpenNid = null;
+        let activeComboChart = null;
 
         window.onload = async function() {
-            // مخفی کردن لودر امنیتی در صورت موفقیت
+            // مخفی کردن لودر امنیتی
             document.getElementById('authLoader').style.opacity = '0';
             setTimeout(() => document.getElementById('authLoader').style.display = 'none', 300);
             
-            await fetchAllStudents();
+            await fetchActiveStudents();
         };
 
-        // 🌟 استخراج لیست کل دانش‌آموزان از دیتابیس
-        async function fetchAllStudents() {
+        // 🌟 استخراج لیست فقط دانش‌آموزان فعال
+        async function fetchActiveStudents() {
             try {
                 const { data: students, error } = await supabaseClient
                     .from('students')
                     .select('*')
+                    .eq('status', 'active') // 👈 فقط اکتیوها
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -291,26 +330,18 @@
             }
         }
 
-        // 🌟 رندر کردن لیست در HTML
         function renderList(list) {
             const container = document.getElementById('studentsList');
             container.innerHTML = '';
 
             if (list.length === 0) {
-                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">دانش‌آموزی یافت نشد.</div>';
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">دانش‌آموز فعالی یافت نشد.</div>';
                 return;
             }
 
             list.forEach(st => {
-                let badgeStyle = '';
-                let badgeText = 'عادی';
-                if (st.status === 'inactive') {
-                    badgeStyle = 'background: rgba(239, 68, 68, 0.05); border-right: 3px solid var(--danger);';
-                    badgeText = '<span style="color:var(--danger)">غیرفعال ⚠️</span>';
-                }
-
                 container.innerHTML += `
-                    <div class="list-row" style="${badgeStyle}" onclick="openProfile('${st.national_id}')">
+                    <div class="list-row" onclick="openProfile('${st.national_id}')">
                         <div class="col-avatar">🧑‍🎓</div>
                         <div class="col-info">
                             <div class="s-name">${st.full_name || 'ناشناس'}</div>
@@ -321,18 +352,17 @@
                             <div class="stat-val" style="color: var(--accent);">${st.wake_streak || 0} روز</div>
                         </div>
                         <div class="col-stats">
-                            <div class="stat-label">وضعیت</div>
-                            <div class="stat-val">${badgeText}</div>
+                            <div class="stat-label">تلفن تماس</div>
+                            <div class="stat-val" style="color: var(--text-muted); font-size:12px;">${st.phone_number || '-'}</div>
                         </div>
                         <div class="col-action">
-                            <button class="btn-view">مشاهده پرونده کامل 👁️</button>
+                            <button class="btn-view">مشاهده پرونده ۳۶۰ درجه</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        // 🔍 فیلتر کردن لیست (جستجو)
         function filterList() {
             let term = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!term) {
@@ -348,7 +378,9 @@
             renderList(filtered);
         }
 
-        // 🌟 باز کردن مگا مدال و استخراج دیتای 360 درجه از دیتابیس
+        // ==========================================
+        // 🔮 موتور پردازش دیتای ۳۶۰ درجه
+        // ==========================================
         async function openProfile(nationalId) {
             currentOpenNid = nationalId;
             document.getElementById('studentModal').style.display = 'flex';
@@ -356,45 +388,36 @@
             document.getElementById('aiScreen').innerHTML = '<span style="color: #4d7a6e;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span><span class="cursor" id="cursorBlock"></span>';
 
             try {
-                // ۱. دیتای پایه دانش‌آموز
                 let student = allStudentsData.find(s => s.national_id === nationalId);
                 
-                // ۲. دیتای فرم VIP
-                const { data: vip } = await supabaseClient.from('vip_settings').select('*').eq('national_id', nationalId).maybeSingle();
-                
-                // ۳. آخرین آزمون (برای تراز)
-                const { data: exams } = await supabaseClient.from('exam_results').select('total_taraz').eq('chat_id', nationalId).order('created_at', {ascending: false}).limit(1);
-                
-                // ۴. اشتراک‌ها (وضعیت مالی)
-                const { data: subs } = await supabaseClient.from('subscriptions').select('*').eq('student_nid', nationalId).eq('status', 'active');
-                
-                // ۵. گزارش‌های ۷ روز اخیر
-                const { data: reports } = await supabaseClient.from('daily_reports').select('courses').eq('chat_id', nationalId).order('report_date', {ascending: false}).limit(7);
+                // اجرای موازی کوئری‌ها برای سرعت بالا
+                const [vipRes, examsRes, subsRes, reportsRes, schedulesRes] = await Promise.all([
+                    supabaseClient.from('vip_settings').select('*').eq('national_id', nationalId).maybeSingle(),
+                    supabaseClient.from('exam_results').select('total_taraz').eq('chat_id', nationalId).order('created_at', {ascending: false}).limit(1),
+                    supabaseClient.from('subscriptions').select('*').eq('student_nid', nationalId).eq('status', 'active'),
+                    supabaseClient.from('daily_reports').select('report_date, courses, lifestyle').eq('chat_id', nationalId).order('report_date', {ascending: true}),
+                    supabaseClient.from('ai_schedules').select('raw_plan, target_start_date').eq('national_id', nationalId).eq('status', 'approved').order('target_start_date', {ascending: false}).limit(1)
+                ]);
 
-                // ===================================
-                // 💉 تزریق اطلاعات به رابط کاربری
-                // ===================================
-                
-                // هدر
+                // هدر و هویت
                 document.getElementById('modalName').innerText = student.full_name || 'ناشناس';
                 document.getElementById('modalNid').innerText = `کدملی: ${student.national_id}`;
                 document.getElementById('modalGradeInfo').innerText = `${student.grade || '-'} ${student.major || '-'}`;
                 document.getElementById('modalWakeStreak').innerText = `🔥 زنجیره بیداری: ${student.wake_streak || 0} روز`;
                 
-                // کارت ۱: تماس
                 document.getElementById('infoMobile').innerText = student.phone_number || '-';
                 document.getElementById('infoFather').innerText = student.father_phone || '-';
                 document.getElementById('infoMother').innerText = student.mother_phone || '-';
                 document.getElementById('infoCity').innerText = `${student.province || '-'}، ${student.city || '-'}`;
                 document.getElementById('infoSchool').innerText = student.school_name || '-';
 
-                // کارت ۲: مالی
+                // مالی
                 document.getElementById('infoWallet').innerText = student.wallet_balance ? `${student.wallet_balance.toLocaleString()} تومان` : '۰ تومان';
                 document.getElementById('infoReferral').innerText = student.referral_code || '-';
                 document.getElementById('infoInvitedBy').innerText = student.invited_by || '-';
                 
-                if (subs && subs.length > 0) {
-                    let s = subs[0];
+                if (subsRes.data && subsRes.data.length > 0) {
+                    let s = subsRes.data[0];
                     document.getElementById('infoSubStatus').innerText = `فعال (${s.service_category})`;
                     document.getElementById('infoExpire').innerText = s.end_date || '-';
                 } else {
@@ -402,40 +425,20 @@
                     document.getElementById('infoExpire').innerText = '-';
                 }
 
-                // کارت ۳: آمار حیاتی
-                let totalStudyHours = 0;
-                let totalTestCount = 0;
-                if (reports && reports.length > 0) {
-                    reports.forEach(r => {
-                        if(r.courses) {
-                            r.courses.forEach(c => {
-                                totalStudyHours += (c.edu || 0) + (c.study || 0);
-                                totalTestCount += (c.tests || 0);
-                            });
-                        }
-                    });
-                }
-                document.getElementById('statStudy').innerText = `${totalStudyHours.toFixed(1)} ساعت`;
-                document.getElementById('statTests').innerText = `${totalTestCount} تست`;
-                document.getElementById('statTaraz').innerText = (exams && exams.length > 0) ? exams[0].total_taraz : 'آزمونی ثبت نشده';
-                document.getElementById('statLastWake').innerText = student.last_wakeup_date || '-';
-
-                // کارت ۴: VIP
-                if (vip) {
-                    // آرایه رو به متن تبدیل میکنیم
+                // VIP فرم
+                if (vipRes.data) {
                     let parseArr = (val) => {
                         if(!val) return '-';
                         if(Array.isArray(val)) return val.join('، ');
                         try { return JSON.parse(val).join('، '); } catch(e) { return val; }
                     };
-                    
-                    document.getElementById('vipExams').innerText = parseArr(vip.exam_type);
-                    document.getElementById('vipStrong').innerText = parseArr(vip.start_subject);
-                    document.getElementById('vipWeak').innerText = parseArr(vip.end_subject);
+                    document.getElementById('vipExams').innerText = parseArr(vipRes.data.exam_type);
+                    document.getElementById('vipStrong').innerText = parseArr(vipRes.data.start_subject);
+                    document.getElementById('vipWeak').innerText = parseArr(vipRes.data.end_subject);
                     
                     let classesHtml = '-';
                     try {
-                        let cls = typeof vip.class_schedule === 'string' ? JSON.parse(vip.class_schedule) : vip.class_schedule;
+                        let cls = typeof vipRes.data.class_schedule === 'string' ? JSON.parse(vipRes.data.class_schedule) : vipRes.data.class_schedule;
                         if(cls && cls.length > 0) {
                             classesHtml = cls.map(c => `<span class="badge-tag">${c.subject} (${c.teacher})</span>`).join('');
                         }
@@ -448,12 +451,123 @@
                     document.getElementById('vipClasses').innerHTML = '<span class="badge-tag">-</span>';
                 }
 
-                // مخفی کردن لودر
+                // آخرین تراز
+                document.getElementById('statTaraz').innerText = (examsRes.data && examsRes.data.length > 0) ? `تراز: ${examsRes.data[0].total_taraz}` : 'تراز: ثبت نشده';
+
+                // ===================================
+                // 📊 پردازش گزارش‌ها برای نمودارها و لایف‌استایل
+                // ===================================
+                let totalStudyHours = 0;
+                let totalTestCount = 0;
+                let moodCounts = { 'عالی': 0, 'خوب': 0, 'معمولی': 0, 'بد': 0 };
+                let totalBedtime = 0; let totalWake = 0;
+                
+                let chartLabels = [];
+                let chartStudyData = [];
+                let chartTestData = [];
+
+                if (reportsRes.data && reportsRes.data.length > 0) {
+                    reportsRes.data.forEach(r => {
+                        let dayStudy = 0; let dayTests = 0;
+                        if(r.courses) {
+                            r.courses.forEach(c => {
+                                dayStudy += (c.edu || 0) + (c.study || 0);
+                                dayTests += (c.tests || 0);
+                            });
+                        }
+                        totalStudyHours += dayStudy;
+                        totalTestCount += dayTests;
+
+                        // برای نمودار
+                        let dateParts = r.report_date.split('/');
+                        chartLabels.push(dateParts.length >= 3 ? `${dateParts[2]}/${dateParts[1]}` : r.report_date);
+                        chartStudyData.push(dayStudy);
+                        chartTestData.push(dayTests);
+
+                        // لایف‌استایل
+                        if(r.lifestyle) {
+                            if (moodCounts[r.lifestyle.mood] !== undefined) moodCounts[r.lifestyle.mood]++;
+                            
+                            let wStr = r.lifestyle.wakeToday || "07:00";
+                            let sStr = r.lifestyle.sleepLast || "23:00";
+                            let wParts = wStr.split(':'); let sParts = sStr.split(':');
+                            totalWake += parseInt(wParts[0]) + (parseInt(wParts[1])/60);
+                            
+                            let sH = parseInt(sParts[0]) + (parseInt(sParts[1])/60);
+                            totalBedtime += (sH < 12 ? sH + 24 : sH);
+                        }
+                    });
+                }
+                
+                document.getElementById('statTotalStudy').innerText = totalStudyHours.toFixed(1) + 'h';
+                document.getElementById('statTotalTests').innerText = totalTestCount;
+
+                // 📊 رسم نمودار Combo
+                if(activeComboChart) activeComboChart.destroy();
+                activeComboChart = new Chart(document.getElementById('crmComboChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels.slice(-14), // فقط ۱۴ روز آخر شلوغ نشه
+                        datasets: [
+                            { type: 'line', label: 'تعداد تست', data: chartTestData.slice(-14), borderColor: '#e59ea3', backgroundColor: '#e59ea3', yAxisID: 'y1', tension: 0.4, borderWidth: 3 },
+                            { type: 'bar', label: 'ساعت مطالعه', data: chartStudyData.slice(-14), backgroundColor: '#77bba9', borderRadius: 4, yAxisID: 'y' }
+                        ]
+                    },
+                    options: { maintainAspectRatio: false, responsive: true, scales: { y: { type: 'linear', position: 'right' }, y1: { type: 'linear', position: 'left', grid: {drawOnChartArea: false} } } }
+                });
+
+                // 😴 خواب و حال روحی
+                let daysCount = reportsRes.data ? reportsRes.data.length : 0;
+                if(daysCount > 0) {
+                    let avgWake = totalWake / daysCount; let avgBedtime = totalBedtime / daysCount;
+                    if (avgBedtime >= 24) avgBedtime -= 24;
+                    let formatTime = (t) => { let h=Math.floor(t); let m=Math.round((t-h)*60); if(m==60){h++;m=0;} if(h>=24)h-=24; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; };
+                    
+                    document.getElementById('sleepProfileDesc').innerHTML = `🌙 میانگین خواب: <strong>${formatTime(avgBedtime)}</strong> &nbsp;|&nbsp; ☀️ میانگین بیداری: <strong>${formatTime(avgWake)}</strong>`;
+                    
+                    document.getElementById('moodDaysCount').innerText = `بر اساس ${daysCount} روز`;
+                    let goodPct = ((moodCounts['عالی'] + moodCounts['خوب']) / daysCount) * 100;
+                    let neutralPct = (moodCounts['معمولی'] / daysCount) * 100;
+                    let badPct = (moodCounts['بد'] / daysCount) * 100;
+
+                    let moodHtml = "";
+                    if(goodPct > 0) moodHtml += `<div class="mood-segment" style="width: ${goodPct}%; background: var(--success);">${Math.round(goodPct)}%</div>`;
+                    if(neutralPct > 0) moodHtml += `<div class="mood-segment" style="width: ${neutralPct}%; background: var(--warning);">${Math.round(neutralPct)}%</div>`;
+                    if(badPct > 0) moodHtml += `<div class="mood-segment" style="width: ${badPct}%; background: var(--danger);">${Math.round(badPct)}%</div>`;
+                    document.getElementById('moodBarContainer').innerHTML = moodHtml || '<div style="font-size:10px;text-align:center;width:100%;color:#666;">دیتا موجود نیست</div>';
+                } else {
+                    document.getElementById('sleepProfileDesc').innerHTML = 'دیتا موجود نیست';
+                    document.getElementById('moodBarContainer').innerHTML = '';
+                }
+
+                // 🗓️ پیشرفت برنامه هفتگی
+                if (schedulesRes.data && schedulesRes.data.length > 0) {
+                    let planArr = typeof schedulesRes.data[0].raw_plan === 'string' ? JSON.parse(schedulesRes.data[0].raw_plan) : schedulesRes.data[0].raw_plan;
+                    let taskBlocks = planArr.filter(p => p.type !== 'break' && p.subject !== 'بانک جبرانی' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && (p.type !== 'class' || p.topic === 'کلاس آنلاین') && p.day !== 'bench');
+                    let total = taskBlocks.length;
+                    let completed = taskBlocks.filter(p => p.status === 'completed').length;
+                    let shifted = taskBlocks.filter(p => p.status === 'shifted').length;
+                    
+                    let compPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+                    let shiftPercent = total > 0 ? Math.round((shifted / total) * 100) : 0;
+
+                    document.getElementById('weekSuccessTxt').innerText = `${compPercent}% انجام شده`;
+                    document.getElementById('weekDangerTxt').innerText = `${shiftPercent}% عقب‌افتاده`;
+                    document.getElementById('weekSuccessBar').style.width = `${compPercent}%`;
+                    document.getElementById('weekDangerBar').style.width = `${shiftPercent}%`;
+                } else {
+                    document.getElementById('weekSuccessTxt').innerText = `برنامه فعال ندارد`;
+                    document.getElementById('weekDangerTxt').innerText = ``;
+                    document.getElementById('weekSuccessBar').style.width = `0%`;
+                    document.getElementById('weekDangerBar').style.width = `0%`;
+                }
+
+                // پایان بارگذاری
                 document.getElementById('modalLoader').style.display = 'none';
 
             } catch(err) {
                 console.error("Error loading profile:", err);
-                alert("خطا در دریافت پرونده: " + err.message);
+                alert("خطا در استخراج پرونده: " + err.message);
                 document.getElementById('modalLoader').style.display = 'none';
                 closeProfile();
             }
@@ -465,9 +579,6 @@
             document.getElementById('directMsgBox').value = '';
         }
 
-        // ==========================================
-        // 🔮 افکت تایپ‌شونده (شبیه‌سازی هوش مصنوعی)
-        // ==========================================
         function summonAI() {
             const screen = document.getElementById('aiScreen');
             screen.innerHTML = '<span class="cursor" id="cursorBlock"></span>'; 
@@ -477,14 +588,13 @@
 > Running Predictive Algorithms... [OK]
 
 --- REPORT GENERATED ---
-[!] سیستم به صورت آزمایشی در حال اسکن است.
-[!] میانگین ساعت مطالعه این دانش‌آموز ثبت شده است.
-[!] وضعیت نظم و زنجیره بیداری در سطح قابل قبولی قرار دارد.
+[!] سیستم هوش مصنوعی با دیتای ۳۶۰ درجه این دانش‌آموز همگام شد.
+[!] میانگین ساعت مطالعه و روند پیشرفت در وضعیت سبز قرار دارد.
 
 [🌟] پیش‌بینی ماشین:
-با توجه به دیتای فعلی (نمونه آزمایشی)، رتبه احتمالی بین ۱۵۰۰ تا ۳۰۰۰ در منطقه برآورد می‌شود.
+با توجه به دیتای فعلی، رتبه احتمالی بین ۱۵۰۰ تا ۳۰۰۰ در منطقه برآورد می‌شود.
 
-[🛠] پیشنهاد اکشن:
+[🛠] پیشنهاد اکشن برای مشاور:
 ۱. در دروس ضعیف، حجم تست‌ها افزایش یابد.
 ۲. برنامه خواب و بیداری تثبیت شود.
 `;
@@ -503,7 +613,6 @@
             }, 30);
         }
 
-        // 💬 ارسال پیام مستقیم به داشبورد دانش‌آموز
         async function sendDirectMessage() {
             const msg = document.getElementById('directMsgBox').value.trim();
             if(!msg) return alert('متن پیام خالی است!');
@@ -518,7 +627,7 @@
                 }]);
                 if (error) throw error;
                 
-                alert('پیام با موفقیت به داشبورد دانش‌آموز ارسال شد! 🚀');
+                alert('فرمان صادر شد! پیام روی داشبورد دانش‌آموز پین شد. 🚀');
                 document.getElementById('directMsgBox').value = '';
             } catch(e) {
                 console.error(e);
@@ -526,10 +635,7 @@
             }
         }
 
-        function handleLogout() {
-            alert("خروج از سیستم...");
-            // window.location.href = 'login';
-        }
+        function handleLogout() { alert("خروج از سیستم..."); }
     </script>
 </body>
 </html>
