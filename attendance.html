@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کنترل تردد پانسیون | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --primary: #77bba9; 
+            --primary-hover: #8fd0bf; 
+            --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; 
+            --bg-color: #121918; 
+            --surface: #1b2624; 
+            --surface-light: #253330;
+            --border-color: #2d3d3a;
+            --text-main: #f1f5f9; 
+            --text-muted: #94a3b8;
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b;
+            --shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: var(--shadow); }
+        .nav-brand { font-size: 20px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .nav-brand span { color: var(--primary); }
+        .live-clock { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--accent); letter-spacing: 2px; direction: ltr; }
+
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+        
+        .toolbar { display: flex; gap: 15px; margin-bottom: 25px; }
+        .search-bar { flex: 1; background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 25px; border-radius: 16px; font-size: 15px; font-weight: bold; outline: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
+
+        .stats-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .stat-box { flex: 1; background: var(--surface); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+        .stat-title { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+        .stat-value { font-size: 28px; font-weight: 900; color: var(--primary); }
+
+        .list-container { background: var(--surface); border: 1px solid var(--border-color); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+        .list-row { display: flex; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .list-row:last-child { border-bottom: none; }
+        .list-row:hover { background: var(--surface-light); }
+
+        .col-info { flex: 2; display: flex; flex-direction: column; gap: 5px; }
+        .student-name { font-size: 16px; font-weight: 900; color: var(--text-main); }
+        .student-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; align-items: center; }
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+        .badge-plan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .col-status { flex: 1.5; font-size: 13px; font-family: monospace; color: var(--text-muted); display: flex; flex-direction: column; gap: 5px; }
+        .time-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--bg-color); border: 1px solid var(--border-color); font-weight: bold; }
+
+        .col-actions { flex: 1.5; display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-action { padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; border: none; transition: 0.2s; color: white; display: flex; align-items: center; gap: 8px; }
+        .btn-entry { background: var(--success); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
+        .btn-entry:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
+        .btn-exit { background: var(--danger); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2); }
+        .btn-exit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
+        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; filter: grayscale(1); }
+
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
+        .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary);">در حال دریافت لیست ترددها...</h3>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-brand">🪪 قطب‌نمای <span>راهینو</span> | پنل مانیتورینگ پانسیون</div>
+        <div class="live-clock" id="liveClock">00:00:00</div>
+    </div>
+
+    <div class="main-content">
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-title">کل اعضای پانسیون</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">حاضرین در سالن</div>
+                <div class="stat-value" style="color: var(--success);" id="statPresent">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">خارج شده‌ها</div>
+                <div class="stat-value" style="color: var(--danger);" id="statExited">0</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 جستجوی نام یا کدملی دانش‌آموز..." onkeyup="filterList()">
+        </div>
+
+        <div class="list-container" id="studentsList"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        // ⚠️ مهم: در این صفحه حتماً از شاه‌کلید (Service Role Key) استفاده کنید
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        });
+
+        let allData = [];
+
+        setInterval(() => {
+            document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Tehran' });
+        }, 1000);
+
+        window.onload = async function() {
+            await fetchAttendanceData();
+        };
+
+        async function fetchAttendanceData() {
+            try {
+                // ۱. دریافت تمام دانش‌آموزانی که اشتراک فعال پانسیون دارند
+                const { data: subs, error: subErr } = await supabaseClient
+                    .from('subscriptions')
+                    .select('student_nid, service_type, remaining_attendance_days')
+                    .eq('service_category', 'pansion')
+                    .eq('status', 'active');
+                
+                if (subErr) throw subErr;
+
+                // ۲. دریافت اطلاعات هویتی (نام) دانش‌آموزان
+                const { data: students, error: stErr } = await supabaseClient
+                    .from('students')
+                    .select('national_id, full_name, phone_number');
+
+                // ۳. دریافت لاگ‌های امروز
+                const today = new Date().toISOString().split('T')[0];
+                const { data: logs, error: logErr } = await supabaseClient
+                    .from('attendance_logs')
+                    .select('*')
+                    .eq('log_date', today);
+
+                // ترکیب دیتاها
+                allData = subs.map(sub => {
+                    let st = students.find(s => s.national_id === sub.student_nid) || {};
+                    let log = logs.find(l => l.student_nid === sub.student_nid) || {};
+                    
+                    return {
+                        nid: sub.student_nid,
+                        name: st.full_name || 'ناشناس',
+                        phone: st.phone_number || '',
+                        planType: sub.service_type,
+                        remaining: sub.remaining_attendance_days,
+                        entryTime: log.entry_time ? new Date(log.entry_time).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : null,
+                        exitTime: log.exit_time ? new Date(log.exit_time).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : null
+                    };
+                });
+
+                // مرتب‌سازی: اول حاضرین، بعد غایبین، آخر خارج‌شده‌ها
+                allData.sort((a, b) => {
+                    let statusA = a.entryTime && !a.exitTime ? 1 : (!a.entryTime ? 2 : 3);
+                    let statusB = b.entryTime && !b.exitTime ? 1 : (!b.entryTime ? 2 : 3);
+                    return statusA - statusB;
+                });
+
+                renderList(allData);
+
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+
+            } catch (err) {
+                console.error(err);
+                alert("خطا در دریافت اطلاعات از سرور.");
+            }
+        }
+
+        function renderList(list) {
+            const container = document.getElementById('studentsList');
+            container.innerHTML = '';
+            
+            let total = list.length;
+            let present = 0;
+            let exited = 0;
+
+            if (list.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">امروز هیچ دانش‌آموزی با اشتراک فعال پانسیون یافت نشد.</div>';
+                document.getElementById('statTotal').innerText = '0';
+                document.getElementById('statPresent').innerText = '0';
+                document.getElementById('statExited').innerText = '0';
+                return;
+            }
+
+            list.forEach(st => {
+                let isPresent = st.entryTime && !st.exitTime;
+                let hasExited = st.entryTime && st.exitTime;
+                
+                if (isPresent) present++;
+                if (hasExited) exited++;
+
+                let planBadge = st.planType === 'student_plan' ? 'دانش‌آموزی' : 'عادی';
+                let remainingHtml = '';
+                
+                if (st.planType === 'student_plan') {
+                    let remVal = st.remaining !== null ? st.remaining : 15;
+                    remainingHtml = `<span class="badge badge-warning">⏳ مانده: ${remVal} روز</span>`;
+                }
+
+                let timeInfo = '';
+                if (isPresent) timeInfo = `<span class="time-tag" style="color:var(--success);">📥 ورود: ${st.entryTime}</span>`;
+                else if (hasExited) timeInfo = `<span class="time-tag" style="color:var(--success);">📥 ورود: ${st.entryTime}</span> <span class="time-tag" style="color:var(--danger);">📤 خروج: ${st.exitTime}</span>`;
+                else timeInfo = `<span class="time-tag">غایب (ورود ثبت نشده)</span>`;
+
+                let btnEntryState = st.entryTime ? 'disabled' : '';
+                let btnExitState = (!st.entryTime || st.exitTime) ? 'disabled' : '';
+
+                container.innerHTML += `
+                    <div class="list-row">
+                        <div class="col-info">
+                            <div class="student-name">${st.name}</div>
+                            <div class="student-meta">
+                                <span>کدملی: ${st.nid}</span>
+                                <span class="badge badge-plan">طرح ${planBadge}</span>
+                                ${remainingHtml}
+                            </div>
+                        </div>
+                        <div class="col-status">${timeInfo}</div>
+                        <div class="col-actions">
+                            <button class="btn-action btn-entry" ${btnEntryState} onclick="actionEntry('${st.nid}', this)">📥 ثبت ورود</button>
+                            <button class="btn-action btn-exit" ${btnExitState} onclick="actionExit('${st.nid}', this)">📤 ثبت خروج</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('statPresent').innerText = present;
+            document.getElementById('statExited').innerText = exited;
+        }
+
+        function filterList() {
+            let term = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!term) { renderList(allData); return; }
+            let filtered = allData.filter(st => st.name.toLowerCase().includes(term) || st.nid.includes(term));
+            renderList(filtered);
+        }
+
+        async function actionEntry(nid, btn) {
+            btn.innerHTML = '⏳...'; btn.disabled = true;
+            try {
+                const { data, error } = await supabaseClient.rpc('register_entry', { p_nid: nid });
+                if (error) throw error;
+                
+                if (data.includes('⚠️')) {
+                    alert(data); // نمایش هشدار اتمام سهمیه
+                }
+                await fetchAttendanceData(); // رفرش لیست
+            } catch (err) {
+                alert("خطا در ثبت ورود.");
+                btn.innerHTML = '📥 ثبت ورود'; btn.disabled = false;
+            }
+        }
+
+        async function actionExit(nid, btn) {
+            btn.innerHTML = '⏳...'; btn.disabled = true;
+            try {
+                const { data, error } = await supabaseClient.rpc('register_exit', { p_nid: nid });
+                if (error) throw error;
+                await fetchAttendanceData(); // رفرش لیست
+            } catch (err) {
+                alert("خطا در ثبت خروج.");
+                btn.innerHTML = '📤 ثبت خروج'; btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
