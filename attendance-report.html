@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گزارش و تاریخچه تردد | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; 
+            --bg-color: #121918; --surface: #1b2624; --border-color: #2d3d3a;
+            --text-main: #f1f5f9; --text-muted: #94a3b8;
+            --success: #10b981; --danger: #ef4444; 
+            --shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 50px; }
+
+        .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 20px 3%; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
+        .nav-brand { font-size: 18px; font-weight: 900; color: var(--text-main); }
+        .btn-back { background: var(--primary-fade); color: var(--primary); padding: 8px 20px; border-radius: 12px; font-weight: bold; text-decoration: none; border: 1px solid var(--primary); }
+
+        .app-container { max-width: 800px; margin: 0 auto; padding: 30px 20px; }
+        .page-title { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 30px; text-align: center; }
+
+        .day-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 15px; box-shadow: var(--shadow); overflow: hidden; transition: 0.3s; }
+        .day-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; background: rgba(0,0,0,0.1); }
+        .day-header:hover { background: var(--primary-fade); }
+        
+        .date-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .date-title .icon { background: var(--primary); color: #000; padding: 5px 10px; border-radius: 10px; font-size: 14px; }
+        .day-stats { font-size: 13px; color: var(--text-muted); font-weight: bold; display: flex; gap: 15px; }
+
+        .day-body { display: none; padding: 0; border-top: 1px solid var(--border-color); }
+        .day-card.active .day-body { display: block; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: bold; }
+        td { color: var(--text-main); font-weight: bold; }
+        tr:last-child td { border-bottom: none; }
+
+        .time-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--bg-color); border: 1px solid var(--border-color); margin: 2px 0; }
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; }
+        .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary);">در حال استخراج بایگانی تردد...</h3>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-brand">🗂️ بایگانی و گزارش ترددها</div>
+        <a href="attendance.html" class="btn-back">بازگشت به پنل زنده 🔙</a>
+    </div>
+
+    <div class="app-container">
+        <h1 class="page-title">گزارش روزانه پانسیون</h1>
+        <div id="reportContainer"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+        window.onload = async function() {
+            await fetchReports();
+        };
+
+        async function fetchReports() {
+            try {
+                const { data: logs, error: logErr } = await supabaseClient
+                    .from('attendance_logs')
+                    .select('student_nid, log_date, entry_time, exit_time')
+                    .order('log_date', { ascending: false })
+                    .order('entry_time', { ascending: true })
+                    .limit(2000);
+                
+                if (logErr) throw logErr;
+
+                const { data: students, error: stErr } = await supabaseClient
+                    .from('students')
+                    .select('national_id, full_name');
+
+                const groupedData = {};
+
+                logs.forEach(log => {
+                    const date = log.log_date;
+                    if (!groupedData[date]) groupedData[date] = {};
+
+                    const nid = log.student_nid;
+                    if (!groupedData[date][nid]) {
+                        let st = students.find(s => s.national_id === nid);
+                        groupedData[date][nid] = {
+                            name: st ? st.full_name : 'ناشناس',
+                            nid: nid,
+                            records: []
+                        };
+                    }
+                    groupedData[date][nid].records.push({ entry: log.entry_time, exit: log.exit_time });
+                });
+
+                renderReports(groupedData);
+
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+            } catch (err) {
+                console.error(err);
+                alert("خطا در ارتباط با سرور");
+            }
+        }
+
+        function renderReports(groupedData) {
+            const container = document.getElementById('reportContainer');
+            let html = '';
+
+            const dateKeys = Object.keys(groupedData).sort((a,b) => new Date(b) - new Date(a));
+
+            if (dateKeys.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 50px;">هیچ دیتایی در بایگانی یافت نشد.</div>';
+                return;
+            }
+
+            dateKeys.forEach((dateStr, index) => {
+                const dateObj = new Date(dateStr);
+                const shamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(dateObj);
+                
+                const studentsDict = groupedData[dateStr];
+                const studentKeys = Object.keys(studentsDict);
+                const totalStudents = studentKeys.length;
+                let totalEntries = 0;
+
+                let tableRows = '';
+                studentKeys.forEach(nid => {
+                    const st = studentsDict[nid];
+                    let timesHtml = st.records.map(rec => {
+                        totalEntries++;
+                        let inTime = rec.entry ? new Date(rec.entry).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : '-';
+                        let outTime = rec.exit ? new Date(rec.exit).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : '-';
+                        return `<div class="time-tag"><span class="text-success">📥 ${inTime}</span> | <span class="text-danger">📤 ${outTime}</span></div>`;
+                    }).join('');
+
+                    tableRows += `
+                        <tr>
+                            <td>${st.name}</td>
+                            <td style="font-family:monospace; color:var(--text-muted);">${st.nid}</td>
+                            <td>${timesHtml}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                    <div class="day-card" id="card_${index}">
+                        <div class="day-header" onclick="document.getElementById('card_${index}').classList.toggle('active')">
+                            <div class="date-title"><span class="icon">📅</span> ${shamsi}</div>
+                            <div class="day-stats">
+                                <span>👥 افراد حاضر: ${totalStudents} نفر</span>
+                                <span>🔄 کل ترددها: ${totalEntries} بار</span>
+                            </div>
+                        </div>
+                        <div class="day-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>نام دانش‌آموز</th>
+                                        <th>کدملی</th>
+                                        <th>ساعات ورود و خروج</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRows}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
