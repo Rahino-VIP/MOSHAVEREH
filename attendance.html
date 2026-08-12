@@ -28,10 +28,13 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: var(--shadow); }
+        .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: var(--shadow); }
         .nav-brand { font-size: 20px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
         .nav-brand span { color: var(--primary); }
-        .live-clock { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--accent); letter-spacing: 2px; direction: ltr; }
+        
+        .time-box { display: flex; flex-direction: column; align-items: flex-end; }
+        .live-clock { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--accent); letter-spacing: 2px; direction: ltr; line-height: 1; }
+        .live-date { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-top: 5px; }
 
         .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
         
@@ -56,8 +59,9 @@
         .badge-plan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
         .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
 
-        .col-status { flex: 1.5; font-size: 13px; font-family: monospace; color: var(--text-muted); display: flex; flex-direction: column; gap: 5px; }
-        .time-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--bg-color); border: 1px solid var(--border-color); font-weight: bold; }
+        .col-status { flex: 1.5; font-size: 13px; font-family: monospace; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; }
+        .time-row { display: flex; gap: 5px; }
+        .time-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--bg-color); border: 1px solid var(--border-color); font-weight: bold; font-size: 11px; }
 
         .col-actions { flex: 1.5; display: flex; gap: 10px; justify-content: flex-end; }
         .btn-action { padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; border: none; transition: 0.2s; color: white; display: flex; align-items: center; gap: 8px; }
@@ -81,7 +85,10 @@
 
     <div class="top-navbar">
         <div class="nav-brand">🪪 قطب‌نمای <span>راهینو</span> | پنل مانیتورینگ پانسیون</div>
-        <div class="live-clock" id="liveClock">00:00:00</div>
+        <div class="time-box">
+            <div class="live-clock" id="liveClock">00:00:00</div>
+            <div class="live-date" id="liveDate"></div>
+        </div>
     </div>
 
     <div class="main-content">
@@ -95,8 +102,8 @@
                 <div class="stat-value" style="color: var(--success);" id="statPresent">0</div>
             </div>
             <div class="stat-box">
-                <div class="stat-title">خارج شده‌ها</div>
-                <div class="stat-value" style="color: var(--danger);" id="statExited">0</div>
+                <div class="stat-title">ثبت تردد امروز</div>
+                <div class="stat-value" style="color: var(--accent);" id="statActive">0</div>
             </div>
         </div>
 
@@ -109,8 +116,7 @@
 
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // ⚠️ مهم: در این صفحه حتماً از شاه‌کلید (Service Role Key) استفاده کنید
-        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
@@ -118,9 +124,14 @@
 
         let allData = [];
 
+        // ساعت و تاریخ زنده به وقت تهران
         setInterval(() => {
-            document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Tehran' });
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Tehran' });
         }, 1000);
+
+        const f = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' });
+        document.getElementById('liveDate').innerText = f.format(new Date());
 
         window.onload = async function() {
             await fetchAttendanceData();
@@ -128,7 +139,6 @@
 
         async function fetchAttendanceData() {
             try {
-                // ۱. دریافت تمام دانش‌آموزانی که اشتراک فعال پانسیون دارند
                 const { data: subs, error: subErr } = await supabaseClient
                     .from('subscriptions')
                     .select('student_nid, service_type, remaining_attendance_days')
@@ -137,38 +147,40 @@
                 
                 if (subErr) throw subErr;
 
-                // ۲. دریافت اطلاعات هویتی (نام) دانش‌آموزان
                 const { data: students, error: stErr } = await supabaseClient
                     .from('students')
                     .select('national_id, full_name, phone_number');
 
-                // ۳. دریافت لاگ‌های امروز
-                const today = new Date().toISOString().split('T')[0];
+                // تعیین دقیق روز جاری به وقت تهران
+                const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tehran' });
+
                 const { data: logs, error: logErr } = await supabaseClient
                     .from('attendance_logs')
                     .select('*')
-                    .eq('log_date', today);
+                    .eq('log_date', today)
+                    .order('entry_time', { ascending: true });
 
-                // ترکیب دیتاها
                 allData = subs.map(sub => {
                     let st = students.find(s => s.national_id === sub.student_nid) || {};
-                    let log = logs.find(l => l.student_nid === sub.student_nid) || {};
+                    let studentLogs = logs.filter(l => l.student_nid === sub.student_nid);
                     
                     return {
                         nid: sub.student_nid,
                         name: st.full_name || 'ناشناس',
-                        phone: st.phone_number || '',
                         planType: sub.service_type,
                         remaining: sub.remaining_attendance_days,
-                        entryTime: log.entry_time ? new Date(log.entry_time).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : null,
-                        exitTime: log.exit_time ? new Date(log.exit_time).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : null
+                        logs: studentLogs
                     };
                 });
 
-                // مرتب‌سازی: اول حاضرین، بعد غایبین، آخر خارج‌شده‌ها
                 allData.sort((a, b) => {
-                    let statusA = a.entryTime && !a.exitTime ? 1 : (!a.entryTime ? 2 : 3);
-                    let statusB = b.entryTime && !b.exitTime ? 1 : (!b.entryTime ? 2 : 3);
+                    let aIsPresent = a.logs.some(l => l.entry_time && !l.exit_time);
+                    let bIsPresent = b.logs.some(l => l.entry_time && !l.exit_time);
+                    let aHasLogs = a.logs.length > 0;
+                    let bHasLogs = b.logs.length > 0;
+
+                    let statusA = aIsPresent ? 1 : (aHasLogs ? 2 : 3);
+                    let statusB = bIsPresent ? 1 : (bHasLogs ? 2 : 3);
                     return statusA - statusB;
                 });
 
@@ -189,22 +201,22 @@
             
             let total = list.length;
             let present = 0;
-            let exited = 0;
+            let activeToday = 0;
 
             if (list.length === 0) {
                 container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">امروز هیچ دانش‌آموزی با اشتراک فعال پانسیون یافت نشد.</div>';
                 document.getElementById('statTotal').innerText = '0';
                 document.getElementById('statPresent').innerText = '0';
-                document.getElementById('statExited').innerText = '0';
+                document.getElementById('statActive').innerText = '0';
                 return;
             }
 
             list.forEach(st => {
-                let isPresent = st.entryTime && !st.exitTime;
-                let hasExited = st.entryTime && st.exitTime;
+                let isPresent = st.logs.some(l => l.entry_time && !l.exit_time);
+                let hasLogs = st.logs.length > 0;
                 
                 if (isPresent) present++;
-                if (hasExited) exited++;
+                if (hasLogs) activeToday++;
 
                 let planBadge = st.planType === 'student_plan' ? 'دانش‌آموزی' : 'عادی';
                 let remainingHtml = '';
@@ -215,12 +227,23 @@
                 }
 
                 let timeInfo = '';
-                if (isPresent) timeInfo = `<span class="time-tag" style="color:var(--success);">📥 ورود: ${st.entryTime}</span>`;
-                else if (hasExited) timeInfo = `<span class="time-tag" style="color:var(--success);">📥 ورود: ${st.entryTime}</span> <span class="time-tag" style="color:var(--danger);">📤 خروج: ${st.exitTime}</span>`;
-                else timeInfo = `<span class="time-tag">غایب (ورود ثبت نشده)</span>`;
+                if (hasLogs) {
+                    timeInfo = st.logs.map(l => {
+                        let inTime = l.entry_time ? new Date(l.entry_time).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : '';
+                        let outTime = l.exit_time ? new Date(l.exit_time).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : '';
+                        
+                        if (inTime && !outTime) {
+                            return `<div class="time-row"><span class="time-tag" style="color:var(--success);">📥 ${inTime}</span></div>`;
+                        } else {
+                            return `<div class="time-row"><span class="time-tag" style="color:var(--success);">📥 ${inTime}</span> <span class="time-tag" style="color:var(--danger);">📤 ${outTime}</span></div>`;
+                        }
+                    }).join('');
+                } else {
+                    timeInfo = `<span class="time-tag">غایب (ورودی ثبت نشده)</span>`;
+                }
 
-                let btnEntryState = st.entryTime ? 'disabled' : '';
-                let btnExitState = (!st.entryTime || st.exitTime) ? 'disabled' : '';
+                let btnEntryState = isPresent ? 'disabled' : '';
+                let btnExitState = isPresent ? '' : 'disabled';
 
                 container.innerHTML += `
                     <div class="list-row">
@@ -243,7 +266,7 @@
 
             document.getElementById('statTotal').innerText = total;
             document.getElementById('statPresent').innerText = present;
-            document.getElementById('statExited').innerText = exited;
+            document.getElementById('statActive').innerText = activeToday;
         }
 
         function filterList() {
@@ -260,12 +283,12 @@
                 if (error) throw error;
                 
                 if (data.includes('⚠️')) {
-                    alert(data); // نمایش هشدار اتمام سهمیه
+                    alert(data); 
                 }
-                await fetchAttendanceData(); // رفرش لیست
+                await fetchAttendanceData(); 
             } catch (err) {
                 alert("خطا در ثبت ورود.");
-                btn.innerHTML = '📥 ثبت ورود'; btn.disabled = false;
+                btn.innerHTML = '📥 ورود'; btn.disabled = false;
             }
         }
 
@@ -274,10 +297,10 @@
             try {
                 const { data, error } = await supabaseClient.rpc('register_exit', { p_nid: nid });
                 if (error) throw error;
-                await fetchAttendanceData(); // رفرش لیست
+                await fetchAttendanceData(); 
             } catch (err) {
                 alert("خطا در ثبت خروج.");
-                btn.innerHTML = '📤 ثبت خروج'; btn.disabled = false;
+                btn.innerHTML = '📤 خروج'; btn.disabled = false;
             }
         }
     </script>
