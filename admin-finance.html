@@ -8,23 +8,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* 🎨 پالت رنگی اختصاصی مدیریت راهینو (تاریک و لوکس) */
         :root { 
             --bg-dark: #0a0f0d; 
             --surface-dark: #121a18; 
             --surface-light: #1b2624; 
             --border-color: #263633;
-            
             --primary: #639889; 
             --primary-hover: #4d7a6e;
             --primary-glow: rgba(99, 152, 137, 0.15);
-            
             --accent: #d9858a; 
-            
             --success: #10b981; 
             --warning: #f59e0b; 
             --danger: #ef4444;
-            
             --text-main: #f1f5f9; 
             --text-muted: #8b9d99;
         }
@@ -32,8 +27,10 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 👑 سایدبار (دقیقاً مشابه داشبورد مرکزی) */
-        .sidebar { width: 280px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 100; flex-shrink: 0; box-shadow: -5px 0 25px rgba(0,0,0,0.2); }
+        .mobile-header { display: none; }
+        .sidebar-overlay { display: none; }
+
+        .sidebar { width: 280px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; box-shadow: -5px 0 25px rgba(0,0,0,0.2); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .brand { text-align: center; font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 40px; letter-spacing: 1px; }
         .brand span { color: var(--primary); }
         
@@ -44,7 +41,6 @@
         .logout-btn { margin-top: auto; color: var(--accent); border-top: 1px solid var(--border-color); padding-top: 20px; }
         .logout-btn:hover { background: rgba(217, 133, 138, 0.08); color: var(--accent); }
 
-        /* 🖥️ محتوای اصلی */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); }
         
         .top-nav { background: var(--surface-dark); border-bottom: 1px solid var(--border-color); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
@@ -58,9 +54,6 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* =======================================
-           🗂️ کانبان برد
-           ======================================= */
         .split-view { display: flex; height: 100%; gap: 25px; align-items: flex-start; }
         .kanban-board { flex: 1; display: flex; gap: 20px; height: 100%; overflow-x: auto; padding-bottom: 10px; }
         .kanban-col { background: rgba(18, 26, 24, 0.6); border: 1px solid var(--border-color); border-radius: 16px; min-width: 280px; flex: 1; display: flex; flex-direction: column; max-height: 100%; }
@@ -86,8 +79,7 @@
         .k-name { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); margin-top: 5px; }
         .k-detail { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
 
-        /* پنل کالبدشکافی */
-        .details-panel { width: 420px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; flex-direction: column; overflow: hidden; display: none; height: 100%; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
+        .details-panel { width: 420px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; flex-direction: column; overflow: hidden; display: none; height: 100%; box-shadow: -5px 0 30px rgba(0,0,0,0.5); z-index: 2000;}
         .dp-header { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
         .dp-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.8; }
         .dp-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 12px 0; }
@@ -102,9 +94,6 @@
         .btn-green { background: var(--success); } .btn-green:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .btn-red { background: var(--danger); } .btn-red:hover { filter: brightness(1.1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
 
-        /* =======================================
-           🗺️ آمار و رادارها
-           ======================================= */
         .stats-grid, .radar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%; }
         .panel-box, .radar-box { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .radar-box.danger { border-top: 4px solid var(--danger); }
@@ -122,9 +111,40 @@
         .r-date strong { font-size: 15px; display: block; margin-bottom: 4px; }
         .r-date span { font-size: 11px; background: var(--surface-light); padding: 2px 8px; border-radius: 6px; }
 
-        .loader-overlay { position: fixed; inset: 0; background: rgba(10, 15, 13, 0.9); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; transition: 0.3s; }
+        .loader-overlay { position: fixed; inset: 0; background: rgba(10, 15, 13, 0.9); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 3000; flex-direction: column; transition: 0.3s; }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 900; position: sticky; top: 0; }
+            .mobile-header .brand { margin: 0; font-size: 18px; }
+            .mobile-menu-btn { background: transparent; border: none; color: var(--primary); font-size: 26px; cursor: pointer; }
+            
+            .sidebar { position: fixed; right: -300px; top: 0; height: 100vh; width: 260px; box-shadow: none; padding-top: 50px; transition: right 0.3s ease; }
+            .sidebar.active { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+            
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; }
+            .sidebar-overlay.active { display: block; }
+
+            .main-content { padding: 0; flex: unset; overflow-y: visible; }
+            
+            .top-nav { flex-direction: column; align-items: stretch; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+            .tabs { width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; }
+            .tab-btn { flex: 1; min-width: 150px; text-align: center; scroll-snap-align: center; }
+
+            .tab-container { padding: 15px; overflow-y: visible; }
+            .split-view { flex-direction: column; gap: 15px; height: auto; }
+            
+            .kanban-board { overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 15px; -webkit-overflow-scrolling: touch; }
+            .kanban-board::-webkit-scrollbar { display: none; }
+            .kanban-col { min-width: 85vw; scroll-snap-align: center; max-height: 65vh; }
+            
+            .details-panel { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; border-radius: 0; }
+            .dp-body { padding-bottom: 100px; }
+            
+            .radar-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -134,8 +154,13 @@
         <h2 style="color: var(--primary); font-size: 16px;">در حال همگام‌سازی با هسته مالی...</h2>
     </div>
 
-    <!-- 👑 سایدبار یکپارچه مدیریت -->
-    <div class="sidebar">
+    <div class="mobile-header">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
         <a href="students.html" class="nav-item"><span>👥</span> پرونده دانش‌آموزان (CRM)</a>
@@ -157,7 +182,6 @@
         </div>
 
         <div class="tab-container">
-            <!-- تب ۱: کانبان -->
             <div id="tab-kanban" class="tab-content active">
                 <div class="split-view">
                     <div class="kanban-board">
@@ -204,7 +228,6 @@
                 </div>
             </div>
 
-            <!-- تب ۲: رادار -->
             <div id="tab-radar" class="tab-content">
                 <div class="radar-grid">
                     <div class="radar-box warning">
@@ -224,9 +247,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔒 لایه‌های امنیتی (جلوگیری از کپی و Inspect)
-        // ==========================================
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false; 
@@ -234,9 +254,6 @@
             if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
         };
 
-        // ==========================================
-        // 🔗 اتصال به دیتابیس (با هدر اجباری مدیریت برای عبور از RLS)
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
@@ -252,7 +269,6 @@
         let currentSelection = { type: null, data: null };
 
         window.onload = async function() { 
-            // ۱. بررسی لاگین بودن ادمین
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
                 window.location.replace('login.html'); 
@@ -275,9 +291,6 @@
             }
         }
 
-        // ==========================================
-        // 📥 دریافت داده‌های یکپارچه
-        // ==========================================
         async function loadData() {
             try {
                 let wrResPromise = (async () => {
@@ -330,9 +343,6 @@
 
         function formatMoney(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
-        // ==========================================
-        // 🗂️ رندر کانبان برد (ترکیب فاکتورها، اقساط و تسویه‌ها)
-        // ==========================================
         function renderKanban() {
             let draftHtml = '', pendingHtml = '', withdrawHtml = '', activeHtml = '';
             let dCnt = 0, pCnt = 0, wCnt = 0, aCnt = 0;
@@ -400,9 +410,6 @@
             document.getElementById('cntActive').innerText = aCnt;
         }
 
-        // ==========================================
-        // 🔬 پنل کالبدشکافی داینامیک
-        // ==========================================
         function openDetails(type, id) {
             currentSelection = { type, id };
             const dpBody = document.getElementById('dpBody');
@@ -499,9 +506,6 @@
         
         function closeDetails() { document.getElementById('detailsPanel').style.display = 'none'; }
 
-        // ==========================================
-        // 💳 توابع تایید و رد تسویه کیف پول
-        // ==========================================
         async function approveWithdraw() {
             if(!confirm('آیا وجه را به حساب کاربر واریز کرده‌اید؟ پس از تایید، پیامک واریز برای کاربر ارسال می‌شود.')) return;
             let wr = db.withdrawals.find(w => String(w.id) === String(currentSelection.id));
@@ -551,9 +555,6 @@
             }
         }
 
-        // ==========================================
-        // 🔄 موتور تایید معاوضه (Trade-in)
-        // ==========================================
         async function approveTradeIn() {
             if(!confirm('آیا از تایید این درخواست تعویض اطمینان دارید؟ قراردادهای لغو شده باطل خواهند شد.')) return;
             let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
@@ -630,9 +631,6 @@
             } catch(e) { console.error(e); alert("⚠️ خطا در پردازش سیستمی فاکتور تعویض."); }
         }
 
-        // ==========================================
-        // ⚙️ توابع هسته پردازش فاکتور و اقساط
-        // ==========================================
         async function approveInvoice() {
             if(!confirm('آیا از تایید این فاکتور و فعال‌سازی دانش‌آموز اطمینان دارید؟')) return;
             let inv = db.invoices.find(i => String(i.id) === String(currentSelection.id));
@@ -798,9 +796,6 @@
             } catch(e) { console.error(e); alert("⚠️ خطا در رد فیش و ارسال پیام."); }
         }
 
-        // ==========================================
-        // ⏳ موتور رادارهای دوگانه
-        // ==========================================
         function renderRadars() {
             let today = new Date();
             const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
@@ -839,6 +834,13 @@
 
             document.getElementById('installmentRadarList').innerHTML = instHtml || '<div style="color:var(--text-muted); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">در ۱۵ روز آینده موعد هیچ قسطی فرا نمی‌رسد.</div>';
             document.getElementById('churnList').innerHTML = churnHtml || '<div style="color:var(--success); padding:15px; text-align:center; background:rgba(0,0,0,0.2); border-radius:12px;">🎉 در حال حاضر هیچ قراردادی رو به اتمام نیست.</div>';
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+            const brand = document.querySelector('.sidebar .brand');
+            if(window.innerWidth <= 992 && brand) brand.style.display = 'none';
         }
     </script>
 </body>
