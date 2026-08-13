@@ -9,9 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* ==========================================
-           🎨 پالت رنگی (قفل شده روی Dark Mode)
-           ========================================== */
         :root { 
             --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.1);
             --accent: #e59ea3; --accent-glow: rgba(229, 158, 163, 0.15);
@@ -24,27 +21,25 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 📁 سایدبار */
-        .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
+        .mobile-header { display: none; }
+        .sidebar-overlay { display: none; }
+
+        .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 1000; flex-shrink: 0; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .brand { text-align: center; font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; letter-spacing: 1px; }
         .brand span { color: var(--primary); }
         .nav-item { padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s; border-right: 3px solid transparent; text-decoration: none; }
         .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
         .nav-item.active { background: linear-gradient(90deg, var(--primary-fade) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
+        .logout-btn { margin-top: auto; color: var(--danger); border-top: 1px solid var(--border-color); padding-top: 20px; }
 
-        /* 🖥️ محتوای اصلی */
         .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
         .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         .page-title { font-size: 24px; font-weight: 900; color: var(--primary); }
 
-        /* 🔍 نوار جستجو و فیلترها */
         .toolbar { display: flex; gap: 15px; margin-bottom: 25px; }
         .search-bar { flex: 1; background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; }
         .search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
-        .filter-btn { background: var(--surface-light); border: 1px solid var(--border-color); color: var(--text-muted); padding: 0 20px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .filter-btn:hover, .filter-btn.active { background: var(--primary); color: var(--bg-color); border-color: var(--primary); }
 
-        /* 👥 لیست دانش‌آموزان */
         .list-container { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
         .list-row { padding: 18px 20px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); font-size: 14px; transition: 0.2s; cursor: pointer; }
         .list-row:last-child { border-bottom: none; }
@@ -60,12 +55,10 @@
         .btn-view { background: var(--primary-fade); color: var(--primary); border: 1px solid var(--primary); padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-view:hover { background: var(--primary); color: var(--bg-color); }
 
-        /* 🪟 مگا مُدال پرونده ۳۶۰ درجه */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 2000; display: none; justify-content: center; align-items: center; }
         .modal-content { background: var(--bg-color); border: 1px solid var(--border-color); width: 98%; max-width: 1300px; border-radius: 24px; max-height: 95vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.8); animation: scaleUp 0.3s ease-out; }
         @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
-        /* هدر پرونده */
         .profile-header { background: linear-gradient(135deg, var(--surface), var(--bg-color)); padding: 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; position: relative; overflow: hidden; }
         .profile-header::before { content: ''; position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: var(--primary-fade); filter: blur(50px); border-radius: 50%; }
         .p-info-wrap { display: flex; gap: 20px; align-items: center; z-index: 1; }
@@ -76,13 +69,10 @@
         .badge-grid { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .badge-tag { background: var(--surface-light); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
-        /* 📱 گرید محتوای پرونده */
         .profile-body { padding: 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative; }
 
-        /* لودر داخل مودال */
         .modal-loader { position: absolute; inset: 0; background: var(--bg-color); z-index: 10; display: flex; justify-content: center; align-items: center; flex-direction: column; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
         
-        /* کارت‌های اطلاعاتی */
         .info-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .card-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
         
@@ -93,11 +83,9 @@
         .col-span-2 { grid-column: span 2; }
         .col-span-3 { grid-column: span 3; }
         
-        /* نمودارها */
         .chart-box { position: relative; width: 100%; height: 250px; }
         canvas { width: 100% !important; height: 100% !important; }
 
-        /* نوارهای پیشرفت و لایف‌استایل */
         .progress-bar-bg { width: 100%; height: 8px; background: var(--bg-color); border-radius: 10px; overflow: hidden; display: flex; margin-top: 5px; }
         .progress-bar-fill-success { height: 100%; background: var(--success); transition: width 1s ease; }
         .progress-bar-fill-danger { height: 100%; background: var(--danger); transition: width 1s ease; }
@@ -105,7 +93,6 @@
         .mood-bar { display: flex; width: 100%; height: 12px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
         .mood-segment { height: 100%; display: flex; justify-content: center; align-items: center; font-size: 10px; color: white; font-weight: bold; transition: 0.5s;}
 
-        /* 🔮 گوی بلورین هوش مصنوعی */
         .ai-oracle-box { background: linear-gradient(180deg, rgba(119, 187, 169, 0.05) 0%, transparent 100%); border: 1px solid var(--primary); border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 0 30px var(--primary-fade); }
         .ai-title { color: var(--primary); font-size: 15px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .ai-screen { background: #000; border: 1px solid #1a2e28; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 13px; color: var(--primary); min-height: 140px; line-height: 1.8; position: relative; }
@@ -115,7 +102,6 @@
         .btn-oracle { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: var(--bg-color); padding: 12px 20px; border-radius: 12px; font-weight: 900; border: none; cursor: pointer; width: 100%; margin-top: 15px; transition: 0.2s; }
         .btn-oracle:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
 
-        /* چت باکس مشاور */
         .chat-box { width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px; border-radius: 12px; font-size: 13px; resize: vertical; min-height: 90px; outline: none; transition: 0.3s; }
         .chat-box:focus { border-color: var(--accent); }
         .btn-send { background: var(--accent); color: var(--bg-color); padding: 10px 20px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s;}
@@ -126,20 +112,60 @@
         .modal-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
         .modal-content::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 3000; flex-direction: column; transition: 0.3s opacity; }
         .spinner { font-size: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            body { flex-direction: column; overflow-y: auto; }
+            
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface); border-bottom: 1px solid var(--border-color); z-index: 900; position: sticky; top: 0; }
+            .mobile-header .brand { margin: 0; font-size: 18px; }
+            .mobile-menu-btn { background: transparent; border: none; color: var(--primary); font-size: 26px; cursor: pointer; }
+            
+            .sidebar { position: fixed; right: -300px; top: 0; height: 100vh; width: 260px; box-shadow: none; padding-top: 50px; transition: right 0.3s ease; }
+            .sidebar.active { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+            
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; }
+            .sidebar-overlay.active { display: block; }
+
+            .main-content { padding: 15px; overflow-y: visible; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .page-title { font-size: 20px; }
+            
+            .list-row { flex-direction: column; align-items: stretch; gap: 15px; position: relative; padding: 20px; }
+            .col-avatar { position: absolute; top: 20px; left: 20px; margin: 0; }
+            .col-info { margin-left: 60px; } 
+            .col-stats { display: flex; justify-content: space-between; align-items: center; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 12px; }
+            .stat-label { margin-bottom: 0; }
+            .stat-val { font-size: 13px; }
+            .col-action { width: 100%; }
+            .btn-view { width: 100%; padding: 12px; }
+
+            .modal-content { width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; border: none; }
+            .profile-header { padding: 40px 20px 20px 20px; flex-direction: column; text-align: center; } 
+            .p-info-wrap { flex-direction: column; width: 100%; }
+            .btn-close { position: absolute; top: 15px; left: 15px; }
+            .badge-grid { justify-content: center; }
+            
+            .profile-body { grid-template-columns: 1fr; padding: 15px; gap: 15px; padding-bottom: 80px; }
+            .col-span-2, .col-span-3 { grid-column: span 1; }
+            .ai-oracle-box { margin-bottom: 30px; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- لودر امنیتی اولیه -->
     <div class="loader-overlay" id="authLoader">
         <div class="spinner">⏳</div>
         <h3 style="color: var(--primary);">در حال تأیید هویت مدیریت...</h3>
     </div>
 
-    <!-- مگا مُدال پرونده ۳۶۰ درجه -->
+    <div class="mobile-header">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <div class="modal-overlay" id="studentModal">
         <div class="modal-content">
             <div class="profile-header">
@@ -163,7 +189,6 @@
                     <h3 style="color: var(--primary);">در حال استخراج و تحلیل دیتای ۳۶۰ درجه...</h3>
                 </div>
 
-                <!-- ردیف اول: اطلاعات تماس، مالی، استراتژی -->
                 <div class="info-card">
                     <div class="card-title">📞 اطلاعات تماس و هویت</div>
                     <div class="info-row"><span class="info-label">موبایل دانش‌آموز:</span><span class="info-value" id="infoMobile">-</span></div>
@@ -191,7 +216,6 @@
                     <div style="display: flex; flex-wrap: wrap; gap: 5px;" id="vipClasses"><span class="badge-tag">-</span></div>
                 </div>
 
-                <!-- ردیف دوم: آمارهای داشبورد و نمودارها -->
                 <div class="info-card col-span-2">
                     <div class="card-title">
                         <span>📈 روند پیشرفت (عملکرد دوره‌ای)</span>
@@ -231,7 +255,6 @@
                     </div>
                 </div>
 
-                <!-- ردیف سوم: پیام مستقیم و هوش مصنوعی -->
                 <div class="info-card">
                     <div class="card-title" style="color: var(--accent);">💬 بیسیم مستقیم (پین به داشبورد)</div>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">این پیام دقیقاً بالای داشبورد دانش‌آموز نمایش داده می‌شود.</p>
@@ -252,8 +275,7 @@
         </div>
     </div>
 
-    <!-- سایدبار اصلی -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         
         <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
@@ -267,7 +289,7 @@
         
         <a href="#" class="nav-item logout-btn" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
-    <!-- محتوای لیست دانش‌آموزان -->
+
     <div class="main-content">
         <div class="page-header">
             <h1 class="page-title">بانک اطلاعاتی دانش‌آموزان فعال</h1>
@@ -284,9 +306,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔗 اتصال سوپابیس (حالت ادمین / Service Role)
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
@@ -294,7 +313,6 @@
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
         });
 
-        // تنظیمات پیش‌فرض Chart.js برای تم تاریک
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn';
         Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
@@ -304,20 +322,18 @@
         let activeComboChart = null;
 
         window.onload = async function() {
-            // مخفی کردن لودر امنیتی
             document.getElementById('authLoader').style.opacity = '0';
             setTimeout(() => document.getElementById('authLoader').style.display = 'none', 300);
             
             await fetchActiveStudents();
         };
 
-        // 🌟 استخراج لیست فقط دانش‌آموزان فعال
         async function fetchActiveStudents() {
             try {
                 const { data: students, error } = await supabaseClient
                     .from('students')
                     .select('*')
-                    .eq('status', 'active') // 👈 فقط اکتیوها
+                    .eq('status', 'active') 
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -380,9 +396,6 @@
             renderList(filtered);
         }
 
-        // ==========================================
-        // 🔮 موتور پردازش دیتای ۳۶۰ درجه
-        // ==========================================
         async function openProfile(nationalId) {
             currentOpenNid = nationalId;
             document.getElementById('studentModal').style.display = 'flex';
@@ -392,7 +405,6 @@
             try {
                 let student = allStudentsData.find(s => s.national_id === nationalId);
                 
-                // اجرای موازی کوئری‌ها برای سرعت بالا
                 const [vipRes, examsRes, subsRes, reportsRes, schedulesRes] = await Promise.all([
                     supabaseClient.from('vip_settings').select('*').eq('national_id', nationalId).maybeSingle(),
                     supabaseClient.from('exam_results').select('total_taraz').eq('chat_id', nationalId).order('created_at', {ascending: false}).limit(1),
@@ -401,7 +413,6 @@
                     supabaseClient.from('ai_schedules').select('raw_plan, target_start_date').eq('national_id', nationalId).eq('status', 'approved').order('target_start_date', {ascending: false}).limit(1)
                 ]);
 
-                // هدر و هویت
                 document.getElementById('modalName').innerText = student.full_name || 'ناشناس';
                 document.getElementById('modalNid').innerText = `کدملی: ${student.national_id}`;
                 document.getElementById('modalGradeInfo').innerText = `${student.grade || '-'} ${student.major || '-'}`;
@@ -413,7 +424,6 @@
                 document.getElementById('infoCity').innerText = `${student.province || '-'}، ${student.city || '-'}`;
                 document.getElementById('infoSchool').innerText = student.school_name || '-';
 
-                // مالی
                 document.getElementById('infoWallet').innerText = student.wallet_balance ? `${student.wallet_balance.toLocaleString()} تومان` : '۰ تومان';
                 document.getElementById('infoReferral').innerText = student.referral_code || '-';
                 document.getElementById('infoInvitedBy').innerText = student.invited_by || '-';
@@ -427,7 +437,6 @@
                     document.getElementById('infoExpire').innerText = '-';
                 }
 
-                // VIP فرم
                 if (vipRes.data) {
                     let parseArr = (val) => {
                         if(!val) return '-';
@@ -453,12 +462,8 @@
                     document.getElementById('vipClasses').innerHTML = '<span class="badge-tag">-</span>';
                 }
 
-                // آخرین تراز
                 document.getElementById('statTaraz').innerText = (examsRes.data && examsRes.data.length > 0) ? `تراز: ${examsRes.data[0].total_taraz}` : 'تراز: ثبت نشده';
 
-                // ===================================
-                // 📊 پردازش گزارش‌ها برای نمودارها و لایف‌استایل
-                // ===================================
                 let totalStudyHours = 0;
                 let totalTestCount = 0;
                 let moodCounts = { 'عالی': 0, 'خوب': 0, 'معمولی': 0, 'بد': 0 };
@@ -480,13 +485,11 @@
                         totalStudyHours += dayStudy;
                         totalTestCount += dayTests;
 
-                        // برای نمودار
                         let dateParts = r.report_date.split('/');
                         chartLabels.push(dateParts.length >= 3 ? `${dateParts[2]}/${dateParts[1]}` : r.report_date);
                         chartStudyData.push(dayStudy);
                         chartTestData.push(dayTests);
 
-                        // لایف‌استایل
                         if(r.lifestyle) {
                             if (moodCounts[r.lifestyle.mood] !== undefined) moodCounts[r.lifestyle.mood]++;
                             
@@ -504,12 +507,11 @@
                 document.getElementById('statTotalStudy').innerText = totalStudyHours.toFixed(1) + 'h';
                 document.getElementById('statTotalTests').innerText = totalTestCount;
 
-                // 📊 رسم نمودار Combo
                 if(activeComboChart) activeComboChart.destroy();
                 activeComboChart = new Chart(document.getElementById('crmComboChart').getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: chartLabels.slice(-14), // فقط ۱۴ روز آخر شلوغ نشه
+                        labels: chartLabels.slice(-14), 
                         datasets: [
                             { type: 'line', label: 'تعداد تست', data: chartTestData.slice(-14), borderColor: '#e59ea3', backgroundColor: '#e59ea3', yAxisID: 'y1', tension: 0.4, borderWidth: 3 },
                             { type: 'bar', label: 'ساعت مطالعه', data: chartStudyData.slice(-14), backgroundColor: '#77bba9', borderRadius: 4, yAxisID: 'y' }
@@ -518,7 +520,6 @@
                     options: { maintainAspectRatio: false, responsive: true, scales: { y: { type: 'linear', position: 'right' }, y1: { type: 'linear', position: 'left', grid: {drawOnChartArea: false} } } }
                 });
 
-                // 😴 خواب و حال روحی
                 let daysCount = reportsRes.data ? reportsRes.data.length : 0;
                 if(daysCount > 0) {
                     let avgWake = totalWake / daysCount; let avgBedtime = totalBedtime / daysCount;
@@ -542,7 +543,6 @@
                     document.getElementById('moodBarContainer').innerHTML = '';
                 }
 
-                // 🗓️ پیشرفت برنامه هفتگی
                 if (schedulesRes.data && schedulesRes.data.length > 0) {
                     let planArr = typeof schedulesRes.data[0].raw_plan === 'string' ? JSON.parse(schedulesRes.data[0].raw_plan) : schedulesRes.data[0].raw_plan;
                     let taskBlocks = planArr.filter(p => p.type !== 'break' && p.subject !== 'بانک جبرانی' && !p.subject.includes('ناهار') && !p.subject.includes('شام') && (p.type !== 'class' || p.topic === 'کلاس آنلاین') && p.day !== 'bench');
@@ -564,7 +564,6 @@
                     document.getElementById('weekDangerBar').style.width = `0%`;
                 }
 
-                // پایان بارگذاری
                 document.getElementById('modalLoader').style.display = 'none';
 
             } catch(err) {
@@ -638,6 +637,13 @@
         }
 
         function handleLogout() { alert("خروج از سیستم..."); }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+            const brand = document.querySelector('.sidebar .brand');
+            if(window.innerWidth <= 992 && brand) brand.style.display = 'none';
+        }
     </script>
 </body>
 </html>
