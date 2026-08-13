@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* 🎨 پالت رنگی اختصاصی مدیریت راهینو */
         :root { 
             --bg-dark: #0a0f0d; 
             --surface-dark: #121a18; 
@@ -29,8 +28,10 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 👑 سایدبار */
-        .sidebar { width: 280px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 100; flex-shrink: 0; box-shadow: -5px 0 25px rgba(0,0,0,0.2); }
+        .mobile-header { display: none; }
+        .sidebar-overlay { display: none; }
+
+        .sidebar { width: 280px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; box-shadow: -5px 0 25px rgba(0,0,0,0.2); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .brand { text-align: center; font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 40px; letter-spacing: 1px; }
         .brand span { color: var(--primary); }
         .nav-item { padding: 16px 30px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; transition: 0.3s; border-right: 4px solid transparent; text-decoration: none; }
@@ -38,12 +39,10 @@
         .nav-item.active { background: linear-gradient(90deg, var(--primary-glow) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
         .logout-btn { margin-top: auto; color: var(--accent); border-top: 1px solid var(--border-color); padding-top: 20px; }
 
-        /* 🖥️ محتوای اصلی */
         .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); position: relative; }
         .page-header { margin-bottom: 35px; display: flex; justify-content: space-between; align-items: center; }
         .page-title { font-size: 26px; font-weight: 900; color: var(--text-main); }
         
-        /* پنل فیلترها */
         .filter-panel { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 30px; display: flex; gap: 15px; align-items: flex-end; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .form-group { display: flex; flex-direction: column; gap: 8px; flex: 1; }
         .form-group label { font-size: 12px; color: var(--text-muted); font-weight: bold; }
@@ -52,11 +51,9 @@
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; height: 46px; }
         .btn-primary:hover { box-shadow: 0 5px 15px var(--primary-glow); transform: translateY(-2px); }
 
-        /* دکمه شناور ذخیره */
         .floating-save-btn { position: fixed; bottom: 40px; left: 50px; background: var(--success); color: white; border: none; padding: 15px 30px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); transition: 0.3s; display: none; z-index: 1000; align-items: center; gap: 10px; }
         .floating-save-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(16, 185, 129, 0.6); filter: brightness(1.1); }
 
-        /* کارت‌های تطبیق */
         .match-grid { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
         .match-card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: 0.3s; }
         .match-card.error { border-right: 4px solid var(--danger); }
@@ -74,7 +71,6 @@
         .mc-body { padding: 20px; display: none; background: var(--bg-dark); }
         .mc-body.open { display: block; }
         
-        /* استایل چک‌باکس‌ها */
         .topic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
         .topic-item { background: var(--surface-light); border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 12px; font-size: 13px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; }
         .topic-item:hover { border-color: var(--primary); }
@@ -87,16 +83,51 @@
         .loader-overlay { position: fixed; inset: 0; background: rgba(10, 15, 13, 0.9); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s; }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            body { flex-direction: column; overflow-y: auto; }
+            
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 900; position: sticky; top: 0; }
+            .mobile-header .brand { margin: 0; font-size: 18px; }
+            .mobile-menu-btn { background: transparent; border: none; color: var(--primary); font-size: 26px; cursor: pointer; }
+            
+            .sidebar { position: fixed; right: -300px; top: 0; height: 100vh; width: 260px; box-shadow: none; padding-top: 50px; transition: right 0.3s ease; }
+            .sidebar.active { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+            
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; }
+            .sidebar-overlay.active { display: block; }
+
+            .main-content { padding: 20px; flex: unset; overflow-y: visible; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
+            .page-title { font-size: 22px; }
+
+            .filter-panel { flex-direction: column; align-items: stretch; }
+            .btn-primary { width: 100%; }
+
+            .mc-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .mc-title { flex-direction: column; align-items: flex-start; gap: 5px; }
+            
+            .topic-list { grid-template-columns: 1fr; }
+            .topic-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .topic-pages { align-self: flex-end; }
+
+            .floating-save-btn { left: 20px; right: 20px; bottom: 20px; justify-content: center; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
+    <div class="mobile-header">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner"></div>
         <h3 id="loaderText" style="color: var(--primary); font-size: 16px;">در حال بارگذاری موتور تطبیق...</h3>
     </div>
 
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         
         <a href="dashboard.html" class="nav-item"><span>🌅</span> داشبورد مرکزی</a>
@@ -110,6 +141,7 @@
         
         <a href="#" class="nav-item logout-btn" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
+
     <div class="main-content">
         <div class="page-header">
             <h1 class="page-title">🎯 اتاق فرمان بودجه‌بندی آزمون‌ها</h1>
@@ -138,7 +170,6 @@
             </div>
         </div>
 
-        <!-- دکمه شناور ذخیره -->
         <button id="saveBudgetBtn" class="floating-save-btn" onclick="saveApprovedBudget()">
             <span>✅</span> تأیید نهایی و ثبت مباحث در دیتابیس
         </button>
@@ -146,9 +177,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔗 اتصال امنیتی به دیتابیس
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
@@ -158,7 +186,7 @@
 
         let allBudgets = [];
         let knowledgeGraph = [];
-        let currentSelectedExamGrade = ''; // برای تشخیص هوشمند خرد/کلان
+        let currentSelectedExamGrade = ''; 
 
         window.onload = async function() {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -179,7 +207,6 @@
 
         async function loadInitialData() {
             try {
-                // ۱. دریافت لیست بودجه‌ها
                 const { data: budgets, error: bErr } = await supabaseClient.from('exam_budgets').select('*').order('exam_date', { ascending: false });
                 if (bErr) throw bErr;
                 allBudgets = budgets || [];
@@ -194,7 +221,6 @@
                     selectEl.appendChild(option);
                 });
 
-                // ۲. دریافت کل گراف دانش با دور زدن محدودیت 1000 تایی
                 let allKg = [];
                 let from = 0; let step = 1000;
                 while (true) {
@@ -214,9 +240,6 @@
             }
         }
 
-        // ==========================================
-        // 🧠 موتور نرمال‌سازی عمیق
-        // ==========================================
         const normalizeForMatch = (str) => {
             if (!str) return "";
             let s = String(str);
@@ -239,9 +262,6 @@
             else wrapper.classList.remove('selected');
         }
 
-        // ==========================================
-        // 🔍 آنالیز و رندر چک‌باکس‌ها
-        // ==========================================
         function analyzeBudget() {
             const selectedId = document.getElementById('examSelect').value;
             if (!selectedId) return alert("لطفاً یک آزمون را انتخاب کنید.");
@@ -283,15 +303,12 @@
                 if (isSuccess) successCount++; else errorCount++;
 
                 let topicsHtml = matchedTopics.map(t => {
-                    // منطق هوشمند پیش‌فرض: اگر پایه مبحث با پایه آزمون یکی بود -> خرد، در غیر این صورت -> کلان
                     let isCurrentGrade = (t.grade === currentSelectedExamGrade);
                     let isChecked = false;
                     
-                    // بررسی اینکه آیا قبلاً ذخیره شده است؟
                     if (bItem.approved_topics && Array.isArray(bItem.approved_topics)) {
                         isChecked = bItem.approved_topics.includes(t.id);
                     } else {
-                        // اگر دفعه اول است، از منطق هوشمند استفاده کن
                         if (isCurrentGrade && t.plan_type === 'micro') isChecked = true;
                         if (!isCurrentGrade && t.plan_type === 'macro') isChecked = true;
                     }
@@ -332,37 +349,28 @@
             document.getElementById('statError').innerText = errorCount;
             document.getElementById('statsSummary').style.display = 'block';
             
-            // نمایش دکمه شناور ذخیره
             document.getElementById('saveBudgetBtn').style.display = 'flex';
         }
 
-        // ==========================================
-        // 💾 ذخیره مباحث تایید شده در دیتابیس
-        // ==========================================
         async function saveApprovedBudget() {
             const selectedId = document.getElementById('examSelect').value;
             if (!selectedId) return;
 
-            // نمایش لودر
             document.getElementById('loaderText').innerText = "در حال ذخیره‌سازی در هسته مرکزی...";
             document.getElementById('mainLoader').style.display = 'flex';
             document.getElementById('mainLoader').style.opacity = '1';
 
-            // پیدا کردن رکورد فعلی
             const budgetRecord = allBudgets.find(b => String(b.id) === selectedId);
             let budgetDataArray = typeof budgetRecord.budget_data === 'string' ? JSON.parse(budgetRecord.budget_data) : budgetRecord.budget_data;
 
-            // جمع‌آوری آیدی چک‌باکس‌های فعال برای هر کتاب
             budgetDataArray.forEach(bItem => {
                 let checkboxes = document.querySelectorAll(`.topic-cb[data-book="${bItem.book}"]`);
                 let selectedIds = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
                 
-                // اضافه کردن آیدی‌های تایید شده به فایل JSON دیتابیس
                 bItem.approved_topics = selectedIds;
             });
 
             try {
-                // ارسال دیتای جدید به جدول exam_budgets
                 const { error } = await supabaseClient
                     .from('exam_budgets')
                     .update({ budget_data: JSON.stringify(budgetDataArray) })
@@ -370,7 +378,6 @@
 
                 if (error) throw error;
 
-                // آپدیت آرایه محلی برای اینکه اگر دوباره کلیک کرد رفرش نشه
                 budgetRecord.budget_data = JSON.stringify(budgetDataArray);
 
                 setTimeout(() => {
@@ -384,6 +391,13 @@
                 document.getElementById('mainLoader').style.display = 'none';
                 alert('⚠️ خطا در ذخیره‌سازی اطلاعات.');
             }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+            const brand = document.querySelector('.sidebar .brand');
+            if(window.innerWidth <= 992 && brand) brand.style.display = 'none';
         }
     </script>
 </body>
