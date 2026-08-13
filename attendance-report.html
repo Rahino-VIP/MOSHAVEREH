@@ -39,7 +39,7 @@
         .day-card.active .day-body { display: block; animation: slideDown 0.3s ease-out; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        table { width: 100%; border-collapse: collapse; text-align: right; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 500px; }
         th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
         th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: bold; }
         td { color: var(--text-main); font-weight: bold; }
@@ -49,9 +49,14 @@
         .text-success { color: var(--success); }
         .text-danger { color: var(--danger); }
 
-        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; }
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .day-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .top-navbar { flex-direction: column; gap: 15px; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -136,7 +141,7 @@
 
             dateKeys.forEach((dateStr, index) => {
                 const dateObj = new Date(dateStr);
-                const shamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(dateObj);
+                const shamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' }).format(dateObj);
                 
                 const studentsDict = groupedData[dateStr];
                 const studentKeys = Object.keys(studentsDict);
@@ -172,18 +177,20 @@
                             </div>
                         </div>
                         <div class="day-body">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>نام دانش‌آموز</th>
-                                        <th>کدملی</th>
-                                        <th>ساعات ورود و خروج</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tableRows}
-                                </tbody>
-                            </table>
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>نام دانش‌آموز</th>
+                                            <th>کدملی</th>
+                                            <th>ساعات ورود و خروج</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableRows}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 `;
