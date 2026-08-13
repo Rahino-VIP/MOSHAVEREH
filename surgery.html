@@ -8,9 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ==========================================
-           🎨 پالت رنگی استاندارد راهینو (روز/شب)
-           ========================================== */
         :root { 
             --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.05);
             --accent: #d9858a; --accent-hover: #c4727c;
@@ -36,8 +33,10 @@
         @keyframes pulse { 0% { transform: scale(0.8); } 100% { transform: scale(1.1); } }
         #aiStatus { font-size: 13px; color: var(--warning); margin-top: 10px; height: 20px; font-weight: bold; }
 
-        /* 🗂️ پنل کناری (سایدبار) */
-        .side-panel { width: 340px; background: var(--surface); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 20; box-shadow: -5px 0 20px rgba(0,0,0,0.05); }
+        .mobile-header { display: none; }
+        .sidebar-overlay { display: none; }
+
+        .side-panel { width: 340px; background: var(--surface); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 20; box-shadow: -5px 0 20px rgba(0,0,0,0.05); transition: right 0.3s ease; }
         .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: var(--primary-fade); }
         .btn-back { background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 18px; transition: 0.2s; box-shadow: var(--shadow); }
         .btn-back:hover { background: var(--danger); border-color: var(--danger); color: white; }
@@ -52,7 +51,6 @@
         .ai-assistant::before { content: '💬 یادداشت دانش‌آموز'; position: absolute; top: -10px; right: 15px; background: var(--surface); padding: 0 10px; font-size: 11px; color: var(--primary); font-weight: bold; border-radius: 4px; border: 1px solid var(--border-color); }
         .ai-text { font-size: 12px; color: var(--text-main); line-height: 1.6; }
 
-        /* 🟨 نیمکت ذخیره‌ها */
         .bench-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px; margin-top: 5px; }
         .bench-title { font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
         .bench-item { background: var(--surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; box-shadow: var(--shadow); }
@@ -61,7 +59,6 @@
         .bench-subj { font-size: 12px; font-weight: bold; color: var(--text-main); }
         .bench-topic { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
 
-        /* فرم افزودن پارت */
         .add-block-form { background: var(--surface); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; box-shadow: var(--shadow); }
         .form-title { font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); display: flex; justify-content: space-between; }
         .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -77,7 +74,6 @@
         .btn-reject { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
 
-        /* 🗓️ بخش تقویم (راست) */
         .calendar-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-color); overflow: hidden; }
         .calendar-header { display: flex; background: var(--surface); border-bottom: 1px solid var(--border-color); z-index: 15; box-shadow: var(--shadow); }
         .time-spacer { width: var(--time-col-width); border-left: 1px solid var(--border-color); flex-shrink: 0; }
@@ -92,7 +88,6 @@
         .day-column { flex: 1; border-left: 1px solid var(--border-color); position: relative; min-height: 100%; }
         .day-column:last-child { border-left: none; }
 
-        /* 🧱 بلاک‌های پارت مطالعاتی با طراحی روشن‌تر و تمیزتر */
         .event-block { position: absolute; left: 4px; right: 4px; border-radius: 8px; padding: 6px 8px; font-size: 11px; cursor: grab; transition: box-shadow 0.2s, filter 0.2s; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); z-index: 5; color: var(--text-main); border: 1px solid var(--border-color); background: var(--surface); }
         .event-block:active { cursor: grabbing; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.2); filter: brightness(0.95); }
         [data-theme="dark"] .event-block:active { filter: brightness(1.1); }
@@ -110,7 +105,6 @@
         [data-theme="dark"] .resizer { background: rgba(255,255,255,0.05); }
         .resizer:hover { background: var(--primary); opacity: 0.5; }
 
-        /* رنگ‌بندی داینامیک دروس (با حاشیه رنگی) */
         .event-bio { background: rgba(16, 185, 129, 0.05); border-right: 4px solid #10b981; } 
         .event-math { background: rgba(245, 158, 11, 0.05); border-right: 4px solid #f59e0b; } 
         .event-chem { background: rgba(59, 130, 246, 0.05); border-right: 4px solid #3b82f6; } 
@@ -123,9 +117,27 @@
         .event-social { background: rgba(245, 158, 11, 0.05); border-right: 4px solid #f59e0b; } 
         .event-philosophy { background: rgba(139, 92, 246, 0.05); border-right: 4px solid #8b5cf6; } 
         .event-makeup { background: rgba(239, 68, 68, 0.05); border-right: 4px solid #ef4444; } 
-        
         .event-break { background: var(--bg-color); color: var(--text-muted); border: 1px dashed var(--border-color); } 
         .event-default { background: var(--primary-fade); border-right: 4px solid var(--primary); } 
+
+        @media (max-width: 992px) {
+            body { flex-direction: column; overflow: hidden; }
+            
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface); border-bottom: 1px solid var(--border-color); z-index: 900; }
+            .mobile-header .brand { margin: 0; font-size: 18px; font-weight: 900; color: var(--text-main); }
+            .mobile-header .brand span { color: var(--primary); }
+            .mobile-menu-btn { background: transparent; border: none; color: var(--primary); font-size: 26px; cursor: pointer; }
+            
+            .side-panel { position: fixed; right: -320px; top: 0; height: 100vh; width: 300px; box-shadow: none; transition: right 0.3s ease; z-index: 1000; }
+            .side-panel.active { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+            
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; }
+            .sidebar-overlay.active { display: block; }
+
+            .calendar-container { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; flex: 1; }
+            .calendar-header { min-width: 800px; }
+            .calendar-body { min-width: 800px; }
+        }
     </style>
 </head>
 <body>
@@ -136,7 +148,13 @@
         <div id="aiStatus"></div>
     </div>
 
-    <div class="side-panel">
+    <div class="mobile-header">
+        <div class="brand">قطب‌نمای <span>راهینو</span></div>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <div class="side-panel" id="sidePanel">
         <div class="panel-header">
             <div style="display: flex; gap: 10px; align-items: center;">
                 <a href="quarantine.html" class="btn-back">🔙</a>
@@ -233,13 +251,9 @@
     </div>
 
     <script>
-        // =========================================================
-        //  🔒 اتصال دیتابیس (استفاده از شاه‌کلید برای مدیریت + ایزوله کردن سشن)
-        // =========================================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
-        // 🌟 کلید جادویی: قطع دسترسی کتابخانه به سشن‌های مرورگر تا RLS دور زده شود
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
             auth: {
                 persistSession: false,
@@ -258,7 +272,6 @@
         const daysArr = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
         const dayMap = { 'شنبه': 0, 'یکشنبه': 1, 'دوشنبه': 2, 'سه‌شنبه': 3, 'چهارشنبه': 4, 'پنجشنبه': 5, 'جمعه': 6 };
 
-        // 🌓 سیستم تم استاندارد
         const themeBtn = document.getElementById('themeBtn');
         const currentTheme = localStorage.getItem('theme') || 'dark';
         
@@ -282,6 +295,11 @@
             }
         }
 
+        function toggleSidebar() {
+            document.getElementById('sidePanel').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
         window.onload = async function() {
             const timeCol = document.getElementById('timeColumn');
             for(let i = 6; i <= 24; i++) {
@@ -301,7 +319,6 @@
 
         async function fetchAndRender() {
             try {
-                // 🌟 استفاده از maybeSingle به جای single برای جلوگیری از کرش سیستم
                 const { data: schData, error: schErr } = await supabaseClient
                     .from('ai_schedules').select('*').eq('id', currentScheduleId).maybeSingle();
                 
@@ -312,7 +329,6 @@
                     return;
                 }
 
-                // 🌟 استفاده از maybeSingle برای جلوگیری از ارور
                 const { data: stData } = await supabaseClient
                     .from('students').select('full_name, grade, major').eq('national_id', schData.national_id).maybeSingle();
 
