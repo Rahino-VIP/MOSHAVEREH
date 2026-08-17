@@ -771,7 +771,8 @@
                     let panTier = inv.pansion_tier || "none";
                     let conTier = inv.consult_tier || "none";
                     
-                    saveContactsToPhone(fullStudentData.full_name, fullStudentData.phone_number, fPhone, mPhone, grade, major, panTier, conTier);
+                    // 👇 کلمه await در اینجا اضافه شد تا سیستم صبر کند
+                    await saveContactsToPhone(fullStudentData.full_name, fullStudentData.phone_number, fPhone, mPhone, grade, major, panTier, conTier);
                 }
                 alert('✅ فاکتور تایید، زمانبندی اعمال و پیام تایید برای دانش‌آموز ارسال شد.');
                 closeDetails(); loadData();
@@ -857,7 +858,7 @@
         }
 
         async function saveContactsToPhone(studentName, studentPhone, fatherPhone, motherPhone, grade, major, panTier, conTier) {
-            // 🚨 آدرس وب‌اپلیکیشن گوگل اسکریپت خود را اینجا قرار دهید:
+            // 🚨 آدرس وب‌اپلیکیشن گوگل اسکریپت
             const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
             try {
@@ -879,12 +880,14 @@
                 
                 const result = await response.json();
                 if(result.success) {
-                    console.log("✅ مخاطبین با موفقیت در دفترچه تلفن ذخیره شدند.");
+                    alert("📱 عالی! مخاطبین با فرمت هوشمند با موفقیت در گوشی (Google Contacts) ذخیره شدند.");
                 } else {
                     console.error("❌ خطای گوگل اسکریپت:", result.error);
+                    alert("⚠️ خطا از سمت گوگل در ذخیره مخاطب:\n" + result.error);
                 }
             } catch(e) {
                 console.error("خطا در ارتباط با سیستم مخاطبین گوگل:", e);
+                alert("⚠️ امکان ارتباط با سرور گوگل فراهم نشد! (احتمالاً مشکل اینترنت یا فیلترشکن)");
             }
         }
     </script>
