@@ -861,7 +861,7 @@
 
         async function saveContactsToPhone(studentName, studentPhone, parentPhone, planType, examYear) {
             // 🚨 آدرس وب‌اپلیکیشن گوگل اسکریپت خود را اینجا قرار دهید:
-            const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/execا';
+            const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
             try {
                 const response = await fetch(GAS_WEBAPP_URL, {
@@ -879,10 +879,14 @@
                 
                 const result = await response.json();
                 if(result.success) {
-                    console.log("مخاطبین در دفترچه تلفن ذخیره شدند.");
+                    console.log("✅ مخاطبین با موفقیت در دفترچه تلفن ذخیره شدند.");
+                } else {
+                    console.error("❌ خطای گوگل اسکریپت:", result.error);
+                    alert("⚠️ خطا در ذخیره مخاطب در گوشی: " + result.error);
                 }
             } catch(e) {
                 console.error("خطا در ارتباط با گوگل اسکریپت:", e);
+                alert("⚠️ امکان ارتباط با سیستم مدیریت مخاطبین گوگل فراهم نشد.");
             }
         }
     </script>
