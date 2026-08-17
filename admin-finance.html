@@ -760,6 +760,22 @@
                     body: `دانش‌آموز عزیز، پرداخت شما توسط مدیریت تایید و اشتراک شما با موفقیت در سیستم فعال/تمدید شد.\nمی‌توانید تاریخ دقیق اعتبار طرح‌های خود را در بخش پروفایل مشاهده کنید.`
                 });
 
+                // استخراج اطلاعات کامل دانش‌آموز از دیتابیس لوکال برای یافتن شماره والدین
+                let fullStudentData = db.students.find(s => String(s.national_id) === String(inv.student_nid));
+                let parentPhone = fullStudentData ? (fullStudentData.father_phone || fullStudentData.mother_phone || "") : "";
+                
+                // استخراج نوع طرح ثبت‌نامی
+                let planStr = "";
+                if (inv.pansion_tier && inv.pansion_tier !== 'none') planStr += "پانسیون ";
+                if (inv.consult_tier && inv.consult_tier !== 'none') planStr += "مشاوره";
+                
+                // ارسال درخواست به گوگل برای ذخیره شماره‌ها در پس‌زمینه
+                if (fullStudentData && fullStudentData.phone_number) {
+                    saveContactsToPhone(fullStudentData.full_name, fullStudentData.phone_number, parentPhone, planStr.trim(), "404");
+                }
+
+                alert('✅ فاکتور تایید، زمانبندی اعمال و پیام تایید برای دانش‌آموز ارسال شد.');
+
                 alert('✅ فاکتور تایید، زمانبندی اعمال و پیام تایید برای دانش‌آموز ارسال شد.');
                 closeDetails(); loadData();
             } catch(e) { 
@@ -841,6 +857,33 @@
             document.getElementById('sidebarOverlay').classList.toggle('active');
             const brand = document.querySelector('.sidebar .brand');
             if(window.innerWidth <= 992 && brand) brand.style.display = 'none';
+        }
+
+        async function saveContactsToPhone(studentName, studentPhone, parentPhone, planType, examYear) {
+            // 🚨 آدرس وب‌اپلیکیشن گوگل اسکریپت خود را اینجا قرار دهید:
+            const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/execا';
+
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'save_contact',
+                        student_name: studentName,
+                        student_phone: studentPhone,
+                        parent_phone: parentPhone,
+                        plan: planType,
+                        year: examYear
+                    })
+                });
+                
+                const result = await response.json();
+                if(result.success) {
+                    console.log("مخاطبین در دفترچه تلفن ذخیره شدند.");
+                }
+            } catch(e) {
+                console.error("خطا در ارتباط با گوگل اسکریپت:", e);
+            }
         }
     </script>
 </body>
