@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رزرو پانسیون VIP | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { 
+            --bg-dark: #0a0f0d; --surface-dark: #121a18; --surface-light: #1b2624; --border-color: #263633;
+            --primary: #639889; --primary-fade: rgba(99, 152, 137, 0.15);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --text-main: #f1f5f9; --text-muted: #8b9d99;
+        }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .container { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 20px; width: 100%; max-width: 500px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; }
+        .header { background: linear-gradient(135deg, var(--surface-light), var(--bg-dark)); padding: 25px; text-align: center; border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 20px; color: var(--primary); margin-bottom: 5px; font-weight: 900; }
+        .header p { font-size: 12px; color: var(--text-muted); }
+        
+        .step-section { padding: 30px 25px; display: none; animation: fadeIn 0.4s; }
+        .step-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; }
+        .form-input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px; border-radius: 12px; font-size: 15px; outline: none; transition: 0.3s; text-align: center; font-weight: bold; }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
+        
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: 0.2s; color: white; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #4d7a6e); }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+        /* Calendar Grid */
+        .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+        .cal-card { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 10px; text-align: center; cursor: pointer; transition: 0.2s; user-select: none; position: relative; }
+        .cal-card.available:hover { border-color: var(--primary); }
+        .cal-card.selected { background: var(--primary-fade); border-color: var(--primary); color: var(--primary); }
+        .cal-card.selected::after { content: '✅'; position: absolute; top: -8px; right: -8px; font-size: 14px; background: var(--bg-dark); border-radius: 50%; }
+        .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--danger); }
+        .cal-card.past-booked { background: rgba(16, 185, 129, 0.1); border-color: var(--success); cursor: not-allowed; opacity: 0.7; }
+        
+        .cal-day { font-size: 13px; font-weight: 900; margin-bottom: 5px; }
+        .cal-cap { font-size: 10px; color: var(--text-muted); font-weight: bold; background: var(--surface-light); padding: 2px 5px; border-radius: 4px; display: inline-block; }
+
+        /* Checkout Box */
+        .checkout-box { background: var(--surface-light); border: 1px dashed var(--primary); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; }
+        .price-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: var(--text-muted); }
+        .price-final { font-size: 22px; font-weight: 900; color: var(--success); margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; }
+        
+        /* File Upload */
+        .file-upload { border: 2px dashed var(--border-color); padding: 20px; text-align: center; border-radius: 12px; cursor: pointer; margin-bottom: 20px; background: var(--bg-dark); transition: 0.3s; }
+        .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
+        .file-upload input { display: none; }
+        
+        .rules-box { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; background: rgba(239, 68, 68, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .rules-box input { margin-top: 3px; accent-color: var(--danger); }
+
+        .loader { position: absolute; inset: 0; background: rgba(10,15,13,0.9); z-index: 10; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <div style="color: var(--primary); font-size: 13px; font-weight: bold;" id="loaderText">در حال بررسی...</div>
+        </div>
+
+        <div class="header">
+            <h1>رزرو پانسیون راهینو</h1>
+            <p>انتخاب روزانه، تخفیف پلکانی، رزرو آنی</p>
+        </div>
+
+        <!-- 1. ورود -->
+        <div class="step-section active" id="step-login">
+            <div class="form-group">
+                <label class="form-label">شماره موبایل خود را وارد کنید:</label>
+                <input type="tel" id="loginPhone" class="form-input" placeholder="09123456789" maxlength="11">
+            </div>
+            <button class="btn btn-primary" onclick="checkUser()">ورود به سیستم 🚀</button>
+        </div>
+
+        <!-- 2. ثبت نام -->
+        <div class="step-section" id="step-register">
+            <div style="background: var(--primary-fade); color: var(--primary); padding: 12px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 20px; font-weight: bold;">
+                شماره شما جدید است. لطفاً برای تشکیل پرونده اطلاعات زیر را تکمیل کنید.
+            </div>
+            <div class="form-group">
+                <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل">
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="regGrade" class="form-input" placeholder="پایه (مثلا دوازدهم)">
+                <input type="text" id="regMajor" class="form-input" placeholder="رشته تحصیلی">
+            </div>
+            <div class="form-group">
+                <input type="text" id="regSchool" class="form-input" placeholder="نام مدرسه / دانشگاه">
+            </div>
+            <button class="btn btn-primary" onclick="registerUser()">ثبت اطلاعات 💾</button>
+            <button class="btn" style="background: transparent; border: 1px solid var(--border-color); margin-top: 10px; color: var(--text-muted);" onclick="showStep('step-login')">بازگشت</button>
+        </div>
+
+        <!-- 3. وضعیت انتظار -->
+        <div class="step-section" id="step-pending">
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 50px; margin-bottom: 10px;">⏳</div>
+                <h3 style="color: var(--warning); margin-bottom: 10px;">در حال بررسی...</h3>
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.8;">
+                    اطلاعات شما در سیستم ثبت شده است.<br>
+                    لطفاً منتظر بمانید تا هویت شما توسط مدیریت راهینو تایید شود. پس از تایید می‌توانید ظرفیت‌ها را مشاهده و رزرو کنید.
+                </p>
+                <button class="btn" style="background: var(--surface-light); margin-top: 20px;" onclick="showStep('step-login')">بازگشت به صفحه اول</button>
+            </div>
+        </div>
+
+        <!-- 4. انتخاب ظرفیت و رزرو -->
+        <div class="step-section" id="step-booking">
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; text-align: center;">روزهای مورد نظر خود را برای رزرو انتخاب کنید:</div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- تقویم با جاوااسکریپت پر می‌شود -->
+            </div>
+
+            <div class="checkout-box">
+                <div class="price-row"><span>روزهای انتخاب شده (جدید):</span><strong id="newDaysCountTxt">0 روز</strong></div>
+                <div class="price-row"><span>تعداد روزهای قبلی شما در این بازه:</span><strong id="pastDaysCountTxt" style="color: var(--primary);">0 روز</strong></div>
+                <div class="price-row"><span>هزینه پایه (هر روز):</span><strong id="rateAppliedTxt">0 تومان</strong></div>
+                <div id="discountNotice" style="color: var(--warning); font-size: 11px; font-weight: bold; margin-top: 5px;"></div>
+                <div class="price-final">مبلغ کل: <span id="finalPriceTxt">0</span> تومان</div>
+            </div>
+
+            <!-- آپلود فیش -->
+            <label class="file-upload" id="uploadBox">
+                <div style="font-size: 24px; margin-bottom: 5px;">📸</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="uploadText">آپلود فیش واریزی (کلیک کنید)</div>
+                <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
+            </label>
+
+            <!-- چک باکس قوانین -->
+            <label class="rules-box">
+                <input type="checkbox" id="rulesCheckbox">
+                <span>تایید می‌کنم که فیش واریزی معتبر و متعلق به همین تراکنش است. می‌دانم در صورت آپلود فیش نامعتبر، برای همیشه از ورود به پانسیون محروم خواهم شد.</span>
+            </label>
+
+            <button class="btn btn-primary" id="btnSubmitBooking" onclick="submitBooking()" disabled>تایید نهایی و رزرو قطعی 🔒</button>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // تنظیمات امنیتی سوپابیس و ربات بله
+        // ----------------------------------------------------
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        // 🚨 نکته مهم: اینجا باید کلید ANON (پابلیک) سوپابیس را قرار دهی، نه کلید سرویس!
+        const SUPABASE_ANON_KEY = 'eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 🚨 اطلاعات ربات بله (برای دریافت مستقیم فیش‌ها)
+        const BALE_BOT_TOKEN = 'توکن_ربات_بله_را_اینجا_بگذار'; 
+        const ADMIN_CHAT_ID = 'آیدی_عددی_بله_خودت_را_اینجا_بگذار';
+
+        // ----------------------------------------------------
+        // متغیرهای سراسری سیستم
+        // ----------------------------------------------------
+        let currentUser = null;
+        let window14Dates = [];
+        let dailyCapacities = {};
+        let userPastReservations = []; // تاریخ‌هایی که قبلا در این بازه خریده
+        let selectedNewDates = []; // تاریخ‌هایی که الان تیک زده
+        let isFirstEver = false;
+        let finalAmountToPay = 0;
+        let selectedFile = null;
+
+        const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
+
+        function showStep(stepId) {
+            document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+        }
+
+        function showLoader(text = 'در حال بررسی...') {
+            document.getElementById('loaderText').innerText = text;
+            document.getElementById('loader').style.display = 'flex';
+        }
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+
+        // =====================================
+        // ۱. ورود و بررسی هویت
+        // =====================================
+        async function checkUser() {
+            let phone = document.getElementById('loginPhone').value.trim();
+            if(!phone || phone.length < 10) return alert('لطفاً شماره موبایل معتبر وارد کنید.');
+            
+            showLoader('در حال استعلام هویت...');
+            try {
+                // جستجو در جدول مستقل پانسیون
+                const { data, error } = await supabase.from('pan_users').select('*').eq('phone_number', phone).maybeSingle();
+                
+                if (data) {
+                    currentUser = data;
+                    if (data.status === 'pending') {
+                        hideLoader(); showStep('step-pending');
+                    } else if (data.status === 'blocked') {
+                        hideLoader(); alert('دسترسی شما به سیستم مسدود شده است.');
+                    } else {
+                        await initializeBookingEngine();
+                    }
+                } else {
+                    // کاربر جدید است
+                    hideLoader(); showStep('step-register');
+                }
+            } catch (e) {
+                hideLoader(); alert('خطا در ارتباط با سرور.'); console.error(e);
+            }
+        }
+
+        async function registerUser() {
+            let phone = document.getElementById('loginPhone').value.trim();
+            let name = document.getElementById('regName').value.trim();
+            let grade = document.getElementById('regGrade').value.trim();
+            let major = document.getElementById('regMajor').value.trim();
+            let school = document.getElementById('regSchool').value.trim();
+
+            if(!name || !grade || !school) return alert('لطفاً فیلدهای الزامی را پر کنید.');
+
+            showLoader('در حال ثبت پرونده...');
+            try {
+                const { error } = await supabase.from('pan_users').insert([{
+                    phone_number: phone, full_name: name, grade: grade, major: major, school: school, status: 'pending'
+                }]);
+                
+                hideLoader();
+                if(error) throw error;
+                showStep('step-pending');
+            } catch (e) { hideLoader(); alert('خطا در ثبت اطلاعات.'); console.error(e); }
+        }
+
+        // =====================================
+        // ۲. موتور تقویم و ظرفیت
+        // =====================================
+        function getShamsiDate(dateObj) {
+            return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
+        }
+
+        function getShamsiDayName(dateObj) {
+            return new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj);
+        }
+
+        async function initializeBookingEngine() {
+            showLoader('در حال دریافت ظرفیت‌های زنده...');
+            
+            // تولید بازه ۱۴ روزه
+            window14Dates = [];
+            for(let i=0; i<14; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                window14Dates.push({ date: getShamsiDate(d), dayName: getShamsiDayName(d) });
+            }
+            let justDates = window14Dates.map(d => d.date);
+
+            try {
+                // الف: استخراج ظرفیت‌های کل سالن
+                const { data: capData } = await supabase.from('pan_daily_capacity').select('*').in('target_date', justDates);
+                capData?.forEach(d => dailyCapacities[d.target_date] = d);
+
+                // ب: استخراج رزروهای قبلی همین شخص
+                const { data: resData } = await supabase.from('pan_reservations').select('reserved_dates').eq('phone_number', currentUser.phone_number);
+                
+                userPastReservations = [];
+                isFirstEver = (!resData || resData.length === 0); // چک کردن تخفیف اولین ورود
+                
+                if (resData) {
+                    resData.forEach(r => {
+                        let dArr = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
+                        dArr.forEach(d => { if (justDates.includes(d)) userPastReservations.push(d); });
+                    });
+                }
+
+                renderCalendar();
+                hideLoader();
+                showStep('step-booking');
+            } catch (e) { hideLoader(); alert('خطا در استخراج اطلاعات تقویم.'); console.error(e); }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            selectedNewDates = [];
+
+            window14Dates.forEach(d => {
+                let capInfo = dailyCapacities[d.date] || { total_capacity: 30, booked_capacity: 0 };
+                let available = capInfo.total_capacity - capInfo.booked_capacity;
+                let isPastBooked = userPastReservations.includes(d.date);
+                
+                let cardClass = 'cal-card';
+                let onclickEvent = '';
+                let statusText = `${available} ظرفیت`;
+
+                if (isPastBooked) {
+                    cardClass += ' past-booked';
+                    statusText = 'رزرو شما ✅';
+                } else if (available <= 0) {
+                    cardClass += ' full';
+                    statusText = 'تکمیل ❌';
+                } else {
+                    cardClass += ' available';
+                    onclickEvent = `onclick="toggleDate('${d.date}', this)"`;
+                }
+
+                grid.innerHTML += `
+                    <div class="${cardClass}" id="card_${d.date.replace(/\//g,'')}" ${onclickEvent}>
+                        <div class="cal-day">${d.dayName}</div>
+                        <div style="font-size:11px; margin-bottom:5px;">${d.date.substring(5)}</div>
+                        <div class="cal-cap">${statusText}</div>
+                    </div>
+                `;
+            });
+            updatePricing();
+        }
+
+        function toggleDate(dateStr, element) {
+            if(element.classList.contains('selected')) {
+                element.classList.remove('selected');
+                selectedNewDates = selectedNewDates.filter(d => d !== dateStr);
+            } else {
+                element.classList.add('selected');
+                selectedNewDates.push(dateStr);
+            }
+            updatePricing();
+            validateSubmitButton();
+        }
+
+        // =====================================
+        // ۳. جادوی محاسبه لایو قیمت
+        // =====================================
+        function getRatePerDay(daysCount) {
+            if (daysCount === 0) return 0;
+            if (daysCount >= 8) return 150;
+            return pricingTiers[daysCount];
+        }
+
+        function updatePricing() {
+            let activeBookedDays = userPastReservations.length;
+            let newSelectedDays = selectedNewDates.length;
+            
+            let totalDaysInWindow = activeBookedDays + newSelectedDays;
+            let applicableRate = getRatePerDay(totalDaysInWindow);
+            
+            let payableAmount = newSelectedDays * applicableRate;
+            let discountMsg = "";
+
+            if (isFirstEver && newSelectedDays > 0) {
+                payableAmount -= 50; 
+                discountMsg = "🎁 ۵۰ هزار تومان تخفیف اولین ورود به پانسیون راهینو اعمال شد!";
+            } else if (activeBookedDays > 0 && newSelectedDays > 0) {
+                discountMsg = `🎉 به دلیل ${activeBookedDays} روز رزرو قبلی، روزهای جدید با بالاترین تخفیف (نرخ ${applicableRate} تومانی) محاسبه شد!`;
+            }
+
+            finalAmountToPay = payableAmount > 0 ? payableAmount * 1000 : 0;
+
+            document.getElementById('newDaysCountTxt').innerText = `${newSelectedDays} روز`;
+            document.getElementById('pastDaysCountTxt').innerText = `${activeBookedDays} روز`;
+            document.getElementById('rateAppliedTxt').innerText = `${applicableRate} هزار تومان`;
+            document.getElementById('finalPriceTxt').innerText = finalAmountToPay.toLocaleString();
+            document.getElementById('discountNotice').innerText = discountMsg;
+        }
+
+        // =====================================
+        // ۴. هندل کردن فایل و قوانین
+        // =====================================
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('uploadText').innerText = `✅ فایل انتخاب شد: ${file.name}`;
+                document.getElementById('uploadBox').style.borderColor = "var(--success)";
+            }
+            validateSubmitButton();
+        }
+
+        document.getElementById('rulesCheckbox').addEventListener('change', validateSubmitButton);
+
+        function validateSubmitButton() {
+            const btn = document.getElementById('btnSubmitBooking');
+            if (selectedNewDates.length > 0 && selectedFile && document.getElementById('rulesCheckbox').checked) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        // =====================================
+        // ۵. ثبت نهایی و ارسال به ربات بله
+        // =====================================
+        async function submitBooking() {
+            if (selectedNewDates.length === 0) return alert('هیچ روزی انتخاب نشده است.');
+            
+            showLoader('در حال استعلام نهایی ظرفیت...');
+            try {
+                // الف: بررسی میلی‌ثانیه‌ای دیتابیس برای تداخل
+                const { data: capCheck } = await supabase.from('pan_daily_capacity').select('*').in('target_date', selectedNewDates);
+                
+                let isConflict = false;
+                capCheck?.forEach(c => {
+                    if(c.total_capacity - c.booked_capacity <= 0) isConflict = true;
+                });
+
+                if (isConflict) {
+                    hideLoader();
+                    alert('⚠️ متاسفانه در همین لحظه یک نفر ظرفیت یکی از روزهای انتخابی شما را پر کرد! صفحه بروزرسانی می‌شود.');
+                    await initializeBookingEngine();
+                    return;
+                }
+
+                showLoader('در حال ارسال فیش و رزرو قطعی...');
+
+                // ب: ثبت رکورد در دیتابیس (بدون عکس)
+                const { error: insertErr } = await supabase.from('pan_reservations').insert([{
+                    phone_number: currentUser.phone_number,
+                    reserved_dates: JSON.stringify(selectedNewDates),
+                    paid_amount: finalAmountToPay,
+                    receipt_base64: "DirectToBot" // نشانه اینکه مستقیم رفته بله
+                }]);
+                if(insertErr) throw insertErr;
+
+                // ج: آپدیت ظرفیت‌ها در دیتابیس
+                for (let dateStr of selectedNewDates) {
+                    let currentBooked = dailyCapacities[dateStr]?.booked_capacity || 0;
+                    let currentTotal = dailyCapacities[dateStr]?.total_capacity || 30;
+                    
+                    await supabase.from('pan_daily_capacity').upsert({
+                        target_date: dateStr,
+                        total_capacity: currentTotal,
+                        booked_capacity: currentBooked + 1
+                    });
+                }
+
+                // د: ارسال مستقیم عکس به ربات بله (بدون درگیری بک‌اند)
+                await sendFileToBaleBot();
+
+                hideLoader();
+                alert('🎉 رزرو شما با موفقیت قطعی شد و رسید برای مدیریت ارسال گردید.\nبه خانواده پانسیون راهینو خوش آمدید!');
+                window.location.reload(); // رفرش تمیز صفحه
+                
+            } catch (e) { hideLoader(); alert('خطا در ثبت نهایی!'); console.error(e); }
+        }
+
+        async function sendFileToBaleBot() {
+            if (!BALE_BOT_TOKEN || !ADMIN_CHAT_ID || !selectedFile) return;
+
+            const captionText = `🚨 رزرو جدید پانسیون 🚨\n\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان\n✅ وضعیت: تایید خودکار و کسر ظرفیت`;
+
+            const formData = new FormData();
+            formData.append('chat_id', ADMIN_CHAT_ID);
+            formData.append('photo', selectedFile);
+            formData.append('caption', captionText);
+
+            try {
+                // ارسال مستقیم درخواست POST به API بله
+                await fetch(`https://tapi.bale.ai/bot${BALE_BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (err) {
+                console.error("خطا در ارسال به بله: ", err);
+                // حتی اگه ربات خطا بده (مثلا فیلترینگ مرورگر)، رزرو تو دیتابیس ثبت شده
+            }
+        }
+    </script>
+</body>
+</html>
