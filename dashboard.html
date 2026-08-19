@@ -194,12 +194,22 @@
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
             
-            // ساخت آرایه ۳ روز گذشته برای چک کردن گزارش‌ها (به ترتیب از دیروز، پریروز، پس‌پریروز)
+            // 🧠 تابع مبدل تاریخ به شمسی استاندارد (اعداد انگلیسی، فرمت 1405/04/20)
+            function getShamsiDateString(dateObj) {
+                return new Intl.DateTimeFormat('fa-IR-u-nu-latn', {
+                    calendar: 'persian',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(dateObj);
+            }
+
+            // 🧠 ساخت آرایه ۳ روز گذشته با تاریخ دقیق شمسی
             const past3Days = [];
             for(let i = 1; i <= 3; i++) {
                 let d = new Date();
                 d.setDate(d.getDate() - i);
-                past3Days.push(d.toISOString().split('T')[0]);
+                past3Days.push(getShamsiDateString(d)); 
             }
 
             // ۱. دریافت فقط دانش‌آموزان فعالی که اشتراک مشاوره دارند
