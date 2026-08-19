@@ -92,7 +92,9 @@
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         // 🚨 کلید سرویس سوپابیس خودت رو اینجا قرار بده
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 💡 اسم متغیر تغییر کرد تا با کتابخانه اصلی تداخل نداشته باشد
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let capacitiesData = {};
 
@@ -109,7 +111,7 @@
         // ۱. تایید کاربران
         // ==========================
         async function loadPendingUsers() {
-            const { data } = await supabase.from('pan_users').select('*').eq('status', 'pending');
+            const { data } = await supabaseClient.from('pan_users').select('*').eq('status', 'pending');
             const list = document.getElementById('pendingUsersList');
             if(!data || data.length === 0) { list.innerHTML = '<p style="color:var(--success);">هیچ درخواست جدیدی وجود ندارد.</p>'; return; }
             
@@ -128,7 +130,7 @@
         }
 
         async function updateUserStatus(phone, status) {
-            await supabase.from('pan_users').update({ status: status }).eq('phone_number', phone);
+            await supabaseClient.from('pan_users').update({ status: status }).eq('phone_number', phone);
             alert(status === 'approved' ? 'کاربر تایید شد.' : 'کاربر رد شد.');
             loadPendingUsers();
         }
@@ -141,18 +143,17 @@
         }
 
         async function loadCapacities() {
-            // ساخت بازه ۱۴ روز آینده
             let dates14 = [];
             for(let i=0; i<14; i++) {
                 let d = new Date(); d.setDate(d.getDate() + i);
                 dates14.push(getShamsiDate(d));
             }
 
-            const { data } = await supabase.from('pan_daily_capacity').select('*').in('target_date', dates14);
+            const { data } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dates14);
             data?.forEach(d => capacitiesData[d.target_date] = d);
 
             document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
-                let totalCap = capacitiesData[date]?.total_capacity ?? 30; // ظرفیت پیش‌فرض 30
+                let totalCap = capacitiesData[date]?.total_capacity ?? 30; 
                 let bookedCap = capacitiesData[date]?.booked_capacity ?? 0;
                 return `
                     <div class="cap-card">
@@ -177,8 +178,8 @@
                     booked_capacity: capacitiesData[dateStr]?.booked_capacity || 0
                 });
             }
-            // استفاده از upsert برای بروزرسانی یا ایجاد رکورد جدید
-            const { error } = await supabase.from('pan_daily_capacity').upsert(updates);
+            
+            const { error } = await supabaseClient.from('pan_daily_capacity').upsert(updates);
             if(error) alert('خطا در ذخیره!'); else alert('✅ ظرفیت‌ها با موفقیت بروزرسانی شدند.');
             loadCapacities();
         }
@@ -187,7 +188,7 @@
         // ۳. تاریخچه رزروها
         // ==========================
         async function loadReservations() {
-            const { data } = await supabase.from('pan_reservations').select('*, pan_users(full_name)').order('created_at', {ascending: false}).limit(50);
+            const { data } = await supabaseClient.from('pan_reservations').select('*, pan_users(full_name)').order('created_at', {ascending: false}).limit(50);
             const list = document.getElementById('reservationsList');
             if(!data || data.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">هنوز رزروی ثبت نشده.</p>'; return; }
 
