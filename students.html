@@ -93,19 +93,30 @@
         .mood-bar { display: flex; width: 100%; height: 12px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
         .mood-segment { height: 100%; display: flex; justify-content: center; align-items: center; font-size: 10px; color: white; font-weight: bold; transition: 0.5s;}
 
-        .ai-oracle-box { background: linear-gradient(180deg, rgba(119, 187, 169, 0.05) 0%, transparent 100%); border: 1px solid var(--primary); border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 0 30px var(--primary-fade); }
-        .ai-title { color: var(--primary); font-size: 15px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .ai-screen { background: #000; border: 1px solid #1a2e28; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 13px; color: var(--primary); min-height: 140px; line-height: 1.8; position: relative; }
-        .cursor { display: inline-block; width: 8px; height: 15px; background: var(--primary); animation: blink 1s infinite; vertical-align: middle; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        
-        .btn-oracle { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: var(--bg-color); padding: 12px 20px; border-radius: 12px; font-weight: 900; border: none; cursor: pointer; width: 100%; margin-top: 15px; transition: 0.2s; }
-        .btn-oracle:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
-
-        .chat-box { width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px; border-radius: 12px; font-size: 13px; resize: vertical; min-height: 90px; outline: none; transition: 0.3s; }
-        .chat-box:focus { border-color: var(--accent); }
-        .btn-send { background: var(--accent); color: var(--bg-color); padding: 10px 20px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s;}
-        .btn-send:hover { background: var(--accent-hover); }
+        /* CSS مربوط به اکاردئون گزارش‌ها */
+        .history-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 15px; overflow: hidden; transition: 0.3s; }
+        .history-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .history-header:hover { background: var(--primary-fade); }
+        .date-badge { background: var(--primary); color: var(--bg-color); padding: 5px 12px; border-radius: 10px; font-size: 13px; font-weight: bold; }
+        .summary-stats { display: flex; gap: 15px; font-size: 12px; font-weight: bold; color: var(--text-muted); }
+        .summary-stats span { display: flex; align-items: center; gap: 5px; }
+        .history-body { display: none; padding: 20px; border-top: 1px dashed var(--border-color); background: var(--surface); }
+        .history-card.active .history-body { display: block; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title { font-size: 13px; font-weight: bold; color: var(--text-muted); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; display: block; width: 4px; height: 12px; background: var(--accent); border-radius: 10px; }
+        .life-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .life-widget { background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 5px; }
+        .life-widget-title { font-size: 11px; color: var(--text-muted); font-weight: bold; }
+        .life-widget-value { font-size: 14px; font-weight: 900; color: var(--primary); display: flex; justify-content: space-between;}
+        .course-list { display: flex; flex-direction: column; gap: 8px; }
+        .course-item { background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .c-name { font-size: 13px; font-weight: 900; color: var(--primary); border-bottom: 1px dashed var(--border-color); padding-bottom: 6px; }
+        .c-stats { display: flex; justify-content: space-between; gap: 5px; }
+        .c-stats span { font-size: 11px; font-weight: bold; padding: 4px 6px; border-radius: 6px; flex: 1; text-align: center; }
+        .stat-edu { background: rgba(99, 152, 137, 0.08); color: var(--primary); border: 1px solid rgba(99, 152, 137, 0.15); }
+        .stat-std { background: rgba(16, 185, 129, 0.08); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.15); }
+        .stat-tst { background: rgba(217, 119, 6, 0.08); color: var(--warning); border: 1px solid rgba(217, 119, 6, 0.15); }
 
         .modal-content::-webkit-scrollbar { width: 8px; }
         .modal-content::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 10px; }
@@ -114,6 +125,7 @@
 
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 3000; flex-direction: column; transition: 0.3s opacity; }
         .spinner { font-size: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         @media (max-width: 992px) {
             body { flex-direction: column; overflow-y: auto; }
@@ -149,7 +161,6 @@
             
             .profile-body { grid-template-columns: 1fr; padding: 15px; gap: 15px; padding-bottom: 80px; }
             .col-span-2, .col-span-3 { grid-column: span 1; }
-            .ai-oracle-box { margin-bottom: 30px; }
         }
     </style>
 </head>
@@ -195,6 +206,7 @@
                     <div class="info-row"><span class="info-label">موبایل پدر:</span><span class="info-value" id="infoFather">-</span></div>
                     <div class="info-row"><span class="info-label">موبایل مادر:</span><span class="info-value" id="infoMother">-</span></div>
                     <div class="info-row"><span class="info-label">استان و شهر:</span><span class="info-value" id="infoCity">-</span></div>
+                    <div class="info-row"><span class="info-label">پایه و رشته:</span><span class="info-value" id="infoGradeMajorModal">-</span></div>
                     <div class="info-row"><span class="info-label">مدرسه:</span><span class="info-value" id="infoSchool">-</span></div>
                 </div>
 
@@ -254,21 +266,11 @@
                         <div class="mood-bar" id="moodBarContainer"></div>
                     </div>
                 </div>
-
-                <div class="info-card">
-                    <div class="card-title" style="color: var(--accent);">💬 بیسیم مستقیم (پین به داشبورد)</div>
-                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">این پیام دقیقاً بالای داشبورد دانش‌آموز نمایش داده می‌شود.</p>
-                    <textarea class="chat-box" id="directMsgBox" placeholder="پیام یا دستور استراتژیک برای این هفته..."></textarea>
-                    <button class="btn-send" onclick="sendDirectMessage()">ارسال فرمان 🚀</button>
-                </div>
-
-                <div class="ai-oracle-box col-span-2">
-                    <div class="ai-title">🔮 هوش مصنوعی (گوی بلورین پیش‌بینی)</div>
-                    <div class="ai-screen" id="aiScreen">
-                        <span style="color: #4d7a6e;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span>
-                        <span class="cursor" id="cursorBlock"></span>
-                    </div>
-                    <button class="btn-oracle" onclick="summonAI()">اسکن ۳۰ روزه و پیش‌بینی رتبه کنکور ⚡</button>
+                
+                <!-- بخش جدید تاریخچه گزارش‌ها -->
+                <div class="info-card col-span-3">
+                    <div class="card-title">📖 دفترچه گزارش‌های روزانه (آرشیو)</div>
+                    <div id="modalHistoryContainer" style="max-height: 500px; overflow-y: auto; padding-right: 5px; margin-top: 5px;"></div>
                 </div>
 
             </div>
@@ -316,10 +318,19 @@
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn';
         Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+        const chartColors = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
         let allStudentsData = [];
         let currentOpenNid = null;
         let activeComboChart = null;
+
+        // تبدیل تاریخ میلادی به شمسی
+        function toShamsi(dateStr) {
+            if(!dateStr) return '-';
+            try {
+                return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(dateStr));
+            } catch(e) { return dateStr; }
+        }
 
         window.onload = async function() {
             document.getElementById('authLoader').style.opacity = '0';
@@ -400,8 +411,7 @@
             currentOpenNid = nationalId;
             document.getElementById('studentModal').style.display = 'flex';
             document.getElementById('modalLoader').style.display = 'flex';
-            document.getElementById('aiScreen').innerHTML = '<span style="color: #4d7a6e;">// دیتای دانش‌آموز آماده‌ی استخراج و تحلیل است. دکمه زیر را فشار دهید...</span><span class="cursor" id="cursorBlock"></span>';
-
+            
             try {
                 let student = allStudentsData.find(s => s.national_id === nationalId);
                 
@@ -416,6 +426,7 @@
                 document.getElementById('modalName').innerText = student.full_name || 'ناشناس';
                 document.getElementById('modalNid').innerText = `کدملی: ${student.national_id}`;
                 document.getElementById('modalGradeInfo').innerText = `${student.grade || '-'} ${student.major || '-'}`;
+                document.getElementById('infoGradeMajorModal').innerText = `${student.grade || '-'} ${student.major || '-'}`;
                 document.getElementById('modalWakeStreak').innerText = `🔥 زنجیره بیداری: ${student.wake_streak || 0} روز`;
                 
                 document.getElementById('infoMobile').innerText = student.phone_number || '-';
@@ -426,12 +437,19 @@
 
                 document.getElementById('infoWallet').innerText = student.wallet_balance ? `${student.wallet_balance.toLocaleString()} تومان` : '۰ تومان';
                 document.getElementById('infoReferral').innerText = student.referral_code || '-';
-                document.getElementById('infoInvitedBy').innerText = student.invited_by || '-';
+                
+                // جستجوی نام شخص دعوت کننده بر اساس کد معرف
+                if (student.invited_by) {
+                    let { data: invData } = await supabaseClient.from('students').select('full_name').eq('referral_code', student.invited_by).maybeSingle();
+                    document.getElementById('infoInvitedBy').innerText = (invData && invData.full_name) ? invData.full_name : student.invited_by;
+                } else {
+                    document.getElementById('infoInvitedBy').innerText = '-';
+                }
                 
                 if (subsRes.data && subsRes.data.length > 0) {
                     let s = subsRes.data[0];
                     document.getElementById('infoSubStatus').innerText = `فعال (${s.service_category})`;
-                    document.getElementById('infoExpire').innerText = s.end_date || '-';
+                    document.getElementById('infoExpire').innerText = s.end_date ? toShamsi(s.end_date) : '-';
                 } else {
                     document.getElementById('infoSubStatus').innerText = 'بدون اشتراک فعال';
                     document.getElementById('infoExpire').innerText = '-';
@@ -450,11 +468,16 @@
                     let classesHtml = '-';
                     try {
                         let cls = typeof vipRes.data.class_schedule === 'string' ? JSON.parse(vipRes.data.class_schedule) : vipRes.data.class_schedule;
-                        if(cls && cls.length > 0) {
-                            classesHtml = cls.map(c => `<span class="badge-tag">${c.subject} (${c.teacher})</span>`).join('');
+                        if(cls && Array.isArray(cls) && cls.length > 0) {
+                            classesHtml = cls.map(c => {
+                                if(typeof c === 'string') return `<span class="badge-tag">${c}</span>`;
+                                let name = c.subject || '';
+                                let teacher = c.teacher ? `(${c.teacher})` : '';
+                                return name ? `<span class="badge-tag">${name} ${teacher}</span>` : '';
+                            }).join('');
                         }
-                    } catch(e) {}
-                    document.getElementById('vipClasses').innerHTML = classesHtml;
+                    } catch(e) { console.error("Classes parse error:", e); }
+                    document.getElementById('vipClasses').innerHTML = classesHtml || '<span class="badge-tag">-</span>';
                 } else {
                     document.getElementById('vipExams').innerText = 'فرم پر نشده';
                     document.getElementById('vipStrong').innerText = '-';
@@ -564,6 +587,10 @@
                     document.getElementById('weekDangerBar').style.width = `0%`;
                 }
 
+                // رندر کردن تاریخچه گزارش‌های روزانه
+                let historyReports = [...(reportsRes.data || [])].reverse();
+                renderHistoryCards(historyReports);
+
                 document.getElementById('modalLoader').style.display = 'none';
 
             } catch(err) {
@@ -574,66 +601,114 @@
             }
         }
 
+        function renderHistoryCards(reports) {
+            const container = document.getElementById('modalHistoryContainer');
+            container.innerHTML = '';
+            
+            if(!reports || reports.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">گزارشی ثبت نشده است.</div>';
+                return;
+            }
+
+            reports.forEach((report, index) => {
+                let courses = report.courses || [];
+                let life = report.lifestyle || {};
+                
+                let totalStudy = 0; let totalTests = 0;
+                let chartLabels = []; let chartData = [];
+
+                let coursesHtml = courses.map(c => {
+                    let cTime = (c.edu || 0) + (c.study || 0);
+                    totalStudy += cTime;
+                    totalTests += (c.tests || 0);
+                    chartLabels.push(c.name);
+                    chartData.push(cTime);
+                    return `
+                    <div class="course-item">
+                        <span class="c-name">${c.name}</span>
+                        <div class="c-stats">
+                            <span class="stat-edu">کلاس: ${c.edu || 0}</span>
+                            <span class="stat-std">مطالعه: ${c.study || 0}</span>
+                            <span class="stat-tst">تست: ${c.tests || 0}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                let moodEmoji = life.mood === 'عالی' ? '🤩' : (life.mood === 'خوب' ? '😊' : (life.mood === 'بد' ? '😞' : '🙂'));
+
+                let sleepSvg = `
+                <div style="text-align:center; padding: 10px 0;">
+                    <span style="font-size:12px; color:var(--text-muted); font-weight:bold;">خواب: ${life.sleepLast || '-'} 🌙 &nbsp; | &nbsp; ☀️ بیداری: ${life.wakeToday || '-'}</span>
+                </div>`;
+
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.innerHTML = `
+                    <div class="history-header" onclick="toggleHistoryCard(this, 'hist_chart_${index}')">
+                        <div class="date-badge">${report.report_date}</div>
+                        <div class="summary-stats">
+                            <span>⏱️ ${totalStudy} ساعت</span>
+                            <span>🎯 ${totalTests} تست</span>
+                            <span>${moodEmoji}</span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        ${totalStudy > 0 ? `
+                        <div class="section-title">نمودار سهم دروس</div>
+                        <div style="height:200px; width:100%; display:flex; justify-content:center; margin-bottom:15px;">
+                            <div style="position:relative; width:200px; height:200px;"><canvas id="hist_chart_${index}"></canvas></div>
+                        </div>` : ''}
+
+                        <div class="section-title">ریکاوری و لایف‌استایل</div>
+                        ${sleepSvg}
+                        <div class="life-grid">
+                            <div class="life-widget"><span class="life-widget-title">فضای مجازی</span><span class="life-widget-value">${life.phone || 0} h</span></div>
+                            <div class="life-widget"><span class="life-widget-title">چرت روزانه</span><span class="life-widget-value">${life.nap || 0} h</span></div>
+                        </div>
+
+                        <div class="section-title">ریز عملکرد درسی</div>
+                        <div class="course-list">${coursesHtml || '<span style="font-size:12px; color:var(--text-muted);">درسی ثبت نشده</span>'}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                if (totalStudy > 0) {
+                    card.dataset.chartLabels = JSON.stringify(chartLabels);
+                    card.dataset.chartData = JSON.stringify(chartData);
+                }
+            });
+        }
+        
+        function toggleHistoryCard(headerEl, chartId) {
+            const card = headerEl.parentElement;
+            const isActive = card.classList.contains('active');
+            document.querySelectorAll('.history-card').forEach(c => c.classList.remove('active'));
+            if (!isActive) {
+                card.classList.add('active');
+                let canvas = document.getElementById(chartId);
+                if (canvas && !canvas.classList.contains('rendered')) {
+                    let labels = JSON.parse(card.dataset.chartLabels);
+                    let data = JSON.parse(card.dataset.chartData);
+                    new Chart(canvas.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: chartColors.slice(0, data.length),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn', size: 10 }, color: '#94a3b8' } } } }
+                    });
+                    canvas.classList.add('rendered'); 
+                }
+            }
+        }
+
         function closeProfile() {
             document.getElementById('studentModal').style.display = 'none';
             currentOpenNid = null;
-            document.getElementById('directMsgBox').value = '';
-        }
-
-        function summonAI() {
-            const screen = document.getElementById('aiScreen');
-            screen.innerHTML = '<span class="cursor" id="cursorBlock"></span>'; 
-            
-            const promptResponse = `> Fetching Data Streams... [OK]
-> Analyzing Subject Tiers... [OK]
-> Running Predictive Algorithms... [OK]
-
---- REPORT GENERATED ---
-[!] سیستم هوش مصنوعی با دیتای ۳۶۰ درجه این دانش‌آموز همگام شد.
-[!] میانگین ساعت مطالعه و روند پیشرفت در وضعیت سبز قرار دارد.
-
-[🌟] پیش‌بینی ماشین:
-با توجه به دیتای فعلی، رتبه احتمالی بین ۱۵۰۰ تا ۳۰۰۰ در منطقه برآورد می‌شود.
-
-[🛠] پیشنهاد اکشن برای مشاور:
-۱. در دروس ضعیف، حجم تست‌ها افزایش یابد.
-۲. برنامه خواب و بیداری تثبیت شود.
-`;
-            
-            let i = 0;
-            const typeWriter = setInterval(() => {
-                if (i < promptResponse.length) {
-                    let currentHtml = screen.innerHTML;
-                    currentHtml = currentHtml.replace('<span class="cursor" id="cursorBlock"></span>', '');
-                    let char = promptResponse.charAt(i) === '\n' ? '<br>' : promptResponse.charAt(i);
-                    screen.innerHTML = currentHtml + char + '<span class="cursor" id="cursorBlock"></span>';
-                    i++;
-                } else {
-                    clearInterval(typeWriter);
-                }
-            }, 30);
-        }
-
-        async function sendDirectMessage() {
-            const msg = document.getElementById('directMsgBox').value.trim();
-            if(!msg) return alert('متن پیام خالی است!');
-            if(!currentOpenNid) return;
-
-            try {
-                const { error } = await supabaseClient.from('messages').insert([{
-                    student_nid: currentOpenNid,
-                    title: 'پشتیبانی راهینو 💬',
-                    body: msg,
-                    is_read: false
-                }]);
-                if (error) throw error;
-                
-                alert('فرمان صادر شد! پیام روی داشبورد دانش‌آموز پین شد. 🚀');
-                document.getElementById('directMsgBox').value = '';
-            } catch(e) {
-                console.error(e);
-                alert('خطا در ارسال پیام: ' + e.message);
-            }
         }
 
         function handleLogout() { alert("خروج از سیستم..."); }
