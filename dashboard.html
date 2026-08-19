@@ -8,23 +8,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* 🎨 پالت رنگی اختصاصی مدیریت راهینو (تاریک و لوکس) */
         :root { 
             --bg-dark: #0a0f0d; 
             --surface-dark: #121a18; 
             --surface-light: #1b2624; 
             --border-color: #263633;
-            
             --primary: #639889; 
             --primary-hover: #4d7a6e;
             --primary-glow: rgba(99, 152, 137, 0.15);
-            
             --accent: #d9858a; 
-            
             --success: #10b981; 
             --warning: #f59e0b; 
             --danger: #ef4444;
-            
             --text-main: #f1f5f9; 
             --text-muted: #8b9d99;
         }
@@ -32,11 +27,9 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* هدر مخصوص موبایل (در دسکتاپ مخفی است) */
         .mobile-header { display: none; }
         .sidebar-overlay { display: none; }
 
-        /* منوی کناری */
         .sidebar { width: 280px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; box-shadow: -5px 0 25px rgba(0,0,0,0.2); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .brand { text-align: center; font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 40px; letter-spacing: 1px; }
         .brand span { color: var(--primary); }
@@ -46,21 +39,16 @@
         .nav-item.active { background: linear-gradient(90deg, var(--primary-glow) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
         
         .logout-btn { margin-top: auto; color: var(--accent); border-top: 1px solid var(--border-color); padding-top: 20px; }
-        .logout-btn:hover { background: rgba(217, 133, 138, 0.08); color: var(--accent); }
 
-        /* محتوای اصلی */
         .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); }
         .page-header { margin-bottom: 35px; display: flex; justify-content: space-between; align-items: center; }
         .page-title { font-size: 26px; font-weight: 900; color: var(--text-main); }
         .date-display { background: var(--surface-light); padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: bold; color: var(--primary); border: 1px dashed var(--primary); box-shadow: 0 5px 15px var(--primary-glow); }
 
-        /* کارت‌های آماری */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 40px; }
         .stat-card { background: var(--surface-dark); border: 1px solid var(--border-color); padding: 25px; border-radius: 20px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-3px); border-color: #384d49; }
         .stat-title { font-size: 14px; color: var(--text-muted); font-weight: bold; margin-bottom: 10px; }
         .stat-value { font-size: 36px; font-weight: 900; color: var(--text-main); }
-        
         .stat-card.green { border-bottom: 4px solid var(--success); }
         .stat-card.green .stat-value { color: var(--success); }
         .stat-card.red { border-bottom: 4px solid var(--danger); }
@@ -68,13 +56,15 @@
         .stat-card.blue { border-bottom: 4px solid var(--primary); }
         .stat-card.blue .stat-value { color: var(--primary); }
         
-        /* جدول رادار */
+        /* اصلاح جدول رادار برای ستون‌های جدید */
         .list-container { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
         .list-header { background: var(--surface-light); padding: 18px 25px; font-size: 14px; font-weight: bold; display: flex; border-bottom: 1px solid var(--border-color); color: var(--primary); }
         .list-row { padding: 18px 25px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 14px; transition: 0.2s; }
         .list-row:hover { background: rgba(255,255,255,0.02); }
+        
         .col-name { flex: 2; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        .col-time { flex: 1; color: var(--text-muted); font-size: 13px; }
+        .col-time { flex: 1.5; color: var(--text-muted); font-size: 13px; }
+        .col-reports { flex: 1; text-align: center; font-size: 18px; letter-spacing: 2px;}
         .col-status { flex: 1; text-align: left; }
         
         .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
@@ -89,55 +79,25 @@
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ========================================= */
-        /* 📱 کدهای ریسپانسیو (سازگاری کامل با موبایل) */
-        /* ========================================= */
         @media (max-width: 992px) {
             body { flex-direction: column; overflow-y: auto; }
-            
-            /* هدر موبایل */
-            .mobile-header { 
-                display: flex; justify-content: space-between; align-items: center; 
-                padding: 15px 20px; background: var(--surface-dark); 
-                border-bottom: 1px solid var(--border-color); z-index: 900; position: sticky; top: 0;
-            }
-            .mobile-header .brand { margin: 0; font-size: 18px; }
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 900; position: sticky; top: 0; }
             .mobile-menu-btn { background: transparent; border: none; color: var(--primary); font-size: 26px; cursor: pointer; }
-            
-            /* مخفی کردن و کشویی کردن سایدبار */
-            .sidebar { 
-                position: fixed; right: -300px; top: 0; height: 100vh; width: 260px; 
-                box-shadow: none; padding-top: 50px; 
-            }
+            .sidebar { position: fixed; right: -300px; top: 0; height: 100vh; width: 260px; box-shadow: none; padding-top: 50px; }
             .sidebar.active { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
-            
-            /* پرده تاریک پس‌زمینه وقتی منو باز است */
-            .sidebar-overlay { 
-                display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
-                backdrop-filter: blur(3px); z-index: 999; 
-            }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; }
             .sidebar-overlay.active { display: block; }
 
-            /* اصلاح محتوای اصلی */
             .main-content { padding: 20px; flex: unset; overflow-y: visible; }
             .page-header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
-            .page-title { font-size: 22px; }
-            
-            /* ستونی کردن کارت‌های آمار */
             .stats-grid { grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
-            .stat-card { padding: 20px; }
             
-            /* تبدیل جدول به کارت در موبایل */
             .list-header { display: none; }
-            .list-container { background: transparent; border: none; box-shadow: none; }
-            .list-row { 
-                flex-direction: column; align-items: flex-start; gap: 12px; 
-                background: var(--surface-dark); border: 1px solid var(--border-color); 
-                border-radius: 16px; margin-bottom: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            }
-            .col-name { width: 100%; font-size: 16px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
-            .col-time, .col-status { width: 100%; text-align: right; }
-            .col-status { text-align: left; margin-top: -30px; } /* قرار دادن وضعیت روبروی جزئیات */
+            .list-row { flex-direction: column; align-items: flex-start; gap: 12px; background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 15px; padding: 20px; }
+            .col-name { width: 100%; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
+            .col-time, .col-reports, .col-status { width: 100%; text-align: right; }
+            .col-reports { font-size: 14px; margin-top: 5px;}
+            .col-status { text-align: left; margin-top: -35px; } 
         }
     </style>
 </head>
@@ -145,16 +105,13 @@
 
     <div class="loader-overlay" id="authLoader">
         <div class="spinner"></div>
-        <h3 style="color: var(--primary); font-size: 16px;">در حال بارگذاری رادار زنده...</h3>
+        <h3 style="color: var(--primary); font-size: 16px;">در حال بارگذاری رادار قطب‌نما...</h3>
     </div>
 
-    <!-- 📱 هدر موبایل (فقط در گوشی دیده می‌شود) -->
     <div class="mobile-header">
         <div class="brand">قطب‌نمای <span>راهینو</span></div>
         <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
     </div>
-
-    <!-- پرده تاریک برای بستن منو با کلیک روی فضای خالی -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <div class="sidebar" id="sidebar">
@@ -168,74 +125,58 @@
         <a href="budget-mapper.html" class="nav-item"><span>🎯</span> رادار تطبیق بودجه</a>
         <a href="exam-surgery.html" class="nav-item"><span>🔬</span> جراحی کارنامه</a>
         <a href="settings.html" class="nav-item"><span>⚙️</span> تنظیمات و ترمینال هسته</a>
-        
         <a href="#" class="nav-item logout-btn" onclick="handleLogout()"><span>🚪</span> خروج از سیستم</a>
     </div>
 
     <div class="main-content">
-        
         <div class="page-header">
-            <h1 class="page-title">نمای کلی سیستم</h1>
+            <h1 class="page-title">داشبورد مانیتورینگ مشاوره</h1>
             <div class="date-display" id="todayDate">...</div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card blue">
-                <div class="stat-title">کل دانش‌آموزان فعال</div>
+                <div class="stat-title">مشاوره‌های فعال (قطب‌نما)</div>
                 <div class="stat-value" id="statTotal">-</div>
             </div>
             <div class="stat-card green">
-                <div class="stat-title">بیدار شده‌ها (رادار ۷ صبح امروز)</div>
+                <div class="stat-title">بیدار شده‌های امروز</div>
                 <div class="stat-value" id="statAwake">-</div>
             </div>
             <div class="stat-card red">
-                <div class="stat-title">خواب‌مونده‌ها / هشدار انضباطی</div>
+                <div class="stat-title">خواب‌مونده‌های امروز</div>
                 <div class="stat-value" id="statAsleep">-</div>
             </div>
         </div>
 
-        <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 16px;">📡 گزارش زنده رادار بیداری (7 AM Club)</h3>
+        <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 16px;">📡 گزارش زنده و وضعیت ۳ روز اخیر (مشاوره)</h3>
         <div class="list-container">
             <div class="list-header">
                 <div class="col-name">نام دانش‌آموز</div>
-                <div class="col-time">جزئیات غیبت‌ها</div>
+                <div class="col-time">جزئیات خواب و بیداری</div>
+                <div class="col-reports">گزارش ۳ روز اخیر</div>
                 <div class="col-status">وضعیت امروز</div>
             </div>
             
             <div id="radarList">
-                <!-- Data will be injected here -->
+                <!-- دیتا تزریق می‌شود -->
             </div>
         </div>
-
     </div>
 
     <script>
-        // ==========================================
-        // 📱 کنترل منوی موبایل
-        // ==========================================
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('sidebarOverlay').classList.toggle('active');
-            
-            // مخفی کردن لوگوی داخل سایدبار در حالت موبایل برای زیبایی بیشتر
             const brand = document.querySelector('.sidebar .brand');
-            if(window.innerWidth <= 992) {
-                brand.style.display = 'none';
-            }
+            if(window.innerWidth <= 992) brand.style.display = 'none';
         }
 
-        // ==========================================
-        // 🔗 تنظیمات اتصال سوپابیس
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            global: {
-                headers: {
-                    Authorization: `Bearer ${SUPABASE_KEY}`
-                }
-            }
+            global: { headers: { Authorization: `Bearer ${SUPABASE_KEY}` } }
         });
 
         window.onload = async function() {
@@ -244,53 +185,108 @@
                 window.location.replace('login.html'); 
                 return;
             }
-
             document.getElementById('todayDate').innerText = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
             
             await fetchDashboardData();
         };
 
         async function fetchDashboardData() {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
             
-            const { data: students, error } = await supabaseClient
+            // 🧠 ساخت آرایه ۳ روز گذشته برای چک کردن گزارش‌ها (به ترتیب از دیروز، پریروز، پس‌پریروز)
+            const past3Days = [];
+            for(let i = 1; i <= 3; i++) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                past3Days.push(d.toISOString().split('T')[0]);
+            }
+
+            // ۱. دریافت فقط دانش‌آموزان فعالی که اشتراک مشاوره دارند
+            const { data: rawStudents, error: stError } = await supabaseClient
                 .from('students')
-                .select('*')
-                .eq('status', 'active');
+                .select('*, subscriptions!inner(service_category, status)')
+                .eq('status', 'active')
+                .eq('subscriptions.service_category', 'consult')
+                .eq('subscriptions.status', 'active');
                 
-            if(error) {
-                console.error("خطا در دریافت اطلاعات:", error);
+            if(stError) {
+                console.error("خطا در دریافت لیست مشاوره:", stError);
                 document.getElementById('authLoader').style.display = 'none';
                 return;
             }
 
-            let total = students ? students.length : 0;
+            // حذف رکوردهای تکراری در صورت داشتن چند اشتراک
+            const uniqueMap = new Map();
+            rawStudents.forEach(st => uniqueMap.set(st.national_id, st));
+            const consultStudents = Array.from(uniqueMap.values());
+
+            // ۲. استخراج Chat ID ها و دریافت یکباره گزارشات ۳ روز اخیر برای همه
+            let chatIds = consultStudents.map(st => st.chat_id).filter(id => id);
+            let reportMap = {}; 
+            
+            if (chatIds.length > 0) {
+                const { data: reports, error: repError } = await supabaseClient
+                    .from('daily_reports')
+                    .select('chat_id, report_date')
+                    .in('chat_id', chatIds)
+                    .in('report_date', past3Days);
+                    
+                if(!repError && reports) {
+                    // گروه‌بندی تاریخ‌ها بر اساس هر چت آیدی
+                    reports.forEach(rep => {
+                        if(!reportMap[rep.chat_id]) reportMap[rep.chat_id] = new Set();
+                        reportMap[rep.chat_id].add(rep.report_date);
+                    });
+                }
+            }
+
+            // ۳. پردازش UI و آمار
+            let total = consultStudents.length;
             let wokeUpCount = 0;
             let oversleptCount = 0;
             let listHTML = '';
             
             if (total === 0) {
-                listHTML = `<div style="padding: 30px; text-align: center; color: var(--text-muted);">هیچ دانش‌آموز فعالی یافت نشد.</div>`;
+                listHTML = `<div style="padding: 30px; text-align: center; color: var(--text-muted);">هیچ دانش‌آموز فعالی در بخش مشاوره یافت نشد.</div>`;
             } else {
-                students.forEach(st => {
+                consultStudents.forEach(st => {
+                    // محاسبه وضعیت بیداری امروز
                     let isAwake = (st.last_wakeup_date === todayStr);
-                    
                     if (isAwake) wokeUpCount++;
                     else oversleptCount++;
+                    
+                    // محاسبه روزهای متوالی خواب موندن
+                    let consecSleep = st.consecutive_oversleeps || 0;
                     
                     let dotClass = isAwake ? 'dot-green' : 'dot-red';
                     let badgeClass = isAwake ? 'on-time' : 'late';
                     let statusText = isAwake ? 'بیدار و آماده ✅' : 'خواب مونده ❌';
-                    let oversleepTotal = st.oversleep_count || 0;
                     
-                    let detailText = isAwake ? `<span style="color:var(--success);">بیدار شده و در حال اجرا</span>` : `<span style="color:var(--warning);">غیبت‌های این ماه: ${oversleepTotal} از ۵</span>`;
-                    
-                    if(oversleepTotal >= 5) detailText = `<span style="color:var(--danger); font-weight:bold;">نیازمند اخراج! (پایان فرصت‌ها)</span>`;
+                    let detailText = isAwake 
+                        ? `<span style="color:var(--success);">بیدار شده و در حال اجرا</span>` 
+                        : (consecSleep > 0 ? `<span style="color:var(--danger); font-weight:bold;">${consecSleep} روز متوالی خواب‌مانده! ⚠️</span>` : `<span style="color:var(--warning);">خواب‌مونده امروز</span>`);
+
+                    // بررسی گزارشات ۳ روز اخیر (مربع‌های سبز و قرمز)
+                    let reportIndicators = "";
+                    if(st.chat_id) {
+                        past3Days.forEach(dateStr => {
+                            let hasReport = reportMap[st.chat_id] && reportMap[st.chat_id].has(dateStr);
+                            // 🟩 به معنی ارسال گزارش و 🟥 به معنی عدم ارسال
+                            reportIndicators += hasReport ? "🟩 " : "🟥 ";
+                        });
+                    } else {
+                        reportIndicators = `<span style="font-size:11px; color:var(--text-muted)">بدون چت‌آیدی</span>`;
+                    }
                     
                     listHTML += `
                         <div class="list-row">
-                            <div class="col-name"><span class="status-dot ${dotClass}"></span> ${st.full_name || 'ناشناس'} <span style="font-size: 11px; color: var(--text-muted);">(${st.grade || '-'} ${st.major || ''})</span></div>
+                            <div class="col-name">
+                                <span class="status-dot ${dotClass}"></span> ${st.full_name || 'ناشناس'} 
+                                <span style="font-size: 11px; color: var(--text-muted);">(${st.grade || '-'} ${st.major || ''})</span>
+                            </div>
                             <div class="col-time">${detailText}</div>
+                            <div class="col-reports" title="از راست به چپ: دیروز، پریروز، پس‌پریروز">${reportIndicators}</div>
                             <div class="col-status"><span class="status-badge ${badgeClass}">${statusText}</span></div>
                         </div>
                     `;
