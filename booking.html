@@ -160,13 +160,15 @@
         // تنظیمات امنیتی سوپابیس و ربات بله
         // ----------------------------------------------------
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 نکته مهم: اینجا باید کلید ANON (پابلیک) سوپابیس را قرار دهی، نه کلید سرویس!
-        const SUPABASE_ANON_KEY = 'eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 🚨 کلید ANON (پابلیک) سوپابیس را اینجا قرار دهی (نه کلید سرویس)
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        
+        // اصلاح نام متغیر سوپابیس برای جلوگیری از تداخل
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 🚨 اطلاعات ربات بله (برای دریافت مستقیم فیش‌ها)
-        const BALE_BOT_TOKEN = 'توکن_ربات_بله_را_اینجا_بگذار'; 
-        const ADMIN_CHAT_ID = 'آیدی_عددی_بله_خودت_را_اینجا_بگذار';
+        // 🚨 اطلاعات ربات بله
+        const BALE_BOT_TOKEN = '754843017:TBgCpaTuJg2yIlcBr_leWXwFZFth70FZj10'; 
+        const ADMIN_CHAT_ID = 'آ937884860';
 
         // ----------------------------------------------------
         // متغیرهای سراسری سیستم
@@ -174,8 +176,8 @@
         let currentUser = null;
         let window14Dates = [];
         let dailyCapacities = {};
-        let userPastReservations = []; // تاریخ‌هایی که قبلا در این بازه خریده
-        let selectedNewDates = []; // تاریخ‌هایی که الان تیک زده
+        let userPastReservations = []; 
+        let selectedNewDates = []; 
         let isFirstEver = false;
         let finalAmountToPay = 0;
         let selectedFile = null;
@@ -202,8 +204,7 @@
             
             showLoader('در حال استعلام هویت...');
             try {
-                // جستجو در جدول مستقل پانسیون
-                const { data, error } = await supabase.from('pan_users').select('*').eq('phone_number', phone).maybeSingle();
+                const { data, error } = await supabaseClient.from('pan_users').select('*').eq('phone_number', phone).maybeSingle();
                 
                 if (data) {
                     currentUser = data;
@@ -215,7 +216,6 @@
                         await initializeBookingEngine();
                     }
                 } else {
-                    // کاربر جدید است
                     hideLoader(); showStep('step-register');
                 }
             } catch (e) {
@@ -234,7 +234,7 @@
 
             showLoader('در حال ثبت پرونده...');
             try {
-                const { error } = await supabase.from('pan_users').insert([{
+                const { error } = await supabaseClient.from('pan_users').insert([{
                     phone_number: phone, full_name: name, grade: grade, major: major, school: school, status: 'pending'
                 }]);
                 
@@ -258,7 +258,6 @@
         async function initializeBookingEngine() {
             showLoader('در حال دریافت ظرفیت‌های زنده...');
             
-            // تولید بازه ۱۴ روزه
             window14Dates = [];
             for(let i=0; i<14; i++) {
                 let d = new Date(); d.setDate(d.getDate() + i);
@@ -267,15 +266,13 @@
             let justDates = window14Dates.map(d => d.date);
 
             try {
-                // الف: استخراج ظرفیت‌های کل سالن
-                const { data: capData } = await supabase.from('pan_daily_capacity').select('*').in('target_date', justDates);
+                const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
                 capData?.forEach(d => dailyCapacities[d.target_date] = d);
 
-                // ب: استخراج رزروهای قبلی همین شخص
-                const { data: resData } = await supabase.from('pan_reservations').select('reserved_dates').eq('phone_number', currentUser.phone_number);
+                const { data: resData } = await supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', currentUser.phone_number);
                 
                 userPastReservations = [];
-                isFirstEver = (!resData || resData.length === 0); // چک کردن تخفیف اولین ورود
+                isFirstEver = (!resData || resData.length === 0); 
                 
                 if (resData) {
                     resData.forEach(r => {
@@ -405,8 +402,7 @@
             
             showLoader('در حال استعلام نهایی ظرفیت...');
             try {
-                // الف: بررسی میلی‌ثانیه‌ای دیتابیس برای تداخل
-                const { data: capCheck } = await supabase.from('pan_daily_capacity').select('*').in('target_date', selectedNewDates);
+                const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', selectedNewDates);
                 
                 let isConflict = false;
                 capCheck?.forEach(c => {
@@ -422,33 +418,30 @@
 
                 showLoader('در حال ارسال فیش و رزرو قطعی...');
 
-                // ب: ثبت رکورد در دیتابیس (بدون عکس)
-                const { error: insertErr } = await supabase.from('pan_reservations').insert([{
+                const { error: insertErr } = await supabaseClient.from('pan_reservations').insert([{
                     phone_number: currentUser.phone_number,
                     reserved_dates: JSON.stringify(selectedNewDates),
                     paid_amount: finalAmountToPay,
-                    receipt_base64: "DirectToBot" // نشانه اینکه مستقیم رفته بله
+                    receipt_base64: "DirectToBot" 
                 }]);
                 if(insertErr) throw insertErr;
 
-                // ج: آپدیت ظرفیت‌ها در دیتابیس
                 for (let dateStr of selectedNewDates) {
                     let currentBooked = dailyCapacities[dateStr]?.booked_capacity || 0;
                     let currentTotal = dailyCapacities[dateStr]?.total_capacity || 30;
                     
-                    await supabase.from('pan_daily_capacity').upsert({
+                    await supabaseClient.from('pan_daily_capacity').upsert({
                         target_date: dateStr,
                         total_capacity: currentTotal,
                         booked_capacity: currentBooked + 1
                     });
                 }
 
-                // د: ارسال مستقیم عکس به ربات بله (بدون درگیری بک‌اند)
                 await sendFileToBaleBot();
 
                 hideLoader();
                 alert('🎉 رزرو شما با موفقیت قطعی شد و رسید برای مدیریت ارسال گردید.\nبه خانواده پانسیون راهینو خوش آمدید!');
-                window.location.reload(); // رفرش تمیز صفحه
+                window.location.reload(); 
                 
             } catch (e) { hideLoader(); alert('خطا در ثبت نهایی!'); console.error(e); }
         }
@@ -464,14 +457,12 @@
             formData.append('caption', captionText);
 
             try {
-                // ارسال مستقیم درخواست POST به API بله
                 await fetch(`https://tapi.bale.ai/bot${BALE_BOT_TOKEN}/sendPhoto`, {
                     method: 'POST',
                     body: formData
                 });
             } catch (err) {
                 console.error("خطا در ارسال به بله: ", err);
-                // حتی اگه ربات خطا بده (مثلا فیلترینگ مرورگر)، رزرو تو دیتابیس ثبت شده
             }
         }
     </script>
