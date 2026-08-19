@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت رزرو پانسیون | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { 
+            --bg-dark: #0a0f0d; --surface-dark: #121a18; --surface-light: #1b2624; --border-color: #263633;
+            --primary: #639889; --primary-fade: rgba(99, 152, 137, 0.15);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --accent: #d9858a;
+            --text-main: #f1f5f9; --text-muted: #8b9d99;
+        }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; }
+        .brand { text-align: center; font-size: 20px; font-weight: 900; margin-bottom: 30px; }
+        .brand span { color: var(--primary); }
+        .nav-item { padding: 15px 25px; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; text-decoration: none; border-right: 3px solid transparent; transition: 0.3s; }
+        .nav-item:hover, .nav-item.active { background: linear-gradient(90deg, var(--primary-fade) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); }
+        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; }
+        .tab-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); border: none; background: var(--surface-light); transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .tab-container { flex: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .c-info div { margin-bottom: 5px; font-size: 13px; color: var(--text-muted); }
+        .c-info strong { color: var(--text-main); font-size: 15px; }
+        .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; color: white; }
+        .btn-green { background: var(--success); } .btn-red { background: var(--danger); } .btn-blue { background: var(--primary); }
+        
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; text-align: center; }
+        .cap-date { font-size: 14px; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
+        .cap-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; }
+        
+        .receipt-img { max-width: 150px; border-radius: 8px; cursor: pointer; border: 1px dashed var(--border-color); }
+        
+        /* Modal for images */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+        .modal img { max-width: 90%; max-height: 90%; border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">مدیریت <span>پانسیون</span></div>
+        <a href="dashboard.html" class="nav-item"><span>🌅</span> بازگشت به داشبورد</a>
+        <a href="#" class="nav-item active"><span>📍</span> سیستم رزرو روزانه</a>
+    </div>
+
+    <div class="main-content">
+        <div class="top-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-users', this)">📝 درخواست‌های تایید عضویت</button>
+            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت ۱۴ روزه</button>
+            <button class="tab-btn" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
+        </div>
+
+        <div class="tab-container">
+            <!-- تب تایید کاربران -->
+            <div id="tab-users" class="tab-content active">
+                <h3 style="margin-bottom: 20px; color: var(--primary);">کاربران در انتظار تایید</h3>
+                <div id="pendingUsersList"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
+            </div>
+
+            <!-- تب مدیریت ظرفیت -->
+            <div id="tab-capacity" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h3 style="color: var(--primary);">ظرفیت‌های ۱۴ روز آینده</h3>
+                    <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات ظرفیت</button>
+                </div>
+                <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
+            </div>
+
+            <!-- تب رسیدها -->
+            <div id="tab-receipts" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary);">آخرین رزروهای ثبت شده</h3>
+                <div id="reservationsList"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>
+
+    <script>
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        // 🚨 کلید سرویس سوپابیس خودت رو اینجا قرار بده
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; 
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let capacitiesData = {};
+
+        window.onload = () => { loadPendingUsers(); loadCapacities(); loadReservations(); };
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // ==========================
+        // ۱. تایید کاربران
+        // ==========================
+        async function loadPendingUsers() {
+            const { data } = await supabase.from('pan_users').select('*').eq('status', 'pending');
+            const list = document.getElementById('pendingUsersList');
+            if(!data || data.length === 0) { list.innerHTML = '<p style="color:var(--success);">هیچ درخواست جدیدی وجود ندارد.</p>'; return; }
+            
+            list.innerHTML = data.map(u => `
+                <div class="card">
+                    <div class="c-info">
+                        <strong>${u.full_name}</strong>
+                        <div>📱 ${u.phone_number} | 🎓 ${u.grade} ${u.major} | 🏫 ${u.school}</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">تایید و دسترسی</button>
+                        <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">رد درخواست</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateUserStatus(phone, status) {
+            await supabase.from('pan_users').update({ status: status }).eq('phone_number', phone);
+            alert(status === 'approved' ? 'کاربر تایید شد.' : 'کاربر رد شد.');
+            loadPendingUsers();
+        }
+
+        // ==========================
+        // ۲. مدیریت ظرفیت ۱۴ روزه
+        // ==========================
+        function getShamsiDate(dateObj) {
+            return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
+        }
+
+        async function loadCapacities() {
+            // ساخت بازه ۱۴ روز آینده
+            let dates14 = [];
+            for(let i=0; i<14; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                dates14.push(getShamsiDate(d));
+            }
+
+            const { data } = await supabase.from('pan_daily_capacity').select('*').in('target_date', dates14);
+            data?.forEach(d => capacitiesData[d.target_date] = d);
+
+            document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
+                let totalCap = capacitiesData[date]?.total_capacity ?? 30; // ظرفیت پیش‌فرض 30
+                let bookedCap = capacitiesData[date]?.booked_capacity ?? 0;
+                return `
+                    <div class="cap-card">
+                        <div class="cap-date">${date}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">ظرفیت کل سالن:</div>
+                        <input type="number" id="cap_${date}" class="cap-input" value="${totalCap}">
+                        <div style="font-size:11px; color:${bookedCap >= totalCap ? 'var(--danger)' : 'var(--success)'};">رزرو شده تا الان: ${bookedCap} نفر</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function saveCapacities() {
+            let updates = [];
+            for(let i=0; i<14; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                let dateStr = getShamsiDate(d);
+                let inputVal = document.getElementById(`cap_${dateStr}`).value;
+                updates.push({
+                    target_date: dateStr,
+                    total_capacity: parseInt(inputVal),
+                    booked_capacity: capacitiesData[dateStr]?.booked_capacity || 0
+                });
+            }
+            // استفاده از upsert برای بروزرسانی یا ایجاد رکورد جدید
+            const { error } = await supabase.from('pan_daily_capacity').upsert(updates);
+            if(error) alert('خطا در ذخیره!'); else alert('✅ ظرفیت‌ها با موفقیت بروزرسانی شدند.');
+            loadCapacities();
+        }
+
+        // ==========================
+        // ۳. تاریخچه رزروها
+        // ==========================
+        async function loadReservations() {
+            const { data } = await supabase.from('pan_reservations').select('*, pan_users(full_name)').order('created_at', {ascending: false}).limit(50);
+            const list = document.getElementById('reservationsList');
+            if(!data || data.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">هنوز رزروی ثبت نشده.</p>'; return; }
+
+            list.innerHTML = data.map(r => {
+                let datesObj = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
+                let datesStr = Array.isArray(datesObj) ? datesObj.join(' ، ') : '-';
+                let imgHtml = r.receipt_base64 ? `<img src="${r.receipt_base64}" class="receipt-img" onclick="showImage(this.src)">` : '<span style="color:var(--danger);font-size:12px;">بدون فیش</span>';
+                
+                return `
+                <div class="card">
+                    <div class="c-info">
+                        <strong>${r.pan_users?.full_name || 'ناشناس'} <span style="font-size:12px; color:var(--text-muted);">(${r.phone_number})</span></strong>
+                        <div style="margin-top:8px;">📅 روزهای رزرو شده: <span style="color:var(--primary);">${datesStr}</span></div>
+                        <div>💰 پرداختی: ${(r.paid_amount || 0).toLocaleString()} تومان</div>
+                    </div>
+                    <div>${imgHtml}</div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function showImage(src) {
+            document.getElementById('modalImg').src = src;
+            document.getElementById('imageModal').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
