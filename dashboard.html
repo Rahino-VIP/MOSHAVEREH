@@ -194,7 +194,7 @@
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
             
-            // 🧠 ساخت آرایه ۳ روز گذشته برای چک کردن گزارش‌ها (به ترتیب از دیروز، پریروز، پس‌پریروز)
+            // ساخت آرایه ۳ روز گذشته برای چک کردن گزارش‌ها (به ترتیب از دیروز، پریروز، پس‌پریروز)
             const past3Days = [];
             for(let i = 1; i <= 3; i++) {
                 let d = new Date();
@@ -221,19 +221,19 @@
             rawStudents.forEach(st => uniqueMap.set(st.national_id, st));
             const consultStudents = Array.from(uniqueMap.values());
 
-            // ۲. استخراج Chat ID ها و دریافت یکباره گزارشات ۳ روز اخیر برای همه
-            let chatIds = consultStudents.map(st => st.chat_id).filter(id => id);
+            // ۲. استخراج کدملی‌ها (که در جدول گزارش‌ها حکم chat_id را دارند)
+            let nationalIds = consultStudents.map(st => st.national_id).filter(id => id);
             let reportMap = {}; 
             
-            if (chatIds.length > 0) {
+            if (nationalIds.length > 0) {
                 const { data: reports, error: repError } = await supabaseClient
                     .from('daily_reports')
                     .select('chat_id, report_date')
-                    .in('chat_id', chatIds)
+                    .in('chat_id', nationalIds) // اینجا با کدملی در ستون chat_id می‌گردیم
                     .in('report_date', past3Days);
                     
                 if(!repError && reports) {
-                    // گروه‌بندی تاریخ‌ها بر اساس هر چت آیدی
+                    // گروه‌بندی تاریخ‌ها بر اساس هر کدملی
                     reports.forEach(rep => {
                         if(!reportMap[rep.chat_id]) reportMap[rep.chat_id] = new Set();
                         reportMap[rep.chat_id].add(rep.report_date);
@@ -256,27 +256,35 @@
                     if (isAwake) wokeUpCount++;
                     else oversleptCount++;
                     
-                    // محاسبه روزهای متوالی خواب موندن
-                    let consecSleep = st.consecutive_oversleeps || 0;
+                    // استخراج رکوردهای متوالی
+                    let wakeStreak = st.wake_streak || 0;
+                    let sleepStreak = st.consecutive_oversleeps || 0;
                     
                     let dotClass = isAwake ? 'dot-green' : 'dot-red';
                     let badgeClass = isAwake ? 'on-time' : 'late';
                     let statusText = isAwake ? 'بیدار و آماده ✅' : 'خواب مونده ❌';
                     
-                    let detailText = isAwake 
-                        ? `<span style="color:var(--success);">بیدار شده و در حال اجرا</span>` 
-                        : (consecSleep > 0 ? `<span style="color:var(--danger); font-weight:bold;">${consecSleep} روز متوالی خواب‌مانده! ⚠️</span>` : `<span style="color:var(--warning);">خواب‌مونده امروز</span>`);
+                    // منطق نمایش رکورد بیداری یا خواب‌ماندن
+                    let detailText = "";
+                    if (wakeStreak > 0) {
+                        detailText = `<span style="color:var(--success); font-weight:bold;">🔥 ${wakeStreak} روز متوالی بیدار</span>`;
+                    } else if (sleepStreak > 0) {
+                        detailText = `<span style="color:var(--danger); font-weight:bold;">⚠️ ${sleepStreak} روز متوالی خواب‌مانده!</span>`;
+                    } else {
+                        // اگر هردو صفر بودند (مثلاً روز اول ثبت‌نام)
+                        detailText = `<span style="color:var(--text-muted);">بدون رکورد متوالی</span>`;
+                    }
 
                     // بررسی گزارشات ۳ روز اخیر (مربع‌های سبز و قرمز)
                     let reportIndicators = "";
-                    if(st.chat_id) {
+                    if(st.national_id) {
                         past3Days.forEach(dateStr => {
-                            let hasReport = reportMap[st.chat_id] && reportMap[st.chat_id].has(dateStr);
+                            let hasReport = reportMap[st.national_id] && reportMap[st.national_id].has(dateStr);
                             // 🟩 به معنی ارسال گزارش و 🟥 به معنی عدم ارسال
                             reportIndicators += hasReport ? "🟩 " : "🟥 ";
                         });
                     } else {
-                        reportIndicators = `<span style="font-size:11px; color:var(--text-muted)">بدون چت‌آیدی</span>`;
+                        reportIndicators = `<span style="font-size:11px; color:var(--text-muted)">کدملی نامعتبر</span>`;
                     }
                     
                     listHTML += `
