@@ -115,9 +115,12 @@
             loadPendingUsers();
         }
 
+        // 🚀 خنثی کردن کاراکترهای مخفی
         function getShamsiDate(dateObj) {
-            let rawDate = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
-            return rawDate.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}/${m}/${d}`;
         }
 
         async function loadCapacities() {
@@ -127,15 +130,17 @@
                 dates14.push(getShamsiDate(d));
             }
 
-            const { data } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dates14);
-            data?.forEach(d => capacitiesData[d.target_date] = d);
+            let dbDates = dates14.map(d => d.replace(/\//g, '-'));
+            const { data } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbDates);
+            
+            data?.forEach(d => { capacitiesData[d.target_date.replace(/-/g, '/')] = d; });
 
             document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
-                let available = capacitiesData[date]?.available_capacity ?? 4; // دیفالت ۴
+                let available = capacitiesData[date]?.available_capacity ?? 4; 
                 return `
                     <div class="cap-card">
                         <div class="cap-date">${date}</div>
-                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">ظرفیتِ باقی‌مانده (خالی):</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">ظرفیتِ باقی‌مانده:</div>
                         <input type="number" id="cap_${date}" class="cap-input" value="${available}">
                     </div>
                 `;
@@ -149,13 +154,13 @@
                 let dateStr = getShamsiDate(d);
                 let inputVal = document.getElementById(`cap_${dateStr}`).value;
                 updates.push({
-                    target_date: dateStr,
+                    target_date: dateStr.replace(/\//g, '-'),
                     available_capacity: parseInt(inputVal)
                 });
             }
             
             const { error } = await supabaseClient.from('pan_daily_capacity').upsert(updates);
-            if(error) alert('خطا در ذخیره!'); else alert('✅ ظرفیت‌ها با موفقیت ذخیره شدند.');
+            if(error) alert('خطا در ذخیره:\n' + error.message); else alert('✅ ظرفیت‌ها ذخیره شدند.');
             loadCapacities();
         }
 
@@ -166,7 +171,7 @@
 
             list.innerHTML = data.map(r => {
                 let datesObj = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
-                let datesStr = Array.isArray(datesObj) ? datesObj.join(' ، ') : '-';
+                let datesStr = Array.isArray(datesObj) ? datesObj.map(d => d.replace(/-/g, '/')).join(' ، ') : '-';
                 return `
                 <div class="card">
                     <div class="c-info">
