@@ -61,7 +61,7 @@
             <div id="tab-capacity" class="tab-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                     <h3 style="color: var(--primary);">ظرفیتِ باقی‌مانده‌ی ۱۴ روز آینده</h3>
-                    <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات ظرفیت</button>
+                    <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات</button>
                 </div>
                 <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
             </div>
@@ -75,7 +75,7 @@
 
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 کلید SERVICE_ROLE سوپابیس رو اینجا بگذار
+        // 🚨 کلید SERVICE_ROLE / آزاد سوپابیس رو اینجا بگذار
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -102,8 +102,8 @@
                         <div>📱 ${u.phone_number} | 🎓 ${u.grade} ${u.major} | 🏫 ${u.school}</div>
                     </div>
                     <div>
-                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">تایید و دسترسی</button>
-                        <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">رد درخواست</button>
+                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">تایید</button>
+                        <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">رد</button>
                     </div>
                 </div>
             `).join('');
@@ -131,8 +131,7 @@
             data?.forEach(d => capacitiesData[d.target_date] = d);
 
             document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
-                // 🧠 مدل دو ستونه: فقط ظرفیت باقی‌مانده رو نشون می‌دیم (دیفالت ۴)
-                let available = capacitiesData[date]?.available_capacity ?? 4; 
+                let available = capacitiesData[date]?.available_capacity ?? 4; // دیفالت ۴
                 return `
                     <div class="cap-card">
                         <div class="cap-date">${date}</div>
@@ -156,7 +155,7 @@
             }
             
             const { error } = await supabaseClient.from('pan_daily_capacity').upsert(updates);
-            if(error) alert('خطا در ذخیره!'); else alert('✅ ظرفیت‌ها با موفقیت بروزرسانی شدند.');
+            if(error) alert('خطا در ذخیره!'); else alert('✅ ظرفیت‌ها با موفقیت ذخیره شدند.');
             loadCapacities();
         }
 
