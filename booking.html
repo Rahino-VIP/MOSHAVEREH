@@ -335,8 +335,6 @@
                 alert('جزئیات خطای دیتابیس:\n' + JSON.stringify(e)); 
                 console.error(e);
             }
-            } catch (e) { hideLoader(); alert('خطا در ثبت اطلاعات.'); }
-        }
 
         function getShamsiDate(dateObj) { return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); }
         function getShamsiDayName(dateObj) { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); }
