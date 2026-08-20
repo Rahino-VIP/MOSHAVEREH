@@ -353,9 +353,19 @@
             }
         }
 
-        function getShamsiDate(dateObj) { return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); }
-        function getShamsiDayName(dateObj) { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); }
-
+        // ==========================================
+        // 🗓️ توابع تولید تاریخ (با فیلتر کاراکترهای مخفی فایرفاکس)
+        // ==========================================
+        function getShamsiDate(dateObj) { 
+            let rawDate = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); 
+            // حذف دقیق کاراکترهای نامرئی LRM و RLM که فایرفاکس اضافه می‌کند
+            return rawDate.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
+        }
+        
+        function getShamsiDayName(dateObj) { 
+            let rawDay = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); 
+            return rawDay.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
+        }
         async function initializeBookingEngine() {
             showLoader('در حال دریافت ظرفیت‌های زنده...');
             window14Dates = [];
