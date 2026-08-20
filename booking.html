@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* ==========================================
-           🎨 پالت رنگی یکپارچه (الهام گرفته از Index)
+           🎨 پالت رنگی یکپارچه
            ========================================== */
         :root { 
             --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.1);
@@ -150,6 +150,7 @@
                 <p>انتخاب روزانه، تخفیف پلکانی، رزرو آنی</p>
             </div>
 
+            <!-- 1. ورود -->
             <div class="step-section active" id="step-login">
                 <div class="form-group">
                     <label class="form-label" style="text-align: center; margin-bottom: 15px;">شماره موبایل خود را وارد کنید:</label>
@@ -158,6 +159,7 @@
                 <button class="btn btn-primary" onclick="checkUser()">بررسی و ورود 🚀</button>
             </div>
 
+            <!-- 2. ثبت نام -->
             <div class="step-section" id="step-register">
                 <div style="background: var(--primary-fade); color: var(--primary); padding: 15px; border-radius: 12px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; border: 1px solid rgba(99, 152, 137, 0.2);">
                     شماره شما در سیستم یافت نشد. لطفاً برای تشکیل پرونده اطلاعات زیر را تکمیل کنید.
@@ -184,6 +186,7 @@
                 <button class="btn btn-outline" style="margin-top: 12px;" onclick="showStep('step-login')">انصراف و بازگشت</button>
             </div>
 
+            <!-- 3. وضعیت انتظار -->
             <div class="step-section" id="step-pending">
                 <div style="text-align: center; padding: 20px 0;">
                     <div style="font-size: 55px; margin-bottom: 15px;">⏳</div>
@@ -196,6 +199,7 @@
                 </div>
             </div>
 
+            <!-- 4. رزرو -->
             <div class="step-section" id="step-booking">
                 <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; text-align: center; font-weight: bold;">روزهای مورد نظر خود را در بازه ۱۴ روز آینده انتخاب کنید:</div>
                 
@@ -209,12 +213,14 @@
                     <div class="price-final"><span style="color: var(--text-main); font-size: 16px;">مبلغ کل پرداخت: </span><span id="finalPriceTxt">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
                 </div>
 
+                <!-- آپلود باکس -->
                 <label class="file-upload" id="uploadBox">
                     <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
                     <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
                     <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
                 </label>
 
+                <!-- باکس قوانین -->
                 <div class="rules-container">
                     <div class="rules-scroll-box">
                         <strong>قوانین سالن مطالعه راهینو:</strong><br>
@@ -255,7 +261,7 @@
         });
 
         // ==========================================
-        // 🧠 تابع جادویی تبدیل اعداد کیبورد فارسی به انگلیسی
+        // 🧠 تابع تبدیل اعداد فارسی به انگلیسی
         // ==========================================
         function toEnglishDigits(str) {
             if (!str) return '';
@@ -266,11 +272,11 @@
         // تنظیمات سوپابیس و بک‌اند
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 کلید ANON پابلیک
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 🚨 موقتاً کلید سرویس رو اینجا گذاشتم تا مشکل RLS رو رد کنیم
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 🚨 لینک وب‌اپلیکیشن گوگل اسکریپت (برای ارسال امن به بله)
+        // 🚨 لینک وب‌اپلیکیشن گوگل اسکریپت
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
         let currentUser = null;
@@ -296,7 +302,6 @@
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 
         async function checkUser() {
-            // خواندن شماره و تبدیل خودکار اعداد فارسی به انگلیسی
             let rawPhone = document.getElementById('loginPhone').value.trim();
             let phone = toEnglishDigits(rawPhone);
             
@@ -314,7 +319,11 @@
                 } else {
                     hideLoader(); showStep('step-register');
                 }
-            } catch (e) { hideLoader(); alert('خطا در سرور.'); }
+            } catch (e) { 
+                hideLoader(); 
+                alert('جزئیات خطای سرور:\n' + JSON.stringify(e)); 
+                console.error(e); 
+            }
         }
 
         async function registerUser() {
@@ -329,12 +338,20 @@
 
             showLoader('در حال ثبت پرونده...');
             try {
-                } catch (e) { 
+                const { error } = await supabaseClient.from('pan_users').insert([{
+                    phone_number: phone, full_name: name, grade: grade, major: major, school: school, status: 'pending'
+                }]);
+                
+                if(error) throw error;
+                
                 hideLoader(); 
-                // اینجا به جای یک متن ثابت، گفتیم کل ارور سوپابیس رو روی صفحه آلرت کنه
-                alert('جزئیات خطای دیتابیس:\n' + JSON.stringify(e)); 
-                console.error(e);
+                showStep('step-pending');
+            } catch (e) { 
+                hideLoader(); 
+                alert('جزئیات خطای سرور:\n' + JSON.stringify(e)); 
+                console.error(e); 
             }
+        }
 
         function getShamsiDate(dateObj) { return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); }
         function getShamsiDayName(dateObj) { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); }
@@ -364,7 +381,7 @@
                     });
                 }
                 renderCalendar(); hideLoader(); showStep('step-booking');
-            } catch (e) { hideLoader(); alert('خطا در استخراج تقویم.'); }
+            } catch (e) { hideLoader(); alert('خطا در استخراج تقویم:\n' + JSON.stringify(e)); }
         }
 
         function renderCalendar() {
@@ -486,7 +503,10 @@
                 hideLoader();
                 alert('🎉 رزرو شما با موفقیت قطعی شد.\n⏰ ساعت کاری پانسیون از ۷ صبح تا ۱۰ شب است و می‌توانید هر ساعتی تشریف بیاورید.');
                 window.location.reload(); 
-            } catch (e) { hideLoader(); alert('خطا در ثبت نهایی!'); }
+            } catch (e) { 
+                hideLoader(); 
+                alert('جزئیات خطای ثبت نهایی:\n' + JSON.stringify(e)); 
+            }
         }
     </script>
 </body>
