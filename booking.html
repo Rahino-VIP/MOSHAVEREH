@@ -210,8 +210,18 @@
         });
 
         function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
-        function getShamsiDate(dateObj) { return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj).replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, ''); }
-        function getShamsiDayName(dateObj) { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj).replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, ''); }
+        
+        // 🚀 خنثی کردن کاراکترهای مخفی فایرفاکس
+        function getShamsiDate(dateObj) { 
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}/${m}/${d}`;
+        }
+        function getShamsiDayName(dateObj) { 
+            const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(dateObj);
+            return parts.find(p => p.type === 'weekday').value;
+        }
 
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         // 🚨 کلید ANON / عمومی را اینجا قرار بده
@@ -276,8 +286,12 @@
             let justDates = window14Dates.map(d => d.date);
 
             try {
-                const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
-                capData?.forEach(d => dailyCapacities[d.target_date] = d);
+                // 🔄 تبدیل تاریخ اسلش‌دار به خط تیره برای ارسال به دیتابیس
+                let dbDates = justDates.map(d => d.replace(/\//g, '-'));
+                const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbDates);
+                
+                // 🔄 تبدیل مجدد تاریخ به اسلش‌دار هنگام دریافت
+                capData?.forEach(d => { dailyCapacities[d.target_date.replace(/-/g, '/')] = d; });
 
                 const { data: resData } = await supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', currentUser.phone_number);
                 userPastReservations = []; isFirstEver = (!resData || resData.length === 0); 
@@ -285,7 +299,10 @@
                 if (resData) {
                     resData.forEach(r => {
                         let dArr = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
-                        dArr.forEach(d => { if (justDates.includes(d)) userPastReservations.push(d); });
+                        dArr.forEach(d => { 
+                            let cleanD = d.replace(/-/g, '/');
+                            if (justDates.includes(cleanD)) userPastReservations.push(cleanD); 
+                        });
                     });
                 }
                 renderCalendar(); hideLoader(); showStep('step-booking');
@@ -353,14 +370,13 @@
         async function submitBooking() {
             showLoader('در حال رزرو و ارسال فیش...');
             try {
-                // چک کردن تداخل ظرفیت
-                const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', selectedNewDates);
+                let dbSelectedDates = selectedNewDates.map(d => d.replace(/\//g, '-'));
+                const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbSelectedDates);
                 let isConflict = false;
                 capCheck?.forEach(c => { if(c.available_capacity <= 0) isConflict = true; });
 
                 if (isConflict) { hideLoader(); alert('⚠️ ظرفیت یکی از روزها همین الان توسط شخص دیگری پر شد!'); await initializeBookingEngine(); return; }
 
-                // ارسال به ربات (غیرهمزمان)
                 fetch(GAS_URL, {
                     method: 'POST', body: JSON.stringify({
                         action: 'send_bale_receipt', photo_base64: base64Image,
@@ -368,17 +384,18 @@
                     })
                 }).catch(err => console.log(err));
 
-                // ثبت در دیتابیس
                 const { error: insertErr } = await supabaseClient.from('pan_reservations').insert([{
-                    phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(selectedNewDates),
+                    phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(dbSelectedDates),
                     paid_amount: finalAmountToPay, receipt_base64: "Sent to Bot" 
                 }]);
                 if(insertErr) throw insertErr;
 
-                // کسر یک واحد از ظرفیت
                 for (let dateStr of selectedNewDates) {
                     let currentAvailable = dailyCapacities[dateStr]?.available_capacity ?? 4; 
-                    await supabaseClient.from('pan_daily_capacity').upsert({ target_date: dateStr, available_capacity: currentAvailable - 1 });
+                    await supabaseClient.from('pan_daily_capacity').upsert({ 
+                        target_date: dateStr.replace(/\//g, '-'), 
+                        available_capacity: currentAvailable - 1 
+                    });
                 }
 
                 hideLoader();
