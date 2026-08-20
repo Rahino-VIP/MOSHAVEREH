@@ -329,10 +329,12 @@
 
             showLoader('در حال ثبت پرونده...');
             try {
-                const { error } = await supabaseClient.from('pan_users').insert([{
-                    phone_number: phone, full_name: name, grade: grade, major: major, school: school, status: 'pending'
-                }]);
-                hideLoader(); if(error) throw error; showStep('step-pending');
+                } catch (e) { 
+                hideLoader(); 
+                // اینجا به جای یک متن ثابت، گفتیم کل ارور سوپابیس رو روی صفحه آلرت کنه
+                alert('جزئیات خطای دیتابیس:\n' + JSON.stringify(e)); 
+                console.error(e);
+            }
             } catch (e) { hideLoader(); alert('خطا در ثبت اطلاعات.'); }
         }
 
