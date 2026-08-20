@@ -16,7 +16,6 @@
             --shadow: 0 20px 40px rgba(99, 152, 137, 0.08); 
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         [data-theme="dark"] {
             --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.15);
             --accent: #e59ea3; --accent-hover: #f0b2b6;
@@ -24,29 +23,18 @@
             --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #2d3d3a; 
             --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
-
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); line-height: 1.7; transition: var(--transition); display: flex; flex-direction: column; min-height: 100vh; }
         a { text-decoration: none; color: inherit; }
 
-        header {
-            position: sticky; top: 0; z-index: 1000;
-            background: var(--surface-glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border); padding: 15px 5%;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        header { position: sticky; top: 0; z-index: 1000; background: var(--surface-glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
         .back-btn { display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--text-main); font-size: 14px; transition: var(--transition); }
         .back-btn:hover { color: var(--primary); }
         .theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 16px; transition: var(--transition); }
         .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
 
         .main-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
-        .container { 
-            background: var(--surface); border: 1px solid var(--border); border-radius: 28px; 
-            width: 100%; max-width: 550px; overflow: hidden; box-shadow: var(--shadow); 
-            position: relative; transition: var(--transition);
-        }
-        
+        .container { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: 100%; max-width: 550px; overflow: hidden; box-shadow: var(--shadow); position: relative; transition: var(--transition); }
         .header-box { text-align: center; padding: 35px 25px 20px; border-bottom: 1px solid var(--border); }
         .header-box h1 { font-size: 22px; color: var(--primary); font-weight: 900; margin-bottom: 8px; }
         .header-box p { font-size: 13px; color: var(--text-muted); }
@@ -56,19 +44,11 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         .form-group { margin-bottom: 22px; }
-        .form-input { 
-            width: 100%; background: var(--bg-color); border: 1px solid var(--border); 
-            color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; 
-            outline: none; transition: var(--transition); text-align: center; font-weight: bold; 
-        }
+        .form-input { width: 100%; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); text-align: center; font-weight: bold; }
         .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
         select.form-input { appearance: none; cursor: pointer; }
 
-        .btn { 
-            width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 900; 
-            font-size: 15px; cursor: pointer; transition: var(--transition); color: white; 
-            display: flex; justify-content: center; align-items: center; gap: 8px; 
-        }
+        .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); color: white; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); box-shadow: 0 10px 20px var(--primary-fade); }
         .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(99, 152, 137, 0.3); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
@@ -76,24 +56,21 @@
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
-        .cal-card { 
-            background: var(--bg-color); border: 1px solid var(--border); border-radius: 16px; 
-            padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); 
-            position: relative; user-select: none; 
-        }
+        .cal-card { background: var(--bg-color); border: 1px solid var(--border); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); position: relative; user-select: none; }
         .cal-card.available:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
         .cal-card.selected { background: var(--primary-fade); border-color: var(--primary); color: var(--primary); }
         .cal-card.selected::after { content: '✅'; position: absolute; top: -8px; right: -8px; font-size: 16px; background: var(--surface); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
         .cal-card.past-booked { background: rgba(16, 185, 129, 0.05); border-color: var(--success); cursor: not-allowed; opacity: 0.8; }
-        
         .cal-day { font-size: 14px; font-weight: 900; margin-bottom: 6px; }
         .cal-date { font-size: 11px; margin-bottom: 8px; color: var(--text-muted); }
         .cal-cap { font-size: 11px; font-weight: bold; background: var(--surface); padding: 4px 8px; border-radius: 8px; display: inline-block; border: 1px solid var(--border); }
 
-        .checkout-box { background: var(--bg-color); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; margin-bottom: 25px; }
+        .checkout-box { background: var(--bg-color); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
         .price-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 10px; color: var(--text-muted); }
         .price-final { font-size: 24px; font-weight: 900; color: var(--success); margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; text-align: left; }
+        
+        .payment-info { background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 25px; text-align: center; }
         
         .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--border); padding: 30px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 20px; background: var(--bg-color); transition: var(--transition); }
         .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
@@ -108,17 +85,8 @@
         .loader { position: absolute; inset: 0; background: var(--surface-glass); backdrop-filter: blur(5px); z-index: 10; display: none; justify-content: center; align-items: center; flex-direction: column; border-radius: 28px; }
         .spinner { width: 45px; height: 45px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
-        @media (max-width: 600px) {
-            .main-wrapper { padding: 20px 15px; }
-            .container { border-radius: 20px; border: none; }
-            .step-section { padding: 25px 20px; }
-            .calendar-grid { grid-template-columns: repeat(2, 1fr); }
-            header { padding: 12px 15px; }
-        }
     </style>
 </head>
 <body>
@@ -140,7 +108,6 @@
                 <p>انتخاب روزانه، تخفیف پلکانی، رزرو آنی</p>
             </div>
 
-            <!-- 1. ورود -->
             <div class="step-section active" id="step-login">
                 <div class="form-group">
                     <label class="form-label" style="text-align: center; margin-bottom: 15px;">شماره موبایل خود را وارد کنید:</label>
@@ -149,14 +116,11 @@
                 <button class="btn btn-primary" onclick="checkUser()">بررسی و ورود 🚀</button>
             </div>
 
-            <!-- 2. ثبت نام -->
             <div class="step-section" id="step-register">
                 <div style="background: var(--primary-fade); color: var(--primary); padding: 15px; border-radius: 12px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; border: 1px solid rgba(99, 152, 137, 0.2);">
                     شماره شما در سیستم یافت نشد. لطفاً برای تشکیل پرونده اطلاعات زیر را تکمیل کنید.
                 </div>
-                <div class="form-group">
-                    <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل">
-                </div>
+                <div class="form-group"><input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل"></div>
                 <div style="display: flex; gap: 12px; margin-bottom: 22px;">
                     <select id="regGrade" class="form-input" style="color: var(--text-muted);" onchange="this.style.color='var(--text-main)'">
                         <option value="" disabled selected>پایه تحصیلی</option>
@@ -169,27 +133,23 @@
                     </select>
                     <input type="text" id="regMajor" class="form-input" placeholder="رشته تحصیلی">
                 </div>
-                <div class="form-group">
-                    <input type="text" id="regSchool" class="form-input" placeholder="نام مدرسه / دانشگاه">
-                </div>
+                <div class="form-group"><input type="text" id="regSchool" class="form-input" placeholder="نام مدرسه / دانشگاه"></div>
                 <button class="btn btn-primary" onclick="registerUser()">ثبت اطلاعات 💾</button>
                 <button class="btn btn-outline" style="margin-top: 12px;" onclick="showStep('step-login')">انصراف و بازگشت</button>
             </div>
 
-            <!-- 3. وضعیت انتظار -->
             <div class="step-section" id="step-pending">
                 <div style="text-align: center; padding: 20px 0;">
                     <div style="font-size: 55px; margin-bottom: 15px;">⏳</div>
                     <h2 style="color: var(--warning); margin-bottom: 12px;">در حال بررسی...</h2>
                     <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
                         اطلاعات شما در سیستم ثبت شده است.<br>
-                        لطفاً منتظر بمانید تا هویت شما توسط مدیریت راهینو تایید شود. پس از تایید می‌توانید ظرفیت‌ها را مشاهده کنید.
+                        لطفاً منتظر بمانید تا هویت شما توسط مدیریت تایید شود.
                     </p>
                     <button class="btn btn-outline" style="margin-top: 25px;" onclick="showStep('step-login')">بازگشت به صفحه اول</button>
                 </div>
             </div>
 
-            <!-- 4. رزرو -->
             <div class="step-section" id="step-booking">
                 <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; text-align: center; font-weight: bold;">روزهای مورد نظر خود را در بازه ۱۴ روز آینده انتخاب کنید:</div>
                 
@@ -203,18 +163,22 @@
                     <div class="price-final"><span style="color: var(--text-main); font-size: 16px;">مبلغ کل پرداخت: </span><span id="finalPriceTxt">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
                 </div>
 
-                <!-- آپلود باکس -->
+                <div class="payment-info">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
+                    <div style="font-size: 20px; font-weight: 900; color: var(--text-main); letter-spacing: 2px;" id="cardNumber">۶۰۳۷-۹۹۱۹-XXXX-XXXX</div>
+                    <div style="font-size: 12px; color: var(--primary); font-weight: bold; margin-top: 5px;">به نام: ارشاد</div>
+                </div>
+
                 <label class="file-upload" id="uploadBox">
                     <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
                     <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
                     <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
                 </label>
 
-                <!-- باکس قوانین -->
                 <div class="rules-container">
                     <div class="rules-scroll-box">
                         <strong>قوانین سالن مطالعه راهینو:</strong><br>
-                        ۱. ساعت کاری پانسیون از ۷ صبح تا ۱۰ شب می‌باشد و می‌توانید در این بازه هر زمانی تشریف بیاورید.<br>
+                        ۱. ساعت کاری پانسیون از ۷ صبح تا ۱۰ شب می‌باشد.<br>
                         ۲. رعایت سکوت مطلق در سالن مطالعه الزامی است.<br>
                         ۳. استفاده از تلفن همراه در فضای مطالعه ممنوع می‌باشد.<br>
                         ۴. امکان بازگشت وجه پس از ثبت رزرو وجود ندارد.<br>
@@ -222,7 +186,7 @@
                     </div>
                     <label class="rules-checkbox-label">
                         <input type="checkbox" id="rulesCheckbox">
-                        <span>قوانین را خوانده و می‌پذیرم. (در صورت آپلود فیش نامعتبر محروم خواهم شد).</span>
+                        <span>قوانین را خوانده و می‌پذیرم. (آپلود فیش نامعتبر = محرومیت).</span>
                     </label>
                 </div>
 
@@ -232,129 +196,78 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🌓 سیستم دارک مود هوشمند
-        // ==========================================
         const themeBtn = document.getElementById('themeBtn');
         const htmlTag = document.documentElement;
-        
         const currentTheme = localStorage.getItem('theme') || 'light';
         htmlTag.setAttribute('data-theme', currentTheme);
         themeBtn.textContent = currentTheme === 'light' ? '🌙' : '☀️';
 
         themeBtn.addEventListener('click', () => {
-            const activeTheme = htmlTag.getAttribute('data-theme');
-            const newTheme = activeTheme === 'light' ? 'dark' : 'light';
+            const newTheme = htmlTag.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             htmlTag.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
         });
 
-        // ==========================================
-        // 🧠 تابع تبدیل اعداد فارسی به انگلیسی
-        // ==========================================
-        function toEnglishDigits(str) {
-            if (!str) return '';
-            return str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-        }
+        function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
+        function getShamsiDate(dateObj) { return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj).replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, ''); }
+        function getShamsiDayName(dateObj) { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj).replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, ''); }
 
-        // ==========================================
-        // 🗓️ توابع تولید تاریخ (با فیلتر کاراکترهای مخفی فایرفاکس)
-        // ==========================================
-        function getShamsiDate(dateObj) { 
-            let rawDate = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); 
-            return rawDate.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
-        }
-        function getShamsiDayName(dateObj) { 
-            let rawDay = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); 
-            return rawDay.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
-        }
-
-        // ==========================================
-        // تنظیمات سوپابیس و بک‌اند
-        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 کلید ANON پابلیک (برای امنیت، کلید اصلی رو نذار)
+        // 🚨 کلید ANON / عمومی را اینجا قرار بده
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 🚨 لینک وب‌اپلیکیشن گوگل اسکریپت
+        // 🚨 لینک گوگل اسکریپت
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
-        let currentUser = null;
-        let window14Dates = [];
-        let dailyCapacities = {};
-        let userPastReservations = []; 
-        let selectedNewDates = []; 
-        let isFirstEver = false;
-        let finalAmountToPay = 0;
-        let base64Image = "";
-
+        let currentUser = null; let window14Dates = []; let dailyCapacities = {};
+        let userPastReservations = []; let selectedNewDates = []; let isFirstEver = false;
+        let finalAmountToPay = 0; let base64Image = "";
         const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
-        function showStep(stepId) {
-            document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(stepId).classList.add('active');
-        }
-
-        function showLoader(text = 'در حال پردازش...') {
-            document.getElementById('loaderText').innerText = text;
-            document.getElementById('loader').style.display = 'flex';
-        }
+        function showStep(stepId) { document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active')); document.getElementById(stepId).classList.add('active'); }
+        function showLoader(text = 'در حال پردازش...') { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 
         async function checkUser() {
-            let rawPhone = document.getElementById('loginPhone').value.trim();
-            let phone = toEnglishDigits(rawPhone);
-            
+            let phone = toEnglishDigits(document.getElementById('loginPhone').value.trim());
             if(!phone || phone.length < 10) return alert('لطفاً شماره موبایل معتبر وارد کنید.');
             
             showLoader('در حال استعلام هویت...');
             try {
                 const { data, error } = await supabaseClient.from('pan_users').select('*').eq('phone_number', phone).maybeSingle();
+                if(error) throw error;
                 
                 if (data) {
                     currentUser = data;
                     if (data.status === 'pending') { hideLoader(); showStep('step-pending'); } 
                     else if (data.status === 'blocked') { hideLoader(); alert('دسترسی شما مسدود است.'); } 
                     else { await initializeBookingEngine(); }
-                } else {
-                    hideLoader(); showStep('step-register');
-                }
-            } catch (e) { 
-                hideLoader(); 
-                alert('جزئیات خطای سرور:\n' + JSON.stringify(e)); 
-            }
+                } else { hideLoader(); showStep('step-register'); }
+            } catch (e) { hideLoader(); alert('خطای سرور:\n' + e.message); }
         }
 
         async function registerUser() {
-            let rawPhone = document.getElementById('loginPhone').value.trim();
-            let phone = toEnglishDigits(rawPhone);
+            let phone = toEnglishDigits(document.getElementById('loginPhone').value.trim());
             let name = document.getElementById('regName').value.trim();
             let grade = document.getElementById('regGrade').value;
             let major = document.getElementById('regMajor').value.trim();
             let school = document.getElementById('regSchool').value.trim();
 
             if(!name || !grade || !school) return alert('لطفاً فیلدهای الزامی را پر کنید.');
-
             showLoader('در حال ثبت پرونده...');
             try {
                 const { error } = await supabaseClient.from('pan_users').insert([{
                     phone_number: phone, full_name: name, grade: grade, major: major, school: school, status: 'pending'
                 }]);
-                
                 if(error) throw error;
-                
-                hideLoader(); 
-                showStep('step-pending');
-            } catch (e) { 
-                hideLoader(); 
-                alert('جزئیات خطای سرور:\n' + JSON.stringify(e)); 
-            }
+                hideLoader(); showStep('step-pending');
+            } catch (e) { hideLoader(); alert('خطای ثبت:\n' + e.message); }
         }
 
         async function initializeBookingEngine() {
-            showLoader('در حال دریافت ظرفیت‌های زنده...');
+            showLoader('در حال دریافت ظرفیت‌ها...');
             window14Dates = [];
             for(let i=0; i<14; i++) {
                 let d = new Date(); d.setDate(d.getDate() + i);
@@ -367,9 +280,7 @@
                 capData?.forEach(d => dailyCapacities[d.target_date] = d);
 
                 const { data: resData } = await supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', currentUser.phone_number);
-                
-                userPastReservations = [];
-                isFirstEver = (!resData || resData.length === 0); 
+                userPastReservations = []; isFirstEver = (!resData || resData.length === 0); 
                 
                 if (resData) {
                     resData.forEach(r => {
@@ -378,16 +289,13 @@
                     });
                 }
                 renderCalendar(); hideLoader(); showStep('step-booking');
-            } catch (e) { hideLoader(); alert('خطا در استخراج تقویم:\n' + JSON.stringify(e)); }
+            } catch (e) { hideLoader(); alert('خطای تقویم:\n' + e.message); }
         }
 
         function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = ''; selectedNewDates = [];
-
+            const grid = document.getElementById('calendarGrid'); grid.innerHTML = ''; selectedNewDates = [];
             window14Dates.forEach(d => {
-                // 🚨 اینجا مدل دو ستونه اعمال شده (available_capacity به جای کسر کردن)
-                let capInfo = dailyCapacities[d.date] || { available_capacity: 4 };
+                let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; // پیش‌فرض ۴ ظرفیت
                 let available = capInfo.available_capacity;
                 let isPastBooked = userPastReservations.includes(d.date);
                 
@@ -397,45 +305,26 @@
                 else if (available <= 0) { cardClass += ' full'; statusText = 'تکمیل ❌'; } 
                 else { cardClass += ' available'; onclickEvent = `onclick="toggleDate('${d.date}', this)"`; }
 
-                grid.innerHTML += `
-                    <div class="${cardClass}" ${onclickEvent}>
-                        <div class="cal-day">${d.dayName}</div>
-                        <div class="cal-date">${d.date.substring(5)}</div>
-                        <div class="cal-cap">${statusText}</div>
-                    </div>`;
+                grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${d.date.substring(5)}</div><div class="cal-cap">${statusText}</div></div>`;
             });
             updatePricing();
         }
 
         function toggleDate(dateStr, element) {
-            if(element.classList.contains('selected')) {
-                element.classList.remove('selected'); selectedNewDates = selectedNewDates.filter(d => d !== dateStr);
-            } else {
-                element.classList.add('selected'); selectedNewDates.push(dateStr);
-            }
+            if(element.classList.contains('selected')) { element.classList.remove('selected'); selectedNewDates = selectedNewDates.filter(d => d !== dateStr); } 
+            else { element.classList.add('selected'); selectedNewDates.push(dateStr); }
             updatePricing(); validateSubmitButton();
         }
 
-        function getRatePerDay(daysCount) {
-            if (daysCount === 0) return 0;
-            if (daysCount >= 8) return 150;
-            return pricingTiers[daysCount];
-        }
-
         function updatePricing() {
-            let activeBookedDays = userPastReservations.length;
-            let newSelectedDays = selectedNewDates.length;
-            let applicableRate = getRatePerDay(activeBookedDays + newSelectedDays);
+            let activeBookedDays = userPastReservations.length; let newSelectedDays = selectedNewDates.length;
+            let totalD = activeBookedDays + newSelectedDays;
+            let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
             
-            let payableAmount = newSelectedDays * applicableRate;
-            let discountMsg = "";
+            let payableAmount = newSelectedDays * applicableRate; let discountMsg = "";
 
-            if (isFirstEver && newSelectedDays > 0) {
-                payableAmount -= 50; 
-                discountMsg = "🎁 ۵۰ هزار تومان تخفیف اولین ورود به سیستم اعمال شد!";
-            } else if (activeBookedDays > 0 && newSelectedDays > 0) {
-                discountMsg = `🎉 به دلیل رزروهای قبلی، روزهای جدید با تخفیف (نرخ ${applicableRate} تومانی) محاسبه شد!`;
-            }
+            if (isFirstEver && newSelectedDays > 0) { payableAmount -= 50; discountMsg = "🎁 ۵۰ هزار تومان تخفیف اولین ورود به سیستم اعمال شد!"; } 
+            else if (activeBookedDays > 0 && newSelectedDays > 0) { discountMsg = `🎉 به دلیل رزروهای قبلی، روزهای جدید با تخفیف (نرخ ${applicableRate} تومانی) محاسبه شد!`; }
 
             finalAmountToPay = payableAmount > 0 ? payableAmount * 1000 : 0;
             document.getElementById('newDaysCountTxt').innerText = `${newSelectedDays} روز`;
@@ -451,7 +340,6 @@
                 const reader = new FileReader();
                 reader.onload = function(e) { base64Image = e.target.result.split(',')[1]; };
                 reader.readAsDataURL(file);
-                
                 document.getElementById('uploadText').innerText = `✅ فایل انتخاب شد: ${file.name}`;
                 document.getElementById('uploadBox').style.borderColor = "var(--success)";
                 document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
@@ -460,59 +348,43 @@
         }
 
         document.getElementById('rulesCheckbox').addEventListener('change', validateSubmitButton);
-
-        function validateSubmitButton() {
-            const btn = document.getElementById('btnSubmitBooking');
-            btn.disabled = !(selectedNewDates.length > 0 && base64Image && document.getElementById('rulesCheckbox').checked);
-        }
+        function validateSubmitButton() { document.getElementById('btnSubmitBooking').disabled = !(selectedNewDates.length > 0 && base64Image && document.getElementById('rulesCheckbox').checked); }
 
         async function submitBooking() {
             showLoader('در حال رزرو و ارسال فیش...');
             try {
+                // چک کردن تداخل ظرفیت
                 const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', selectedNewDates);
                 let isConflict = false;
-                
-                // در مدل جدید، دیتابیس مستقیم ظرفیت باقی‌مانده رو نشون می‌ده
                 capCheck?.forEach(c => { if(c.available_capacity <= 0) isConflict = true; });
 
-                if (isConflict) {
-                    hideLoader(); alert('⚠️ ظرفیت یکی از روزها همین الان توسط شخص دیگری پر شد!'); await initializeBookingEngine(); return;
-                }
+                if (isConflict) { hideLoader(); alert('⚠️ ظرفیت یکی از روزها همین الان توسط شخص دیگری پر شد!'); await initializeBookingEngine(); return; }
 
-                // 🚨 نکته مهم: اگر گوگل اسکریپت فیلتر باشه یا زمان‌بر بشه، ممکنه مرورگر تایم‌اوت بده. 
-                // پس فیش رو بصورت غیرهمزمان می‌فرستیم که معطل نشه
+                // ارسال به ربات (غیرهمزمان)
                 fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'send_bale_receipt',
-                        photo_base64: base64Image,
+                    method: 'POST', body: JSON.stringify({
+                        action: 'send_bale_receipt', photo_base64: base64Image,
                         caption: `🚨 رزرو جدید پانسیون 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان`
                     })
-                }).catch(err => console.log('خطای ارسال بک‌گراند فیش', err));
+                }).catch(err => console.log(err));
 
-                // ثبت رزرو در جدول خودمون
+                // ثبت در دیتابیس
                 const { error: insertErr } = await supabaseClient.from('pan_reservations').insert([{
                     phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(selectedNewDates),
                     paid_amount: finalAmountToPay, receipt_base64: "Sent to Bot" 
                 }]);
                 if(insertErr) throw insertErr;
 
-                // 🚨 اینجا مدل دو ستونه اعمال شده (یکی کم می‌کنیم از ظرفیت باقی‌مانده)
+                // کسر یک واحد از ظرفیت
                 for (let dateStr of selectedNewDates) {
                     let currentAvailable = dailyCapacities[dateStr]?.available_capacity ?? 4; 
-                    await supabaseClient.from('pan_daily_capacity').upsert({ 
-                        target_date: dateStr, 
-                        available_capacity: currentAvailable - 1 
-                    });
+                    await supabaseClient.from('pan_daily_capacity').upsert({ target_date: dateStr, available_capacity: currentAvailable - 1 });
                 }
 
                 hideLoader();
-                alert('🎉 رزرو شما با موفقیت قطعی شد.\n⏰ ساعت کاری پانسیون از ۷ صبح تا ۱۰ شب است و می‌توانید هر ساعتی تشریف بیاورید.');
+                alert('🎉 رزرو شما با موفقیت قطعی شد.\n⏰ ساعت کاری پانسیون از ۷ صبح تا ۱۰ شب است.');
                 window.location.reload(); 
-            } catch (e) { 
-                hideLoader(); 
-                alert('جزئیات خطای ثبت نهایی:\n' + JSON.stringify(e)); 
-            }
+            } catch (e) { hideLoader(); alert('خطای ثبت نهایی:\n' + e.message); }
         }
     </script>
 </body>
