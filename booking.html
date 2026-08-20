@@ -7,9 +7,6 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ==========================================
-           🎨 پالت رنگی یکپارچه
-           ========================================== */
         :root { 
             --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.1);
             --accent: #d9858a; --accent-hover: #c4727c;
@@ -32,7 +29,6 @@
         body { background: var(--bg-color); color: var(--text-main); line-height: 1.7; transition: var(--transition); display: flex; flex-direction: column; min-height: 100vh; }
         a { text-decoration: none; color: inherit; }
 
-        /* 🎩 هدر بالای صفحه */
         header {
             position: sticky; top: 0; z-index: 1000;
             background: var(--surface-glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -44,7 +40,6 @@
         .theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 16px; transition: var(--transition); }
         .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* 📦 کانتینر اصلی محتوا */
         .main-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
         .container { 
             background: var(--surface); border: 1px solid var(--border); border-radius: 28px; 
@@ -56,12 +51,10 @@
         .header-box h1 { font-size: 22px; color: var(--primary); font-weight: 900; margin-bottom: 8px; }
         .header-box p { font-size: 13px; color: var(--text-muted); }
 
-        /* 🔄 کنترل مراحل */
         .step-section { padding: 35px 30px; display: none; animation: fadeIn 0.4s ease-out; }
         .step-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 📝 فرم‌ها و ورودی‌ها */
         .form-group { margin-bottom: 22px; }
         .form-input { 
             width: 100%; background: var(--bg-color); border: 1px solid var(--border); 
@@ -82,7 +75,6 @@
         .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
-        /* 🗓️ تقویم رزرو */
         .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
         .cal-card { 
             background: var(--bg-color); border: 1px solid var(--border); border-radius: 16px; 
@@ -99,12 +91,10 @@
         .cal-date { font-size: 11px; margin-bottom: 8px; color: var(--text-muted); }
         .cal-cap { font-size: 11px; font-weight: bold; background: var(--surface); padding: 4px 8px; border-radius: 8px; display: inline-block; border: 1px solid var(--border); }
 
-        /* 💰 باکس فاکتور */
         .checkout-box { background: var(--bg-color); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; margin-bottom: 25px; }
         .price-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 10px; color: var(--text-muted); }
         .price-final { font-size: 24px; font-weight: 900; color: var(--success); margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; text-align: left; }
         
-        /* 📸 آپلود فایل و قوانین */
         .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--border); padding: 30px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 20px; background: var(--bg-color); transition: var(--transition); }
         .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
         .file-upload input { display: none; }
@@ -269,12 +259,24 @@
         }
 
         // ==========================================
+        // 🗓️ توابع تولید تاریخ (با فیلتر کاراکترهای مخفی فایرفاکس)
+        // ==========================================
+        function getShamsiDate(dateObj) { 
+            let rawDate = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); 
+            return rawDate.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
+        }
+        function getShamsiDayName(dateObj) { 
+            let rawDay = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); 
+            return rawDay.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
+        }
+
+        // ==========================================
         // تنظیمات سوپابیس و بک‌اند
         // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 موقتاً کلید سرویس رو اینجا گذاشتم تا مشکل RLS رو رد کنیم
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 🚨 کلید ANON پابلیک (برای امنیت، کلید اصلی رو نذار)
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // 🚨 لینک وب‌اپلیکیشن گوگل اسکریپت
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
@@ -322,7 +324,6 @@
             } catch (e) { 
                 hideLoader(); 
                 alert('جزئیات خطای سرور:\n' + JSON.stringify(e)); 
-                console.error(e); 
             }
         }
 
@@ -349,23 +350,9 @@
             } catch (e) { 
                 hideLoader(); 
                 alert('جزئیات خطای سرور:\n' + JSON.stringify(e)); 
-                console.error(e); 
             }
         }
 
-        // ==========================================
-        // 🗓️ توابع تولید تاریخ (با فیلتر کاراکترهای مخفی فایرفاکس)
-        // ==========================================
-        function getShamsiDate(dateObj) { 
-            let rawDate = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj); 
-            // حذف دقیق کاراکترهای نامرئی LRM و RLM که فایرفاکس اضافه می‌کند
-            return rawDate.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
-        }
-        
-        function getShamsiDayName(dateObj) { 
-            let rawDay = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(dateObj); 
-            return rawDay.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
-        }
         async function initializeBookingEngine() {
             showLoader('در حال دریافت ظرفیت‌های زنده...');
             window14Dates = [];
@@ -399,8 +386,9 @@
             grid.innerHTML = ''; selectedNewDates = [];
 
             window14Dates.forEach(d => {
-                let capInfo = dailyCapacities[d.date] || { total_capacity: 4, booked_capacity: 0 };
-                let available = capInfo.total_capacity - capInfo.booked_capacity;
+                // 🚨 اینجا مدل دو ستونه اعمال شده (available_capacity به جای کسر کردن)
+                let capInfo = dailyCapacities[d.date] || { available_capacity: 4 };
+                let available = capInfo.available_capacity;
                 let isPastBooked = userPastReservations.includes(d.date);
                 
                 let cardClass = 'cal-card'; let onclickEvent = ''; let statusText = `${available} ظرفیت خالی`;
@@ -483,31 +471,39 @@
             try {
                 const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', selectedNewDates);
                 let isConflict = false;
-                capCheck?.forEach(c => { if(c.total_capacity - c.booked_capacity <= 0) isConflict = true; });
+                
+                // در مدل جدید، دیتابیس مستقیم ظرفیت باقی‌مانده رو نشون می‌ده
+                capCheck?.forEach(c => { if(c.available_capacity <= 0) isConflict = true; });
 
                 if (isConflict) {
                     hideLoader(); alert('⚠️ ظرفیت یکی از روزها همین الان توسط شخص دیگری پر شد!'); await initializeBookingEngine(); return;
                 }
 
-                await fetch(GAS_URL, {
+                // 🚨 نکته مهم: اگر گوگل اسکریپت فیلتر باشه یا زمان‌بر بشه، ممکنه مرورگر تایم‌اوت بده. 
+                // پس فیش رو بصورت غیرهمزمان می‌فرستیم که معطل نشه
+                fetch(GAS_URL, {
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'send_bale_receipt',
                         photo_base64: base64Image,
                         caption: `🚨 رزرو جدید پانسیون 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان`
                     })
-                });
+                }).catch(err => console.log('خطای ارسال بک‌گراند فیش', err));
 
+                // ثبت رزرو در جدول خودمون
                 const { error: insertErr } = await supabaseClient.from('pan_reservations').insert([{
                     phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(selectedNewDates),
                     paid_amount: finalAmountToPay, receipt_base64: "Sent to Bot" 
                 }]);
                 if(insertErr) throw insertErr;
 
+                // 🚨 اینجا مدل دو ستونه اعمال شده (یکی کم می‌کنیم از ظرفیت باقی‌مانده)
                 for (let dateStr of selectedNewDates) {
-                    let currentBooked = dailyCapacities[dateStr]?.booked_capacity || 0;
-                    let currentTotal = dailyCapacities[dateStr]?.total_capacity || 4; 
-                    await supabaseClient.from('pan_daily_capacity').upsert({ target_date: dateStr, total_capacity: currentTotal, booked_capacity: currentBooked + 1 });
+                    let currentAvailable = dailyCapacities[dateStr]?.available_capacity ?? 4; 
+                    await supabaseClient.from('pan_daily_capacity').upsert({ 
+                        target_date: dateStr, 
+                        available_capacity: currentAvailable - 1 
+                    });
                 }
 
                 hideLoader();
