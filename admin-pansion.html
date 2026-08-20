@@ -10,8 +10,7 @@
         :root { 
             --bg-dark: #0a0f0d; --surface-dark: #121a18; --surface-light: #1b2624; --border-color: #263633;
             --primary: #639889; --primary-fade: rgba(99, 152, 137, 0.15);
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --accent: #d9858a;
-            --text-main: #f1f5f9; --text-muted: #8b9d99;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --text-main: #f1f5f9; --text-muted: #8b9d99;
         }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
@@ -37,9 +36,6 @@
         .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; text-align: center; }
         .cap-date { font-size: 14px; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
         .cap-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; }
-        .receipt-img { max-width: 150px; border-radius: 8px; cursor: pointer; border: 1px dashed var(--border-color); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-        .modal img { max-width: 90%; max-height: 90%; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -64,7 +60,7 @@
 
             <div id="tab-capacity" class="tab-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                    <h3 style="color: var(--primary);">ظرفیت‌های ۱۴ روز آینده</h3>
+                    <h3 style="color: var(--primary);">ظرفیتِ باقی‌مانده‌ی ۱۴ روز آینده</h3>
                     <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات ظرفیت</button>
                 </div>
                 <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
@@ -77,11 +73,9 @@
         </div>
     </div>
 
-    <div class="modal" id="imageModal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>
-
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 کلید SERVICE (مدیریتی) را اینجا بگذار
+        // 🚨 کلید SERVICE_ROLE سوپابیس رو اینجا بگذار
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -122,7 +116,8 @@
         }
 
         function getShamsiDate(dateObj) {
-            return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
+            let rawDate = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
+            return rawDate.replace(/[\u200B-\u200D\uFEFF\u200E\u200F\u061C]/g, '');
         }
 
         async function loadCapacities() {
@@ -136,15 +131,13 @@
             data?.forEach(d => capacitiesData[d.target_date] = d);
 
             document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
-                // 🚨 پیش‌فرض به 4 تغییر کرد
-                let totalCap = capacitiesData[date]?.total_capacity ?? 4; 
-                let bookedCap = capacitiesData[date]?.booked_capacity ?? 0;
+                // 🧠 مدل دو ستونه: فقط ظرفیت باقی‌مانده رو نشون می‌دیم (دیفالت ۴)
+                let available = capacitiesData[date]?.available_capacity ?? 4; 
                 return `
                     <div class="cap-card">
                         <div class="cap-date">${date}</div>
-                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">ظرفیت کل سالن:</div>
-                        <input type="number" id="cap_${date}" class="cap-input" value="${totalCap}">
-                        <div style="font-size:11px; color:${bookedCap >= totalCap ? 'var(--danger)' : 'var(--success)'};">رزرو شده تا الان: ${bookedCap} نفر</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">ظرفیتِ باقی‌مانده (خالی):</div>
+                        <input type="number" id="cap_${date}" class="cap-input" value="${available}">
                     </div>
                 `;
             }).join('');
@@ -158,8 +151,7 @@
                 let inputVal = document.getElementById(`cap_${dateStr}`).value;
                 updates.push({
                     target_date: dateStr,
-                    total_capacity: parseInt(inputVal),
-                    booked_capacity: capacitiesData[dateStr]?.booked_capacity || 0
+                    available_capacity: parseInt(inputVal)
                 });
             }
             
@@ -176,7 +168,6 @@
             list.innerHTML = data.map(r => {
                 let datesObj = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
                 let datesStr = Array.isArray(datesObj) ? datesObj.join(' ، ') : '-';
-                // چون عکس در دیتابیس نیست، فقط مینویسیم ارسال شده به ربات
                 return `
                 <div class="card">
                     <div class="c-info">
