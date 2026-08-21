@@ -3,40 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رزرو روزانه پانسیون VIP | راهینو</title>
+    <title>رزرو روزانه پانسیون مطالعه راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 🎨 ترکیب رنگی جدید با تم صورتی/رزگلد دخترانه */
         :root { 
             --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.1);
-            --accent: #d9858a; --accent-hover: #c4727c;
+            --accent: #d9858a; --accent-hover: #c4727c; --accent-fade: rgba(217, 133, 138, 0.15);
             --bg-color: #f1f5f3; --surface: #ffffff; --surface-glass: rgba(255, 255, 255, 0.85);
             --text-main: #2d3748; --text-muted: #718096; --border: #e2e8f0; 
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --shadow: 0 20px 40px rgba(99, 152, 137, 0.08); 
+            --shadow: 0 20px 40px rgba(217, 133, 138, 0.12); 
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         [data-theme="dark"] {
             --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.15);
-            --accent: #e59ea3; --accent-hover: #f0b2b6;
+            --accent: #e59ea3; --accent-hover: #f0b2b6; --accent-fade: rgba(229, 158, 163, 0.15);
             --bg-color: #121918; --surface: #1b2624; --surface-glass: rgba(27, 38, 36, 0.85);
             --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #2d3d3a; 
             --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
+        
+        /* قفل کردن اسکرول افقی برای جلوگیری از لرزش در موبایل */
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); line-height: 1.7; transition: var(--transition); display: flex; flex-direction: column; min-height: 100vh; }
         a { text-decoration: none; color: inherit; }
 
         header { position: sticky; top: 0; z-index: 1000; background: var(--surface-glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
         .back-btn { display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--text-main); font-size: 14px; transition: var(--transition); }
-        .back-btn:hover { color: var(--primary); }
+        .back-btn:hover { color: var(--accent); }
         .theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 16px; transition: var(--transition); }
-        .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+        .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
         .main-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
         .container { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: 100%; max-width: 550px; overflow: hidden; box-shadow: var(--shadow); position: relative; transition: var(--transition); }
         .header-box { text-align: center; padding: 35px 25px 20px; border-bottom: 1px solid var(--border); }
-        .header-box h1 { font-size: 22px; color: var(--primary); font-weight: 900; margin-bottom: 8px; }
+        .header-box h1 { font-size: 20px; color: var(--accent); font-weight: 900; margin-bottom: 8px; }
         .header-box p { font-size: 13px; color: var(--text-muted); }
 
         .step-section { padding: 35px 30px; display: none; animation: fadeIn 0.4s ease-out; }
@@ -45,35 +50,38 @@
 
         .form-group { margin-bottom: 22px; }
         .form-input { width: 100%; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); text-align: center; font-weight: bold; }
-        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
+        .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-fade); }
         select.form-input { appearance: none; cursor: pointer; }
 
+        /* دکمه‌های صورتی رنگ */
         .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); color: white; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); box-shadow: 0 10px 20px var(--primary-fade); }
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(99, 152, 137, 0.3); }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); box-shadow: 0 10px 20px var(--accent-fade); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(217, 133, 138, 0.3); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
         .cal-card { background: var(--bg-color); border: 1px solid var(--border); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); position: relative; user-select: none; }
-        .cal-card.available:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
-        .cal-card.selected { background: var(--primary-fade); border-color: var(--primary); color: var(--primary); }
+        .cal-card.available:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-fade); }
+        .cal-card.selected { background: var(--accent-fade); border-color: var(--accent); color: var(--accent); }
         .cal-card.selected::after { content: '✅'; position: absolute; top: -8px; right: -8px; font-size: 16px; background: var(--surface); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--border); background: rgba(0, 0, 0, 0.05); }
         .cal-card.past-booked { background: rgba(16, 185, 129, 0.05); border-color: var(--success); cursor: not-allowed; opacity: 0.8; }
         .cal-day { font-size: 14px; font-weight: 900; margin-bottom: 6px; }
         .cal-date { font-size: 11px; margin-bottom: 8px; color: var(--text-muted); }
         .cal-cap { font-size: 11px; font-weight: bold; background: var(--surface); padding: 4px 8px; border-radius: 8px; display: inline-block; border: 1px solid var(--border); }
 
-        .checkout-box { background: var(--bg-color); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .checkout-box { background: var(--bg-color); border: 1px dashed var(--accent); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
         .price-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 10px; color: var(--text-muted); }
         .price-final { font-size: 24px; font-weight: 900; color: var(--success); margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; text-align: left; }
         
-        .payment-info { background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 25px; text-align: center; }
+        .payment-info { background: var(--accent-fade); border: 1px solid rgba(217, 133, 138, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 25px; text-align: center; }
+        .copy-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; padding: 5px 10px; font-size: 14px; transition: 0.2s; }
+        .copy-btn:hover { background: var(--bg-color); border-color: var(--accent); }
         
         .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--border); padding: 30px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 20px; background: var(--bg-color); transition: var(--transition); }
-        .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
+        .file-upload:hover { border-color: var(--accent); background: var(--accent-fade); }
         .file-upload input { display: none; }
         
         .rules-container { background: var(--bg-color); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 25px; overflow: hidden; }
@@ -82,8 +90,9 @@
         .rules-checkbox-label:hover { background: rgba(239, 68, 68, 0.1); }
         .rules-checkbox-label input { accent-color: var(--danger); width: 18px; height: 18px; cursor: pointer; }
 
-        .loader { position: absolute; inset: 0; background: var(--surface-glass); backdrop-filter: blur(5px); z-index: 10; display: none; justify-content: center; align-items: center; flex-direction: column; border-radius: 28px; }
-        .spinner { width: 45px; height: 45px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        /* فیکس شدن لودر در وسط صفحه برای موبایل */
+        .loader { position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--surface-glass); backdrop-filter: blur(5px); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
@@ -96,15 +105,15 @@
         <button class="theme-toggle" id="themeBtn" title="تغییر حالت شب و روز">🌙</button>
     </header>
 
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div style="color: var(--accent); font-size: 15px; font-weight: bold;" id="loaderText">در حال پردازش...</div>
+    </div>
+
     <div class="main-wrapper">
         <div class="container">
-            <div class="loader" id="loader">
-                <div class="spinner"></div>
-                <div style="color: var(--primary); font-size: 14px; font-weight: bold;" id="loaderText">در حال پردازش...</div>
-            </div>
-
             <div class="header-box">
-                <h1>رزرو سالن مطالعه راهینو</h1>
+                <h1>رزرو روزانه پانسیون مطالعه راهینو</h1>
                 <p>انتخاب روزانه، تخفیف پلکانی، رزرو آنی</p>
             </div>
 
@@ -117,7 +126,7 @@
             </div>
 
             <div class="step-section" id="step-register">
-                <div style="background: var(--primary-fade); color: var(--primary); padding: 15px; border-radius: 12px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; border: 1px solid rgba(99, 152, 137, 0.2);">
+                <div style="background: var(--accent-fade); color: var(--accent); padding: 15px; border-radius: 12px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; border: 1px solid rgba(217, 133, 138, 0.3);">
                     شماره شما در سیستم یافت نشد. لطفاً برای تشکیل پرونده اطلاعات زیر را تکمیل کنید.
                 </div>
                 <div class="form-group"><input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل"></div>
@@ -157,16 +166,19 @@
 
                 <div class="checkout-box">
                     <div class="price-row"><span>روزهای انتخاب شده (جدید):</span><strong id="newDaysCountTxt">0 روز</strong></div>
-                    <div class="price-row"><span>تعداد روزهای قبلی شما در این بازه:</span><strong id="pastDaysCountTxt" style="color: var(--primary);">0 روز</strong></div>
+                    <div class="price-row"><span>تعداد روزهای قبلی شما در این بازه:</span><strong id="pastDaysCountTxt" style="color: var(--accent);">0 روز</strong></div>
                     <div class="price-row"><span>هزینه پایه (هر روز):</span><strong id="rateAppliedTxt">0 تومان</strong></div>
                     <div id="discountNotice" style="color: var(--warning); font-size: 12px; font-weight: bold; margin-top: 5px; text-align: right;"></div>
                     <div class="price-final"><span style="color: var(--text-main); font-size: 16px;">مبلغ کل پرداخت: </span><span id="finalPriceTxt">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
                 </div>
 
                 <div class="payment-info">
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
-                    <div style="font-size: 20px; font-weight: 900; color: var(--text-main); letter-spacing: 2px;" id="cardNumber">6219861810380484</div>
-                    <div style="font-size: 12px; color: var(--primary); font-weight: bold; margin-top: 5px;">به نام: ارشاد شفیعی</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <button class="copy-btn" onclick="copyCard()" title="کپی شماره کارت">📋 کپی</button>
+                        <div style="font-size: 22px; font-weight: 900; color: var(--text-main); letter-spacing: 2px;" id="cardNumber">6219861810380484</div>
+                    </div>
+                    <div style="font-size: 13px; color: var(--accent); font-weight: bold;">به نام: ارشاد شفیعی</div>
                 </div>
 
                 <label class="file-upload" id="uploadBox">
@@ -175,18 +187,29 @@
                     <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
                 </label>
 
+                <!-- باکس قوانین -->
                 <div class="rules-container">
                     <div class="rules-scroll-box">
-                        <strong>قوانین سالن مطالعه راهینو:</strong><br>
-                        ۱. ساعت کاری پانسیون از ۷ صبح تا ۱۰ شب می‌باشد.<br>
-                        ۲. رعایت سکوت مطلق در سالن مطالعه الزامی است.<br>
-                        ۳. استفاده از تلفن همراه در فضای مطالعه ممنوع می‌باشد.<br>
-                        ۴. امکان بازگشت وجه پس از ثبت رزرو وجود ندارد.<br>
-                        ۵. فیش واریزی باید متعلق به همین تراکنش باشد.
+                        <strong style="color: var(--accent); font-size: 13px;">قوانین انضباطی و محیطی سالن مطالعه راهینو:</strong>
+                        <ul style="padding-right: 18px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">
+                            <li>امکان بازگشت وجه پس از ثبت رزرو وجود ندارد.</li>
+                            <li>فیش واریزی باید متعلق به همین تراکنش باشد.</li>
+                            <li>حفظ سکوت و آرامش، رعایت اخلاق و حرمت‌های اجتماعی، احترام به حقوق دیگران و برخورد مناسب با مسئولین و سایر دانش‌آموزان الزامی است.</li>
+                            <li>در تایم‌های مطالعه، هرگونه پیاده‌روی بی‌مورد، مراجعه به میز دیگران برای صحبت، و پچ‌پچ کردن اکیداً ممنوع است.</li>
+                            <li>استفاده از تلفن همراه در بخش‌های مختلف سالن مطالعه ممنوع می‌باشد.</li>
+                            <li>صرف غذا تنها در تایم‌های مشخص‌شده برای ناهار و صرفاً در بخش‌های مجاز (آشپزخانه یا چیل‌زون) امکان‌پذیر است.</li>
+                            <li>تمامی دانش‌آموزان موظفند در اپلیکیشن بوفه ثبت‌نام نموده و کلیه خریدهای خوراکی خود را منحصراً از طریق این پلتفرم انجام دهند.</li>
+                            <li>حفظ نظم و پاکیزگی سالن الزامی است و دانش‌آموزان باید قبل از خروج، میز خود را کاملاً مرتب کرده و زباله‌هایشان را جمع‌آوری نمایند.</li>
+                            <li>از آوردن وسایل زینتی و قیمتی خودداری شود؛ مؤسسه هیچ‌گونه مسئولیتی در قبال مفقودی اشیاء قیمتی، طلا و پول دانش‌آموز ندارد.</li>
+                            <li>چنانچه دانش‌آموز به اموال سالن خسارتی وارد کند، موظف است هزینه خسارت وارده را شخصاً پرداخت نماید.</li>
+                            <li>پس از خروج دانش‌آموز از مجموعه، مسئولیت هرگونه اتفاق و رفت‌وآمد بر عهده اولیا می‌باشد.</li>
+                            <li>بروز حوادث ناشی از بی‌احتیاطی (مانند سوختگی با آب جوش یا شوخی‌های پرخطر) از کنترل سرپرستان خارج بوده و مؤسسه مسئولیتی جز تذکر یا اخراج فرد مخل نظم نخواهد داشت.</li>
+                            <li style="color: var(--danger); font-weight: bold;">در صورت عدم رعایت هر یک از قوانین فوق و دریافت تذکرهای مداوم از سوی سرپرستان، بدون هیچ‌گونه تعارفی از ادامه حضور شخص متخلف در پانسیون جلوگیری به عمل خواهد آمد.</li>
+                        </ul>
                     </div>
                     <label class="rules-checkbox-label">
                         <input type="checkbox" id="rulesCheckbox">
-                        <span>قوانین را خوانده و می‌پذیرم. (آپلود فیش نامعتبر = محرومیت).</span>
+                        <span>تمام قوانین فوق را خوانده و می‌پذیرم. (تخلف = لغو دسترسی)</span>
                     </label>
                 </div>
 
@@ -209,9 +232,15 @@
             themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
         });
 
+        // کپی شماره کارت
+        function copyCard() {
+            navigator.clipboard.writeText('6219861810380484').then(() => {
+                alert('شماره کارت با موفقیت کپی شد! 💳');
+            });
+        }
+
         function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
         
-        // 🚀 خنثی کردن کاراکترهای مخفی فایرفاکس
         function getShamsiDate(dateObj) { 
             const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
             let y, m, d;
@@ -224,14 +253,10 @@
         }
 
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 کلید ANON / عمومی را اینجا قرار بده
+        // 🚨 کلید ANON عمومی
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY , {
-            auth: { 
-                persistSession: false, 
-                autoRefreshToken: false, 
-                detectSessionInUrl: false 
-            }
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
         });
 
         // 🚨 لینک گوگل اسکریپت
@@ -292,11 +317,9 @@
             let justDates = window14Dates.map(d => d.date);
 
             try {
-                // 🔄 تبدیل تاریخ اسلش‌دار به خط تیره برای ارسال به دیتابیس
                 let dbDates = justDates.map(d => d.replace(/\//g, '-'));
                 const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbDates);
                 
-                // 🔄 تبدیل مجدد تاریخ به اسلش‌دار هنگام دریافت
                 capData?.forEach(d => { dailyCapacities[d.target_date.replace(/-/g, '/')] = d; });
 
                 const { data: resData } = await supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', currentUser.phone_number);
@@ -318,7 +341,7 @@
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid'); grid.innerHTML = ''; selectedNewDates = [];
             window14Dates.forEach(d => {
-                let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; // پیش‌فرض ۴ ظرفیت
+                let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; 
                 let available = capInfo.available_capacity;
                 let isPastBooked = userPastReservations.includes(d.date);
                 
@@ -357,17 +380,34 @@
             document.getElementById('discountNotice').innerText = discountMsg;
         }
 
+        // 🚀 موتور فشرده‌سازی هوشمند عکس برای جلوگیری از کرش کردن بله
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
+                document.getElementById('uploadText').innerText = `⏳ در حال بهینه‌سازی فایل...`;
                 const reader = new FileReader();
-                reader.onload = function(e) { base64Image = e.target.result.split(',')[1]; };
+                reader.onload = function(e) { 
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        const MAX = 1000;
+                        if(w > h && w > MAX) { h *= MAX/w; w = MAX; }
+                        else if(h > MAX) { w *= MAX/h; h = MAX; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        
+                        base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                        document.getElementById('uploadText').innerText = `✅ فایل آماده شد: ${file.name}`;
+                        document.getElementById('uploadBox').style.borderColor = "var(--success)";
+                        document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
+                        validateSubmitButton();
+                    };
+                    img.src = e.target.result;
+                };
                 reader.readAsDataURL(file);
-                document.getElementById('uploadText').innerText = `✅ فایل انتخاب شد: ${file.name}`;
-                document.getElementById('uploadBox').style.borderColor = "var(--success)";
-                document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
             }
-            validateSubmitButton();
         }
 
         document.getElementById('rulesCheckbox').addEventListener('change', validateSubmitButton);
@@ -383,12 +423,14 @@
 
                 if (isConflict) { hideLoader(); alert('⚠️ ظرفیت یکی از روزها همین الان توسط شخص دیگری پر شد!'); await initializeBookingEngine(); return; }
 
-                fetch(GAS_URL, {
-                    method: 'POST', body: JSON.stringify({
+                // 🚀 اضافه شدن کلمه await برای تضمین ارسال عکس قبل از رفرش
+                await fetch(GAS_URL, {
+                    method: 'POST', 
+                    body: JSON.stringify({
                         action: 'send_bale_receipt', photo_base64: base64Image,
                         caption: `🚨 رزرو جدید پانسیون 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان`
                     })
-                }).catch(err => console.log(err));
+                }).catch(err => console.log('خطا در ارتباط با بله:', err));
 
                 const { error: insertErr } = await supabaseClient.from('pan_reservations').insert([{
                     phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(dbSelectedDates),
@@ -398,10 +440,7 @@
 
                 for (let dateStr of selectedNewDates) {
                     let currentAvailable = dailyCapacities[dateStr]?.available_capacity ?? 4; 
-                    await supabaseClient.from('pan_daily_capacity').upsert({ 
-                        target_date: dateStr.replace(/\//g, '-'), 
-                        available_capacity: currentAvailable - 1 
-                    });
+                    await supabaseClient.from('pan_daily_capacity').upsert({ target_date: dateStr.replace(/\//g, '-'), available_capacity: currentAvailable - 1 });
                 }
 
                 hideLoader();
