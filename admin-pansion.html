@@ -3,90 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت رزرو پانسیون | راهینو</title>
+    <title>مدیریت پیشرفته رزرو پانسیون | راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
-            --bg-dark: #0a0f0d; --surface-dark: #121a18; --surface-light: #1b2624; --border-color: #263633;
-            --primary: #639889; --primary-fade: rgba(99, 152, 137, 0.15);
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --text-main: #f1f5f9; --text-muted: #8b9d99;
+            --bg-dark: #070b09; 
+            --surface-dark: #121a18; 
+            --surface-light: #1b2624; 
+            --border-color: #263633;
+            --primary: #639889; 
+            --primary-fade: rgba(99, 152, 137, 0.15);
+            --primary-glow: rgba(99, 152, 137, 0.4);
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
         }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--surface-dark); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; }
-        .brand { text-align: center; font-size: 20px; font-weight: 900; margin-bottom: 30px; }
-        .brand span { color: var(--primary); }
-        .nav-item { padding: 15px 25px; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; text-decoration: none; border-right: 3px solid transparent; transition: 0.3s; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 260px; background: rgba(18, 26, 24, 0.95); backdrop-filter: blur(10px); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .brand { text-align: center; font-size: 22px; font-weight: 900; margin-bottom: 30px; letter-spacing: -0.5px; }
+        .brand span { color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); }
+        .nav-item { padding: 15px 25px; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; text-decoration: none; border-right: 3px solid transparent; transition: all 0.3s; }
         .nav-item:hover, .nav-item.active { background: linear-gradient(90deg, var(--primary-fade) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #0a0f0d 100%); }
-        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; }
-        .tab-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); border: none; background: var(--surface-light); transition: 0.3s; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        .tab-container { flex: 1; padding: 30px; overflow-y: auto; }
+        
+        /* Mobile Header */
+        .mobile-header { display: none; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 900; }
+        .menu-toggle { background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; opacity: 0; transition: opacity 0.3s; }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #070b09 100%); }
+        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .top-nav::-webkit-scrollbar { display: none; }
+        .tab-btn { padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-muted); border: 1px solid transparent; background: var(--surface-light); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { background: #22302e; color: var(--text-main); }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+        
+        /* Container & Cards */
+        .tab-container { flex: 1; padding: 30px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) var(--surface-dark); }
         .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .c-info div { margin-bottom: 5px; font-size: 13px; color: var(--text-muted); }
-        .c-info strong { color: var(--text-main); font-size: 15px; }
-        .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; color: white; }
-        .btn-green { background: var(--success); } .btn-red { background: var(--danger); } .btn-blue { background: var(--primary); }
-        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; text-align: center; }
-        .cap-date { font-size: 14px; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
-        .cap-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); border-color: #314541; }
+        .c-info div { margin-bottom: 6px; font-size: 13px; color: var(--text-muted); }
+        .c-info strong { color: var(--text-main); font-size: 16px; margin-bottom: 8px; display: inline-block; }
+        
+        /* Buttons */
+        .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; color: white; display: inline-flex; align-items: center; gap: 5px; }
+        .btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+        .btn:active { transform: scale(0.98); }
+        .btn-green { background: var(--success); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); } 
+        .btn-red { background: var(--danger); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); } 
+        .btn-blue { background: var(--primary); box-shadow: 0 4px 10px var(--primary-glow); }
+        
+        /* Capacity Grid */
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; text-align: center; transition: 0.3s; }
+        .cap-card:hover { border-color: var(--primary); background: var(--surface-dark); }
+        .cap-date { font-size: 15px; font-weight: 900; margin-bottom: 12px; color: var(--primary); }
+        .cap-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 16px; transition: border 0.3s; }
+        .cap-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
+
+        /* Data Table for Users */
+        .table-responsive { width: 100%; overflow-x: auto; background: var(--surface-dark); border-radius: 14px; border: 1px solid var(--border-color); }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: right; }
+        .data-table th, .data-table td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        .data-table th { background: rgba(27, 38, 36, 0.8); color: var(--primary); font-weight: bold; position: sticky; top: 0; }
+        .data-table tr { transition: background 0.2s; }
+        .data-table tr:hover { background: var(--surface-light); }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        /* Badges */
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badge-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-blocked { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .mobile-header { display: flex; }
+            .sidebar { position: fixed; right: -260px; height: 100%; box-shadow: -5px 0 25px rgba(0,0,0,0.5); }
+            .sidebar.active { transform: translateX(-260px); }
+            .top-nav { padding: 15px; }
+            .tab-btn { padding: 10px 15px; font-size: 13px; }
+            .tab-container { padding: 15px; }
+            .card { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .card > div:last-child { width: 100%; display: flex; gap: 10px; }
+            .card .btn { flex: 1; justify-content: center; }
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="brand">مدیریت <span>پانسیون</span></div>
+
+    <!-- Mobile Overlay -->
+    <div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="brand">راهینو <span>پانسیون</span></div>
         <a href="dashboard.html" class="nav-item"><span>🌅</span> بازگشت به داشبورد</a>
         <a href="#" class="nav-item active"><span>📍</span> سیستم رزرو روزانه</a>
     </div>
 
     <div class="main-content">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <div class="brand" style="margin:0; font-size:18px;">راهینو <span>پانسیون</span></div>
+            <div style="width: 24px;"></div> <!-- Spacer for flex alignment -->
+        </div>
+
         <div class="top-nav">
-            <button class="tab-btn active" onclick="switchTab('tab-users', this)">📝 درخواست‌های تایید عضویت</button>
-            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت ۱۴ روزه</button>
+            <button class="tab-btn active" onclick="switchTab('tab-users', this)">📝 در انتظار تایید</button>
+            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
             <button class="tab-btn" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
+            <button class="tab-btn" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
         </div>
 
         <div class="tab-container">
+            <!-- تب کاربران در انتظار <--
             <div id="tab-users" class="tab-content active">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">کاربران در انتظار تایید</h3>
-                <div id="pendingUsersList"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">کاربران در انتظار تایید عضویت</h3>
+                <div id="pendingUsersList"><div style="color:var(--text-muted); text-align:center; padding: 20px;">در حال دریافت اطلاعات...</div></div>
             </div>
 
+            <!-- تب ظرفیت <--
             <div id="tab-capacity" class="tab-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                    <h3 style="color: var(--primary);">ظرفیتِ باقی‌مانده‌ی ۱۴ روز آینده</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h3 style="color: var(--primary); font-size: 18px;">ظرفیتِ باقی‌مانده‌ی ۱۴ روز آینده</h3>
                     <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات</button>
                 </div>
-                <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
+                <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted); text-align:center; grid-column: 1/-1;">در حال دریافت اطلاعات...</div></div>
             </div>
 
+            <!-- تب رسیدها <--
             <div id="tab-receipts" class="tab-content">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">آخرین رزروهای ثبت شده</h3>
-                <div id="reservationsList"><div style="color:var(--text-muted);">در حال دریافت...</div></div>
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">آخرین رزروهای ثبت شده</h3>
+                <div id="reservationsList"><div style="color:var(--text-muted); text-align:center; padding: 20px;">در حال دریافت اطلاعات...</div></div>
+            </div>
+
+            <!-- تب جدید: لیست تمام کاربران <--
+            <div id="tab-all-users" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">لیست و مشخصات کامل کاربران ثبت‌نامی</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>نام و نام خانوادگی</th>
+                                <th>شماره موبایل</th>
+                                <th>پایه تحصیلی</th>
+                                <th>رشته</th>
+                                <th>مدرسه / دانشگاه</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ ثبت‌نام</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allUsersList">
+                            <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">در حال دریافت اطلاعات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        // 🚨 کلید SERVICE_ROLE / آزاد سوپابیس رو اینجا بگذار
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: { 
-                persistSession: false, 
-                autoRefreshToken: false, 
-                detectSessionInUrl: false 
-            }
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
         });
         let capacitiesData = {};
 
-        window.onload = () => { loadPendingUsers(); loadCapacities(); loadReservations(); };
+        window.onload = () => { 
+            loadPendingUsers(); 
+            loadCapacities(); 
+            loadReservations(); 
+            loadAllUsers(); // فراخوانی تب جدید
+        };
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -95,32 +202,75 @@
             btn.classList.add('active');
         }
 
+        // تبدیل وضعیت انگلیسی به فارسی با استایل
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'approved': return '<span class="badge badge-approved">تایید شده</span>';
+                case 'pending': return '<span class="badge badge-pending">در انتظار بررسی</span>';
+                case 'blocked': return '<span class="badge badge-blocked">مسدود شده</span>';
+                default: return `<span class="badge badge-pending">${status}</span>`;
+            }
+        }
+
         async function loadPendingUsers() {
             const { data } = await supabaseClient.from('pan_users').select('*').eq('status', 'pending');
             const list = document.getElementById('pendingUsersList');
-            if(!data || data.length === 0) { list.innerHTML = '<p style="color:var(--success);">هیچ درخواست جدیدی وجود ندارد.</p>'; return; }
+            if(!data || data.length === 0) { list.innerHTML = '<div style="background:var(--surface-light); padding:20px; border-radius:10px; text-align:center; color:var(--success);">✨ هیچ درخواست بررسی نشده‌ای وجود ندارد.</div>'; return; }
             
             list.innerHTML = data.map(u => `
                 <div class="card">
                     <div class="c-info">
                         <strong>${u.full_name}</strong>
-                        <div>📱 ${u.phone_number} | 🎓 ${u.grade} ${u.major} | 🏫 ${u.school}</div>
+                        <div>📱 ${u.phone_number} | 🎓 ${u.grade} ${u.major}</div>
+                        <div>🏫 محل تحصیل: ${u.school}</div>
                     </div>
                     <div>
-                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">تایید</button>
-                        <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">رد</button>
+                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">✔️ تایید</button>
+                        <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">❌ مسدود</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function updateUserStatus(phone, status) {
-            await supabaseClient.from('pan_users').update({ status: status }).eq('phone_number', phone);
-            alert(status === 'approved' ? 'کاربر تایید شد.' : 'کاربر رد شد.');
-            loadPendingUsers();
+        async function loadAllUsers() {
+            // دریافت تمام کاربران به ترتیب جدیدترین تاریخ
+            const { data } = await supabaseClient.from('pan_users').select('*').order('created_at', {ascending: false});
+            const list = document.getElementById('allUsersList');
+            
+            if(!data || data.length === 0) { 
+                list.innerHTML = '<tr><td colspan="7" style="text-align:center;">کاربری یافت نشد.</td></tr>'; 
+                return; 
+            }
+
+            list.innerHTML = data.map(u => {
+                // تبدیل تاریخ میلادی دیتابیس به شمسی خوانا
+                let dateStr = '-';
+                if(u.created_at) {
+                    const dateObj = new Date(u.created_at);
+                    dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(dateObj);
+                }
+
+                return `
+                <tr>
+                    <td style="font-weight:bold; color:var(--text-main);">${u.full_name}</td>
+                    <td style="font-family:monospace; font-size:14px;">${u.phone_number}</td>
+                    <td>${u.grade}</td>
+                    <td>${u.major}</td>
+                    <td>${u.school}</td>
+                    <td>${getStatusBadge(u.status)}</td>
+                    <td style="direction:ltr; text-align:right;">${dateStr}</td>
+                </tr>
+                `;
+            }).join('');
         }
 
-        // 🚀 خنثی کردن کاراکترهای مخفی
+        async function updateUserStatus(phone, status) {
+            await supabaseClient.from('pan_users').update({ status: status }).eq('phone_number', phone);
+            // رفرش کردن تب‌ها بعد از تغییر وضعیت
+            loadPendingUsers();
+            loadAllUsers(); 
+        }
+
         function getShamsiDate(dateObj) {
             const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
             let y, m, d;
@@ -145,8 +295,8 @@
                 return `
                     <div class="cap-card">
                         <div class="cap-date">${date}</div>
-                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">ظرفیتِ باقی‌مانده:</div>
-                        <input type="number" id="cap_${date}" class="cap-input" value="${available}">
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">ظرفیتِ باقی‌مانده:</div>
+                        <input type="number" id="cap_${date}" class="cap-input" value="${available}" min="0">
                     </div>
                 `;
             }).join('');
@@ -164,15 +314,22 @@
                 });
             }
             
+            const btn = document.querySelector('.btn-blue');
+            btn.innerHTML = '⏳ در حال ذخیره...';
+            
             const { error } = await supabaseClient.from('pan_daily_capacity').upsert(updates);
-            if(error) alert('خطا در ذخیره:\n' + error.message); else alert('✅ ظرفیت‌ها ذخیره شدند.');
+            
+            btn.innerHTML = '💾 ذخیره تغییرات';
+            if(error) alert('خطا در ذخیره:\n' + error.message); 
+            else alert('✅ ظرفیت‌ها با موفقیت ذخیره شدند.');
+            
             loadCapacities();
         }
 
         async function loadReservations() {
             const { data } = await supabaseClient.from('pan_reservations').select('*, pan_users(full_name)').order('created_at', {ascending: false}).limit(50);
             const list = document.getElementById('reservationsList');
-            if(!data || data.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">هنوز رزروی ثبت نشده.</p>'; return; }
+            if(!data || data.length === 0) { list.innerHTML = '<div style="background:var(--surface-light); padding:20px; border-radius:10px; text-align:center; color:var(--text-muted);">هنوز رزروی ثبت نشده است.</div>'; return; }
 
             list.innerHTML = data.map(r => {
                 let datesObj = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
@@ -180,11 +337,13 @@
                 return `
                 <div class="card">
                     <div class="c-info">
-                        <strong>${r.pan_users?.full_name || 'ناشناس'} <span style="font-size:12px; color:var(--text-muted);">(${r.phone_number})</span></strong>
-                        <div style="margin-top:8px;">📅 روزهای رزرو شده: <span style="color:var(--primary);">${datesStr}</span></div>
-                        <div>💰 پرداختی: ${(r.paid_amount || 0).toLocaleString()} تومان</div>
+                        <strong>${r.pan_users?.full_name || 'ناشناس'} <span style="font-size:13px; color:var(--text-muted); font-family:monospace;">(${r.phone_number})</span></strong>
+                        <div style="margin-top:8px; font-size: 14px;">📅 روزهای رزرو: <span style="color:var(--primary); font-weight:bold;">${datesStr}</span></div>
+                        <div style="font-size: 14px;">💰 پرداختی: <span style="color:var(--text-main);">${(r.paid_amount || 0).toLocaleString()} تومان</span></div>
                     </div>
-                    <div><span style="color:var(--success);font-size:12px;font-weight:bold;">✅ فیش در بله</span></div>
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <span style="color:var(--success); font-size:13px; font-weight:bold;">✅ فیش در بله</span>
+                    </div>
                 </div>
                 `;
             }).join('');
