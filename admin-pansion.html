@@ -86,6 +86,11 @@
         .badge-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
         .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-blocked { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-duplicate { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px dashed var(--danger); margin-right: 8px; font-size: 10px; }
+        .action-btn { padding: 6px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; border: none; color: white; font-weight: bold; transition: 0.2s; }
+        .action-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+        .btn-block-sm { background: var(--danger); }
+        .btn-approve-sm { background: var(--success); }
 
         /* Responsive Design */
         @media (max-width: 900px) {
@@ -146,26 +151,47 @@
             </div>
 
             <div id="tab-all-users" class="tab-content">
-                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">لیست و مشخصات کامل کاربران ثبت‌نامی</h3>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>نام و نام خانوادگی</th>
-                                <th>شماره موبایل</th>
-                                <th>پایه تحصیلی</th>
-                                <th>رشته</th>
-                                <th>مدرسه / دانشگاه</th>
-                                <th>وضعیت</th>
-                                <th>تاریخ ثبت‌نام</th>
-                            </tr>
-                        </thead>
-                        <tbody id="allUsersList">
-                            <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">در حال دریافت اطلاعات...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">لیست و مشخصات کامل کاربران ثبت‌نامی</h3>
+    
+    
+    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+        <input type="text" id="searchInput" placeholder="جستجوی نام یا موبایل..." class="cap-input" style="width: auto; flex: 1; margin: 0; text-align: right;" onkeyup="renderAllUsers()">
+        <select id="gradeFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
+            <option value="">همه پایه‌ها</option>
+            <option value="دوازدهم">دوازدهم</option>
+            <option value="یازدهم">یازدهم</option>
+            <option value="دهم">دهم</option>
+            <option value="دانشجو">دانشجو</option>
+            <option value="پشت کنکوری">پشت کنکوری</option>
+        </select>
+        <select id="statusFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="approved">تایید شده</option>
+            <option value="pending">در انتظار</option>
+            <option value="blocked">مسدود</option>
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>نام و نام خانوادگی</th>
+                    <th>شماره موبایل</th>
+                    <th>پایه تحصیلی</th>
+                    <th>رشته</th>
+                    <th>مدرسه / دانشگاه</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ ثبت‌نام</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody id="allUsersList">
+                <tr><td colspan="8" style="text-align:center; color:var(--text-muted);">در حال دریافت اطلاعات...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
         </div>
     </div>
 
@@ -227,37 +253,76 @@
             `).join('');
         }
 
-        async function loadAllUsers() {
-            // دریافت تمام کاربران به ترتیب جدیدترین تاریخ
-            const { data } = await supabaseClient.from('pan_users').select('*').order('created_at', {ascending: false});
-            const list = document.getElementById('allUsersList');
-            
-            if(!data || data.length === 0) { 
-                list.innerHTML = '<tr><td colspan="7" style="text-align:center;">کاربری یافت نشد.</td></tr>'; 
-                return; 
-            }
+        // متغیر سراسری برای ذخیره همه کاربران و فیلتر کردن بدون نیاز به ریکوئست اضافه
+let allUsersData = [];
 
-            list.innerHTML = data.map(u => {
-                // تبدیل تاریخ میلادی دیتابیس به شمسی خوانا
-                let dateStr = '-';
-                if(u.created_at) {
-                    const dateObj = new Date(u.created_at);
-                    dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(dateObj);
-                }
+// دریافت داده‌ها از دیتابیس فقط یک بار
+async function loadAllUsers() {
+    const { data } = await supabaseClient.from('pan_users').select('*').order('created_at', {ascending: false});
+    if(data) {
+        allUsersData = data;
+        renderAllUsers(); // اعمال فیلترها و رندر
+    }
+}
 
-                return `
-                <tr>
-                    <td style="font-weight:bold; color:var(--text-main);">${u.full_name}</td>
-                    <td style="font-family:monospace; font-size:14px;">${u.phone_number}</td>
-                    <td>${u.grade}</td>
-                    <td>${u.major}</td>
-                    <td>${u.school}</td>
-                    <td>${getStatusBadge(u.status)}</td>
-                    <td style="direction:ltr; text-align:right;">${dateStr}</td>
-                </tr>
-                `;
-            }).join('');
+// تابع جدید برای فیلتر، تشخیص تکراری‌ها و ساخت جدول
+function renderAllUsers() {
+    const list = document.getElementById('allUsersList');
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    const gradeFilter = document.getElementById('gradeFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    // پیدا کردن نام‌های تکراری
+    const nameCounts = {};
+    allUsersData.forEach(u => {
+        nameCounts[u.full_name] = (nameCounts[u.full_name] || 0) + 1;
+    });
+
+    // اعمال فیلترها به صورت همزمان
+    const filteredUsers = allUsersData.filter(u => {
+        const matchSearch = u.full_name.includes(searchTerm) || u.phone_number.includes(searchTerm);
+        const matchGrade = gradeFilter === "" || u.grade === gradeFilter;
+        const matchStatus = statusFilter === "" || u.status === statusFilter;
+        return matchSearch && matchGrade && matchStatus;
+    });
+
+    if(filteredUsers.length === 0) { 
+        list.innerHTML = '<tr><td colspan="8" style="text-align:center;">کاربری با این مشخصات یافت نشد.</td></tr>'; 
+        return; 
+    }
+
+    list.innerHTML = filteredUsers.map(u => {
+        let dateStr = '-';
+        if(u.created_at) {
+            const dateObj = new Date(u.created_at);
+            dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(dateObj);
         }
+
+        // بررسی تکراری بودن کاربر
+        const isDuplicate = nameCounts[u.full_name] > 1;
+        const duplicateBadge = isDuplicate ? '<span class="badge badge-duplicate">⚠️ نام تکراری</span>' : '';
+
+        // ساخت دکمه عملیات در لحظه (بسته به وضعیت فعلی)
+        const actionBtn = u.status !== 'blocked' 
+            ? `<button class="action-btn btn-block-sm" onclick="updateUserStatus('${u.phone_number}', 'blocked')">🚫 مسدود</button>`
+            : `<button class="action-btn btn-approve-sm" onclick="updateUserStatus('${u.phone_number}', 'approved')">✅ فعال‌سازی</button>`;
+
+        return `
+        <tr>
+            <td style="font-weight:bold; color:var(--text-main);">
+                ${u.full_name} ${duplicateBadge}
+            </td>
+            <td style="font-family:monospace; font-size:14px;">${u.phone_number}</td>
+            <td>${u.grade}</td>
+            <td>${u.major}</td>
+            <td>${u.school}</td>
+            <td>${getStatusBadge(u.status)}</td>
+            <td style="direction:ltr; text-align:right;">${dateStr}</td>
+            <td>${actionBtn}</td>
+        </tr>
+        `;
+    }).join('');
+}
 
         async function updateUserStatus(phone, status) {
             await supabaseClient.from('pan_users').update({ status: status }).eq('phone_number', phone);
