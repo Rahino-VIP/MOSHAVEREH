@@ -229,11 +229,7 @@
             <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; color: var(--text-muted);">منوی بوفه 🍩</div>
             
             <div class="category-wrapper" id="categoryScroll">
-                <button class="cat-btn active" onclick="renderStore('all', this)">همه موارد</button>
-                <button class="cat-btn" onclick="renderStore('hot_drink', this)">نوشیدنی گرم ☕</button>
-                <button class="cat-btn" onclick="renderStore('cold_drink', this)">نوشیدنی سرد 🥤</button>
-                <button class="cat-btn" onclick="renderStore('snack', this)">کیک و اسنک 🍩</button>
-                <button class="cat-btn" onclick="renderStore('meal', this)">غذای آماده 🥪</button>
+  
             </div>
 
             <div class="product-grid" id="productGrid"></div>
@@ -507,7 +503,8 @@
                         document.getElementById('view-auth').classList.remove('active');
                         document.getElementById('bottomNav').style.display = 'flex';
                         switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-                        renderStore('all'); // رندر پیش‌فرض دسته همه موارد
+                        renderCategories(); // <--- این خط اضافه شد
+                        renderStore('all');
                         updateWalletLabels();
                     }, 1500);
                 } else { throw new Error(data.error); }
@@ -532,6 +529,22 @@
                 document.getElementById('profileWalletStatus').style.color = 'inherit';
             }
         }
+
+        function renderCategories() {
+    const wrapper = document.getElementById('categoryScroll');
+    // پیدا کردن نام دسته‌بندی‌ها به صورت یکتا از محصولاتی که موجودی دارند
+    const categories = [...new Set(storeProducts.filter(p => p.stock_count > 0).map(p => p.category))];
+
+    let html = `<button class="cat-btn active" onclick="renderStore('all', this)">همه موارد</button>`;
+    
+    categories.forEach(cat => {
+        if (cat) {
+            html += `<button class="cat-btn" onclick="renderStore('${cat}', this)">${cat}</button>`;
+        }
+    });
+    
+    wrapper.innerHTML = html;
+}
 
         // ==========================================
         // 🏪 فروشگاه و تب‌های دسته‌بندی
@@ -682,7 +695,7 @@
                     const initData = await resInit.json();
                     if(initData.success) storeProducts = initData.products;
                     
-                    renderStore(); switchView('view-store', document.querySelectorAll('.nav-item')[0]);
+                    renderCategories();renderStore('all'); switchView('view-store', document.querySelectorAll('.nav-item')[0]);
                 } else { throw new Error(data.error); }
             } catch(e) {
                 alert('خطا در ثبت سفارش: ' + e.message);
