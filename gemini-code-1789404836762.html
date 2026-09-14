@@ -80,7 +80,7 @@
         .qty-display { font-size: 14px; font-weight: 900; width: 24px; text-align: center; color: var(--primary); }
 
         /* -------------------------------------- */
-        /* UI سبد خرید و تاریخچه */
+        /* UI سبد خرید */
         /* -------------------------------------- */
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed var(--border); }
         .checkout-box { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 25px 20px; margin-top: 15px; box-shadow: var(--shadow); }
@@ -94,6 +94,9 @@
         .btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); }
         .btn-checkout.disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed;}
 
+        /* -------------------------------------- */
+        /* UI تاریخچه سفارشات */
+        /* -------------------------------------- */
         .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .history-icon { font-size: 24px; }
         .history-info { display: flex; align-items: center; gap: 10px; }
@@ -103,7 +106,6 @@
         /* -------------------------------------- */
         /* UI پروفایل و شارژ */
         /* -------------------------------------- */
-        /* آپدیت ظاهر کارت کیف پول */
         .wallet-card { background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 25px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
         .wallet-card::before { content: '💳'; position: absolute; font-size: 100px; opacity: 0.05; right: -10px; bottom: -20px; }
         .wallet-balance { font-size: 34px; font-weight: 900; margin: 10px 0; }
@@ -198,7 +200,6 @@
                     <div class="alert-box" style="display: block;">شماره شما یافت نشد. لطفاً اطلاعات را تکمیل کنید.</div>
                     <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل">
                     
-                    <!-- اصلاح رشته و مدرسه <--
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <select id="regGrade" class="form-input" style="margin-bottom: 0;">
                             <option value="" disabled selected>پایه</option>
@@ -227,7 +228,6 @@
         <div id="view-store" class="view-section">
             <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; color: var(--text-muted);">منوی بوفه 🍩</div>
             
-            <!-- تب‌های دسته‌بندی <--
             <div class="category-wrapper" id="categoryScroll">
                 <button class="cat-btn active" onclick="renderStore('all', this)">همه موارد</button>
                 <button class="cat-btn" onclick="renderStore('hot_drink', this)">نوشیدنی گرم ☕</button>
@@ -286,17 +286,17 @@
                 <div class="quick-amounts" id="quickAmountsContainer"></div>
                 <input type="number" id="inpChargeAmount" class="form-input" placeholder="مبلغ دلخواه (تومان)">
                 
-                <div style="background: var(--accent-fade); border: 1px dashed var(--accent); padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 15px;">
+                <div class="card-info-box">
                     <div style="font-size: 11px; color: var(--text-muted);">مبلغ را به کارت زیر واریز نمایید:</div>
                     <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 5px 0; font-family: monospace;">6219861810380484</div>
                     <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
                     <button onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 12px; font-size: 11px; cursor: pointer; font-weight: bold;">📋 کپی شماره کارت</button>
                 </div>
 
-                <label style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--border); padding: 25px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 15px; background: var(--bg-color);" id="uploadBox">
+                <label class="file-upload" id="uploadBox">
                     <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
                     <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
-                    <input type="file" id="receiptFile" accept="image/*" onchange="handleReceiptSelect(event)" style="display:none;">
+                    <input type="file" id="receiptFile" accept="image/*" onchange="handleReceiptSelect(event)">
                 </label>
                 <button class="btn-checkout" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled>ارسال فیش و درخواست شارژ 📤</button>
             </div>
@@ -310,7 +310,7 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- تاریخچه سفارشات (مربوط به پروفایل) <--
+        <!-- تاریخچه سفارشات <--
         <!-- ============================================== -->
         <div id="view-history" class="view-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -322,7 +322,6 @@
             </div>
         </div>
 
-       
         <nav class="bottom-nav" id="bottomNav">
             <div class="nav-item active" onclick="switchView('view-store', this)"><div class="nav-icon">🏪</div><div class="nav-text">فروشگاه</div></div>
             <div class="nav-item" onclick="switchView('view-cart', this)"><div class="nav-icon">🛒</div><div class="nav-text">سبد خرید</div><div class="cart-badge" id="cartBadge" style="display: none;">0</div></div>
@@ -481,7 +480,7 @@
         }
 
         // ==========================================
-        // 🌍 فاز پنجم: ارتباط با بک‌اند (گوگل اسکریپت)
+        // 🌍 ارتباط با بک‌اند (گوگل اسکریپت)
         // ==========================================
         async function loginSuccess() {
             localStorage.setItem('buffet_user_phone', activeUser.phone_number);
@@ -508,7 +507,7 @@
                         document.getElementById('view-auth').classList.remove('active');
                         document.getElementById('bottomNav').style.display = 'flex';
                         switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-                        renderStore('all');
+                        renderStore('all'); // رندر پیش‌فرض دسته همه موارد
                         updateWalletLabels();
                     }, 1500);
                 } else { throw new Error(data.error); }
@@ -539,14 +538,17 @@
         // ==========================================
         function renderStore(categoryFilter = 'all', btnElement = null) {
             if (btnElement) {
-                document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('active'); });
-                btnElement.classList.add('active');
+                document.querySelectorAll('.cat-btn').forEach(b => { 
+                    b.style.background = 'var(--surface)'; b.style.color = 'var(--text-muted)'; b.style.borderColor = 'var(--border)'; 
+                });
+                btnElement.style.background = 'var(--primary-fade)'; btnElement.style.color = 'var(--primary)'; btnElement.style.borderColor = 'var(--primary)';
             }
 
             const grid = document.getElementById('productGrid');
+            if(!grid) return;
             let html = '';
             
-            // فیلتر کردن محصولات ناموجود
+            // فیلتر کردن محصولات ناموجود (موجودی صفر یا کمتر را نشان نمی‌دهد)
             let filteredProducts = storeProducts.filter(p => p.stock_count > 0);
             
             // فیلتر دسته‌بندی
@@ -555,7 +557,7 @@
             }
 
             if(filteredProducts.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 20px;">محصولی یافت نشد.</div>';
+                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 20px;">محصولی در این دسته یافت نشد.</div>';
                 return;
             }
             
