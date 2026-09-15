@@ -335,7 +335,8 @@
         const maxCredit = 200000; 
         let cart = []; 
         let receiptBase64 = "";
-
+        let userFavorites = []; 
+        
         function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
         function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
@@ -482,6 +483,7 @@
                     storeProducts = data.products || [];
                     userWalletBalance = data.wallet_balance || 0;
                     activeUser.full_name = data.full_name;
+                    userFavorites = data.favorites || [];
                     document.getElementById('welcomeName').innerText = `سلام ${data.full_name.split(' ')[0]} عزیز!`;
                     
                     setTimeout(() => {
@@ -518,15 +520,9 @@
         function renderStore() {
             const navContainer = document.getElementById('catNav');
             const storeContainer = document.getElementById('storeScroll');
+            if(!navContainer || !storeContainer) return;
             
             const categories = [...new Set(storeProducts.filter(p => p.stock_count > 0).map(p => p.category))];
-
-            let navHtml = '';
-            categories.forEach((cat, index) => {
-                let activeClass = index === 0 ? 'active' : '';
-                navHtml += `<a href="#cat-${cat}" class="cat-link ${activeClass}">${cat}</a>`;
-            });
-            navContainer.innerHTML = navHtml;
 
             let storeHtml = `<div class="hero-card">
                         <div class="hero-badge">پیشنهاد سرپرست!</div>
@@ -534,51 +530,87 @@
                         <div class="hero-desc">به زودی از پنل مدیریت تنظیم می‌شود</div>
                      </div>`;
 
-            let hasFavorites = false; 
-            if (hasFavorites) {
-                storeHtml += `<section id="cat-foryou" class="category-section">`;
-                storeHtml += `<div class="section-header">علاقه‌مندی‌های شما</div>`;
-                storeHtml += `<div class="horizontal-list"></div></section>`;
+            let navHtml = '';
+
+            // تولید بخش علاقه‌مندی‌های واقعی (دریافت شده از سرور)
+            let favoriteProducts = storeProducts.filter(p => userFavorites.includes(p.id) && p.stock_count > 0);
+            
+            if (favoriteProducts.length > 0) {
+                navHtml += `<div class="cat-link active" onclick="scrollToCategory('cat-foryou', this)" style="cursor:pointer;">✨ ویژه شما</div>`;
+                storeHtml += `<section id="cat-foryou" class="category-section"><div class="section-header">✨ علاقه‌مندی‌های شما</div><div class="horizontal-list">`;
+                favoriteProducts.forEach(p => { storeHtml += generateProductHtml(p); });
+                storeHtml += `</div></section>`;
             }
+
+            // تولید بقیه دسته‌بندی‌ها
+            categories.forEach((cat, index) => {
+                let activeClass = (index === 0 && favoriteProducts.length === 0) ? 'active' : '';
+                navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-${cat}', this)" style="cursor:pointer;">${cat}</div>`;
+            });
+            navContainer.innerHTML = navHtml;
 
             categories.forEach(cat => {
                 let catProducts = storeProducts.filter(p => p.stock_count > 0 && p.category === cat);
                 if (catProducts.length === 0) return;
 
-                storeHtml += `<section id="cat-${cat}" class="category-section">`;
-                storeHtml += `<div class="section-header">${cat}</div>`;
-                storeHtml += `<div class="horizontal-list">`;
-
-                catProducts.forEach(p => {
-                    const cartItem = cart.find(item => item.id === p.id);
-                    const qty = cartItem ? cartItem.qty : 0;
-                    
-                    let actionHtml = qty === 0 
-                        ? `<div class="btn-add-init" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">+ افزودن</div>`
-                        : `<div class="qty-controls">
-                            <button class="${qty === 1 ? 'qty-btn del' : 'qty-btn'}" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, -1)">${qty === 1 ? '🗑️' : '−'}</button>
-                            <span class="qty-display">${qty}</span>
-                            <button class="qty-btn" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">+</button>
-                           </div>`;
-                    
-                    let imageDiv = p.image_url ? `url('${p.image_url}')` : 'none';
-
-                    storeHtml += `<div class="product-card">
-                                <div class="product-img" style="background-image: ${imageDiv};"></div>
-                                <div class="product-info">
-                                    <div class="product-name">${p.name}</div>
-                                    <div class="product-price">${p.price.toLocaleString()} تومان</div>
-                                    <div style="margin-top:auto;">${actionHtml}</div>
-                                </div>
-                            </div>`;
-                });
-
+                storeHtml += `<section id="cat-${cat}" class="category-section"><div class="section-header">${cat}</div><div class="horizontal-list">`;
+                catProducts.forEach(p => { storeHtml += generateProductHtml(p); });
                 storeHtml += `</div></section>`;
             });
 
             storeContainer.innerHTML = storeHtml;
         }
 
+        // تابع کمکی برای ساخت ظاهر کارت محصولات
+        function generateProductHtml(p) {
+            const cartItem = cart.find(item => item.id === p.id);
+            const qty = cartItem ? cartItem.qty : 0;
+            let actionHtml = qty === 0 
+                ? `<div class="btn-add-init" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">+ افزودن</div>` 
+                : `<div class="qty-controls"><button class="${qty === 1 ? 'qty-btn del' : 'qty-btn'}" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, -1)">${qty === 1 ? '🗑️' : '−'}</button><span class="qty-display">${qty}</span><button class="qty-btn" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">+</button></div>`;
+            let imageDiv = p.image_url ? `url('${p.image_url}')` : 'none';
+            return `<div class="product-card"><div class="product-img" style="background-image: ${imageDiv};"></div><div class="product-info"><div class="product-name">${p.name}</div><div class="product-price">${p.price.toLocaleString()} تومان</div><div style="margin-top:auto;">${actionHtml}</div></div></div>`;
+        }
+
+        // تابع اسکرول نرم با کلیک روی منو
+        function scrollToCategory(id, btn) {
+            document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+            btn.classList.add('active');
+            const section = document.getElementById(id);
+            const storeScroll = document.getElementById('storeScroll');
+            if(section && storeScroll) {
+                storeScroll.scrollTo({ top: section.offsetTop - 20, behavior: 'smooth' });
+            }
+        }
+
+        // تشخیص خودکار اسکرول برای تغییر رنگ تب‌های بالا
+        window.addEventListener('DOMContentLoaded', () => {
+            const storeScroll = document.getElementById('storeScroll');
+            if(storeScroll) {
+                storeScroll.addEventListener('scroll', () => {
+                    const sections = document.querySelectorAll('.category-section');
+                    const navLinks = document.querySelectorAll('.cat-link');
+                    let current = '';
+
+                    sections.forEach(section => {
+                        const sectionTop = section.offsetTop;
+                        if (storeScroll.scrollTop >= (sectionTop - 60)) {
+                            current = section.getAttribute('id');
+                        }
+                    });
+
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (current && link.getAttribute('onclick') && link.getAttribute('onclick').includes(current)) {
+                            link.classList.add('active');
+                            // اسکرول نوار بالا برای اینکه تب همیشه تو دید باشه
+                            link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        }
+                    });
+                });
+            }
+        });
+        
         function updateItemQty(id, name, price, change) {
             if (navigator.vibrate) navigator.vibrate(30);
             let itemIndex = cart.findIndex(item => item.id === id);
