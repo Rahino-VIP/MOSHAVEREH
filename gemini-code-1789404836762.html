@@ -37,7 +37,8 @@
 
         .view-section { flex: 1; overflow-y: auto; padding: 20px; display: none; animation: fadeIn 0.3s ease; padding-bottom: 100px; z-index: 1; position: relative;}
         .view-section.active { display: block; }
-        #view-store { padding: 0; display: flex; flex-direction: column; }
+        #view-store { padding: 0; }
+        #view-store.active { display: flex; flex-direction: column; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .auth-container { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: 100%; overflow: hidden; box-shadow: var(--shadow); position: relative; margin-top: 10vh;}
@@ -56,7 +57,7 @@
         .text-link { color: var(--accent); font-size: 13px; text-align: center; display: block; margin-top: 20px; cursor: pointer; font-weight: bold; }
         .alert-box { background: var(--accent-fade); border: 1px solid rgba(217, 133, 138, 0.3); color: var(--accent); padding: 15px; border-radius: 14px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; display: none; }
 
-        .category-nav { position: sticky; top: 0; z-index: 90; background: var(--surface-glass); backdrop-filter: blur(16px); padding: 10px 20px 15px; overflow-x: auto; white-space: nowrap; display: flex; gap: 10px; scrollbar-width: none; border-bottom: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.02);}
+        .category-nav { background: var(--bg-color); padding: 10px 20px 15px; overflow-x: auto; white-space: nowrap; display: flex; gap: 10px; scrollbar-width: none; border-bottom: 1px solid var(--border); }
         .category-nav::-webkit-scrollbar { display: none; }
         .cat-link { text-decoration: none; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-block; }
         .cat-link.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
@@ -69,8 +70,8 @@
         .hero-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .hero-desc { font-size: 12px; opacity: 0.9; margin-bottom: 10px; }
         
-        .category-section { margin-bottom: 30px; scroll-margin-top: 60px; }
-        .section-header { position: sticky; top: -1px; z-index: 10; background: var(--bg-color); padding: 10px 0 15px; font-size: 16px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .category-section { margin-bottom: 30px; scroll-margin-top: 20px; }
+        .section-header { background: var(--bg-color); padding: 10px 0 15px; font-size: 16px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 8px; }
         .section-header::before { content: ''; width: 4px; height: 18px; background: var(--primary); border-radius: 4px; }
 
         .horizontal-list { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scrollbar-width: none; }
@@ -135,6 +136,18 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .welcome-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+
+        @media (min-width: 768px) {
+            body { align-items: center; background: #cbd5e1; }
+            [data-theme="dark"] body { background: #0f172a; }
+            .app-container { max-width: 1000px; height: 92dvh; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); margin: auto; }
+            header { border-radius: 24px 24px 0 0; }
+            .bottom-nav { border-radius: 0 0 24px 24px; }
+            .horizontal-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; overflow-x: visible; }
+            .product-card { flex: unset; width: 100%; }
+            .category-nav { justify-content: center; }
+            .hero-card { height: 200px; }
+        }
     </style>
 </head>
 <body>
@@ -221,6 +234,8 @@
         </div>
 
         <div id="view-store" class="view-section">
+            <div class="category-nav" id="catNav"></div>
+            <div class="store-content" id="storeScroll"></div>
         </div>
 
         <div id="view-cart" class="view-section">
@@ -320,7 +335,6 @@
         const maxCredit = 200000; 
         let cart = []; 
         let receiptBase64 = "";
-        let currentCategory = 'all'; 
 
         function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
@@ -502,21 +516,19 @@
         }
 
         function renderStore() {
-            const container = document.getElementById('view-store');
-            let html = '';
-
+            const navContainer = document.getElementById('catNav');
+            const storeContainer = document.getElementById('storeScroll');
+            
             const categories = [...new Set(storeProducts.filter(p => p.stock_count > 0).map(p => p.category))];
 
-            html += `<nav class="category-nav" id="catNav">`;
+            let navHtml = '';
             categories.forEach((cat, index) => {
                 let activeClass = index === 0 ? 'active' : '';
-                html += `<a href="#cat-${cat}" class="cat-link ${activeClass}">${cat}</a>`;
+                navHtml += `<a href="#cat-${cat}" class="cat-link ${activeClass}">${cat}</a>`;
             });
-            html += `</nav>`;
+            navContainer.innerHTML = navHtml;
 
-            html += `<div class="store-content" id="storeScroll">`;
-
-            html += `<div class="hero-card">
+            let storeHtml = `<div class="hero-card">
                         <div class="hero-badge">پیشنهاد سرپرست!</div>
                         <div class="hero-title">پیشنهاد ویژه</div>
                         <div class="hero-desc">به زودی از پنل مدیریت تنظیم می‌شود</div>
@@ -524,18 +536,18 @@
 
             let hasFavorites = false; 
             if (hasFavorites) {
-                html += `<section id="cat-foryou" class="category-section">`;
-                html += `<div class="section-header">علاقه‌مندی‌های شما</div>`;
-                html += `<div class="horizontal-list"></div></section>`;
+                storeHtml += `<section id="cat-foryou" class="category-section">`;
+                storeHtml += `<div class="section-header">علاقه‌مندی‌های شما</div>`;
+                storeHtml += `<div class="horizontal-list"></div></section>`;
             }
 
             categories.forEach(cat => {
                 let catProducts = storeProducts.filter(p => p.stock_count > 0 && p.category === cat);
                 if (catProducts.length === 0) return;
 
-                html += `<section id="cat-${cat}" class="category-section">`;
-                html += `<div class="section-header">${cat}</div>`;
-                html += `<div class="horizontal-list">`;
+                storeHtml += `<section id="cat-${cat}" class="category-section">`;
+                storeHtml += `<div class="section-header">${cat}</div>`;
+                storeHtml += `<div class="horizontal-list">`;
 
                 catProducts.forEach(p => {
                     const cartItem = cart.find(item => item.id === p.id);
@@ -551,7 +563,7 @@
                     
                     let imageDiv = p.image_url ? `url('${p.image_url}')` : 'none';
 
-                    html += `<div class="product-card">
+                    storeHtml += `<div class="product-card">
                                 <div class="product-img" style="background-image: ${imageDiv};"></div>
                                 <div class="product-info">
                                     <div class="product-name">${p.name}</div>
@@ -561,39 +573,10 @@
                             </div>`;
                 });
 
-                html += `</div></section>`;
+                storeHtml += `</div></section>`;
             });
 
-            html += `</div>`;
-            container.innerHTML = html;
-
-            setupScrollSpy();
-        }
-
-        function setupScrollSpy() {
-            const storeScroll = document.getElementById('storeScroll');
-            const sections = document.querySelectorAll('.category-section');
-            const navLinks = document.querySelectorAll('.cat-link');
-
-            if (!storeScroll) return;
-
-            storeScroll.addEventListener('scroll', () => {
-                let current = '';
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop;
-                    if (storeScroll.scrollTop >= (sectionTop - 180)) {
-                        current = section.getAttribute('id');
-                    }
-                });
-
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (current && link.getAttribute('href').includes(current)) {
-                        link.classList.add('active');
-                        link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    }
-                });
-            });
+            storeContainer.innerHTML = storeHtml;
         }
 
         function updateItemQty(id, name, price, change) {
