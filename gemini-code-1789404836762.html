@@ -275,23 +275,31 @@
             </div>
 
             <div class="charge-section">
-                <div style="font-size: 15px; font-weight: bold; margin-bottom: 15px;">⚡ شارژ کیف پول (آپلود فیش)</div>
+                <div style="font-size: 15px; font-weight: bold; margin-bottom: 15px;">⚡ شارژ کیف پول</div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-outline active" id="btnTabReceipt" style="flex:1; border-color:var(--primary); color:var(--primary);" onclick="switchChargeTab('receipt')">کارت به کارت</button>
+                    <button class="btn btn-outline" id="btnTabCash" style="flex:1;" onclick="switchChargeTab('cash')">پرداخت نقدی</button>
+                </div>
+
                 <div class="quick-amounts" id="quickAmountsContainer"></div>
                 <input type="number" id="inpChargeAmount" class="form-input" placeholder="مبلغ دلخواه (تومان)">
                 
-                <div class="card-info-box">
-                    <div style="font-size: 11px; color: var(--text-muted);">مبلغ را به کارت زیر واریز نمایید:</div>
-                    <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 5px 0; font-family: monospace;">6219861810380484</div>
-                    <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
-                    <button onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 12px; font-size: 11px; cursor: pointer; font-weight: bold;">📋 کپی شماره کارت</button>
+                <div id="receiptBox">
+                    <div class="card-info-box">
+                        <div style="font-size: 11px; color: var(--text-muted);">مبلغ را به کارت زیر واریز نمایید:</div>
+                        <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 5px 0; font-family: monospace;">6219861810380484</div>
+                        <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
+                        <button onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 12px; font-size: 11px; cursor: pointer; font-weight: bold;">📋 کپی شماره کارت</button>
+                    </div>
+                    <label class="file-upload" id="uploadBox">
+                        <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش را آپلود کنید</div>
+                        <input type="file" id="receiptFile" accept="image/*" onchange="handleReceiptSelect(event)">
+                    </label>
                 </div>
-
-                <label class="file-upload" id="uploadBox">
-                    <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
-                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
-                    <input type="file" id="receiptFile" accept="image/*" onchange="handleReceiptSelect(event)">
-                </label>
-                <button class="btn-checkout disabled" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled style="margin-top: 0;">ارسال فیش و درخواست شارژ 📤</button>
+                
+                <button class="btn-checkout disabled" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled style="margin-top: 0;">ثبت درخواست شارژ</button>
             </div>
 
             <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; margin-bottom: 20px;">
@@ -336,6 +344,7 @@
         let cart = []; 
         let receiptBase64 = "";
         let userFavorites = []; 
+        let chargeMethod = 'receipt';
         
         function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
@@ -755,36 +764,49 @@
         }
 
         document.getElementById('inpChargeAmount').addEventListener('input', validateChargeForm);
+
+        function switchChargeTab(method) {
+            chargeMethod = method;
+            document.getElementById('btnTabReceipt').style.borderColor = method === 'receipt' ? 'var(--primary)' : 'var(--border)';
+            document.getElementById('btnTabReceipt').style.color = method === 'receipt' ? 'var(--primary)' : 'var(--text-main)';
+            document.getElementById('btnTabCash').style.borderColor = method === 'cash' ? 'var(--primary)' : 'var(--border)';
+            document.getElementById('btnTabCash').style.color = method === 'cash' ? 'var(--primary)' : 'var(--text-main)';
+            document.getElementById('receiptBox').style.display = method === 'receipt' ? 'block' : 'none';
+            validateChargeForm();
+        }
+
         function validateChargeForm() {
             const amt = document.getElementById('inpChargeAmount').value;
             const btn = document.getElementById('btnSubmitCharge');
-            if (amt >= 10000 && receiptBase64) { btn.disabled = false; btn.className = 'btn-checkout active'; } 
+            let isValid = amt >= 10000;
+            if(chargeMethod === 'receipt' && !receiptBase64) isValid = false;
+            
+            if (isValid) { btn.disabled = false; btn.className = 'btn-checkout active'; } 
             else { btn.disabled = true; btn.className = 'btn-checkout disabled'; }
         }
 
         async function submitChargeRequest() {
             const amt = document.getElementById('inpChargeAmount').value;
             const btn = document.getElementById('btnSubmitCharge');
-            btn.innerText = 'ارسال فیش به سرور... ⏳'; btn.disabled = true; btn.className = 'btn-checkout';
+            btn.innerText = 'در حال ارسال... ⏳'; btn.disabled = true; btn.className = 'btn-checkout';
 
             try {
                 const response = await fetch(GAS_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'charge_request', phone_number: activeUser.phone_number, amount: amt, receipt_base64: receiptBase64 })
+                    body: JSON.stringify({ action: 'charge_request', phone_number: activeUser.phone_number, amount: amt, method: chargeMethod, receipt_base64: receiptBase64 })
                 });
                 const data = await response.json();
                 if(data.success) {
-                    alert(`✅ درخواست شارژ ${Number(amt).toLocaleString()} تومانی با موفقیت ثبت شد و فیش برای سرپرست ارسال گردید.\nموجودی شما پس از تایید مدیریت افزایش می‌یابد.`);
+                    alert(`✅ درخواست شارژ ثبت شد.`);
                     document.getElementById('inpChargeAmount').value = ''; receiptBase64 = '';
-                    document.getElementById('uploadText').innerText = `تصویر فیش واریزی را اینجا آپلود کنید`;
+                    document.getElementById('uploadText').innerText = `تصویر فیش را آپلود کنید`;
                     document.getElementById('uploadBox').style.borderColor = "var(--border)";
-                    document.getElementById('uploadBox').style.background = "var(--bg-color)";
                     validateChargeForm();
-                    btn.innerText = 'ارسال فیش و درخواست شارژ 📤';
+                    btn.innerText = 'ثبت درخواست شارژ';
                 } else { throw new Error(data.error); }
             } catch(e) {
                 alert('خطا در ارسال درخواست: ' + e.message);
-                btn.innerText = 'ارسال فیش و درخواست شارژ 📤'; validateChargeForm();
+                btn.innerText = 'ثبت درخواست شارژ'; validateChargeForm();
             }
         }
 
