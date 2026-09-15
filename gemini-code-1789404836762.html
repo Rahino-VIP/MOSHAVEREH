@@ -409,6 +409,14 @@
                 const { data, error } = await supabaseClient.from('pan_users').select('*').eq('phone_number', phone).maybeSingle();
                 hideLoader();
                 if (data) {
+                    if (data.status === 'pending') {
+                        hideLoader();
+                        return alert('⏳ حساب شما ایجاد شده اما در انتظار تایید مدیریت است.\nلطفاً تا زمان تایید شکیبا باشید.');
+                    }
+                    if (data.status === 'blocked' || data.status === 'rejected') {
+                        hideLoader();
+                        return alert('❌ دسترسی شما به سیستم مسدود شده است.');
+                    }
                     activeUser = data;
                     if (!data.buffet_password) {
                         document.getElementById('setupNameLabel').innerText = data.full_name.split(' ')[0];
@@ -462,13 +470,18 @@
             showLoader('تشکیل پرونده...');
             try {
                 let hashedPass = await hashString(pass);
+                // وضعیت به pending تغییر کرد
                 const { error } = await supabaseClient.from('pan_users').insert([{
-                    phone_number: phone, full_name: name, grade: grade, major: major, school: school, buffet_password: hashedPass, security_question: secQ, security_answer: secA, status: 'approved', wallet_balance: 0
+                    phone_number: phone, full_name: name, grade: grade, major: major, school: school, buffet_password: hashedPass, security_question: secQ, security_answer: secA, status: 'pending', wallet_balance: 0
                 }]);
                 hideLoader();
                 if(error) throw error;
-                activeUser = { phone_number: phone, full_name: name };
-                loginSuccess();
+                
+                // پیام موفقیت و بازگشت به صفحه اول (عدم لاگین خودکار)
+                alert('✅ ثبت‌نام اولیه شما با موفقیت انجام شد.\nپس از تایید حساب توسط مدیریت، می‌توانید وارد بوفه شوید.');
+                goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
+                document.getElementById('inpPhone').value = '';
+                
             } catch (err) { hideLoader(); alert('خطا در ثبت نام.'); }
         }
 
@@ -828,7 +841,15 @@
                         if (isOrder && item.items) {
                             let itemsArr = typeof item.items === 'string' ? JSON.parse(item.items) : item.items;
                             let itemsText = itemsArr.map(i => `${i.qty}x ${i.name}`).join(' ، ');
-                            detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.6;">اقلام: ${itemsText}</div>`;
+                            
+                            // تشخیص روش پرداخت
+                            let payMethodTxt = item.payment_method === 'wallet' ? '💳 پرداخت از کیف پول' : '💵 پرداخت نقدی';
+                            let payMethodColor = item.payment_method === 'wallet' ? 'var(--primary)' : 'var(--warning)';
+                            
+                            detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.6;">
+                                اقلام: ${itemsText}<br>
+                                <span style="color: ${payMethodColor}; font-weight: bold; display: inline-block; margin-top: 4px;">${payMethodTxt}</span>
+                            </div>`;
                         } else if (!isOrder) {
                             let statusTxt = item.status === 'approved' ? '✅ تایید شده' : (item.status === 'rejected' ? '❌ رد شده' : '⏳ در انتظار تایید');
                             let statusColor = item.status === 'approved' ? 'var(--success)' : (item.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
