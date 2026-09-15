@@ -32,7 +32,7 @@
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; font-family: 'Vazirmatn'; text-align: center; }
+        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; font-family: 'Vazirmatn'; text-align: right; }
         .form-input:focus { border-color: var(--primary); }
         .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; }
@@ -40,6 +40,12 @@
         .modal input, .modal select { width: 100%; margin-bottom: 15px; }
         .receipt-img { max-height: 80px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
         .receipt-img:hover { transform: scale(1.1); }
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .kpi-card { background: linear-gradient(135deg, var(--surface), #2a3b4f); border: 1px solid var(--border); border-radius: 16px; padding: 25px; text-align: center; }
+        .kpi-val { font-size: 28px; font-weight: 900; color: var(--primary); margin: 10px 0; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .checkbox-group label { background: var(--bg-color); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 12px; }
+        .checkbox-group input { margin-left: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -50,8 +56,10 @@
         <div class="brand">⚙️ مدیریت راهینو</div>
         <nav class="nav-menu">
             <div class="nav-item active" onclick="switchView('view-inventory', this, 'انبار و محصولات')">📦 انبار و محصولات</div>
-            <div class="nav-item" onclick="switchView('view-finance', this, 'صندوق و دریافت نقدی')">💵 تایید دریافت نقدی <span class="badge" id="cashBadge" style="display:none;">0</span></div>
+            <div class="nav-item" onclick="switchView('view-finance', this, 'صندوق و دریافت نقدی')">💵 صندوق (نقدی) <span class="badge" id="cashBadge" style="display:none;">0</span></div>
             <div class="nav-item" onclick="switchView('view-approvals', this, 'تایید فیش بانکی')">💳 تایید فیش‌ها <span class="badge" id="pendingBadge" style="display:none;">0</span></div>
+            <div class="nav-item" onclick="switchView('view-featured', this, 'زمان‌بندی پیشنهاد راهینو')">🌟 پیشنهاد راهینو</div>
+            <div class="nav-item" onclick="switchView('view-reports', this, 'گزارش روزانه بوفه')">📊 گزارش روزانه</div>
         </nav>
     </aside>
 
@@ -84,11 +92,11 @@
                         </table>
                     </div>
                 </div>
-                <div class="card" style="margin-top: 20px;">
-                    <h2 style="font-size: 16px; margin-bottom: 15px;">شارژ مستقیم کیف پول (بدون درخواست)</h2>
-                    <select id="financeUserSelect" class="form-input" style="width: 250px; margin-left: 10px;"></select>
+                <div class="card" style="margin-top: 20px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <h2 style="font-size: 16px; margin-left: 20px;">شارژ مستقیم کیف پول</h2>
+                    <select id="financeUserSelect" class="form-input" style="width: 250px;"></select>
                     <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 150px;">
-                    <button class="btn btn-primary" style="margin-right: 10px;" onclick="submitManualCharge()">ثبت شارژ</button>
+                    <button class="btn btn-primary" onclick="submitManualCharge()">ثبت شارژ</button>
                 </div>
             </div>
 
@@ -99,6 +107,71 @@
                         <table>
                             <thead><tr><th>موبایل</th><th>مبلغ فیش</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
                             <tbody id="approvalsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-featured" class="view-section">
+                <div class="card" style="max-width: 600px; margin: auto;">
+                    <h2 style="font-size: 16px; margin-bottom: 20px;">برنامه‌ریزی پیشنهاد ویژه</h2>
+                    <select id="featProduct" class="form-input"></select>
+                    
+                    <div style="margin: 20px 0 10px; color: var(--text-muted); font-size: 12px;">روزهای نمایش:</div>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="day-chk" value="saturday"> شنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="sunday"> یکشنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="monday"> دوشنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="tuesday"> سه‌شنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="wednesday"> چهارشنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="thursday"> پنجشنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="friday"> جمعه</label>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <div style="flex:1;">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">از ساعت:</div>
+                            <input type="time" id="featStart" class="form-input" style="text-align: center;">
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">تا ساعت:</div>
+                            <input type="time" id="featEnd" class="form-input" style="text-align: center;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 5px; color: var(--text-muted); font-size: 12px;">متن بنر (کوتاه و جذاب):</div>
+                    <input type="text" id="featText" class="form-input" placeholder="مثلاً: بمب انرژی برای شروع مطالعه!" style="margin-bottom: 20px;">
+
+                    <button class="btn btn-success" style="width: 100%;" onclick="submitFeatured()">ذخیره برنامه‌ریزی 🚀</button>
+                    <button class="btn btn-danger" style="width: 100%; margin-top:10px;" onclick="clearFeatured()">حذف پیشنهاد این محصول 🗑️</button>
+                </div>
+            </div>
+
+            <div id="view-reports" class="view-section">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div style="font-size: 13px; color: var(--text-muted);">فروش کل بوفه (امروز)</div>
+                        <div class="kpi-val" id="repTotalSales">0</div>
+                        <div style="font-size: 11px;">تومان</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div style="font-size: 13px; color: var(--text-muted);">پول نقدِ داخل صندوق</div>
+                        <div class="kpi-val" style="color: var(--success);" id="repCashBox">0</div>
+                        <div style="font-size: 11px;">دریافتی‌های نقدیِ امروز</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div style="font-size: 13px; color: var(--text-muted);">گردش کیف پول</div>
+                        <div class="kpi-val" style="color: var(--warning);" id="repWalletSales">0</div>
+                        <div style="font-size: 11px;">خرید بدون پول نقد</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h2 style="font-size: 16px;">ریز سفارشات امروز</h2></div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead><tr><th>موبایل</th><th>اقلام</th><th>مبلغ</th><th>روش پرداخت</th><th>ساعت</th></tr></thead>
+                            <tbody id="todayOrdersBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -127,7 +200,7 @@
 
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
-        let products = [], pendingTxs = [], pendingOrders = [], usersData = [];
+        let products = [], pendingTxs = [], pendingOrders = [], usersData = [], recentOrders = [], recentTxs = [];
 
         function switchView(viewId, navElement, title) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -135,7 +208,10 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             navElement.classList.add('active');
             document.getElementById('topbarTitle').innerText = title;
+            if(viewId === 'view-featured') populateFeatured();
+            if(viewId === 'view-reports') generateDailyReport();
         }
+        
         function showLoader() { document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 
@@ -150,6 +226,8 @@
                     pendingTxs = data.pending_txs || [];
                     pendingOrders = data.pending_orders || [];
                     usersData = data.users || [];
+                    recentOrders = data.recent_orders || [];
+                    recentTxs = data.recent_txs || [];
                     renderInventory(); renderCashViews(); renderApprovals(); renderFinanceUsers();
                 } else alert('خطا: ' + data.error);
             } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
@@ -173,10 +251,8 @@
         async function updateProduct(id) {
             showLoader();
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: document.getElementById(`price_${id}`).value, stock: document.getElementById(`stock_${id}`).value }) });
-                const data = await response.json();
-                hideLoader();
-                if(data.success) alert('✅ ذخیره شد'); else alert('خطا');
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: document.getElementById(`price_${id}`).value, stock: document.getElementById(`stock_${id}`).value }) });
+                hideLoader(); alert('✅ ذخیره شد');
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
@@ -185,10 +261,8 @@
             if(!name || !price || !stock || !cat) return alert('اطلاعات ناقص است.');
             showLoader();
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
-                const data = await response.json();
-                hideLoader();
-                if(data.success) window.location.reload(); else alert('خطا');
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
+                window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
@@ -217,10 +291,8 @@
             let rAmt = document.getElementById(`recv_o_${oId}`).value;
             showLoader();
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
-                const data = await response.json();
-                hideLoader();
-                if(data.success) window.location.reload(); else alert('خطا');
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
+                window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
@@ -245,10 +317,8 @@
             let amt = document.getElementById(inputId).value;
             showLoader();
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
-                const data = await response.json();
-                hideLoader();
-                if(data.success) window.location.reload(); else alert('خطا');
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
+                window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
@@ -261,11 +331,79 @@
             if(!phone || !amount) return;
             showLoader();
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
-                const data = await response.json();
-                hideLoader();
-                if(data.success) window.location.reload(); else alert('خطا');
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
+                window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
+        }
+
+        // =======================
+        // بخش پیشنهاد راهینو 
+        // =======================
+        function populateFeatured() {
+            const select = document.getElementById('featProduct');
+            select.innerHTML = '<option value="" disabled selected>انتخاب محصول برای پیشنهاد...</option>' + products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            
+            select.onchange = () => {
+                let p = products.find(x => x.id == select.value);
+                document.querySelectorAll('.day-chk').forEach(chk => { chk.checked = p.featured_days && p.featured_days.includes(chk.value); });
+                document.getElementById('featStart').value = p.featured_start || '';
+                document.getElementById('featEnd').value = p.featured_end || '';
+                document.getElementById('featText').value = p.featured_text || '';
+            };
+        }
+
+        async function submitFeatured() {
+            let pid = document.getElementById('featProduct').value;
+            if(!pid) return alert('یک محصول انتخاب کنید.');
+            let selectedDays = Array.from(document.querySelectorAll('.day-chk:checked')).map(el => el.value).join(',');
+            let fStart = document.getElementById('featStart').value;
+            let fEnd = document.getElementById('featEnd').value;
+            let fText = document.getElementById('featText').value;
+            
+            showLoader();
+            try {
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: selectedDays, start: fStart, end: fEnd, text: fText }) });
+                hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
+            } catch(e) { hideLoader(); alert('خطا'); }
+        }
+
+        async function clearFeatured() {
+            let pid = document.getElementById('featProduct').value;
+            if(!pid) return;
+            showLoader();
+            try {
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: '', start: '', end: '', text: '' }) });
+                hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
+            } catch(e) { hideLoader(); alert('خطا'); }
+        }
+
+        // =======================
+        // بخش گزارش روزانه
+        // =======================
+        function generateDailyReport() {
+            let todayStr = new Date().toLocaleDateString('fa-IR');
+            
+            let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
+            let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved');
+
+            let totalSales = todaysOrders.reduce((sum, o) => sum + o.total_price, 0);
+            let walletSales = todaysOrders.filter(o => o.payment_method === 'wallet').reduce((sum, o) => sum + o.total_price, 0);
+            
+            let cashOrdersTotal = todaysOrders.filter(o => o.payment_method === 'cash').reduce((sum, o) => sum + o.total_price, 0);
+            let physicalCashDeposits = todaysTxs.filter(t => ['change_deposit', 'cash_charge', 'manual_cash'].includes(t.tx_type)).reduce((sum, t) => sum + t.amount, 0);
+            let cashInBox = cashOrdersTotal + physicalCashDeposits;
+
+            document.getElementById('repTotalSales').innerText = totalSales.toLocaleString();
+            document.getElementById('repWalletSales').innerText = walletSales.toLocaleString();
+            document.getElementById('repCashBox').innerText = cashInBox.toLocaleString();
+
+            let tbody = document.getElementById('todayOrdersBody');
+            tbody.innerHTML = todaysOrders.map(o => {
+                let itemsTxt = '';
+                try { itemsTxt = JSON.parse(o.items).map(i => i.qty + 'x ' + i.name).join(' ، '); } catch(e){}
+                let time = new Date(o.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+                return `<tr><td dir="ltr">${o.phone_number}</td><td>${itemsTxt}</td><td>${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td>${time}</td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center;">هنوز سفارشی ثبت نشده است.</td></tr>';
         }
     </script>
 </body>
