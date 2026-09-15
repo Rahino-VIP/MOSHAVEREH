@@ -99,9 +99,9 @@
         .pay-option input { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
         .wallet-badge { background: var(--surface); padding: 4px 8px; border-radius: 8px; font-size: 11px; color: var(--text-muted); }
         .summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
-        .btn-checkout { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; color: white; margin-top: 20px; }
-        .btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); }
-        .btn-checkout.disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed;}
+        .btn-checkout { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; margin-top: 20px; transition: var(--transition); }
+        .btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #ffffff; box-shadow: 0 10px 20px var(--primary-fade); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .btn-checkout.disabled { background: var(--border); color: var(--text-main); opacity: 0.6; cursor: not-allowed; }
 
         /* -------------------------------------- */
         /* UI تاریخچه سفارشات */
@@ -235,7 +235,6 @@
         <!-- فروشگاه <--
         <!-- ============================================== -->
         <div id="view-store" class="view-section">
-            <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; color: var(--text-muted);">منوی بوفه 🍩</div>
             
             <div class="category-wrapper" id="categoryScroll">
   
@@ -821,27 +820,39 @@
                         let amountColor = isOrder ? 'var(--danger)' : 'var(--success)';
                         let sign = isOrder ? '-' : '+';
                         
+                        // تبدیل تاریخ به شمسی همراه با ساعت
+                        let shamsiDate = new Date(item.raw_date).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+                        // استخراج جزئیات خرید یا وضعیت شارژ
+                        let detailsHtml = '';
+                        if (isOrder && item.items) {
+                            let itemsArr = typeof item.items === 'string' ? JSON.parse(item.items) : item.items;
+                            let itemsText = itemsArr.map(i => `${i.qty}x ${i.name}`).join(' ، ');
+                            detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.6;">اقلام: ${itemsText}</div>`;
+                        } else if (!isOrder) {
+                            let statusTxt = item.status === 'approved' ? '✅ تایید شده' : (item.status === 'rejected' ? '❌ رد شده' : '⏳ در انتظار تایید');
+                            let statusColor = item.status === 'approved' ? 'var(--success)' : (item.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
+                            detailsHtml = `<div style="font-size: 11px; color: ${statusColor}; margin-top: 6px; font-weight: bold;">وضعیت: ${statusTxt}</div>`;
+                        }
+                        
                         html += `
                         <div class="history-card">
                             <div class="history-info">
                                 <div class="history-icon">${icon}</div>
                                 <div>
                                     <div class="history-title">${title}</div>
-                                    <div class="history-date">${item.date}</div>
+                                    <div class="history-date" style="direction:ltr; text-align:right;">${shamsiDate}</div>
+                                    ${detailsHtml}
                                 </div>
                             </div>
-                            <div style="font-weight:900; font-size:14px; color:${amountColor}; direction:ltr;">${sign} ${item.amount.toLocaleString()}</div>
+                            <div style="font-weight:900; font-size:14px; color:${amountColor}; direction:ltr; white-space: nowrap;">${sign} ${item.amount.toLocaleString()}</div>
                         </div>`;
                     });
                     container.innerHTML = html;
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch(e) {
-                container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px;">خطا در دریافت تاریخچه</div>`;
-            }
+                } else { throw new Error(data.error); }
+            } catch(e) { container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px;">خطا در دریافت تاریخچه</div>`; }
         }
-
+        
         function logoutApp() {
             if(confirm('آیا از حساب کاربری خود خارج می‌شوید؟')) {
                 localStorage.removeItem('buffet_user_phone');
