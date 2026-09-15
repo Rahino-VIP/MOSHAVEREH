@@ -6,18 +6,9 @@
     <title>پنل مدیریت بوفه راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <style>
-        :root { 
-            --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.15);
-            --bg-color: #0f172a; --surface: #1e293b; --surface-glass: rgba(30, 41, 59, 0.8);
-            --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; 
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); 
-            --transition: all 0.3s ease;
-        }
-        
+        :root { --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.15); --bg-color: #0f172a; --surface: #1e293b; --surface-glass: rgba(30, 41, 59, 0.8); --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --transition: all 0.3s ease; }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
-
         .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
         .brand { padding: 25px 20px; font-size: 20px; font-weight: 900; color: var(--primary); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         .nav-menu { padding: 20px 10px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
@@ -25,52 +16,42 @@
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
         .nav-item.active { background: var(--primary-fade); color: var(--primary); }
         .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
-
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0a0f0d; }
         .topbar { height: 70px; background: var(--surface-glass); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 30px; font-size: 18px; font-weight: bold; }
         .content-area { flex: 1; overflow-y: auto; padding: 30px; }
-        
         .view-section { display: none; animation: fadeIn 0.3s ease; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        
         table { width: 100%; border-collapse: collapse; text-align: right; }
-        th, td { padding: 15px; border-bottom: 1px solid var(--border); }
+        th, td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         th { color: var(--text-muted); font-size: 13px; }
-        
         .btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; transition: var(--transition); color: white; }
         .btn-primary { background: var(--primary); }
-        .btn-primary:hover { background: var(--primary-hover); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        
-        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; width: 100%; font-family: 'Vazirmatn'; text-align: right;}
+        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; font-family: 'Vazirmatn'; text-align: center; }
         .form-input:focus { border-color: var(--primary); }
-
         .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; }
-
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; }
         .modal { background: var(--surface); width: 400px; border-radius: 20px; padding: 25px; border: 1px solid var(--border); }
-        .modal input, .modal select { margin-bottom: 15px; }
-
-        .finance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .modal input, .modal select { width: 100%; margin-bottom: 15px; }
+        .receipt-img { max-height: 80px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+        .receipt-img:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-    <div class="loader" id="loader">⏳ در حال ارتباط با سرور...</div>
+    <div class="loader" id="loader">⏳ در حال ارتباط...</div>
 
     <aside class="sidebar">
         <div class="brand">⚙️ مدیریت راهینو</div>
         <nav class="nav-menu">
             <div class="nav-item active" onclick="switchView('view-inventory', this, 'انبار و محصولات')">📦 انبار و محصولات</div>
-            <div class="nav-item" onclick="switchView('view-finance', this, 'صندوق و امور مالی')">💰 امور مالی و صندوق</div>
-            <div class="nav-item" onclick="switchView('view-approvals', this, 'تایید رسیدهای کیف پول')">💳 تایید رسیدها <span class="badge" id="pendingBadge" style="display:none;">0</span></div>
-            <div class="nav-item" onclick="alert('در فاز بعدی اضافه می‌شود.')">📊 گزارش فروش</div>
+            <div class="nav-item" onclick="switchView('view-finance', this, 'صندوق و دریافت نقدی')">💵 تایید دریافت نقدی <span class="badge" id="cashBadge" style="display:none;">0</span></div>
+            <div class="nav-item" onclick="switchView('view-approvals', this, 'تایید فیش بانکی')">💳 تایید فیش‌ها <span class="badge" id="pendingBadge" style="display:none;">0</span></div>
         </nav>
     </aside>
 
@@ -81,20 +62,12 @@
             <div id="view-inventory" class="view-section active">
                 <div class="card">
                     <div class="card-header">
-                        <h2 style="font-size: 16px;">لیست محصولات بوفه</h2>
+                        <h2 style="font-size: 16px;">لیست محصولات</h2>
                         <button class="btn btn-primary" onclick="document.getElementById('modalAddProduct').style.display='flex'">+ محصول جدید</button>
                     </div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>نام محصول</th>
-                                    <th>دسته‌بندی</th>
-                                    <th>قیمت (تومان)</th>
-                                    <th>موجودی فعلی</th>
-                                    <th>عملیات</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>نام محصول</th><th>دسته‌بندی</th><th>قیمت (تومان)</th><th>موجودی</th><th>عملیات</th></tr></thead>
                             <tbody id="inventoryTableBody"></tbody>
                         </table>
                     </div>
@@ -102,32 +75,29 @@
             </div>
 
             <div id="view-finance" class="view-section">
-                <div class="finance-grid">
-                    <div class="card">
-                        <h2 style="font-size: 16px; margin-bottom: 20px;">شارژ نقدی / واریز مابقی پول</h2>
-                        <div style="margin-bottom: 10px; color: var(--text-muted); font-size: 12px;">دانش‌آموز را انتخاب کنید:</div>
-                        <select id="financeUserSelect" class="form-input"></select>
-                        <div style="margin-bottom: 10px; margin-top: 15px; color: var(--text-muted); font-size: 12px;">مبلغ مورد نظر (تومان):</div>
-                        <input type="number" id="financeAmount" class="form-input" placeholder="مثلاً: 30000" style="text-align: center; letter-spacing: 2px;">
-                        <button class="btn btn-success" style="width: 100%; margin-top: 20px;" onclick="submitManualCharge()">ثبت و شارژ کیف پول ✅</button>
+                <div class="card">
+                    <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری</h2></div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead><tr><th>موبایل</th><th>نوع درخواست</th><th>مبلغ پایه</th><th>مبلغ دریافتی شما (تومان)</th><th>عملیات</th></tr></thead>
+                            <tbody id="cashTableBody"></tbody>
+                        </table>
                     </div>
+                </div>
+                <div class="card" style="margin-top: 20px;">
+                    <h2 style="font-size: 16px; margin-bottom: 15px;">شارژ مستقیم کیف پول (بدون درخواست)</h2>
+                    <select id="financeUserSelect" class="form-input" style="width: 250px; margin-left: 10px;"></select>
+                    <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 150px;">
+                    <button class="btn btn-primary" style="margin-right: 10px;" onclick="submitManualCharge()">ثبت شارژ</button>
                 </div>
             </div>
 
             <div id="view-approvals" class="view-section">
                 <div class="card">
-                    <div class="card-header"><h2 style="font-size: 16px;">رسیدهای در انتظار تایید</h2></div>
+                    <div class="card-header"><h2 style="font-size: 16px;">فیش‌های واریزی در انتظار</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>شماره موبایل کاربر</th>
-                                    <th>مبلغ درخواستی</th>
-                                    <th>تاریخ ثبت</th>
-                                    <th>تصویر فیش</th>
-                                    <th>عملیات</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>موبایل</th><th>مبلغ فیش</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
                             <tbody id="approvalsTableBody"></tbody>
                         </table>
                     </div>
@@ -140,31 +110,24 @@
     <div class="modal-overlay" id="modalAddProduct">
         <div class="modal">
             <h3 style="margin-bottom: 20px; color: var(--primary);">افزودن محصول جدید</h3>
-            <input type="text" id="addName" class="form-input" placeholder="نام محصول (مثلاً: رانی هلو)">
-            <select id="addCat" class="form-input">
-                <option value="نوشیدنی گرم ☕">نوشیدنی گرم ☕</option>
-                <option value="نوشیدنی سرد 🥤">نوشیدنی سرد 🥤</option>
-                <option value="کیک و اسنک 🍩">کیک و اسنک 🍩</option>
-                <option value="غذای آماده 🥪">غذای آماده 🥪</option>
-            </select>
+            <input type="text" id="addName" class="form-input" placeholder="نام محصول">
+            <input type="text" id="addCat" class="form-input" placeholder="انتخاب یا تایپ دسته‌بندی..." list="cat-options">
+            <datalist id="cat-options"></datalist>
             <div style="display: flex; gap: 10px;">
                 <input type="number" id="addPrice" class="form-input" placeholder="قیمت (تومان)">
                 <input type="number" id="addStock" class="form-input" placeholder="موجودی اولیه">
             </div>
             <input type="text" id="addImg" class="form-input" placeholder="لینک عکس (اختیاری)">
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-primary" style="flex:1;" onclick="submitNewProduct()">ثبت محصول</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="submitNewProduct()">ثبت</button>
                 <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('modalAddProduct').style.display='none'">انصراف</button>
             </div>
         </div>
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
-        
-        let products = [];
-        let pendingCharges = [];
-        let usersData = [];
+        const GAS_URL = 'AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA';
+        let products = [], pendingTxs = [], pendingOrders = [], usersData = [];
 
         function switchView(viewId, navElement, title) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -173,133 +136,136 @@
             navElement.classList.add('active');
             document.getElementById('topbarTitle').innerText = title;
         }
-
         function showLoader() { document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 
         window.onload = async () => {
             showLoader();
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'get_admin_data' })
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_admin_data' }) });
                 const data = await response.json();
                 hideLoader();
                 if(data.success) {
                     products = data.products || [];
-                    pendingCharges = data.pending_charges || [];
+                    pendingTxs = data.pending_txs || [];
+                    pendingOrders = data.pending_orders || [];
                     usersData = data.users || [];
-                    renderInventory();
-                    renderApprovals();
-                    renderFinanceUsers();
-                } else { alert('خطا: ' + data.error); }
-            } catch(e) { hideLoader(); alert('خطا در ارتباط با سرور'); }
+                    renderInventory(); renderCashViews(); renderApprovals(); renderFinanceUsers();
+                } else alert('خطا: ' + data.error);
+            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
         };
 
         function renderInventory() {
             const tbody = document.getElementById('inventoryTableBody');
-            let html = '';
-            products.forEach(p => {
-                html += `
-                <tr>
-                    <td style="font-weight:bold;">${p.name}</td>
-                    <td style="color:var(--text-muted);">${p.category}</td>
-                    <td dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px; text-align:center;"></td>
-                    <td dir="ltr"><input type="number" id="stock_${p.id}" class="form-input" value="${p.stock_count}" style="width:100px; text-align:center;"></td>
-                    <td><button class="btn btn-outline" style="padding: 6px 12px; font-size:12px;" onclick="updateProduct('${p.id}')">💾 ذخیره تغییرات</button></td>
-                </tr>`;
-            });
-            tbody.innerHTML = html;
+            const dl = document.getElementById('cat-options');
+            let cats = [...new Set(products.map(p => p.category))];
+            dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+            
+            tbody.innerHTML = products.map(p => `<tr>
+                <td style="font-weight:bold;">${p.name}</td>
+                <td style="color:var(--text-muted);">${p.category}</td>
+                <td dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px;"></td>
+                <td dir="ltr"><input type="number" id="stock_${p.id}" class="form-input" value="${p.stock_count}" style="width:100px;"></td>
+                <td><button class="btn btn-outline" style="padding: 6px 12px; font-size:12px;" onclick="updateProduct('${p.id}')">ذخیره</button></td>
+            </tr>`).join('');
         }
 
         async function updateProduct(id) {
-            const newPrice = document.getElementById(`price_${id}`).value;
-            const newStock = document.getElementById(`stock_${id}`).value;
             showLoader();
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'update_product', id: id, price: newPrice, stock: newStock })
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: document.getElementById(`price_${id}`).value, stock: document.getElementById(`stock_${id}`).value }) });
                 const data = await response.json();
                 hideLoader();
-                if(data.success) { alert('✅ تغییرات ذخیره شد'); } else { alert('خطا: ' + data.error); }
-            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
+                if(data.success) alert('✅ ذخیره شد'); else alert('خطا');
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         async function submitNewProduct() {
-            const name = document.getElementById('addName').value;
-            const cat = document.getElementById('addCat').value;
-            const price = document.getElementById('addPrice').value;
-            const stock = document.getElementById('addStock').value;
-            const img = document.getElementById('addImg').value;
-            if(!name || !price || !stock) return alert('نام، قیمت و موجودی الزامی است.');
-            document.getElementById('modalAddProduct').style.display = 'none';
+            const name = document.getElementById('addName').value, cat = document.getElementById('addCat').value, price = document.getElementById('addPrice').value, stock = document.getElementById('addStock').value, img = document.getElementById('addImg').value;
+            if(!name || !price || !stock || !cat) return alert('اطلاعات ناقص است.');
             showLoader();
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img })
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
                 const data = await response.json();
                 hideLoader();
-                if(data.success) { alert('✅ محصول جدید به انبار اضافه شد!'); window.location.reload(); } else { alert('خطا: ' + data.error); }
-            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
+                if(data.success) window.location.reload(); else alert('خطا');
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
-        function renderFinanceUsers() {
-            const select = document.getElementById('financeUserSelect');
-            let html = '<option value="" disabled selected>-- انتخاب کاربر --</option>';
-            usersData.forEach(u => {
-                html += `<option value="${u.phone_number}">${u.full_name} (${u.phone_number}) - موجودی: ${u.wallet_balance}</option>`;
+        function renderCashViews() {
+            const tbody = document.getElementById('cashTableBody');
+            let cashCharges = pendingTxs.filter(t => t.tx_type === 'cash_charge');
+            let totalCash = cashCharges.length + pendingOrders.length;
+            document.getElementById('cashBadge').style.display = totalCash ? 'inline-block' : 'none';
+            document.getElementById('cashBadge').innerText = totalCash;
+
+            let html = '';
+            pendingOrders.forEach(o => {
+                html += `<tr><td dir="ltr">${o.phone_number}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
+                <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;"></td>
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">دریافت شد ✅</button></td></tr>`;
             });
-            select.innerHTML = html;
+            cashCharges.forEach(t => {
+                html += `<tr><td dir="ltr">${t.phone_number}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
+                <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;"></td>
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
+            });
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ موردی نیست.</td></tr>';
         }
 
-        async function submitManualCharge() {
-            const phone = document.getElementById('financeUserSelect').value;
-            const amount = document.getElementById('financeAmount').value;
-            if(!phone || !amount) return alert('کاربر و مبلغ را وارد کنید.');
+        async function processCashOrder(oId, phone, oTotal) {
+            let rAmt = document.getElementById(`recv_o_${oId}`).value;
             showLoader();
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount })
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
                 const data = await response.json();
                 hideLoader();
-                if(data.success) { alert('✅ مبلغ با موفقیت به کیف پول کاربر اضافه شد.'); window.location.reload(); } else { alert('خطا: ' + data.error); }
-            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
+                if(data.success) window.location.reload(); else alert('خطا');
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function renderApprovals() {
             const tbody = document.getElementById('approvalsTableBody');
-            const badge = document.getElementById('pendingBadge');
-            if(pendingCharges.length > 0) { badge.innerText = pendingCharges.length; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; }
+            let receiptCharges = pendingTxs.filter(t => t.tx_type === 'receipt_charge');
+            document.getElementById('pendingBadge').style.display = receiptCharges.length ? 'inline-block' : 'none';
+            document.getElementById('pendingBadge').innerText = receiptCharges.length;
+
             let html = '';
-            if(pendingCharges.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">هیچ درخواست جدیدی وجود ندارد.</td></tr>'; return;
-            }
-            pendingCharges.forEach(tx => {
-                let dateStr = new Date(tx.created_at).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-                html += `<tr><td style="font-weight:bold;" dir="ltr">${tx.phone_number}</td><td style="color:var(--success); font-weight:bold;">${tx.amount.toLocaleString()} تومان</td><td>${dateStr}</td><td><a href="data:image/jpeg;base64,${tx.receipt_base64}" target="_blank" style="color:var(--primary); text-decoration:none;">نمایش فیش 👁️</a></td><td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-left:5px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', ${tx.amount}, 'approved')">تایید ✅</button><button class="btn btn-danger" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', ${tx.amount}, 'rejected')">رد ❌</button></td></tr>`;
+            receiptCharges.forEach(tx => {
+                html += `<tr><td dir="ltr">${tx.phone_number}</td><td>${tx.amount.toLocaleString()}</td>
+                <td>${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
+                <td><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
+                <td><input type="hidden" id="recv_t_${tx.id}" value="${tx.amount}"><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
             });
-            tbody.innerHTML = html;
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">فیشی وجود ندارد.</td></tr>';
         }
 
-        async function processCharge(txId, phone, amount, status) {
-            if(!confirm(`آیا از انجام این عملیات مطمئن هستید؟`)) return;
+        async function processCharge(txId, phone, inputId, status) {
+            let amt = document.getElementById(inputId).value;
             showLoader();
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, amount: amount, status: status })
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
                 const data = await response.json();
                 hideLoader();
-                if(data.success) { alert('✅ عملیات با موفقیت انجام شد.'); window.location.reload(); } else { alert('خطا: ' + data.error); }
-            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
+                if(data.success) window.location.reload(); else alert('خطا');
+            } catch(e) { hideLoader(); alert('خطا'); }
+        }
+
+        function renderFinanceUsers() {
+            document.getElementById('financeUserSelect').innerHTML = '<option value="" disabled selected>انتخاب کاربر</option>' + usersData.map(u => `<option value="${u.phone_number}">${u.full_name} (${u.phone_number})</option>`).join('');
+        }
+
+        async function submitManualCharge() {
+            const phone = document.getElementById('financeUserSelect').value, amount = document.getElementById('financeAmount').value;
+            if(!phone || !amount) return;
+            showLoader();
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
+                const data = await response.json();
+                hideLoader();
+                if(data.success) window.location.reload(); else alert('خطا');
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
     </script>
 </body>
