@@ -345,7 +345,7 @@
         let receiptBase64 = "";
         let userFavorites = []; 
         let chargeMethod = 'receipt';
-        let featuredProduct = null;
+        let featuredProduct = [];
         
         function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
@@ -494,7 +494,7 @@
                     userWalletBalance = data.wallet_balance || 0;
                     activeUser.full_name = data.full_name;
                     userFavorites = data.favorites || [];
-                    featuredProduct = data.featured_product || null;
+                    featuredProducts = data.featured_products || [];
                     document.getElementById('welcomeName').innerText = `سلام ${data.full_name.split(' ')[0]} عزیز!`;
                     
                     setTimeout(() => {
@@ -535,44 +535,30 @@
             
             const categories = [...new Set(storeProducts.filter(p => p.stock_count > 0).map(p => p.category))];
 
-            // تو تابع renderStore() تو اپلیکیشن دانش‌آموز
             let storeHtml = '';
-            
-            // اگه ادمین پیشنهاد ویژه‌ای تنظیم کرده بود و تو ساعت مجازش بودیم:
-            if (featuredProduct) {
-                let fp = featuredProduct;
-                storeHtml += `
-                    <div class="hero-card" style="background: linear-gradient(to left, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('${fp.image_url || 'https://images.unsplash.com/photo-1551024601-bec78aea704b'}') center/cover;">
-                        <div class="hero-badge">پیشنهاد سرپرست!</div>
-                        <div class="hero-title">${fp.name}</div>
-                        <div class="hero-desc">${fp.featured_text || 'یک انتخاب عالی برای این ساعت!'}</div>
-                        <button class="btn btn-primary" style="width: auto; padding: 8px 20px; margin-top: 10px; border-radius: 12px; font-size:12px;" onclick="updateItemQty('${fp.id}', '${fp.name}', ${fp.price}, 1)">+ افزودن (${fp.price.toLocaleString()} تومان)</button>
-                     </div>`;
-            } else {
-                // در غیر این صورت، یک بنر دیفالت یا خالی می‌ذاریم
-                storeHtml += `
-                    <div class="hero-card">
-                        <div class="hero-badge">پیشنهاد راهینو</div>
-                        <div class="hero-title">بوفه هوشمند راهینو</div>
-                        <div class="hero-desc">به زودی پیشنهادهای ویژه در این قسمت نمایش داده می‌شوند.</div>
-                     </div>`;
-            }
-
             let navHtml = '';
 
-            // تولید بخش علاقه‌مندی‌های واقعی (دریافت شده از سرور)
+            // 🌟 بخش پیشنهاد راهینو (مثل دسته‌بندی عادی)
+            if (featuredProducts && featuredProducts.length > 0) {
+                navHtml += `<div class="cat-link active" onclick="scrollToCategory('cat-featured', this)" style="cursor:pointer;">🌟 پیشنهاد ویژه</div>`;
+                storeHtml += `<section id="cat-featured" class="category-section"><div class="section-header">🌟 پیشنهاد راهینو</div><div class="horizontal-list">`;
+                featuredProducts.forEach(p => { storeHtml += generateProductHtml(p); });
+                storeHtml += `</div></section>`;
+            }
+
+            // ✨ بخش علاقه‌مندی‌ها
             let favoriteProducts = storeProducts.filter(p => userFavorites.includes(p.id) && p.stock_count > 0);
-            
             if (favoriteProducts.length > 0) {
-                navHtml += `<div class="cat-link active" onclick="scrollToCategory('cat-foryou', this)" style="cursor:pointer;">✨ ویژه شما</div>`;
+                let activeClass = (featuredProducts.length === 0) ? 'active' : '';
+                navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-foryou', this)" style="cursor:pointer;">✨ ویژه شما</div>`;
                 storeHtml += `<section id="cat-foryou" class="category-section"><div class="section-header">✨ علاقه‌مندی‌های شما</div><div class="horizontal-list">`;
                 favoriteProducts.forEach(p => { storeHtml += generateProductHtml(p); });
                 storeHtml += `</div></section>`;
             }
 
-            // تولید بقیه دسته‌بندی‌ها
+            // 📦 تولید بقیه دسته‌بندی‌ها
             categories.forEach((cat, index) => {
-                let activeClass = (index === 0 && favoriteProducts.length === 0) ? 'active' : '';
+                let activeClass = (index === 0 && (!featuredProducts || featuredProducts.length === 0) && favoriteProducts.length === 0) ? 'active' : '';
                 navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-${cat}', this)" style="cursor:pointer;">${cat}</div>`;
             });
             navContainer.innerHTML = navHtml;
@@ -734,7 +720,7 @@
                     const initData = await resInit.json();
                     if(initData.success) {
                         storeProducts = initData.products;
-                        featuredProduct = initData.featured_product || null;
+                        featuredProducts = initData.featured_products || [];
                     }
                     
                     renderStore(); switchView('view-store', document.querySelectorAll('.nav-item')[0]);
