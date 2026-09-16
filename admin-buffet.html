@@ -399,7 +399,9 @@
             let todayStr = new Date().toLocaleDateString('fa-IR');
             
             let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
-            let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved');
+            
+            // 🌟 تغییر در این خط: شرط t.tx_type !== 'purchase' اضافه شد تا خریدهای کیف پول در جدول شارژها نیاید
+            let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved' && t.tx_type !== 'purchase');
 
             let totalSales = todaysOrders.reduce((sum, o) => sum + o.total_price, 0);
             let walletSales = todaysOrders.filter(o => o.payment_method === 'wallet').reduce((sum, o) => sum + o.total_price, 0);
@@ -429,6 +431,7 @@
                 else if(t.tx_type === 'receipt_charge') typeTxt = '💳 واریز کارت به کارت';
                 else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد خرید';
                 else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ شارژ دستی مدیریت';
+                else typeTxt = 'سایر';
                 let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
                 return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
             }).join('') || '<tr><td colspan="4" style="text-align:center;">امروز شارژی انجام نشده است.</td></tr>';
