@@ -46,11 +46,34 @@
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .checkbox-group label { background: var(--bg-color); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 12px; }
         .checkbox-group input { margin-left: 5px; cursor: pointer; }
+
+        /* 📱 تنظیمات ریسپانسیو برای موبایل */
+        .menu-toggle { display: none; background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; margin-left: 15px; }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; backdrop-filter: blur(3px); }
+        .sidebar-overlay.active { display: block; animation: fadeIn 0.3s; }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; top: 0; right: 0; bottom: 0; transform: translateX(100%); z-index: 1000; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+            .sidebar.open { transform: translateX(0); }
+            .menu-toggle { display: block; }
+            .topbar { padding: 0 15px; }
+            .content-area { padding: 15px; }
+            .kpi-grid { grid-template-columns: 1fr; gap: 10px; } /* کارت‌های گزارش زیر هم بیفتن */
+            .card-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .card-header .btn { width: 100%; }
+            table { font-size: 12px; }
+            th, td { padding: 10px 5px; }
+            .form-input { width: 100%; } /* ورودی‌ها تمام‌عرض بشن */
+            .card[style*="display:flex"] { flex-direction: column; align-items: stretch !important; }
+            .card select, .card input, .card button { width: 100% !important; margin: 5px 0 !important; }
+        }
     </style>
 </head>
 <body>
 
     <div class="loader" id="loader">⏳ در حال ارتباط...</div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <aside class="sidebar">
         <div class="brand">⚙️ مدیریت راهینو</div>
@@ -64,7 +87,10 @@
     </aside>
 
     <main class="main-content">
-        <header class="topbar" id="topbarTitle">📦 انبار و محصولات</header>
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <span id="topbarTitle">📦 انبار و محصولات</span>
+        </header>
         <div class="content-area">
             
             <div id="view-inventory" class="view-section active">
@@ -225,10 +251,21 @@
             document.getElementById('topbarTitle').innerText = title;
             if(viewId === 'view-featured') populateFeatured();
             if(viewId === 'view-reports') generateDailyReport();
+            
+            // بستن اتوماتیک سایدبار در موبایل
+            if(window.innerWidth <= 768) {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            }
         }
         
         function showLoader() { document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
 
         window.onload = async () => {
             showLoader();
