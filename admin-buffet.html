@@ -429,7 +429,6 @@
                 else if(t.tx_type === 'receipt_charge') typeTxt = '💳 واریز کارت به کارت';
                 else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد خرید';
                 else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ شارژ دستی مدیریت';
-                else typeTxt = 'سایر';
                 let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
                 return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
             }).join('') || '<tr><td colspan="4" style="text-align:center;">امروز شارژی انجام نشده است.</td></tr>';
