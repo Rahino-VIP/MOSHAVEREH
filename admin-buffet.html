@@ -175,6 +175,16 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header"><h2 style="font-size: 16px;">ریز شارژها و ورودی‌های کیف پول امروز</h2></div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead><tr><th>کاربر</th><th>نوع تراکنش</th><th>مبلغ (تومان)</th><th>ساعت</th></tr></thead>
+                            <tbody id="todayTxsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -201,6 +211,11 @@
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
         let products = [], pendingTxs = [], pendingOrders = [], usersData = [], recentOrders = [], recentTxs = [];
+
+        function getUserName(phone) {
+            let u = usersData.find(x => x.phone_number === phone);
+            return u ? `<div style="font-weight:bold;">${u.full_name}</div><div style="font-size:11px; color:var(--text-muted);">${phone}</div>` : phone;
+        }
 
         function switchView(viewId, navElement, title) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -275,12 +290,12 @@
 
             let html = '';
             pendingOrders.forEach(o => {
-                html += `<tr><td dir="ltr">${o.phone_number}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
                 <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;"></td>
                 <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">دریافت شد ✅</button></td></tr>`;
             });
             cashCharges.forEach(t => {
-                html += `<tr><td dir="ltr">${t.phone_number}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
                 <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;"></td>
                 <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
             });
@@ -304,7 +319,7 @@
 
             let html = '';
             receiptCharges.forEach(tx => {
-                html += `<tr><td dir="ltr">${tx.phone_number}</td><td>${tx.amount.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(tx.phone_number)}</td><td>${tx.amount.toLocaleString()}</td>
                 <td>${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
                 <td><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
                 <td><input type="hidden" id="recv_t_${tx.id}" value="${tx.amount}"><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button>
@@ -397,13 +412,27 @@
             document.getElementById('repWalletSales').innerText = walletSales.toLocaleString();
             document.getElementById('repCashBox').innerText = cashInBox.toLocaleString();
 
-            let tbody = document.getElementById('todayOrdersBody');
-            tbody.innerHTML = todaysOrders.map(o => {
+            // ساخت جدول سفارشات
+            let tbodyOrders = document.getElementById('todayOrdersBody');
+            tbodyOrders.innerHTML = todaysOrders.map(o => {
                 let itemsTxt = '';
                 try { itemsTxt = JSON.parse(o.items).map(i => i.qty + 'x ' + i.name).join(' ، '); } catch(e){}
                 let time = new Date(o.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-                return `<tr><td dir="ltr">${o.phone_number}</td><td>${itemsTxt}</td><td>${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td>${time}</td></tr>`;
+                return `<tr><td>${getUserName(o.phone_number)}</td><td>${itemsTxt}</td><td>${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td dir="ltr">${time}</td></tr>`;
             }).join('') || '<tr><td colspan="5" style="text-align:center;">هنوز سفارشی ثبت نشده است.</td></tr>';
+
+            // ساخت جدول شارژها
+            let tbodyTxs = document.getElementById('todayTxsBody');
+            tbodyTxs.innerHTML = todaysTxs.map(t => {
+                let typeTxt = '';
+                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی (حضوری)';
+                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 واریز کارت به کارت';
+                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد خرید';
+                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ شارژ دستی مدیریت';
+                else typeTxt = 'سایر';
+                let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+                return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
+            }).join('') || '<tr><td colspan="4" style="text-align:center;">امروز شارژی انجام نشده است.</td></tr>';
         }
     </script>
 </body>
