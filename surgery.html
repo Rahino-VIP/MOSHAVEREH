@@ -667,6 +667,15 @@
             btn.innerHTML = 'در حال ساخت پیام انگیزشی... ⏳';
             btn.disabled = true;
 
+            // 🌟 پاکسازی عبارت [هفته دوم] از تمام پارت‌ها پیش از ارسال برای دانش‌آموز
+            let finalPlanForStudent = scheduleDataArray.map(part => {
+                let cleanPart = JSON.parse(JSON.stringify(part));
+                if (cleanPart.topic) {
+                    cleanPart.topic = cleanPart.topic.replace(' [هفته دوم]', '');
+                }
+                return cleanPart;
+            });
+
             try {
                 const aiResponse = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
@@ -693,7 +702,7 @@
                 const { error } = await supabaseClient
                     .from('ai_schedules')
                     .update({ 
-                        raw_plan: scheduleDataArray,
+                        raw_plan: finalPlanForStudent,
                         ai_motivations: generatedMotivations, 
                         status: 'approved' 
                     })
