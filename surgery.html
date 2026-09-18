@@ -119,6 +119,8 @@
         .event-makeup { background: rgba(239, 68, 68, 0.05); border-right: 4px solid #ef4444; } 
         .event-break { background: var(--bg-color); color: var(--text-muted); border: 1px dashed var(--border-color); } 
         .event-default { background: var(--primary-fade); border-right: 4px solid var(--primary); } 
+        .is-test-box { border: 2px dashed var(--primary); opacity: 0.85; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px); }
+        [data-theme="dark"] .is-test-box { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px); }
 
         @media (max-width: 992px) {
             body { flex-direction: column; overflow: hidden; }
@@ -383,9 +385,14 @@
             scheduleDataArray.forEach((part, index) => {
                 if (part.day === 'bench' || !part.day) {
                     if (!groupedBench[part.subject]) {
-                        groupedBench[part.subject] = { count: 0, type: part.type || 'default', indices: [] };
+                        // 🌟 اضافه کردن شمارنده مجزا برای پارت‌های تست و عادی
+                        groupedBench[part.subject] = { coreCount: 0, testCount: 0, type: part.type || 'default', indices: [] };
                     }
-                    groupedBench[part.subject].count++;
+                    if (part.is_test_box) {
+                        groupedBench[part.subject].testCount++;
+                    } else {
+                        groupedBench[part.subject].coreCount++;
+                    }
                     groupedBench[part.subject].indices.push(index); 
                     benchCount++;
                 } else {
@@ -399,6 +406,9 @@
 
                     let typeClass = "event-default";
                     if(part.type) typeClass = `event-${part.type}`;
+                    
+                    // 🌟 اضافه کردن استایل اختصاصی به پارت‌های تست
+                    if(part.is_test_box) typeClass += " is-test-box";
 
                     const block = document.createElement('div');
                     block.className = `event-block ${typeClass}`;
@@ -413,7 +423,7 @@
                             <div class="action-btn" title="کپی" onclick="cloneBlock(${index}, event)">📋</div>
                         </div>
                         <div class="event-time">${part.start_time} - ${part.end_time}</div>
-                        <div class="event-title">${part.subject}</div>
+                        <div class="event-title">${part.subject} ${part.is_test_box ? '🎯' : ''}</div>
                         <div class="event-desc">${part.topic || ''}</div>
                         <div class="resizer"></div>
                     `;
@@ -430,11 +440,16 @@
                     let group = groupedBench[subject];
                     let firstIndex = group.indices[0]; 
 
+                    // 🌟 تفکیک نمایش آمار نیمکت
+                    let statsText = '';
+                    if (group.coreCount > 0) statsText += `📚 ${group.coreCount} پارت اصلی`;
+                    if (group.testCount > 0) statsText += (statsText ? ' | ' : '') + `🎯 ${group.testCount} پارت تست`;
+
                     let benchHtml = `
                         <div class="bench-item event-${group.type}" style="border-right: 4px solid var(--primary); padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                             <div class="bench-info">
                                 <div class="bench-subj" style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${subject}</div>
-                                <div class="bench-topic" style="font-size: 12px;">📚 ${group.count} باکس تو صف موندن</div>
+                                <div class="bench-topic" style="font-size: 11px; color: var(--danger); font-weight: bold;">${statsText}</div>
                             </div>
                             <div class="bench-actions" style="display: flex; gap: 5px; flex-direction: column;">
                                 <div class="action-btn" style="cursor: pointer; background: var(--surface); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 4px; font-size: 11px; text-align: center;" onclick="injectFromBench(${firstIndex})">➕ تقویم</div>
@@ -541,41 +556,11 @@
             e.stopPropagation();
             let origBlock = scheduleDataArray[index];
             let isMakeup = (origBlock.type === 'makeup' || origBlock.subject.includes('جبرانی'));
-            let confirmMsg = isMakeup 
-                ? "آیا از حذف این باکس جبرانی مطمئن هستید؟ (جای آن روی تقویم خالی می‌ماند)" 
-                : "پارت حذف شود؟ (جای آن با بانک جبرانی پر خواهد شد)";
-
-            if(confirm(confirmMsg)) {
-                if (isMakeup) {
-                    scheduleDataArray.splice(index, 1);
-                } else {
-                    let makeupBlock = {
-                        day: origBlock.day,
-                        type: 'makeup',
-                        subject: 'بانک جبرانی',
-                        topic: 'جایگزینی دروس جا مانده',
-                        start_time: origBlock.start_time,
-                        end_time: origBlock.end_time,
-                        duration: origBlock.duration || 90,
-                        status: 'pending',
-                        block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
-                    };
-                    scheduleDataArray.splice(index, 1, makeupBlock);
-                }
-                renderAllBlocks(); 
-            }
-        }
-
-        function moveToBench(index, e) {
-            e.stopPropagation(); 
-            let origBlock = scheduleDataArray[index];
             
-            if (origBlock.type === 'makeup' || origBlock.subject.includes('جبرانی')) {
-                alert("⚠️ باکس جبرانی رو که نمی‌تونی بفرستی رو نیمکت! اگر بهش نیاز نداری، از دکمه «حذف» استفاده کن.");
-                return; 
-            }
-
-            if(confirm("این پارت به نیمکت منتقل شود؟ (جای آن با بانک جبرانی پر خواهد شد)")) {
+            // 🌟 حذف تأییدیه
+            if (isMakeup) {
+                scheduleDataArray.splice(index, 1);
+            } else {
                 let makeupBlock = {
                     day: origBlock.day,
                     type: 'makeup',
@@ -587,22 +572,46 @@
                     status: 'pending',
                     block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
                 };
-
-                scheduleDataArray[index].day = 'bench';
-                scheduleDataArray[index].start_time = '';
-                scheduleDataArray[index].end_time = '';
-                scheduleDataArray[index].is_benched = true;
-
-                scheduleDataArray.push(makeupBlock);
-                renderAllBlocks(); 
+                scheduleDataArray.splice(index, 1, makeupBlock);
             }
+            renderAllBlocks(); 
+        }
+
+        function moveToBench(index, e) {
+            e.stopPropagation(); 
+            let origBlock = scheduleDataArray[index];
+            
+            if (origBlock.type === 'makeup' || origBlock.subject.includes('جبرانی')) {
+                alert("⚠️ باکس جبرانی رو که نمی‌تونی بفرستی رو نیمکت! اگر بهش نیاز نداری، از دکمه «حذف» استفاده کن.");
+                return; 
+            }
+
+            // 🌟 حذف تأییدیه
+            let makeupBlock = {
+                day: origBlock.day,
+                type: 'makeup',
+                subject: 'بانک جبرانی',
+                topic: 'جایگزینی دروس جا مانده',
+                start_time: origBlock.start_time,
+                end_time: origBlock.end_time,
+                duration: origBlock.duration || 90,
+                status: 'pending',
+                block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6)
+            };
+
+            scheduleDataArray[index].day = 'bench';
+            scheduleDataArray[index].start_time = '';
+            scheduleDataArray[index].end_time = '';
+            scheduleDataArray[index].is_benched = true;
+
+            scheduleDataArray.push(makeupBlock);
+            renderAllBlocks(); 
         }
 
         function deleteGroupFromBench(subjectName) {
-            if(confirm(`مطمئنی می‌خوای کل باکس‌های "${subjectName}" رو از نیمکت حذف کنی؟`)) {
-                scheduleDataArray = scheduleDataArray.filter(part => !(part.day === 'bench' && part.subject === subjectName));
-                renderAllBlocks();
-            }
+            // 🌟 حذف تأییدیه
+            scheduleDataArray = scheduleDataArray.filter(part => !(part.day === 'bench' && part.subject === subjectName));
+            renderAllBlocks();
         }
 
         function cloneBlock(index, e) {
