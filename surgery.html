@@ -88,7 +88,7 @@
         .day-column { flex: 1; border-left: 1px solid var(--border-color); position: relative; min-height: 100%; }
         .day-column:last-child { border-left: none; }
 
-        .event-block { position: absolute; left: 4px; right: 4px; border-radius: 8px; padding: 6px 8px; font-size: 11px; cursor: grab; transition: box-shadow 0.2s, filter 0.2s; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); z-index: 5; color: var(--text-main); border: 1px solid var(--border-color); background: var(--surface); }
+        .event-block { position: absolute; left: 4px; right: 4px; border-radius: 8px; padding: 5px; font-size: 11px; cursor: grab; transition: box-shadow 0.2s, filter 0.2s; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); z-index: 5; color: var(--text-main); border: 1px solid var(--border-color); background: var(--surface); touch-action: none; -webkit-user-select: none; }
         .event-block:active { cursor: grabbing; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.2); filter: brightness(0.95); }
         [data-theme="dark"] .event-block:active { filter: brightness(1.1); }
         
@@ -454,6 +454,7 @@
                     `;
 
                     block.addEventListener('mousedown', handleMouseDown);
+                    block.addEventListener('touchstart', handleMouseDown, { passive: false });
                     document.getElementById(`col-${colIndex}`).appendChild(block);
                 }
             });
@@ -503,12 +504,16 @@
         let startY = 0; let initialTop = 0; let initialHeight = 0;
 
         function handleMouseDown(e) {
-            if (e.button !== 0) return; 
+            if (e.type === 'mousedown' && e.button !== 0) return; 
             if (e.target.classList.contains('action-btn')) return; 
 
             activeBlock = e.currentTarget;
             activeIndex = parseInt(activeBlock.dataset.index);
-            startY = e.clientY;
+            
+            // 🌟 پشتیبانی از لمس: گرفتن مختصات ماوس یا انگشت
+            let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            startY = clientY;
+            
             initialTop = parseFloat(activeBlock.style.top) || 0;
             initialHeight = parseFloat(activeBlock.style.height) || 0;
 
@@ -517,11 +522,22 @@
 
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
+            
+            // 🌟 ثبت رویدادهای حرکتی گوشی
+            document.addEventListener('touchmove', handleMouseMove, { passive: false });
+            document.addEventListener('touchend', handleMouseUp);
         }
 
         function handleMouseMove(e) {
             if (!activeBlock) return;
-            let dy = e.clientY - startY;
+            
+            // 🌟 جلوگیری از اسکرول و ریفرش شدن صفحه در گوشی موقع کشیدن باکس
+            if (e.type.includes('touch') && e.cancelable) e.preventDefault();
+
+            let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            
+            let dy = clientY - startY;
 
             if (isResizing) {
                 let newHeight = initialHeight + dy;
@@ -539,7 +555,7 @@
 
                 const gridRect = document.getElementById('daysGrid').getBoundingClientRect();
                 const colWidth = gridRect.width / 7;
-                let mouseXRTL = gridRect.right - e.clientX; 
+                let mouseXRTL = gridRect.right - clientX; 
                 
                 if (mouseXRTL >= 0 && mouseXRTL <= gridRect.width) {
                     let hoveredColIndex = Math.floor(mouseXRTL / colWidth);
@@ -554,6 +570,8 @@
         function handleMouseUp(e) {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleMouseMove);
+            document.removeEventListener('touchend', handleMouseUp);
 
             if (activeBlock && activeIndex !== -1) {
                 let finalTop = parseFloat(activeBlock.style.top);
