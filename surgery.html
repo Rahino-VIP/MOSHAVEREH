@@ -139,6 +139,31 @@
             .calendar-container { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; flex: 1; }
             .calendar-header { min-width: 800px; }
             .calendar-body { min-width: 800px; }
+
+            /* --- تنظیمات بهینه‌سازی باکس‌ها فقط برای گوشی --- */
+            .calendar-header { min-width: 950px; }
+            .calendar-body { min-width: 950px; }
+            
+            .event-block { padding: 4px 6px; }
+            .event-time { 
+                font-size: 9px; 
+                padding: 1px 3px; 
+                letter-spacing: -0.5px; 
+                white-space: nowrap; 
+                margin-bottom: 1px; 
+            }
+            .event-title { 
+                font-size: 11px; 
+                margin-top: 1px; 
+            }
+            .event-desc { 
+                font-size: 9.5px; 
+                margin-top: 1px; 
+                line-height: 1.2;
+                white-space: nowrap; 
+                overflow: hidden; 
+                text-overflow: ellipsis; 
+            }
         }
     </style>
 </head>
