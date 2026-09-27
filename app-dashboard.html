@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>پرتال جامع راهینو | داشبورد</title>
+    <title>پرتال جامع راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <style>
-        /* پالت رنگی شیشه‌ای راهینو */
         :root { 
             --primary: #5cb89f; --primary-hover: #4a9e86; --primary-fade: rgba(92, 184, 159, 0.15);
             --accent: #e67381; --accent-hover: #d15b69; --accent-fade: rgba(230, 115, 129, 0.15);
@@ -48,7 +47,11 @@
         .icon-btn { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: var(--transition); }
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
-        .app-content { flex: 1; padding: 10px 20px 100px 20px; overflow-y: auto; }
+        .app-content { flex: 1; padding: 10px 20px 100px 20px; overflow-y: auto; position: relative; }
+
+        .view-section { display: none; animation: fadeInView 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .view-section.active { display: block; }
+        @keyframes fadeInView { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         .wallet-card { padding: 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
         .wallet-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: var(--primary); opacity: 0.15; border-radius: 50%; filter: blur(30px); z-index: 0; pointer-events: none; }
@@ -101,7 +104,6 @@
         .loader-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
 
-        /* استایل‌های مودال تاریخچه */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 150; display: none; align-items: flex-end; justify-content: center; }
         .modal-content { background: var(--bg-color); width: 100%; max-width: 480px; border-radius: 32px 32px 0 0; padding: 25px 20px; animation: slideUpModal 0.4s ease; max-height: 80vh; overflow-y: auto; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;}
         @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -137,10 +139,10 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="icon-btn glass-panel" onclick="toggleTheme()" title="تغییر تم">
+                <button class="icon-btn glass-panel" onclick="toggleTheme()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
-                <button class="icon-btn glass-panel" onclick="logout()" title="خروج از حساب" style="border-color: rgba(239, 68, 68, 0.3); color: var(--danger);">
+                <button class="icon-btn glass-panel" onclick="logout()" style="border-color: rgba(239, 68, 68, 0.3); color: var(--danger);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 </button>
             </div>
@@ -148,151 +150,167 @@
 
         <main class="app-content">
 
-            <div class="wallet-card glass-panel">
-                <div class="wallet-info">
-                    <div class="wallet-label">
-                        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                        موجودی کیف پول شما
+            <div id="view-dashboard" class="view-section active">
+                <div class="wallet-card glass-panel">
+                    <div class="wallet-info">
+                        <div class="wallet-label">
+                            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                            موجودی کیف پول شما
+                        </div>
+                        <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
                     </div>
-                    <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
+                    <div class="wallet-action">
+                        <button class="btn-add-fund" onclick="switchView('view-finance', document.getElementById('navFinance'))">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            افزایش موجودی
+                        </button>
+                    </div>
                 </div>
-                <div class="wallet-action">
-                    <button class="btn-add-fund">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        افزایش موجودی
-                    </button>
+
+                <div class="section-title">وضعیت قراردادهای من</div>
+
+                <div class="status-grid">
+                    
+                    <div class="status-card glass-panel full-width" id="cardDaily">
+                        <div class="status-header">
+                            <div class="srv-title">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                رزروهای روزانه
+                            </div>
+                            <div class="srv-badge inactive" id="badgeDaily">بدون رزرو</div>
+                        </div>
+
+                        <div id="dailyActiveData" style="display: none;">
+                            <div class="srv-details single-col">
+                                <div class="detail-item row-style">
+                                    <span class="detail-label">نزدیک‌ترین رزرو شما:</span>
+                                    <span class="detail-val highlight" id="uiNextDailyDate">--</span>
+                                </div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-action primary" onclick="switchView('view-daily', document.getElementById('navDaily'))">رزرو روز جدید</button>
+                                <button class="btn-action" onclick="openHistoryModal()">تاریخچه رزروها</button>
+                            </div>
+                        </div>
+
+                        <div id="dailyInactiveData">
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">هیچ رزرو فعالی برای روزهای آینده ندارید.</p>
+                            <div class="card-actions">
+                                <button class="btn-action primary" onclick="switchView('view-daily', document.getElementById('navDaily'))">تقویم رزرو روزانه</button>
+                                <button class="btn-action" onclick="openHistoryModal()">تاریخچه رزروها</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-card glass-panel" id="cardPansion">
+                        <div class="status-header">
+                            <div class="srv-title">
+                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                پانسیون ماهانه
+                            </div>
+                            <div class="srv-badge inactive" id="badgePansion">غیرفعال</div>
+                        </div>
+                        
+                        <div id="pansionActiveData" style="display: none;">
+                            <div class="srv-details single-col">
+                                <div class="detail-item row-style">
+                                    <span class="detail-label">نوع میز:</span>
+                                    <span class="detail-val highlight" id="uiPanType">--</span>
+                                </div>
+                                <div class="detail-item row-style">
+                                    <span class="detail-label">انقضا:</span>
+                                    <span class="detail-val" id="uiPanDays" style="color: var(--text-main);">--</span>
+                                </div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-action primary" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">تمدید سریع</button>
+                                <button class="btn-action" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">ارتقا میز</button>
+                            </div>
+                        </div>
+
+                        <div id="pansionInactiveData">
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">شما میز اختصاصی بلندمدت ندارید.</p>
+                            <div class="card-actions">
+                                <button class="btn-action primary" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">رزرو میز ماهانه</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-card glass-panel" id="cardConsult">
+                        <div class="status-header">
+                            <div class="srv-title">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                                مشاوره قطب‌نما
+                            </div>
+                            <div class="srv-badge inactive" id="badgeConsult">غیرفعال</div>
+                        </div>
+
+                        <div id="consultActiveData" style="display: none;">
+                            <div class="srv-details single-col">
+                                <div class="detail-item row-style">
+                                    <span class="detail-label">نوع طرح:</span>
+                                    <span class="detail-val highlight" id="uiConType">--</span>
+                                </div>
+                                <div class="detail-item row-style">
+                                    <span class="detail-label">انقضا:</span>
+                                    <span class="detail-val" id="uiConDays" style="color: var(--text-main);">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="consultInactiveData">
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">با فعال‌سازی این بخش از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.</p>
+                            <div class="card-actions">
+                                <button class="btn-action primary" style="background: var(--accent);">
+                                    مشاهده طرح‌ها
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <div class="section-title">وضعیت قراردادهای من</div>
+            <div id="view-daily" class="view-section">
+                <div class="section-title">تقویم رزرو روزانه</div>
+                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش رزرو روزانه در حال آماده سازی است...</div>
+            </div>
 
-            <div class="status-grid">
-                
-                
-                <div class="status-card glass-panel full-width" id="cardDaily">
-                    <div class="status-header">
-                        <div class="srv-title">
-                            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            رزروهای روزانه
-                        </div>
-                        <div class="srv-badge inactive" id="badgeDaily">بدون رزرو</div>
-                    </div>
+            <div id="view-monthly" class="view-section">
+                <div class="section-title">طرح‌های رزرو ماهانه</div>
+                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش رزرو ماهانه در حال آماده سازی است...</div>
+            </div>
 
-                    <div id="dailyActiveData" style="display: none;">
-                        <div class="srv-details single-col">
-                            <div class="detail-item row-style">
-                                <span class="detail-label">نزدیک‌ترین رزرو شما:</span>
-                                <span class="detail-val highlight" id="uiNextDailyDate">--</span>
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn-action primary">رزرو روز جدید</button>
-                            <button class="btn-action" onclick="openHistoryModal()">تاریخچه رزروها</button>
-                        </div>
-                    </div>
+            <div id="view-finance" class="view-section">
+                <div class="section-title">امور مالی و اقساط</div>
+                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش امور مالی در حال آماده سازی است...</div>
+            </div>
 
-                    <div id="dailyInactiveData">
-                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">هیچ رزرو فعالی برای روزهای آینده ندارید.</p>
-                        <div class="card-actions">
-                            <button class="btn-action primary">تقویم رزرو روزانه</button>
-                            <button class="btn-action" onclick="openHistoryModal()">تاریخچه رزروها</button>
-                        </div>
-                    </div>
-                </div>
-
-                
-                <div class="status-card glass-panel" id="cardPansion">
-                    <div class="status-header">
-                        <div class="srv-title">
-                            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                            پانسیون ماهانه
-                        </div>
-                        <div class="srv-badge inactive" id="badgePansion">غیرفعال</div>
-                    </div>
-                    
-                    <div id="pansionActiveData" style="display: none;">
-                        <div class="srv-details single-col">
-                            <div class="detail-item row-style">
-                                <span class="detail-label">نوع میز:</span>
-                                <span class="detail-val highlight" id="uiPanType">--</span>
-                            </div>
-                            <div class="detail-item row-style">
-                                <span class="detail-label">انقضا:</span>
-                                <span class="detail-val" id="uiPanDays" style="color: var(--text-main);">--</span>
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn-action primary">تمدید سریع</button>
-                            <button class="btn-action">ارتقا میز</button>
-                        </div>
-                    </div>
-
-                    <div id="pansionInactiveData">
-                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">شما میز اختصاصی بلندمدت ندارید.</p>
-                        <div class="card-actions">
-                            <button class="btn-action primary">رزرو میز ماهانه</button>
-                        </div>
-                    </div>
-                </div>
-
-                
-                <div class="status-card glass-panel" id="cardConsult">
-                    <div class="status-header">
-                        <div class="srv-title">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                            مشاوره قطب‌نما
-                        </div>
-                        <div class="srv-badge inactive" id="badgeConsult">غیرفعال</div>
-                    </div>
-
-                    <div id="consultActiveData" style="display: none;">
-                        <div class="srv-details single-col">
-                            <div class="detail-item row-style">
-                                <span class="detail-label">نوع طرح:</span>
-                                <span class="detail-val highlight" id="uiConType">--</span>
-                            </div>
-                            <div class="detail-item row-style">
-                                <span class="detail-label">انقضا:</span>
-                                <span class="detail-val" id="uiConDays" style="color: var(--text-main);">--</span>
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn-action primary">تمدید سریع</button>
-                        </div>
-                    </div>
-
-                    <div id="consultInactiveData">
-                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">با فعال‌سازی این بخش از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.</p>
-                        <div class="card-actions">
-                            <button class="btn-action primary" style="background: var(--accent);">
-                                مشاهده طرح‌ها
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
+            <div id="view-profile" class="view-section">
+                <div class="section-title">پروفایل کاربری</div>
+                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش پروفایل در حال آماده سازی است...</div>
             </div>
 
         </main>
 
         <nav class="bottom-nav glass-panel">
-            <div class="nav-item active">
+            <div class="nav-item active" id="navDashboard" onclick="switchView('view-dashboard', this)">
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 <span>داشبورد</span>
             </div>
-            <div class="nav-item">
+            <div class="nav-item" id="navDaily" onclick="switchView('view-daily', this)">
                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <span>رزرو روزانه</span>
             </div>
-            <div class="nav-item">
+            <div class="nav-item" id="navMonthly" onclick="switchView('view-monthly', this)">
                 <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                <span>فروشگاه</span>
+                <span>رزرو ماهانه</span>
             </div>
-            <div class="nav-item">
+            <div class="nav-item" id="navFinance" onclick="switchView('view-finance', this)">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 <span>امور مالی</span>
             </div>
-            <div class="nav-item">
+            <div class="nav-item" id="navProfile" onclick="switchView('view-profile', this)">
                 <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <span>پروفایل</span>
             </div>
@@ -300,7 +318,6 @@
 
     </div>
 
-    
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -313,7 +330,7 @@
                 </button>
             </div>
             <div class="history-list" id="historyListContainer">
-                
+                <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">در حال دریافت اطلاعات...</div>
             </div>
         </div>
     </div>
@@ -340,7 +357,16 @@
             }
         }
 
-        // تابع تبدیل تاریخ میلادی به تاریخ هوشمند شمسی
+        function switchView(viewId, navElement) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            if (navElement) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+        }
+
         function getSmartDateText(dateStr) {
             const target = new Date(dateStr);
             target.setHours(0, 0, 0, 0);
@@ -360,44 +386,51 @@
             return target.toLocaleDateString('fa-IR', options);
         }
 
-        // توابع مدیریت مودال
-        function openHistoryModal() {
+        async function openHistoryModal() {
             document.getElementById('historyModal').style.display = 'flex';
-            // نمایش دیتای آزمایشی در تاریخچه
             const container = document.getElementById('historyListContainer');
-            container.innerHTML = `
-                <div class="history-item">
-                    <div class="history-date">فردا (۲۸ مهر)</div>
-                    <div class="history-status status-upcoming">در انتظار مراجعه</div>
-                </div>
-                <div class="history-item">
-                    <div class="history-date">۲۲ مهر</div>
-                    <div class="history-status status-done">استفاده شده</div>
-                </div>
-                <div class="history-item">
-                    <div class="history-date">۱۵ مهر</div>
-                    <div class="history-status status-done">استفاده شده</div>
-                </div>
-            `;
+            container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">در حال دریافت اطلاعات...</div>';
+            
+            const userPhone = localStorage.getItem('rahino_user_phone');
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'get_daily_history', phone_number: userPhone })
+                });
+                const res = await response.json();
+                
+                if (res.success && res.history.length > 0) {
+                    let html = '';
+                    res.history.forEach(item => {
+                        html += `
+                            <div class="history-item">
+                                <div class="history-date">${getSmartDateText(item.date)}</div>
+                                <div class="history-status ${item.status === 'done' ? 'status-done' : 'status-upcoming'}">${item.status === 'done' ? 'استفاده شده' : 'در انتظار مراجعه'}</div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">تاریخچه‌ای یافت نشد.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div style="text-align: center; color: var(--danger); font-size: 13px; margin-top: 10px;">خطا در ارتباط با سرور</div>';
+            }
         }
+
         function closeHistoryModal() {
             document.getElementById('historyModal').style.display = 'none';
         }
 
-        // بررسی لاگین بودن کاربر هنگام لود صفحه
         window.onload = async function() {
             const userPhone = localStorage.getItem('rahino_user_phone');
             if (!userPhone) { 
-                // اگر شماره در کش نبود، برگردد به صفحه ورود
                 window.location.href = 'auth.html'; 
                 return; 
             }
-            
-            // فراخوانی دیتای واقعی از بک‌اند
             await loadRealDashboardData(userPhone);
         };
 
-        // تابع واقعی برای اتصال به گوگل اسکریپت
         async function loadRealDashboardData(phone) {
             try {
                 const response = await fetch(GAS_URL, {
@@ -412,38 +445,30 @@
                     const user = res.user;
                     const pansion = res.pansion;
                     const consult = res.consult;
-                    const nextDaily = res.next_daily_date; // تاریخ نزدیک‌ترین رزرو که از بک‌اند می‌آید
+                    const nextDaily = res.next_daily_date;
 
-                    // ۱. پر کردن اطلاعات پروفایل
                     document.getElementById('uiUserFullName').innerText = `سلام، ${user.full_name.split(' ')[0]} عزیز`;
                     document.getElementById('uiUserGradeMajor').innerText = `پایه ${user.grade || 'نامشخص'} (${user.major || 'نامشخص'})`;
                     document.getElementById('uiWalletBalance').innerHTML = `${Number(user.wallet_balance || 0).toLocaleString()} <span>تومان</span>`;
 
-                    // ۲. مدیریت کارت‌های پانسیون (ماهانه و روزانه)
                     if (pansion) {
-                        // اگر اشتراک ماهانه دارد
                         document.getElementById('badgePansion').innerText = 'فعال';
                         document.getElementById('badgePansion').className = 'srv-badge';
                         document.getElementById('pansionActiveData').style.display = 'block';
                         document.getElementById('pansionInactiveData').style.display = 'none';
                         document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
                         
-                        // مخفی کردن کامل کارت رزرو روزانه
                         document.getElementById('cardDaily').style.display = 'none';
                     } else {
-                        // اگر اشتراک ماهانه ندارد، بررسی رزرو روزانه
                         if (nextDaily) {
                             document.getElementById('badgeDaily').innerText = 'دارای رزرو';
                             document.getElementById('badgeDaily').className = 'srv-badge';
                             document.getElementById('dailyActiveData').style.display = 'block';
                             document.getElementById('dailyInactiveData').style.display = 'none';
-                            
-                            // تبدیل تاریخ دیتابیس به فرمت خوانا (امروز، فردا، ...)
                             document.getElementById('uiNextDailyDate').innerText = getSmartDateText(nextDaily);
                         }
                     }
 
-                    // ۳. مدیریت کارت مشاوره قطب‌نما
                     if (consult) {
                         document.getElementById('badgeConsult').innerText = 'فعال';
                         document.getElementById('badgeConsult').className = 'srv-badge';
@@ -459,18 +484,8 @@
             } catch (error) {
                 document.getElementById('mainLoader').style.display = 'none';
                 alert('خطا در ارتباط با سرور. لطفاً اینترنت خود را بررسی کنید.');
-                console.error(error);
             }
         }
-
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                navItems.forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
     </script>
 </body>
 </html>
