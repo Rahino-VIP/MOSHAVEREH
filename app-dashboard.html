@@ -384,60 +384,83 @@
             document.getElementById('historyModal').style.display = 'none';
         }
 
+        // بررسی لاگین بودن کاربر هنگام لود صفحه
         window.onload = async function() {
-            // در محیط واقعی، بررسی لاگین انجام شود
-            // const userPhone = localStorage.getItem('rahino_user_phone');
-            // if (!userPhone) { window.location.href = 'auth.html'; return; }
+            const userPhone = localStorage.getItem('rahino_user_phone');
+            if (!userPhone) { 
+                // اگر شماره در کش نبود، برگردد به صفحه ورود
+                window.location.href = 'auth.html'; 
+                return; 
+            }
             
-            simulateDashboardLoad();
+            // فراخوانی دیتای واقعی از بک‌اند
+            await loadRealDashboardData(userPhone);
         };
 
-        function simulateDashboardLoad() {
-            setTimeout(() => {
+        // تابع واقعی برای اتصال به گوگل اسکریپت
+        async function loadRealDashboardData(phone) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'get_dashboard_data', phone_number: phone })
+                });
+                
+                const res = await response.json();
                 document.getElementById('mainLoader').style.display = 'none';
 
-                document.getElementById('uiUserFullName').innerText = 'سلام، ارشاد عزیز';
-                document.getElementById('uiUserGradeMajor').innerText = 'پایه دوازدهم (ریاضی)';
-                document.getElementById('uiWalletBalance').innerHTML = `۲,۵۰۰,۰۰۰ <span>تومان</span>`;
+                if (res.success) {
+                    const user = res.user;
+                    const pansion = res.pansion;
+                    const consult = res.consult;
+                    const nextDaily = res.next_daily_date; // تاریخ نزدیک‌ترین رزرو که از بک‌اند می‌آید
 
-                // دیتای شبیه‌سازی شده:
-                const hasMonthlyPansion = false; // این متغیر برای تست است. اگر true شود، کارت رزرو روزانه پنهان می‌شود.
-                const nextDailyDate = "2026-09-28"; // فرضاً فردا
+                    // ۱. پر کردن اطلاعات پروفایل
+                    document.getElementById('uiUserFullName').innerText = `سلام، ${user.full_name.split(' ')[0]} عزیز`;
+                    document.getElementById('uiUserGradeMajor').innerText = `پایه ${user.grade || 'نامشخص'} (${user.major || 'نامشخص'})`;
+                    document.getElementById('uiWalletBalance').innerHTML = `${Number(user.wallet_balance || 0).toLocaleString()} <span>تومان</span>`;
 
-                // 1. بررسی وضعیت پانسیون ماهانه
-                if (hasMonthlyPansion) {
-                    document.getElementById('badgePansion').innerText = 'فعال';
-                    document.getElementById('badgePansion').className = 'srv-badge';
-                    document.getElementById('pansionActiveData').style.display = 'block';
-                    document.getElementById('pansionInactiveData').style.display = 'none';
-                    document.getElementById('uiPanType').innerText = 'طرح VIP';
-                    document.getElementById('uiPanDays').innerText = '۱۲ روز دیگر';
-
-                    // پنهان کردن کامل کارت رزرو روزانه برای مشترکین ماهانه
-                    document.getElementById('cardDaily').style.display = 'none';
-                } else {
-                    // 2. مدیریت کارت رزرو روزانه (فقط اگر مشترک ماهانه نباشد)
-                    if (nextDailyDate) {
-                        document.getElementById('badgeDaily').innerText = 'دارای رزرو';
-                        document.getElementById('badgeDaily').className = 'srv-badge';
-                        document.getElementById('dailyActiveData').style.display = 'block';
-                        document.getElementById('dailyInactiveData').style.display = 'none';
+                    // ۲. مدیریت کارت‌های پانسیون (ماهانه و روزانه)
+                    if (pansion) {
+                        // اگر اشتراک ماهانه دارد
+                        document.getElementById('badgePansion').innerText = 'فعال';
+                        document.getElementById('badgePansion').className = 'srv-badge';
+                        document.getElementById('pansionActiveData').style.display = 'block';
+                        document.getElementById('pansionInactiveData').style.display = 'none';
+                        document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
                         
-                        // استفاده از تابع هوشمند برای تولید تاریخ
-                        document.getElementById('uiNextDailyDate').innerText = getSmartDateText(nextDailyDate);
+                        // مخفی کردن کامل کارت رزرو روزانه
+                        document.getElementById('cardDaily').style.display = 'none';
+                    } else {
+                        // اگر اشتراک ماهانه ندارد، بررسی رزرو روزانه
+                        if (nextDaily) {
+                            document.getElementById('badgeDaily').innerText = 'دارای رزرو';
+                            document.getElementById('badgeDaily').className = 'srv-badge';
+                            document.getElementById('dailyActiveData').style.display = 'block';
+                            document.getElementById('dailyInactiveData').style.display = 'none';
+                            
+                            // تبدیل تاریخ دیتابیس به فرمت خوانا (امروز، فردا، ...)
+                            document.getElementById('uiNextDailyDate').innerText = getSmartDateText(nextDaily);
+                        }
                     }
-                }
 
-                // 3. بررسی وضعیت مشاوره قطب‌نما
-                const hasConsult = false;
-                if (hasConsult) {
-                    document.getElementById('badgeConsult').innerText = 'فعال';
-                    document.getElementById('badgeConsult').className = 'srv-badge';
-                    document.getElementById('consultActiveData').style.display = 'block';
-                    document.getElementById('consultInactiveData').style.display = 'none';
-                }
+                    // ۳. مدیریت کارت مشاوره قطب‌نما
+                    if (consult) {
+                        document.getElementById('badgeConsult').innerText = 'فعال';
+                        document.getElementById('badgeConsult').className = 'srv-badge';
+                        document.getElementById('consultActiveData').style.display = 'block';
+                        document.getElementById('consultInactiveData').style.display = 'none';
+                        document.getElementById('uiConType').innerText = `طرح ${consult.service_type}`;
+                    }
 
-            }, 800);
+                } else {
+                    alert(res.error || 'خطا در دریافت اطلاعات کاربری.');
+                    logout();
+                }
+            } catch (error) {
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطا در ارتباط با سرور. لطفاً اینترنت خود را بررسی کنید.');
+                console.error(error);
+            }
         }
 
         const navItems = document.querySelectorAll('.nav-item');
