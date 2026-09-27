@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ورود به راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <style>
+        /* 🎨 پالت رنگی شیشه‌ای و دخترانه (پاستلی) */
+        :root { 
+            --primary: #5cb89f; --primary-hover: #4a9e86; 
+            --accent: #e67381; --accent-hover: #d15b69; 
+            
+            --glass-bg: rgba(255, 255, 255, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-highlight: rgba(255, 255, 255, 0.85);
+            --text-main: #2d3748; 
+            --text-muted: #5a6a82; 
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --shadow-soft: 0 15px 40px rgba(230, 115, 129, 0.15); 
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #6ee7b7; --primary-hover: #34d399; 
+            --accent: #fca5a5; --accent-hover: #f87171; 
+            
+            --glass-bg: rgba(15, 23, 42, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc; 
+            --text-muted: #cbd5e1; 
+            --shadow-soft: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        /* 🌌 بک‌گراند گرادیانت متحرک پاستلی */
+        body { 
+            background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main); 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            padding: 20px;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #4a2f3d 100%);
+        }
+
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+
+        .auth-container {
+            width: 100%; max-width: 420px; 
+            position: relative; display: flex; flex-direction: column;
+        }
+
+        /* 💎 کلاس افکت شیشه‌ای (Glassmorphism) */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px; 
+            box-shadow: var(--shadow-soft);
+        }
+
+        /* 🔝 هدر و تنظیمات تم */
+        .top-controls { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .icon-btn { 
+            background: var(--glass-highlight); border: 1px solid var(--glass-border); 
+            color: var(--text-main); width: 45px; height: 45px; border-radius: 18px; 
+            display: flex; justify-content: center; align-items: center; 
+            cursor: pointer; transition: var(--transition); 
+        }
+        .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+        /* فرم مرکزی */
+        .auth-card { padding: 40px 30px; position: relative; overflow: hidden; }
+        .auth-card::before {
+            content: ''; position: absolute; top: -50px; left: -50px; width: 150px; height: 150px;
+            background: var(--accent); opacity: 0.1; border-radius: 50%; filter: blur(40px); z-index: 0;
+        }
+
+        .header-title { text-align: center; margin-bottom: 30px; position: relative; z-index: 1; }
+        .header-title svg { width: 48px; height: 48px; color: var(--primary); margin-bottom: 10px; stroke-width: 1.5; }
+        .header-title h1 { font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; }
+        .header-title p { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+
+        .view-section { display: none; animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; z-index: 1; }
+        .view-section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* استایل فیلدها */
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-label { display: block; font-size: 12px; font-weight: 900; color: var(--text-muted); margin-bottom: 8px; padding-right: 5px; }
+        .form-input { 
+            width: 100%; background: var(--glass-highlight); border: 1px solid var(--glass-border); 
+            color: var(--text-main); padding: 16px 18px; border-radius: 20px; 
+            font-size: 14px; outline: none; transition: var(--transition); font-weight: bold;
+        }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(92, 184, 159, 0.15); }
+        .input-icon { position: absolute; left: 18px; top: 16px; color: var(--text-muted); }
+        .input-icon svg { width: 20px; height: 20px; stroke-width: 2; }
+        .has-icon { padding-left: 45px; direction: ltr; text-align: left; }
+
+        /* دکمه‌ها */
+        .btn { 
+            width: 100%; padding: 16px; border-radius: 20px; border: none; 
+            font-weight: 900; font-size: 14px; cursor: pointer; transition: var(--transition); 
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover)); 
+            color: white; box-shadow: 0 8px 20px rgba(92, 184, 159, 0.25); 
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(92, 184, 159, 0.35); }
+        .btn-action { background: transparent; color: var(--text-muted); margin-top: 10px; }
+        .btn-action:hover { color: var(--text-main); background: var(--glass-highlight); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* پیام‌ها و هشدارها */
+        .status-box { padding: 25px 20px; border-radius: 24px; text-align: center; margin-bottom: 25px; border: 1px solid var(--glass-border); background: var(--glass-highlight); }
+        .status-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px; }
+        .status-icon svg { width: 30px; height: 30px; color: white; stroke-width: 2.5; }
+        .status-box.pending .status-icon { background: var(--warning); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); }
+        .status-box.blocked .status-icon { background: var(--danger); box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2); }
+        .status-title { font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
+        .status-desc { font-size: 13px; color: var(--text-muted); line-height: 1.8; font-weight: bold; }
+
+        /* لودر شیشه‌ای */
+        .loader-overlay { position: absolute; inset: 0; background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 32px; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .promo-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; font-weight: bold; padding: 0 5px; }
+        .promo-hint span { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        
+        <div class="top-controls">
+            <button class="icon-btn glass-panel" onclick="toggleTheme()" title="تغییر تم">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+
+        <div class="glass-panel auth-card">
+            
+            <div class="loader-overlay" id="loader">
+                <div class="spinner"></div>
+                <div style="font-size: 13px; font-weight: 900; color: var(--primary);" id="loaderTxt">در حال پردازش...</div>
+            </div>
+
+            <div class="header-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <h1>پرتال راهینو</h1>
+                <p>پلتفرم جامع رزرو پانسیون و مشاوره</p>
+            </div>
+
+            <!-- VIEW 1: Phone Check -->
+            <div class="view-section active" id="view-phone">
+                <div class="form-group">
+                    <label class="form-label">شماره موبایل (متصل به بله)</label>
+                    <div style="position: relative;">
+                        <input type="tel" id="inpPhone" class="form-input has-icon" placeholder="09123456789" maxlength="11">
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="submitPhone()">
+                    ادامه
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+            </div>
+
+            <!-- VIEW 2: Login Password -->
+            <div class="view-section" id="view-login">
+                <div style="text-align: center; margin-bottom: 20px; font-size: 13px; font-weight: 900; color: var(--primary);">
+                    سلام <span id="lblLoginName"></span> 👋<br>لطفاً رمز عبور خود را وارد کنید.
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رمز عبور</label>
+                    <div style="position: relative;">
+                        <input type="password" id="inpPass" class="form-input has-icon" placeholder="******">
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="submitLogin()">ورود به حساب</button>
+                <button class="btn btn-action" onclick="showView('view-phone')">تغییر شماره موبایل</button>
+            </div>
+
+            <!-- VIEW 3: Register -->
+            <div class="view-section" id="view-register">
+                <div style="text-align: center; margin-bottom: 20px; font-size: 12px; font-weight: 900; color: var(--accent);">
+                    پرونده‌ای با این شماره یافت نشد.<br>برای ثبت‌نام اطلاعات زیر را تکمیل کنید.
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <select id="regGrade" class="form-input" style="color: var(--text-muted);" onchange="this.style.color='var(--text-main)'">
+                        <option value="" disabled selected>پایه تحصیلی</option>
+                        <option value="دهم">دهم</option><option value="یازدهم">یازدهم</option>
+                        <option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">پشت کنکوری</option>
+                    </select>
+                    <select id="regMajor" class="form-input" style="color: var(--text-muted);" onchange="this.style.color='var(--text-main)'">
+                        <option value="" disabled selected>رشته</option>
+                        <option value="ریاضی">ریاضی فیزیک</option><option value="تجربی">علوم تجربی</option><option value="انسانی">علوم انسانی</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور دلخواه (حداقل ۶ حرف)">
+                </div>
+
+                <div class="form-group" style="margin-top: 25px;">
+                    <div style="position: relative;">
+                        <input type="text" id="regReferral" class="form-input has-icon" placeholder="کد معرف دوستان (اختیاری)" style="text-transform: uppercase;">
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                    </div>
+                    <div class="promo-hint">با وارد کردن کد معرف دوستان، <span>۲۰ هزار تومان</span> در رزرو روزانه و <span>۱۰۰ هزار تومان</span> در اشتراک ماهانه پاداش بگیرید.</div>
+                </div>
+
+                <button class="btn btn-primary" onclick="submitRegister()">ثبت اطلاعات پرونده</button>
+                <button class="btn btn-action" onclick="showView('view-phone')">بازگشت</button>
+            </div>
+
+            <!-- VIEW 4: Pending Status -->
+            <div class="view-section" id="view-pending">
+                <div class="status-box pending">
+                    <div class="status-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <div class="status-title">در انتظار بررسی مدیریت</div>
+                    <div class="status-desc">پرونده شما ثبت شده است. لطفاً منتظر بمانید تا هویت شما توسط مدیریت راهینو تایید شود. سپس می‌توانید وارد پنل شوید.</div>
+                </div>
+                <button class="btn btn-action" style="border: 1px solid var(--glass-border);" onclick="showView('view-phone')">بازگشت به صفحه اصلی</button>
+            </div>
+
+            <!-- VIEW 5: Blocked Status -->
+            <div class="view-section" id="view-blocked">
+                <div class="status-box blocked">
+                    <div class="status-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    </div>
+                    <div class="status-title">دسترسی مسدود است</div>
+                    <div class="status-desc">حساب کاربری شما به دلیل نقض قوانین یا دلایل انضباطی مسدود شده است. لطفاً با پشتیبانی تماس بگیرید.</div>
+                </div>
+                <button class="btn btn-action" style="border: 1px solid var(--glass-border);" onclick="showView('view-phone')">بازگشت به صفحه اصلی</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 🔗 تنظیمات بک‌اند
+        // آدرس وب‌اپلیکیشن گوگل اسکریپت خود را اینجا قرار دهید
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec';
+
+        // 🌓 تغییر تم
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // بارگذاری تم قبلی
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        // مدیریت نمایش ویوها
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            // پاک کردن رمزها برای امنیت
+            document.getElementById('loginPass').value = '';
+            document.getElementById('regPass').value = '';
+        }
+
+        function toggleLoader(show, text = 'در حال پردازش...') {
+            const loader = document.getElementById('loader');
+            document.getElementById('loaderTxt').innerText = text;
+            loader.style.display = show ? 'flex' : 'none';
+        }
+
+        function toEngDigits(str) { 
+            return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) : ''; 
+        }
+
+        // 🚀 تابع مرکزی ارتباط با گوگل اسکریپت
+        async function fetchAPI(payload) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw new Error("خطا در ارتباط با سرور. لطفاً اتصال اینترنت خود را بررسی کنید.");
+            }
+        }
+
+        // ۱. بررسی شماره موبایل
+        async function submitPhone() {
+            const phoneInput = document.getElementById('inpPhone').value;
+            const phone = toEngDigits(phoneInput.trim());
+            
+            if (!phone || phone.length < 10) {
+                return alert('لطفاً یک شماره موبایل معتبر وارد کنید.');
+            }
+
+            toggleLoader(true, 'استعلام اطلاعات...');
+            try {
+                const res = await fetchAPI({ action: 'check_phone', phone_number: phone });
+                toggleLoader(false);
+
+                if (!res.success) {
+                    return alert(res.error || "خطای ناشناخته");
+                }
+
+                if (res.status === 'not_found') {
+                    showView('view-register');
+                } else if (res.status === 'pending') {
+                    showView('view-pending');
+                } else if (res.status === 'blocked') {
+                    showView('view-blocked');
+                } else if (res.status === 'active') {
+                    document.getElementById('lblLoginName').innerText = res.name || 'کاربر';
+                    showView('view-login');
+                }
+            } catch (error) {
+                toggleLoader(false);
+                alert(error.message);
+            }
+        }
+
+        // ۲. ورود با رمز عبور
+        async function submitLogin() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            const pass = document.getElementById('loginPass').value.trim();
+
+            if (!pass) return alert('لطفاً رمز عبور را وارد کنید.');
+
+            toggleLoader(true, 'تایید هویت...');
+            try {
+                const res = await fetchAPI({ action: 'login', phone_number: phone, password: pass });
+                toggleLoader(false);
+
+                if (res.success) {
+                    // ذخیره شماره موبایل برای استفاده در داشبورد
+                    localStorage.setItem('rahino_user_phone', phone);
+                    alert('ورود با موفقیت انجام شد!');
+                    // در مرحله بعد اینجا را به window.location.href = 'app-dashboard.html' تغییر می‌دهیم
+                } else {
+                    alert(res.error);
+                }
+            } catch (error) {
+                toggleLoader(false);
+                alert(error.message);
+            }
+        }
+
+        // ۳. ثبت‌نام کاربر جدید
+        async function submitRegister() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            const name = document.getElementById('regName').value.trim();
+            const grade = document.getElementById('regGrade').value;
+            const major = document.getElementById('regMajor').value;
+            const pass = document.getElementById('regPass').value.trim();
+            const refCode = toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase());
+
+            if (!name || !grade || !major || !pass) {
+                return alert('لطفاً تمامی فیلدهای الزامی را پر کنید.');
+            }
+            if (pass.length < 6) {
+                return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+            }
+
+            const userData = {
+                phone: phone,
+                name: name,
+                grade: grade,
+                major: major,
+                password: pass,
+                referral_code: refCode
+            };
+
+            toggleLoader(true, 'تشکیل پرونده...');
+            try {
+                const res = await fetchAPI({ action: 'register', user_data: userData });
+                toggleLoader(false);
+
+                if (res.success) {
+                    // پس از ثبت‌نام، کاربر همیشه به حالت انتظار منتقل می‌شود
+                    showView('view-pending');
+                } else {
+                    alert(res.error);
+                }
+            } catch (error) {
+                toggleLoader(false);
+                alert(error.message);
+            }
+        }
+    </script>
+</body>
+</html>
