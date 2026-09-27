@@ -380,11 +380,11 @@
                 toggleLoader(false);
 
                 // داخل فایل auth.html - تابع submitLogin
- if (res.success) {
-    // ذخیره شماره موبایل به عنوان کلید ورود
-    localStorage.setItem('rahino_user_phone', phone);
-    // پرش به صفحه داشبورد
-    window.location.href = 'app-dashboard.html';
+                if (res.success) {
+                    // ذخیره شماره موبایل به عنوان کلید ورود
+                    localStorage.setItem('rahino_user_phone', phone);
+                    // پرش به صفحه داشبورد
+                    window.location.href = 'app-dashboard.html';
                 } else {
                     alert(res.error);
                 }
