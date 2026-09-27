@@ -491,8 +491,12 @@
             </div>
             
             <div id="view-finance" class="view-section">
-                <div class="section-title">امور مالی و اقساط</div>
-                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش امور مالی در حال آماده سازی است...</div>
+                <div class="section-title">امور مالی و اقساط پانسیون</div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; font-weight: bold;">در این بخش می‌توانید وضعیت پرداخت‌ها و اقساط طرح‌های پانسیون خود را مشاهده و مدیریت کنید.</p>
+                
+                <div id="installmentsContainer">
+                    <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">در حال دریافت اطلاعات مالی...</div>
+                </div>
             </div>
             
             <div id="view-profile" class="view-section">
@@ -539,6 +543,54 @@
                 </button>
             </div>
             <div class="history-list" id="historyListContainer"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">درخواست برداشت وجه</div>
+                <button class="close-btn" onclick="closeWithdrawModal()">X</button>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
+                موجودی شما بالای ۵۰۰ هزار تومان است. لطفاً اطلاعات حساب خود را جهت واریز وارد کنید. مبلغ درخواستی پس از بررسی مدیریت به حساب شما واریز خواهد شد.
+            </div>
+            <div class="form-group">
+                <input type="text" id="withdrawCard" class="form-input" placeholder="شماره کارت ۱۶ رقمی" maxlength="16" style="letter-spacing: 2px; direction: ltr;">
+            </div>
+            <div class="form-group">
+                <input type="text" id="withdrawName" class="form-input" placeholder="نام و نام خانوادگی صاحب کارت">
+            </div>
+            <div class="form-group">
+                <input type="number" id="withdrawAmount" class="form-input" placeholder="مبلغ درخواستی (تومان)">
+            </div>
+            <button class="btn-submit" onclick="submitWithdraw()">ثبت درخواست واریز</button>
+        </div>
+    </div>
+
+    
+    <div class="modal-overlay" id="installmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">پرداخت و آپلود فیش قسط</div>
+                <button class="close-btn" onclick="closeInstallmentModal()">X</button>
+            </div>
+            
+            <div class="payment-info" style="margin-bottom: 15px;">
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px;">مبلغ قابل پرداخت:</div>
+                <div style="font-size: 20px; font-weight: 900; color: var(--primary);" id="instPayAmount">-- تومان</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-top: 10px;">شماره کارت جهت واریز:</div>
+                <div style="font-size: 18px; font-weight: 900; color: var(--text-main); letter-spacing: 2px; font-family: monospace;">6219861810380484</div>
+                <div style="font-size: 12px; font-weight: bold; color: var(--primary);">به نام: ارشاد شفیعی</div>
+            </div>
+
+            <label class="file-upload" id="instUploadBox">
+                <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="instUploadText">تصویر فیش واریزی را آپلود کنید</div>
+                <input type="file" id="instReceiptFile" accept="image/*" onchange="handleInstFileSelect(event)">
+            </label>
+
+            <button class="btn-submit" id="btnSubmitInst" onclick="submitInstallment()" disabled>ارسال فیش و تایید پرداخت</button>
         </div>
     </div>
 
@@ -630,6 +682,150 @@
             await loadRealDashboardData(userPhone);
         };
 
+        // --- متغیرهای جدید امور مالی ---
+        let currentInstallmentId = null;
+        let currentInstallmentAmount = 0;
+        let instBase64Image = "";
+
+        // --- توابع مودال برداشت وجه ---
+        function openWithdrawModal() { document.getElementById('withdrawModal').style.display = 'flex'; }
+        function closeWithdrawModal() { document.getElementById('withdrawModal').style.display = 'none'; }
+
+        async function submitWithdraw() {
+            const card = document.getElementById('withdrawCard').value.trim();
+            const name = document.getElementById('withdrawName').value.trim();
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+
+            if(!card || card.length !== 16 || !name || !amount) {
+                return alert('لطفاً اطلاعات را به درستی وارد کنید.');
+            }
+            if(amount > currentUser.wallet_balance || amount < 50000) {
+                return alert('مبلغ درخواستی نامعتبر است.');
+            }
+
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const payload = {
+                    action: 'withdraw_wallet',
+                    phone_number: currentUser.phone_number,
+                    user_name: name,
+                    card_number: card,
+                    amount: amount
+                };
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) {
+                    alert('درخواست برداشت با موفقیت ثبت شد و پس از تایید به حساب شما واریز می‌شود.');
+                    window.location.reload();
+                } else { alert(res.error); }
+            } catch (e) { 
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطا در ارتباط با سرور'); 
+            }
+        }
+
+        // --- توابع مودال پرداخت قسط ---
+        function openInstallmentModal(id, amount) {
+            currentInstallmentId = id;
+            currentInstallmentAmount = amount;
+            document.getElementById('instPayAmount').innerText = `${amount.toLocaleString()} تومان`;
+            document.getElementById('installmentModal').style.display = 'flex';
+        }
+        function closeInstallmentModal() { document.getElementById('installmentModal').style.display = 'none'; }
+
+        function handleInstFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('instUploadText').innerText = `⏳ در حال فشرده‌سازی...`;
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if(w > h && w > 1000) { h *= 1000/w; w = 1000; } else if(h > 1000) { w *= 1000/h; h = 1000; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                        
+                        instBase64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                        document.getElementById('instUploadText').innerText = `✅ فیش آماده ارسال`;
+                        document.getElementById('btnSubmitInst').disabled = false;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function submitInstallment() {
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const payload = {
+                    action: 'pay_installment',
+                    installment_id: currentInstallmentId,
+                    phone_number: currentUser.phone_number,
+                    user_name: currentUser.full_name,
+                    amount: currentInstallmentAmount,
+                    receipt_base64: instBase64Image
+                };
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) {
+                    alert('فیش شما با موفقیت ارسال شد و وضعیت قسط به پرداخت‌شده تغییر یافت.');
+                    window.location.reload();
+                } else { alert(res.error); }
+            } catch (e) { 
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطا در ارسال فیش'); 
+            }
+        }
+
+        // --- رندر کارت‌های اقساط ---
+        function renderInstallments(installmentsData) {
+            const container = document.getElementById('installmentsContainer');
+            if(!installmentsData || installmentsData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-weight: bold;">شما هیچ قسط ثبت‌شده‌ای ندارید.</div>';
+                return;
+            }
+
+            let html = '';
+            installmentsData.sort((a, b) => new Date(a.due_date) - new Date(b.due_date)); // سورت بر اساس تاریخ
+
+            installmentsData.forEach(inst => {
+                let statusObj = { text: 'در انتظار پرداخت', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.1)', showBtn: true };
+                
+                // بررسی وضعیت
+                if (inst.status === 'paid') {
+                    statusObj = { text: 'پرداخت شده', color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)', showBtn: false };
+                } else {
+                    let due = new Date(inst.due_date);
+                    let today = new Date(); today.setHours(0,0,0,0);
+                    if (due < today) {
+                        statusObj = { text: 'سررسید گذشته (اخطار)', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.1)', showBtn: true };
+                    }
+                }
+
+                let btnHtml = statusObj.showBtn ? `<button class="btn-action primary" style="width:100%; margin-top:15px;" onclick="openInstallmentModal('${inst.id}', ${inst.amount})">آپلود فیش و پرداخت</button>` : '';
+
+                html += `
+                    <div class="status-card glass-panel" style="margin-bottom: 15px; border-right: 4px solid ${statusObj.color};">
+                        <div class="status-header" style="margin-bottom: 10px;">
+                            <div class="srv-title" style="font-size: 14px;">قسط شماره ${inst.installment_number}</div>
+                            <div class="srv-badge" style="background: ${statusObj.bg}; color: ${statusObj.color}; border: none;">${statusObj.text}</div>
+                        </div>
+                        <div style="font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 10px;">${Number(inst.amount).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;">تاریخ سررسید: ${getShamsiDateSafe(new Date(inst.due_date)).replace(/-/g, '/')}</div>
+                        ${btnHtml}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
         // 🌐 دریافت دیتای زنده از سرور
         async function loadRealDashboardData(phone) {
             try {
@@ -660,6 +856,14 @@
                     let wBal = Number(user.wallet_balance || 0);
                     document.getElementById('uiWalletBalance').innerHTML = `${wBal.toLocaleString()} <span>تومان</span>`;
                     document.getElementById('walletStatusBadge').innerText = `موجودی: ${wBal.toLocaleString()}`;
+
+                    // نمایش دکمه برداشت اگر موجودی بالای ۵۰۰ هزار بود
+                    if (Number(user.wallet_balance) >= 500000) {
+                        document.getElementById('btnWithdraw').style.display = 'block';
+                    }
+
+                    // رندر کردن اقساط در تب مالی
+                    renderInstallments(res.installments);
 
                     // بررسی وضعیت پانسیون
                     if (pansion) {
