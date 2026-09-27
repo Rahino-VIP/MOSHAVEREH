@@ -485,9 +485,83 @@
             <!-- ===============================
                  سایر بخش‌ها (آینده)
             ================================ -->
+            <!-- SECTION: MONTHLY BOOKING -->
             <div id="view-monthly" class="view-section">
-                <div class="section-title">طرح‌های رزرو ماهانه</div>
-                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش رزرو ماهانه در حال آماده سازی است...</div>
+                <div class="section-title" style="margin-bottom: 5px;">رزرو و تمدید ماهانه پانسیون</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; font-weight: bold;">طرح اختصاصی خود را با امکان پرداخت منعطف انتخاب کنید.</div>
+                
+                <div class="status-card glass-panel" style="margin-bottom: 20px; padding: 15px;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">نوع تراکنش شما:</label>
+                        <select id="monTxType" class="form-input" onchange="updateMonthlyForm()" style="padding: 12px; font-size: 13px;">
+                            <option value="new">ثبت‌نام جدید (بدون میز فعال)</option>
+                            <option value="renew">تمدید قرارداد فعلی</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="monStartDateGroup" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px; display: block;">📅 تاریخ شروع قرارداد:</label>
+                        <select id="monStartDate" class="form-input" onchange="calculateMonthly()" style="padding: 12px; font-size: 13px;"></select>
+                    </div>
+
+                    <div class="form-group" id="monRenewDateGroup" style="display: none; margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--warning); margin-bottom: 8px; display: block;">⏳ شروع تمدید (پس از پایان قرارداد فعلی):</label>
+                        <input type="text" id="monRenewBaseDate" class="form-input" readonly style="padding: 12px; font-size: 13px; background: rgba(0,0,0,0.05); color: var(--text-muted);">
+                    </div>
+                </div>
+
+                <div class="section-title">انتخاب طرح و مدت زمان</div>
+                <div class="selection-grid" id="monPlanGrid">
+                    <div class="option-card selected" id="card_vip" onclick="selectMonthlyPlan('vip', 3600000)">
+                        <div class="opt-badge" style="background:var(--primary); position:absolute; top:0; right:15px; color:white; padding:3px 10px; border-radius:0 0 8px 8px; font-size:10px; font-weight:bold;">محبوب‌ترین</div>
+                        <div class="opt-title" style="font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; margin-top: 10px;">طرح VIP</div>
+                        <div class="opt-price" style="font-size: 14px; color: var(--primary); font-weight: bold;">۳,۶۰۰,۰۰۰ <span style="font-size:10px;color:var(--text-muted);">/ ماه</span></div>
+                    </div>
+                    <div class="option-card" id="card_cip" onclick="selectMonthlyPlan('cip', 4400000)">
+                        <div class="opt-title" style="font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; margin-top: 10px;">طرح CIP (اتاق ۴ نفره)</div>
+                        <div class="opt-price" style="font-size: 14px; color: var(--primary); font-weight: bold;">۴,۴۰۰,۰۰۰ <span style="font-size:10px;color:var(--text-muted);">/ ماه</span></div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">مدت قرارداد:</label>
+                        <select id="monDuration" class="form-input" onchange="calculateMonthly()" style="padding: 12px; font-size: 13px;">
+                            <option value="1">۱ ماهه</option>
+                            <option value="3">۳ ماهه</option>
+                            <option value="konkur">تا کنکور</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1.5;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">نحوه پرداخت:</label>
+                        <select id="monPayMethod" class="form-input" onchange="calculateMonthly()" style="padding: 12px; font-size: 13px;">
+                            <option value="cash">نقدی (تخفیف کامل)</option>
+                            <option value="monthly">اقساط ماهانه</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkout-box" style="margin-bottom: 25px;">
+                    <h3 style="color: var(--primary); font-size: 14px; margin-bottom: 15px; text-align: center;">🧾 فاکتور قرارداد</h3>
+                    <div class="price-row"><span>مبلغ پایه:</span><strong id="monLblBase">0 تومان</strong></div>
+                    <div class="price-row" style="color: var(--success);"><span>سود شما (تخفیف):</span><strong id="monLblDisc">0 تومان</strong></div>
+                    <div class="price-final"><span style="color: var(--text-main); font-size: 14px;">مبلغ نهایی قرارداد: </span><span id="monLblFinal">0</span> <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
+                    
+                    <div style="background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.4); padding: 15px; border-radius: 12px; margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; color: var(--danger); margin-bottom: 10px;">
+                            <span>پرداخت آنی (پیش‌پرداخت):</span><span id="monLblUpfront">0 تومان</span>
+                        </div>
+                        <div id="monInstList" style="font-size: 12px; color: var(--text-muted); line-height: 1.8;"></div>
+                    </div>
+                </div>
+
+                <label class="file-upload" id="monUploadBox">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش پیش‌پرداخت را آپلود کنید</div>
+                    <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
+                </label>
+
+                <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
             </div>
             
             <div id="view-finance" class="view-section">
@@ -613,6 +687,173 @@
         let selectedPayMethod = "card";
         let globalUserPastReservations = []; 
         const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
+
+        // --- متغیرهای رزرو ماهانه ---
+        let monState = { planType: 'vip', basePrice: 3600000, konkurMonths: 9, receiptBase64: "" };
+        let monFinance = { totalBase: 0, discount: 0, finalPrice: 0, upfront: 0, installments: [] };
+
+        // محاسبه حدودی ماه‌های تا کنکور (برای شبیه‌سازی تا زمان اتصال دیتابیس)
+        function calcKonkurMonths() {
+            let konkurDate = new Date('2027-07-10');
+            let diffDays = Math.ceil((konkurDate - new Date()) / (1000 * 3600 * 24));
+            monState.konkurMonths = diffDays > 0 ? Math.max(1, Math.round((diffDays / 30.41) * 10) / 10) : 1;
+        }
+
+        function initMonthlyBooking() {
+            calcKonkurMonths();
+            let sd = document.getElementById('monStartDate');
+            sd.innerHTML = '';
+            let today = new Date();
+            
+            // تولید 3 روز آینده برای ثبت‌نام جدید
+            let options = [
+                { text: `امروز (${getSmartDateTextSafe(getShamsiDateSafe(today))})`, val: getShamsiDateSafe(today) },
+                { text: `فردا (${getSmartDateTextSafe(getShamsiDateSafe(new Date(today.getTime() + 86400000)))})`, val: getShamsiDateSafe(new Date(today.getTime() + 86400000)) },
+                { text: `پس‌فردا (${getSmartDateTextSafe(getShamsiDateSafe(new Date(today.getTime() + 172800000)))})`, val: getShamsiDateSafe(new Date(today.getTime() + 172800000)) }
+            ];
+            
+            options.forEach(o => {
+                let opt = document.createElement('option');
+                opt.value = o.val; opt.innerText = o.text;
+                sd.appendChild(opt);
+            });
+
+            // قفل کردن فرم بر اساس وضعیت کاربر
+            const pansionActive = document.getElementById('badgePansion').innerText === 'فعال';
+            const txType = document.getElementById('monTxType');
+            
+            if (pansionActive) {
+                txType.value = 'renew';
+                // در سیستم واقعی اینجا تاریخ پایان قرارداد فعلی از دیتابیس جایگذاری می‌شود
+                let fakeEndDate = new Date(today.getTime() + (30 * 86400000));
+                document.getElementById('monRenewBaseDate').value = getShamsiDateSafe(fakeEndDate);
+            } else {
+                txType.value = 'new';
+                // غیرفعال کردن گزینه تمدید برای کسی که میز ندارد
+                txType.querySelector('option[value="renew"]').disabled = true;
+            }
+            
+            updateMonthlyForm();
+        }
+
+        function updateMonthlyForm() {
+            let type = document.getElementById('monTxType').value;
+            if (type === 'new') {
+                document.getElementById('monStartDateGroup').style.display = 'block';
+                document.getElementById('monRenewDateGroup').style.display = 'none';
+            } else {
+                document.getElementById('monStartDateGroup').style.display = 'none';
+                document.getElementById('monRenewDateGroup').style.display = 'block';
+            }
+            calculateMonthly();
+        }
+
+        function selectMonthlyPlan(type, price) {
+            monState.planType = type;
+            monState.basePrice = price;
+            
+            document.getElementById('card_vip').classList.remove('selected');
+            document.getElementById('card_cip').classList.remove('selected');
+            document.getElementById('card_' + type).classList.add('selected');
+            
+            calculateMonthly();
+        }
+
+        function addMonthsJS(dateStr, monthsToAdd) {
+            // تبدیل تاریخ شمسی خط تیره‌دار به میلادی برای محاسبه دقیق
+            let d = new Date(); // در سیستم واقعی اینجا باید تبدیل دقیق شمسی به میلادی صورت گیرد
+            d.setMonth(d.getMonth() + monthsToAdd);
+            return getShamsiDateSafe(d);
+        }
+
+        function calculateMonthly() {
+            let durationVal = document.getElementById('monDuration').value;
+            let method = document.getElementById('monPayMethod').value;
+            let duration = durationVal === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(durationVal);
+
+            let totalBase = monState.basePrice * duration;
+            let discount = 0; let finalPrice = 0; let upfront = 0;
+            let instAmount = 0; let instCount = 0;
+
+            if (duration === 1) {
+                finalPrice = totalBase;
+                upfront = finalPrice;
+            } else {
+                if (method === 'cash') {
+                    discount = totalBase * 0.05; // 5 درصد تخفیف نقدی
+                    finalPrice = totalBase - discount;
+                    upfront = finalPrice;
+                } else if (method === 'monthly') {
+                    discount = 50000 * duration; // 50 هزار تومان تخفیف روی هر ماه
+                    finalPrice = totalBase - discount;
+                    instAmount = monState.basePrice - 50000;
+                    upfront = instAmount; // قسط اول همان پیش‌پرداخت است
+                    instCount = duration - 1;
+                }
+            }
+
+            monFinance.totalBase = totalBase;
+            monFinance.discount = discount;
+            monFinance.finalPrice = finalPrice;
+            monFinance.upfront = upfront;
+            monFinance.installments = [];
+
+            document.getElementById('monLblBase').innerText = totalBase.toLocaleString() + ' تومان';
+            document.getElementById('monLblDisc').innerText = discount.toLocaleString() + ' تومان';
+            document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
+            document.getElementById('monLblUpfront').innerText = upfront.toLocaleString() + ' تومان';
+
+            let type = document.getElementById('monTxType').value;
+            let baseDateStr = type === 'new' ? document.getElementById('monStartDate').value : document.getElementById('monRenewBaseDate').value;
+            let listHtml = '';
+
+            if (instCount > 0) {
+                listHtml += '<div style="font-weight:bold; margin-bottom:8px; color: var(--text-main);">زمان‌بندی اقساط بعدی:</div>';
+                for (let i = 1; i <= instCount; i++) {
+                    let dueDate = addMonthsJS(baseDateStr, i);
+                    monFinance.installments.push({ amount: instAmount, due_date: dueDate, installment_number: i });
+                    listHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding:6px 0;"><span>قسط ${i} (${dueDate.replace(/-/g,'/')})</span><span style="font-weight:bold; color:var(--text-main);">${instAmount.toLocaleString()} تومان</span></div>`;
+                }
+            } else {
+                listHtml = '<div style="text-align:center; color:var(--text-muted);">فاقد اقساط بعدی (تسویه کامل)</div>';
+            }
+            document.getElementById('monInstList').innerHTML = listHtml;
+            validateMonSubmit();
+        }
+
+        function handleMonFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('monUploadText').innerText = `⏳ در حال فشرده‌سازی...`;
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if(w > h && w > 1000) { h *= 1000/w; w = 1000; } else if(h > 1000) { w *= 1000/h; h = 1000; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                        
+                        monState.receiptBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                        document.getElementById('monUploadText').innerText = `✅ فیش ضمیمه شد`;
+                        document.getElementById('monUploadBox').style.borderColor = "var(--success)";
+                        document.getElementById('monUploadBox').style.background = "rgba(16, 185, 129, 0.05)";
+                        validateMonSubmit();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function validateMonSubmit() {
+            document.getElementById('btnSubmitMonthly').disabled = (monState.receiptBase64 === "");
+        }
+
+        function submitMonthly() {
+            alert('طراحی فرانت‌اند با موفقیت انجام شد. فاکتور، تاریخ‌ها و فیش آماده ارسال به بک‌اند هستند.');
+        }
 
         // 🌗 تم سیستم
         function toggleTheme() {
@@ -864,6 +1105,7 @@
 
                     // رندر کردن اقساط در تب مالی
                     renderInstallments(res.installments);
+                    initMonthlyBooking();
 
                     // بررسی وضعیت پانسیون
                     if (pansion) {
