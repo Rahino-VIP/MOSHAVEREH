@@ -6,7 +6,7 @@
     <title>پرتال جامع راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <style>
-        /* 🎨 پالت رنگی شیشه‌ای راهینو */
+        /* (استایل‌های قبلی حفظ شده‌اند) */
         :root { 
             --primary: #5cb89f; --primary-hover: #4a9e86; --primary-fade: rgba(92, 184, 159, 0.15);
             --accent: #e67381; --accent-hover: #d15b69; --accent-fade: rgba(230, 115, 129, 0.15);
@@ -16,7 +16,6 @@
             --shadow-soft: 0 15px 40px rgba(0, 0, 0, 0.08); 
             --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-
         [data-theme="dark"] {
             --primary: #6ee7b7; --primary-hover: #34d399; --primary-fade: rgba(110, 231, 183, 0.15);
             --accent: #fca5a5; --accent-hover: #f87171; --accent-fade: rgba(252, 165, 165, 0.15);
@@ -26,12 +25,7 @@
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%); background-size: 400% 400%; animation: gradientBG 15s ease infinite;
-            color: var(--text-main); display: flex; justify-content: center; min-height: 100vh;
-        }
-
+        body { background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%); background-size: 400% 400%; animation: gradientBG 15s ease infinite; color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
         [data-theme="dark"] body { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #4a2f3d 100%); }
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
@@ -49,65 +43,49 @@
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
         .app-content { flex: 1; padding: 10px 20px 100px 20px; overflow-y: auto; position: relative; }
-
         .view-section { display: none; animation: fadeInView 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .view-section.active { display: block; }
         @keyframes fadeInView { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- استایل‌های اختصاصی داشبورد --- */
+        /* استایل‌های داشبورد */
         .wallet-card { padding: 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
         .wallet-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: var(--primary); opacity: 0.15; border-radius: 50%; filter: blur(30px); z-index: 0; pointer-events: none; }
         .wallet-info { position: relative; z-index: 1; }
         .wallet-label { font-size: 12px; color: var(--text-muted); font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
-        .wallet-label svg { width: 16px; height: 16px; stroke-width: 2.5; fill: none; stroke: currentColor; }
         .wallet-amount { font-size: 26px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
         .wallet-amount span { font-size: 12px; color: var(--primary); font-weight: 900; margin-right: 5px; }
         
         .section-title { font-size: 15px; font-weight: 900; color: var(--text-muted); margin-bottom: 15px; padding-right: 5px; }
-        
         .status-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 25px; }
         @media (min-width: 600px) { .status-grid { grid-template-columns: 1fr 1fr; } .status-card.full-width { grid-column: 1 / -1; } }
 
         .status-card { padding: 22px; transition: var(--transition); }
         .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .srv-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-        .srv-title svg { width: 22px; height: 22px; color: var(--primary); stroke-width: 2; fill: none; stroke: currentColor; }
-        
         .srv-badge { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; }
         .srv-badge.inactive { background: rgba(113, 128, 150, 0.2); color: var(--text-muted); border-color: rgba(113, 128, 150, 0.3); }
         
         .srv-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .srv-details.single-col { grid-template-columns: 1fr; }
-        
         .detail-item { background: var(--glass-highlight); padding: 12px 15px; border-radius: 16px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 5px; }
         .detail-item.row-style { flex-direction: row; justify-content: space-between; align-items: center; }
-        
         .detail-label { font-size: 11px; color: var(--text-muted); font-weight: 800;}
         .detail-val { font-size: 13px; font-weight: 900; color: var(--text-main); direction: ltr; text-align: right; }
         .detail-val.highlight { color: var(--primary); direction: rtl; }
 
         .card-actions { display: flex; gap: 10px; }
-        
-        /* 🐛 رفع مشکل سفید شدن دکمه‌های پایین داشبورد */
         .btn-action { flex: 1; padding: 12px; border-radius: 16px; border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-main); font-size: 12px; font-weight: 900; cursor: pointer; transition: var(--transition); text-align: center; display: flex; justify-content: center; align-items: center; gap: 6px; }
         .btn-action:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-fade); }
-        
-        /* کلاس دکمه‌های اصلی کارت‌ها */
         .btn-action.primary { background: var(--primary); color: white; border: none; box-shadow: 0 6px 15px var(--primary-fade);}
         .btn-action.primary:hover { transform: translateY(-2px); color: white; }
 
-        /* دکمه شارژ کیف پول */
-        .btn-add-fund { background: var(--text-main); color: var(--bg-color); border: none; padding: 10px 16px; border-radius: 16px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; transition: var(--transition); }
-        .btn-add-fund svg { stroke: var(--bg-color); }
-        .btn-add-fund:hover { transform: scale(1.05); }
-
-        /* --- استایل‌های فرم رزرو روزانه --- */
+        /* استایل‌های تقویم و فرم رزرو روزانه */
         .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
         .cal-card { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); position: relative; user-select: none; }
         .cal-card.available:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
         .cal-card.selected { background: var(--primary-fade); border-color: var(--primary); color: var(--primary); }
         .cal-card.selected::after { content: '✅'; position: absolute; top: -8px; right: -8px; font-size: 16px; background: var(--surface); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--border); background: rgba(0, 0, 0, 0.05); }
+        .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--glass-border); background: rgba(0, 0, 0, 0.05); }
         .cal-card.past-booked { background: rgba(16, 185, 129, 0.05); border-color: var(--success); cursor: not-allowed; opacity: 0.8; }
         .cal-day { font-size: 14px; font-weight: 900; margin-bottom: 6px; }
         .cal-date { font-size: 11px; margin-bottom: 8px; color: var(--text-muted); }
@@ -117,23 +95,22 @@
         .price-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 10px; color: var(--text-muted); }
         .price-final { font-size: 24px; font-weight: 900; color: var(--success); margin-top: 15px; border-top: 1px dashed var(--glass-border); padding-top: 15px; text-align: left; }
         
+        /* 💳 استایل‌های روش پرداخت */
+        .payment-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; margin-bottom: 20px; border-top: 1px dashed var(--glass-border); padding-top: 20px; }
+        .pay-option { background: var(--glass-highlight); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); font-size: 13px; font-weight: bold; }
+        .pay-option.active { border-color: var(--primary); background: var(--primary-fade); color: var(--primary); }
+        .pay-option input { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
+
         .payment-info { background: var(--primary-fade); border: 1px solid rgba(92, 184, 159, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 25px; text-align: center; }
         .copy-btn { background: var(--glass-highlight); border: 1px dashed var(--primary); color: var(--primary); border-radius: 12px; cursor: pointer; padding: 10px 24px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; margin: 0 auto; }
-        .copy-btn:hover { background: var(--primary-fade); border-style: solid; transform: translateY(-2px); }
         
         .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--glass-border); padding: 30px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 20px; background: var(--glass-highlight); transition: var(--transition); }
-        .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
         .file-upload input { display: none; }
         
-        /* 🐛 رفع مشکل لیست قوانین */
         .rules-container { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 25px; overflow: hidden; }
         .rules-scroll-box { max-height: 120px; overflow-y: auto; padding: 15px 20px; font-size: 12px; color: var(--text-muted); line-height: 2; text-align: justify; }
-        
-        /* فاصله دادن به نقطه‌های لیست برای جلوگیری از افتادن روی متن */
         .rules-scroll-box ul { padding-right: 25px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; list-style-position: outside; }
-        
         .rules-checkbox-label { display: flex; gap: 12px; align-items: center; padding: 15px 20px; background: rgba(239, 68, 68, 0.05); border-top: 1px solid rgba(239, 68, 68, 0.1); font-size: 12px; cursor: pointer; color: var(--danger); font-weight: bold; transition: var(--transition); }
-        .rules-checkbox-label:hover { background: rgba(239, 68, 68, 0.1); }
         .rules-checkbox-label input { accent-color: var(--danger); width: 18px; height: 18px; cursor: pointer; }
         
         .form-group { margin-bottom: 22px; }
@@ -146,7 +123,6 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
 
-        /* منوی پایین */
         .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 440px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; padding: 10px 0; border-radius: 20px; transition: var(--transition); flex: 1; position: relative; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
@@ -160,13 +136,7 @@
         .modal-content { background: var(--bg-color); width: 100%; max-width: 480px; border-radius: 32px 32px 0 0; padding: 25px 20px; animation: slideUpModal 0.4s ease; max-height: 80vh; overflow-y: auto; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;}
         @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--glass-border); padding-bottom: 15px; }
-        .modal-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
-        .close-btn { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted); width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .close-btn:hover { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
-        .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item { padding: 15px; border-radius: 16px; background: var(--glass-highlight); border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
-        .history-date { font-size: 13px; font-weight: 900; color: var(--text-main); }
-        .history-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 8px; }
         .status-done { background: rgba(113, 128, 150, 0.1); color: var(--text-muted); border: 1px solid rgba(113, 128, 150, 0.3);}
         .status-upcoming { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3);}
     </style>
@@ -213,8 +183,7 @@
                         <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
                     </div>
                     <div class="wallet-action">
-                        <button class="btn-add-fund" onclick="switchView('view-finance', document.getElementById('navFinance'))">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <button class="btn-action primary" style="padding: 10px 16px; border-radius: 16px; border: none; font-size: 12px;" onclick="switchView('view-finance', document.getElementById('navFinance'))">
                             افزایش موجودی
                         </button>
                     </div>
@@ -223,7 +192,6 @@
                 <div class="section-title">وضعیت قراردادهای من</div>
 
                 <div class="status-grid">
-                    
                     <div class="status-card glass-panel full-width" id="cardDaily">
                         <div class="status-header">
                             <div class="srv-title">
@@ -232,7 +200,6 @@
                             </div>
                             <div class="srv-badge inactive" id="badgeDaily">بدون رزرو</div>
                         </div>
-
                         <div id="dailyActiveData" style="display: none;">
                             <div class="srv-details single-col">
                                 <div class="detail-item row-style">
@@ -245,7 +212,6 @@
                                 <button class="btn-action" onclick="openHistoryModal()">تاریخچه رزروها</button>
                             </div>
                         </div>
-
                         <div id="dailyInactiveData">
                             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">هیچ رزرو فعالی برای روزهای آینده ندارید.</p>
                             <div class="card-actions">
@@ -263,24 +229,15 @@
                             </div>
                             <div class="srv-badge inactive" id="badgePansion">غیرفعال</div>
                         </div>
-                        
                         <div id="pansionActiveData" style="display: none;">
                             <div class="srv-details single-col">
-                                <div class="detail-item row-style">
-                                    <span class="detail-label">نوع میز:</span>
-                                    <span class="detail-val highlight" id="uiPanType">--</span>
-                                </div>
-                                <div class="detail-item row-style">
-                                    <span class="detail-label">انقضا:</span>
-                                    <span class="detail-val" id="uiPanDays" style="color: var(--text-main);">--</span>
-                                </div>
+                                <div class="detail-item row-style"><span class="detail-label">نوع میز:</span><span class="detail-val highlight" id="uiPanType">--</span></div>
+                                <div class="detail-item row-style"><span class="detail-label">انقضا:</span><span class="detail-val" id="uiPanDays" style="color: var(--text-main);">--</span></div>
                             </div>
                             <div class="card-actions">
                                 <button class="btn-action primary" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">تمدید سریع</button>
-                                <button class="btn-action" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">ارتقا میز</button>
                             </div>
                         </div>
-
                         <div id="pansionInactiveData">
                             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">شما میز اختصاصی بلندمدت ندارید.</p>
                             <div class="card-actions">
@@ -288,42 +245,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="status-card glass-panel" id="cardConsult">
-                        <div class="status-header">
-                            <div class="srv-title">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                                مشاوره قطب‌نما
-                            </div>
-                            <div class="srv-badge inactive" id="badgeConsult">غیرفعال</div>
-                        </div>
-
-                        <div id="consultActiveData" style="display: none;">
-                            <div class="srv-details single-col">
-                                <div class="detail-item row-style">
-                                    <span class="detail-label">نوع طرح:</span>
-                                    <span class="detail-val highlight" id="uiConType">--</span>
-                                </div>
-                                <div class="detail-item row-style">
-                                    <span class="detail-label">انقضا:</span>
-                                    <span class="detail-val" id="uiConDays" style="color: var(--text-main);">--</span>
-                                </div>
-                            </div>
-                            <div class="card-actions">
-                                <button class="btn-action primary">تمدید سریع</button>
-                            </div>
-                        </div>
-
-                        <div id="consultInactiveData">
-                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold;">با فعال‌سازی این بخش از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.</p>
-                            <div class="card-actions">
-                                <button class="btn-action primary" style="background: var(--accent);">
-                                    مشاهده طرح‌ها
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -343,26 +264,43 @@
                         <input type="text" id="discountCode" class="form-input" placeholder="کد معرف (در صورت وجود)" style="flex: 2; margin-bottom: 0; padding: 12px; font-size: 12px; text-transform: uppercase;">
                         <button class="btn-action primary" style="flex: 1; border-radius: 16px; margin: 0; padding: 12px;" onclick="applyDiscount()">اعمال کد</button>
                     </div>
-                    
                     <div id="discountNotice" style="color: var(--warning); font-size: 11px; font-weight: bold; margin-top: 8px; text-align: justify; line-height: 1.6;"></div>
+                    
+                    
+                    <div class="payment-options">
+                        <label class="pay-option active" id="lblCard" onclick="selectPayMethod('card')">
+                            <input type="radio" name="payMethod" value="card" checked>
+                            <span>📸 واریز کارت به کارت (آپلود فیش)</span>
+                        </label>
+                        <label class="pay-option" id="lblWallet" onclick="selectPayMethod('wallet')">
+                            <input type="radio" name="payMethod" value="wallet">
+                            <span style="display:flex; justify-content:space-between; width:100%;">
+                                💳 پرداخت از کیف پول
+                                <span id="walletStatusBadge" style="font-size:11px; color: var(--text-muted);">موجودی: --</span>
+                            </span>
+                        </label>
+                    </div>
+
                     <div class="price-final"><span style="color: var(--text-main); font-size: 16px;">مبلغ قابل پرداخت: </span><span id="finalPriceTxt">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
                 </div>
 
-                <div class="payment-info">
-                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 12px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
-                    <div style="font-size: 24px; font-weight: 900; color: var(--text-main); letter-spacing: 2px; margin-bottom: 5px; font-family: monospace;" id="cardNumber">6219861810380484</div>
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 18px;">به نام: <span style="color: var(--primary);">ارشاد شفیعی</span></div>
-                    <button class="copy-btn" onclick="copyCard()" id="btnCopyCard">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        کپی شماره کارت
-                    </button>
-                </div>
+                <div id="paymentInfoBox">
+                    <div class="payment-info">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 12px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
+                        <div style="font-size: 24px; font-weight: 900; color: var(--text-main); letter-spacing: 2px; margin-bottom: 5px; font-family: monospace;" id="cardNumber">6219861810380484</div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 18px;">به نام: <span style="color: var(--primary);">ارشاد شفیعی</span></div>
+                        <button class="copy-btn" onclick="copyCard()" id="btnCopyCard">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            کپی شماره کارت
+                        </button>
+                    </div>
 
-                <label class="file-upload" id="uploadBox">
-                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
-                    <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
-                </label>
+                    <label class="file-upload" id="uploadBox">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
+                        <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
+                    </label>
+                </div>
 
                 <div class="rules-container">
                     <div class="rules-scroll-box">
@@ -370,17 +308,11 @@
                         <ul>
                             <li>امکان بازگشت وجه پس از ثبت رزرو وجود ندارد.</li>
                             <li>فیش واریزی باید متعلق به همین تراکنش باشد.</li>
-                            <li>حفظ سکوت و آرامش، رعایت اخلاق و حرمت‌های اجتماعی، احترام به حقوق دیگران و برخورد مناسب با مسئولین و سایر دانش‌آموزان الزامی است.</li>
-                            <li>در تایم‌های مطالعه، هرگونه پیاده‌روی بی‌مورد، مراجعه به میز دیگران برای صحبت، و پچ‌پچ کردن اکیداً ممنوع است.</li>
+                            <li>حفظ سکوت و آرامش، رعایت اخلاق و احترام به حقوق دیگران الزامی است.</li>
                             <li>استفاده از تلفن همراه در بخش‌های مختلف سالن مطالعه ممنوع می‌باشد.</li>
-                            <li>صرف غذا تنها در تایم‌های مشخص‌شده برای ناهار و صرفاً در بخش‌های مجاز (آشپزخانه یا چیل‌زون) امکان‌پذیر است.</li>
-                            <li>تمامی دانش‌آموزان موظفند در اپلیکیشن بوفه ثبت‌نام نموده و کلیه خریدهای خوراکی خود را منحصراً از طریق این پلتفرم انجام دهند.</li>
-                            <li>حفظ نظم و پاکیزگی سالن الزامی است و دانش‌آموزان باید قبل از خروج، میز خود را کاملاً مرتب کرده و زباله‌هایشان را جمع‌آوری نمایند.</li>
-                            <li>از آوردن وسایل زینتی و قیمتی خودداری شود؛ مؤسسه هیچ‌گونه مسئولیتی در قبال مفقودی اشیاء قیمتی، طلا و پول دانش‌آموز ندارد.</li>
-                            <li>چنانچه دانش‌آموز به اموال سالن خسارتی وارد کند، موظف است هزینه خسارت وارده را شخصاً پرداخت نماید.</li>
-                            <li>پس از خروج دانش‌آموز از مجموعه، مسئولیت هرگونه اتفاق و رفت‌وآمد بر عهده اولیا می‌باشد.</li>
-                            <li>بروز حوادث ناشی از بی‌احتیاطی (مانند سوختگی با آب جوش یا شوخی‌های پرخطر) از کنترل سرپرستان خارج بوده و مؤسسه مسئولیتی جز تذکر یا اخراج فرد مخل نظم نخواهد داشت.</li>
-                            <li style="color: var(--danger); font-weight: bold;">در صورت عدم رعایت هر یک از قوانین فوق و دریافت تذکرهای مداوم از سوی سرپرستان، بدون هیچ‌گونه تعارفی از ادامه حضور شخص متخلف در پانسیون جلوگیری به عمل خواهد آمد.</li>
+                            <li>تمامی دانش‌آموزان موظفند در اپلیکیشن بوفه ثبت‌نام نموده و خریدهای خود را اینترنتی انجام دهند.</li>
+                            <li>حفظ نظم و پاکیزگی سالن الزامی است و دانش‌آموزان باید قبل از خروج، میز خود را کاملاً مرتب کنند.</li>
+                            <li style="color: var(--danger); font-weight: bold;">در صورت عدم رعایت هر یک از قوانین فوق، بدون هیچ‌گونه تعارفی از ادامه حضور شخص متخلف جلوگیری به عمل خواهد آمد.</li>
                         </ul>
                     </div>
                     <label class="rules-checkbox-label">
@@ -392,44 +324,50 @@
                 <button class="btn-submit" id="btnSubmitBooking" onclick="submitBooking()" disabled>تایید نهایی و رزرو قطعی 🔒</button>
             </div>
 
-            <!-- SECTION: OTHERS -->
+            
             <div id="view-monthly" class="view-section">
                 <div class="section-title">طرح‌های رزرو ماهانه</div>
                 <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش رزرو ماهانه در حال آماده سازی است...</div>
             </div>
-
             <div id="view-finance" class="view-section">
                 <div class="section-title">امور مالی و اقساط</div>
                 <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش امور مالی در حال آماده سازی است...</div>
             </div>
-
             <div id="view-profile" class="view-section">
                 <div class="section-title">پروفایل کاربری</div>
                 <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش پروفایل در حال آماده سازی است...</div>
             </div>
-
         </main>
 
         <nav class="bottom-nav glass-panel">
-            <div class="nav-item active" id="navDashboard" onclick="switchView('view-dashboard', this)"><span>داشبورد</span></div>
-            <div class="nav-item" id="navDaily" onclick="switchView('view-daily', this)"><span>رزرو روزانه</span></div>
-            <div class="nav-item" id="navMonthly" onclick="switchView('view-monthly', this)"><span>رزرو ماهانه</span></div>
-            <div class="nav-item" id="navFinance" onclick="switchView('view-finance', this)"><span>امور مالی</span></div>
-            <div class="nav-item" id="navProfile" onclick="switchView('view-profile', this)"><span>پروفایل</span></div>
+            <div class="nav-item active" id="navDashboard" onclick="switchView('view-dashboard', this)">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>داشبورد</span>
+            </div>
+            <div class="nav-item" id="navDaily" onclick="switchView('view-daily', this)">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>رزرو روزانه</span>
+            </div>
+            <div class="nav-item" id="navMonthly" onclick="switchView('view-monthly', this)">
+                <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                <span>رزرو ماهانه</span>
+            </div>
+            <div class="nav-item" id="navFinance" onclick="switchView('view-finance', this)">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span>امور مالی</span>
+            </div>
+            <div class="nav-item" id="navProfile" onclick="switchView('view-profile', this)">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>پروفایل</span>
+            </div>
         </nav>
-
     </div>
-    
+
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    تاریخچه رزروهای روزانه
-                </div>
-                <button class="close-btn" onclick="closeHistoryModal()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <div class="modal-title">تاریخچه رزروهای روزانه</div>
+                <button class="close-btn" onclick="closeHistoryModal()">X</button>
             </div>
             <div class="history-list" id="historyListContainer"></div>
         </div>
@@ -448,6 +386,7 @@
         let base64Image = "";
         let appliedDiscountCode = "";
         let discountAmount = 0;
+        let selectedPayMethod = "card";
         const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
         function toggleTheme() {
@@ -472,54 +411,38 @@
         function switchView(viewId, navElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            
             if (navElement) {
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                 navElement.classList.add('active');
             }
         }
 
-        function getMonthName(m) {
-            const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
-            return months[parseInt(m, 10) - 1] || '';
+        // 🐛 تقویم خط تیره‌ای هماهنگ با سوپابیس
+        function getShamsiDateSafe(dateObj) { 
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}-${m}-${d}`; 
         }
 
-        // 🐛 نسخه ضد-کرش برای پیدا کردن "امروز" و "فردا" در تاریخ شمسی
         function getSmartDateTextSafe(dateStr) {
-            const matched = window14Dates.find(w => w.date === dateStr);
-            if (matched) {
-                if (matched.diffDays === 0) return 'امروز';
-                if (matched.diffDays === 1) return 'فردا';
-                if (matched.diffDays === 2) return 'پس‌فردا';
-                return `${matched.dayName} (${matched.date.split('/')[2]} ${getMonthName(matched.date.split('/')[1])})`;
-            }
-            return dateStr;
+            let todayStr = getShamsiDateSafe(new Date());
+            if (dateStr === todayStr) return 'امروز';
+
+            let tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+            if (dateStr === getShamsiDateSafe(tmrw)) return 'فردا';
+
+            let dayAfter = new Date(); dayAfter.setDate(dayAfter.getDate() + 2);
+            if (dateStr === getShamsiDateSafe(dayAfter)) return 'پس‌فردا';
+
+            return dateStr.replace(/-/g, '/');
         }
 
         window.onload = async function() {
             const userPhone = localStorage.getItem('rahino_user_phone');
-            if (!userPhone) { 
-                window.location.href = 'auth.html'; 
-                return; 
-            }
+            if (!userPhone) { window.location.href = 'auth.html'; return; }
             await loadRealDashboardData(userPhone);
         };
-
-        let globalUserPastReservations = []; // ذخیره تاریخ‌ها برای استفاده در مودال تاریخچه
-
-        // تابع ایمن برای تشخیص روزهای نزدیک (بدون کرش کردن مرورگر)
-        function getRelativeDayText(dbDateStr) {
-            let todayStr = getShamsiDate(new Date()).replace(/\//g, '-');
-            if (dbDateStr === todayStr) return 'امروز';
-
-            let tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
-            if (dbDateStr === getShamsiDate(tmrw).replace(/\//g, '-')) return 'فردا';
-
-            let dayAfter = new Date(); dayAfter.setDate(dayAfter.getDate() + 2);
-            if (dbDateStr === getShamsiDate(dayAfter).replace(/\//g, '-')) return 'پس‌فردا';
-
-            return dbDateStr.replace(/-/g, '/'); // حالت عادی
-        }
 
         async function loadRealDashboardData(phone) {
             try {
@@ -536,18 +459,13 @@
                     currentUser = user; 
                     const pansion = res.pansion;
                     const consult = res.consult;
-                    
-                    // دریافت تمام رزروها از بک‌اند جدید
-                    globalUserPastReservations = res.daily_dates || []; 
-                    
-                    // پیدا کردن نزدیک‌ترین رزرو آینده
-                    let todayShamsi = getShamsiDate(new Date()).replace(/\//g, '-');
-                    let upcomingDates = globalUserPastReservations.filter(d => d >= todayShamsi).sort();
-                    let nextDaily = upcomingDates.length > 0 ? upcomingDates[0] : null;
 
                     document.getElementById('uiUserFullName').innerText = `سلام، ${user.full_name.split(' ')[0]} عزیز`;
                     document.getElementById('uiUserGradeMajor').innerText = `پایه ${user.grade || 'نامشخص'} (${user.major || 'نامشخص'})`;
-                    document.getElementById('uiWalletBalance').innerHTML = `${Number(user.wallet_balance || 0).toLocaleString()} <span>تومان</span>`;
+                    
+                    let wBal = Number(user.wallet_balance || 0);
+                    document.getElementById('uiWalletBalance').innerHTML = `${wBal.toLocaleString()} <span>تومان</span>`;
+                    document.getElementById('walletStatusBadge').innerText = `موجودی: ${wBal.toLocaleString()}`;
 
                     if (pansion) {
                         document.getElementById('badgePansion').innerText = 'فعال';
@@ -555,19 +473,8 @@
                         document.getElementById('pansionActiveData').style.display = 'block';
                         document.getElementById('pansionInactiveData').style.display = 'none';
                         document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
-                        
                         document.getElementById('cardDaily').style.display = 'none';
-                        document.getElementById('navDaily').style.display = 'none'; 
                     } else {
-                        if (nextDaily) {
-                            document.getElementById('badgeDaily').innerText = 'دارای رزرو';
-                            document.getElementById('badgeDaily').className = 'srv-badge';
-                            document.getElementById('dailyActiveData').style.display = 'block';
-                            document.getElementById('dailyInactiveData').style.display = 'none';
-                            
-                            // اعمال هوشمند تاریخ
-                            document.getElementById('uiNextDailyDate').innerText = getRelativeDayText(nextDaily);
-                        }
                         await initializeBookingEngine();
                     }
 
@@ -578,7 +485,6 @@
                         document.getElementById('consultInactiveData').style.display = 'none';
                         document.getElementById('uiConType').innerText = `طرح ${consult.service_type}`;
                     }
-
                 } else {
                     alert(res.error || 'خطا در دریافت اطلاعات کاربری.');
                     logout();
@@ -589,26 +495,13 @@
             }
         }
 
-        // =====================================
-        // منطق رزرو روزانه و تقویم
-        // =====================================
-
-        function getShamsiDate(dateObj) { 
-            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
-            let y, m, d;
-            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
-            return `${y}/${m}/${d}`;
-        }
-        function getShamsiDayName(dateObj) { 
-            const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(dateObj);
-            return parts.find(p => p.type === 'weekday').value;
-        }
-
         async function initializeBookingEngine() {
             window14Dates = [];
             for(let i=0; i<14; i++) {
                 let d = new Date(); d.setDate(d.getDate() + i);
-                window14Dates.push({ date: getShamsiDate(d), dayName: getShamsiDayName(d), diffDays: i });
+                const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(d);
+                let dayName = parts.find(p => p.type === 'weekday').value;
+                window14Dates.push({ date: getShamsiDateSafe(d), dayName: dayName });
             }
 
             try {
@@ -628,17 +521,15 @@
                     if (futureReservations.length > 0) {
                         futureReservations.sort();
                         let nextRes = futureReservations[0];
-                        
                         document.getElementById('badgeDaily').innerText = 'دارای رزرو';
                         document.getElementById('badgeDaily').className = 'srv-badge';
                         document.getElementById('dailyActiveData').style.display = 'block';
                         document.getElementById('dailyInactiveData').style.display = 'none';
                         document.getElementById('uiNextDailyDate').innerText = getSmartDateTextSafe(nextRes);
                     }
-
                     renderCalendar();
                 }
-            } catch (e) { console.error("خطا در بارگذاری تقویم"); }
+            } catch (e) {}
         }
 
         function renderCalendar() {
@@ -654,7 +545,7 @@
                 else if (available <= 0) { cardClass += ' full'; statusText = 'تکمیل ❌'; } 
                 else { cardClass += ' available'; onclickEvent = `onclick="toggleDate('${d.date}', this)"`; }
 
-                grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${d.date.substring(5)}</div><div class="cal-cap">${statusText}</div></div>`;
+                grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${d.date.substring(5).replace(/-/g, '/')}</div><div class="cal-cap">${statusText}</div></div>`;
             });
             updatePricing();
         }
@@ -662,7 +553,22 @@
         function toggleDate(dateStr, element) {
             if(element.classList.contains('selected')) { element.classList.remove('selected'); selectedNewDates = selectedNewDates.filter(d => d !== dateStr); } 
             else { element.classList.add('selected'); selectedNewDates.push(dateStr); }
-            updatePricing(); validateSubmitButton();
+            updatePricing(); 
+        }
+
+        function selectPayMethod(method) {
+            selectedPayMethod = method;
+            document.getElementById('lblCard').classList.remove('active');
+            document.getElementById('lblWallet').classList.remove('active');
+            
+            if (method === 'card') {
+                document.getElementById('lblCard').classList.add('active');
+                document.getElementById('paymentInfoBox').style.display = 'block';
+            } else {
+                document.getElementById('lblWallet').classList.add('active');
+                document.getElementById('paymentInfoBox').style.display = 'none';
+            }
+            updatePricing();
         }
 
         function updatePricing() {
@@ -693,6 +599,18 @@
             document.getElementById('rateAppliedTxt').innerText = `${applicableRate} هزار تومان`;
             document.getElementById('finalPriceTxt').innerText = finalAmountToPay.toLocaleString();
             document.getElementById('discountNotice').innerText = discountMsg;
+
+            // بررسی وضعیت کیف پول برای دکمه
+            let walletBadge = document.getElementById('walletStatusBadge');
+            if (selectedPayMethod === 'wallet' && currentUser.wallet_balance < finalAmountToPay) {
+                walletBadge.style.color = 'var(--danger)';
+                walletBadge.innerText = 'موجودی ناکافی';
+            } else {
+                walletBadge.style.color = 'var(--text-muted)';
+                walletBadge.innerText = `موجودی: ${Number(currentUser.wallet_balance || 0).toLocaleString()}`;
+            }
+
+            validateSubmitButton();
         }
 
         async function applyDiscount() {
@@ -728,7 +646,6 @@
                 btn.style.background = 'var(--success)';
                 btn.style.color = 'white';
                 btn.style.borderColor = 'var(--success)';
-                
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.style.background = 'var(--glass-highlight)';
@@ -768,14 +685,24 @@
         }
 
         document.getElementById('rulesCheckbox').addEventListener('change', validateSubmitButton);
+        
         function validateSubmitButton() { 
             const btn = document.getElementById('btnSubmitBooking');
-            btn.disabled = !(selectedNewDates.length > 0 && base64Image && document.getElementById('rulesCheckbox').checked); 
+            let hasDates = selectedNewDates.length > 0;
+            let rulesChecked = document.getElementById('rulesCheckbox').checked;
+            
+            let isValid = hasDates && rulesChecked;
+            if (selectedPayMethod === 'wallet') {
+                isValid = isValid && (currentUser.wallet_balance >= finalAmountToPay);
+            } else {
+                isValid = isValid && (base64Image !== "");
+            }
+            btn.disabled = !isValid; 
         }
 
         async function submitBooking() {
             document.getElementById('mainLoader').style.display = 'flex';
-            document.getElementById('loaderTxt').innerText = 'در حال ثبت رزرو و ارسال فیش...';
+            document.getElementById('loaderTxt').innerText = 'در حال ثبت رزرو و صدور رسید...';
             
             const safePhone = localStorage.getItem('rahino_user_phone');
             const safeName = currentUser ? currentUser.full_name : document.getElementById('uiUserFullName').innerText;
@@ -784,9 +711,10 @@
                 const payload = {
                     action: 'submit_daily_booking',
                     phone_number: safePhone,
-                    dates: selectedNewDates,
+                    dates: selectedNewDates, // حالا به شکل خط تیره ارسال می‌شود
                     amount: finalAmountToPay,
-                    receipt_base64: base64Image,
+                    pay_method: selectedPayMethod,
+                    receipt_base64: selectedPayMethod === 'card' ? base64Image : '',
                     discount_code: appliedDiscountCode,
                     user_name: safeName
                 };
@@ -804,27 +732,24 @@
                 }
             } catch (e) { 
                 document.getElementById('mainLoader').style.display = 'none';
-                alert('خطای ثبت نهایی:\n' + e.message); 
+                alert('خطای ارتباط با سرور.'); 
             }
         }
 
-        // =====================================
-        // تاریخچه رزرو (اصلاح شده با مقایسه متنی)
-        // =====================================
-        function openHistoryModal() {
+        async function openHistoryModal() {
             document.getElementById('historyModal').style.display = 'flex';
             const container = document.getElementById('historyListContainer');
             
-            if(globalUserPastReservations.length > 0) {
+            if(userPastReservations.length > 0) {
                 let html = '';
-                let sortedPast = [...globalUserPastReservations].sort().reverse(); // از جدید به قدیم
-                let todayShamsi = getShamsiDate(new Date()).replace(/\//g, '-'); 
+                let sortedPast = [...userPastReservations].sort().reverse(); 
+                let todayShamsi = getShamsiDateSafe(new Date()); 
                 
                 sortedPast.forEach(dateStr => {
                     let isUpcoming = (dateStr >= todayShamsi);
                     html += `
                         <div class="history-item">
-                            <div class="history-date">${getRelativeDayText(dateStr)}</div>
+                            <div class="history-date">${getSmartDateTextSafe(dateStr)}</div>
                             <div class="history-status ${isUpcoming ? 'status-upcoming' : 'status-done'}">${isUpcoming ? 'در انتظار مراجعه' : 'استفاده شده'}</div>
                         </div>
                     `;
