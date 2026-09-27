@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ورود به دنیای راهینو</title>
+    <title>پرتال جامع پانسیون راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <style>
-        /* 🎨 پالت رنگی شیشه‌ای و پاستلی راهینو */
+        /* 🎨 پالت رنگی شیشه‌ای راهینو */
         :root { 
             --primary: #5cb89f; --primary-hover: #4a9e86; 
             --accent: #e67381; --accent-hover: #d15b69; 
@@ -18,7 +18,7 @@
             --text-muted: #5a6a82; 
             
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --shadow-soft: 0 15px 40px rgba(230, 115, 129, 0.12); 
+            --shadow-soft: 0 15px 40px rgba(0, 0, 0, 0.08); 
             --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
@@ -36,7 +36,6 @@
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        /* 🌌 بک‌گراند گرادیانت متحرک (آرام‌بخش) */
         body { 
             background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%);
             background-size: 400% 400%;
@@ -61,7 +60,6 @@
             position: relative; display: flex; flex-direction: column;
         }
 
-        /* 💎 افکت شیشه‌ای (Glassmorphism) */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(25px);
@@ -81,21 +79,16 @@
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
         .auth-card { padding: 40px 30px; position: relative; overflow: hidden; }
-        .auth-card::before {
-            content: ''; position: absolute; top: -50px; left: -50px; width: 150px; height: 150px;
-            background: var(--accent); opacity: 0.15; border-radius: 50%; filter: blur(45px); z-index: 0; pointer-events: none;
-        }
 
         .header-title { text-align: center; margin-bottom: 35px; position: relative; z-index: 1; }
-        .header-logo { width: 85px; height: 85px; border-radius: 30%; object-fit: cover; margin-bottom: 15px; border: 2px solid var(--glass-border); padding: 4px; background: var(--glass-highlight); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .header-title h1 { font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
+        .header-logo { width: 85px; height: 85px; border-radius: 25%; object-fit: cover; margin-bottom: 15px; border: 2px solid var(--glass-border); padding: 4px; background: var(--glass-highlight); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .header-title h1 { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
         .header-title p { font-size: 13px; color: var(--text-muted); font-weight: bold; line-height: 1.6; }
 
         .view-section { display: none; animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; z-index: 1; }
         .view-section.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* استایل فیلدها */
         .form-group { margin-bottom: 18px; position: relative; }
         .form-input { 
             width: 100%; background: var(--glass-highlight); border: 1px solid var(--glass-border); 
@@ -106,28 +99,31 @@
         .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(92, 184, 159, 0.15); transform: translateY(-1px); }
         select.form-input { appearance: none; cursor: pointer; }
 
-        /* دکمه‌ها */
         .btn { 
             width: 100%; padding: 18px; border-radius: 20px; border: none; 
-            font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); 
+            font-weight: 900; font-size: 14px; cursor: pointer; transition: var(--transition); 
             display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px;
         }
         .btn-primary { 
             background: linear-gradient(135deg, var(--primary), var(--primary-hover)); 
             color: white; box-shadow: 0 10px 25px rgba(92, 184, 159, 0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(92, 184, 159, 0.4); }
-        .btn-action { background: transparent; color: var(--text-muted); margin-top: 5px; box-shadow: none;}
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(92, 184, 159, 0.4); }
+        .btn-action { background: transparent; color: var(--text-muted); margin-top: 5px; box-shadow: none; border: 1px solid var(--glass-border);}
         .btn-action:hover { color: var(--text-main); background: var(--glass-highlight); }
 
-        /* هشدارها */
-        .alert-banner { display: flex; align-items: center; gap: 12px; padding: 15px 20px; border-radius: 20px; margin-bottom: 25px; border: 1px solid transparent; font-size: 12px; font-weight: bold; line-height: 1.7;}
+        .alert-banner { display: flex; align-items: center; gap: 12px; padding: 15px 20px; border-radius: 20px; margin-bottom: 25px; border: 1px solid transparent; font-size: 13px; font-weight: bold; line-height: 1.7;}
         .alert-success { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--success); }
         .alert-warning { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--warning); }
+        .alert-danger { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--danger); }
         
         .promo-hint { font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.7; font-weight: bold; padding: 0 10px; text-align: justify; }
         .promo-hint span { color: var(--accent); background: var(--glass-highlight); padding: 2px 6px; border-radius: 6px;}
 
+        /* لودر پردازش */
+        .loader-overlay { position: absolute; inset: 0; background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 32px; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -141,53 +137,55 @@
         </div>
 
         <div class="glass-panel auth-card">
+            
+            <div class="loader-overlay" id="loader">
+                <div class="spinner"></div>
+                <div style="font-size: 14px; font-weight: 900; color: var(--primary);" id="loaderTxt">در حال پردازش...</div>
+            </div>
 
-         
+            
             <div class="header-title">
                 <img src="YOUR_LOGO_URL_HERE" alt="لوگو پانسیون راهینو" class="header-logo" id="mainLogo">
-                <h1 id="headerTitle">دروازه ورود به راهینو</h1>
-                <p id="headerSub">فقط با شماره موبایل وارد دنیای مطالعه متمرکز شو</p>
+                <h1 id="headerTitle">پرتال جامع پانسیون راهینو</h1>
+                <p id="headerSub">جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید</p>
             </div>
 
             <!-- VIEW 1: Phone Check -->
             <div class="view-section active" id="view-phone">
                 <div class="form-group">
-                    <input type="tel" id="inpPhone" class="form-input" placeholder="شماره موبایلت رو بنویس (مثال: 09123456789)" maxlength="11" style="text-align: center; font-size: 16px; letter-spacing: 2px; direction: ltr;">
+                    <input type="tel" id="inpPhone" class="form-input" placeholder="شماره موبایل (مثال: 09123456789)" maxlength="11" style="text-align: center; font-size: 16px; letter-spacing: 2px; direction: ltr;">
                 </div>
-                <button class="btn btn-primary" onclick="goToStep('view-register', 'عضویت در خانواده راهینو', 'چند قدم تا رزرو بهترین میز پانسیون فاصله داری')">
-                    بزن بریم 🚀
-                </button>
-                <button class="btn btn-action" onclick="goToStep('view-login', 'خوش برگشتی!', 'رمز عبورت رو بنویس تا درِ پانسیون باز بشه')">
-                    شبیه‌سازی ورود (کاربر قدیمی)
+                <button class="btn btn-primary" onclick="checkUserPhone()">
+                    تایید و ادامه
                 </button>
             </div>
 
             <!-- VIEW 2: Login -->
             <div class="view-section" id="view-login">
                 <div class="alert-banner alert-success glass-panel">
-                    ✅ حساب کاربری‌ت پیدا شد. لطفاً کلید ورودت رو بزن.
+                    حساب کاربری یافت شد. لطفاً رمز عبور خود را وارد کنید.
                 </div>
                 
                 <div class="form-group">
                     <input type="password" id="inpLoginPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)" style="text-align: center; font-size: 18px; letter-spacing: 3px; direction: ltr;">
                 </div>
                 
-                <button class="btn btn-primary">ورود به پرتال اختصاصی 🔓</button>
+                <button class="btn btn-primary" onclick="submitLogin()">ورود به پرتال اختصاصی</button>
                 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn btn-action" style="flex: 1; font-size: 12px;" onclick="goToStep('view-recovery', 'فراموشی رمز عبور', 'پاسخ سوال امنیتی‌ت رو یادت میاد؟')">رمزت یادت رفته؟</button>
-                    <button class="btn btn-action" style="flex: 1; font-size: 12px;" onclick="goToStep('view-phone', 'دروازه ورود به راهینو', 'فقط با شماره موبایل وارد دنیای مطالعه متمرکز شو')">تغییر شماره</button>
+                    <button class="btn btn-action" style="flex: 1; font-size: 12px;" onclick="goToStep('view-recovery', 'بازیابی رمز عبور', 'پاسخ سوال امنیتی خود را وارد کنید')">فراموشی رمز</button>
+                    <button class="btn btn-action" style="flex: 1; font-size: 12px;" onclick="goToStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">تغییر شماره</button>
                 </div>
             </div>
 
             <!-- VIEW 3: Register -->
             <div class="view-section" id="view-register">
                 <div class="alert-banner alert-warning glass-panel">
-                    👋 به نظر میاد بار اولته! یه پرونده کوچیک برات باز می‌کنیم تا میَزت رو آماده کنیم.
+                    شماره شما در سیستم ثبت نشده است. جهت تشکیل پرونده، اطلاعات زیر را تکمیل نمایید.
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی (مثال: ترانه علیدوستی)">
+                    <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل">
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
@@ -203,55 +201,85 @@
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="regSchool" class="form-input" placeholder="نام مدرسه / دانشگاه (مثال: فرزانگان)">
+                    <input type="text" id="regSchool" class="form-input" placeholder="نام مدرسه / آموزشگاه">
                 </div>
                 
                 <div class="form-group">
-                    <input type="password" id="regPass" class="form-input" placeholder="یک رمز عبور امن (حداقل ۶ کاراکتر)">
+                    <input type="password" id="regPass" class="form-input" placeholder="تعیین رمز عبور (حداقل ۶ کاراکتر)">
                 </div>
                 
                 <div class="form-group">
                     <select id="regSecQ" class="form-input" style="color: var(--text-muted);" onchange="this.style.color='var(--text-main)'">
-                        <option value="" disabled selected>یه سوال امنیتی برای روز مبادا (فراموشی رمز)</option>
-                        <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکیت؟</option>
-                        <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">اسم اولین مدرسه‌ت چی بود؟</option>
-                        <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه‌ت تو بچگی؟</option>
+                        <option value="" disabled selected>سوال امنیتی جهت بازیابی رمز</option>
+                        <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
+                        <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option>
+                        <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی (حتماً یادت بمونه!)">
+                    <input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی (جهت یادآوری)">
                 </div>
 
+                
                 <div class="form-group" style="margin-top: 30px; border-top: 1px dashed var(--glass-border); padding-top: 25px;">
-                    <input type="text" id="regReferral" class="form-input" placeholder="کد معرف دوستان (اختیاری 🎁)" style="text-transform: uppercase; border-color: rgba(230, 115, 129, 0.4); text-align: center; letter-spacing: 2px;">
+                    <input type="text" id="regReferral" class="form-input" placeholder="کد معرف دوستان (اختیاری)" style="text-transform: uppercase; border-color: rgba(230, 115, 129, 0.4); text-align: center; letter-spacing: 2px;">
                     <div class="promo-hint">
-                        اگه یکی از بچه‌های راهینو معرفی‌ت کرده، کدش رو اینجا بنویس تا <span>۲۰ هزار تومن</span> روی رزرو روزانه و <span>۱۰۰ هزار تومن</span> روی رزرو ماهانه تخفیف خوش‌آمدگویی بگیری!
+                        در صورت داشتن کد معرف، با ثبت آن از <span>۲۰ هزار تومان</span> تخفیف در رزرو روزانه و <span>۱۰۰ هزار تومان</span> تخفیف در اشتراک ماهانه بهره‌مند می‌شوید.
                     </div>
                 </div>
 
-                <button class="btn btn-primary">ثبت‌نام و تشکیل پرونده 🎉</button>
-                <button class="btn btn-action" onclick="goToStep('view-phone', 'دروازه ورود به راهینو', 'فقط با شماره موبایل وارد دنیای مطالعه متمرکز شو')">انصراف و بازگشت</button>
+                <button class="btn btn-primary" onclick="submitRegistration()">ثبت‌نام و تشکیل پرونده</button>
+                <button class="btn btn-action" onclick="goToStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">انصراف و بازگشت</button>
             </div>
 
             <!-- VIEW 4: Recovery -->
             <div class="view-section" id="view-recovery">
                 <div class="alert-banner alert-warning glass-panel">
-                    <div id="recoveryQuestionText">پاسخ سوال امنیتی که موقع ثبت‌نام انتخاب کردی رو اینجا بنویس.</div>
+                    <div id="recoveryQuestionText">پاسخ سوال امنیتی که هنگام ثبت‌نام انتخاب کرده‌اید را وارد نمایید.</div>
                 </div>
                 <div class="form-group">
-                    <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ تو چی بود؟">
+                    <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ سوال امنیتی">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدیدت (حداقل ۶ کاراکتر)">
+                    <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
                 </div>
-                <button class="btn btn-primary">تغییر رمز و ورود 🔄</button>
-                <button class="btn btn-action" onclick="goToStep('view-login', 'خوش برگشتی!', 'رمز عبورت رو بنویس تا درِ پانسیون باز بشه')">بی‌خیال، یادم اومد!</button>
+                <button class="btn btn-primary" onclick="alert('قابلیت بازیابی به زودی فعال می‌شود.')">بروزرسانی رمز عبور</button>
+                <button class="btn btn-action" onclick="goToStep('view-login', 'ورود به حساب کاربری', 'لطفاً رمز عبور خود را وارد کنید')">بازگشت</button>
+            </div>
+
+            <!-- VIEW 5: Pending Status -->
+            <div class="view-section" id="view-pending">
+                <div class="alert-banner alert-warning glass-panel" style="flex-direction: column; text-align: center; padding: 30px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <div style="font-size: 16px; font-weight: 900; margin-bottom: 10px;">در انتظار بررسی مدیریت</div>
+                    <div style="font-size: 13px; font-weight: bold; line-height: 1.8;">پرونده شما در سیستم ثبت شده است. لطفاً منتظر بمانید تا وضعیت حساب شما توسط مدیریت مجموعه تایید گردد.</div>
+                </div>
+                <button class="btn btn-action" onclick="goToStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">بازگشت به صفحه اصلی</button>
+            </div>
+
+            <!-- VIEW 6: Blocked Status -->
+            <div class="view-section" id="view-blocked">
+                <div class="alert-banner alert-danger glass-panel" style="flex-direction: column; text-align: center; padding: 30px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    <div style="font-size: 16px; font-weight: 900; margin-bottom: 10px;">دسترسی مسدود است</div>
+                    <div style="font-size: 13px; font-weight: bold; line-height: 1.8;">حساب کاربری شما به دلایل انضباطی یا نقض قوانین مسدود گردیده است. جهت پیگیری با پشتیبانی تماس حاصل فرمایید.</div>
+                </div>
+                <button class="btn btn-action" onclick="goToStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">بازگشت به صفحه اصلی</button>
             </div>
 
         </div>
     </div>
 
     <script>
+        // ==========================================
+        // 🔗 تنظیمات اتصال به بک‌اند
+        // ==========================================
+        // لینک دیپلوی شده از گوگل اسکریپت را اینجا قرار دهید:
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec';
+
+        // ==========================================
+        // مدیریت تم و لودر
+        // ==========================================
         function toggleTheme() {
             const html = document.documentElement;
             if (html.getAttribute('data-theme') === 'dark') {
@@ -264,16 +292,155 @@
         }
         if(localStorage.getItem('theme') === 'light') document.documentElement.removeAttribute('data-theme');
 
+        function toggleLoader(show, text = 'در حال پردازش...') {
+            const loader = document.getElementById('loader');
+            document.getElementById('loaderTxt').innerText = text;
+            loader.style.display = show ? 'flex' : 'none';
+        }
+
+        function toEngDigits(str) { 
+            return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) : ''; 
+        }
+
         function goToStep(stepId, title, sub) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(stepId).classList.add('active');
             document.getElementById('headerTitle').innerText = title;
             document.getElementById('headerSub').innerText = sub;
             
-            // پاک کردن رمزها برای امنیت
+            // پاکسازی فیلدهای حساس
             document.getElementById('inpLoginPass').value = '';
             document.getElementById('regPass').value = '';
             document.getElementById('inpRecoveryNewPass').value = '';
+        }
+
+        // ==========================================
+        // 🚀 توابع ارتباط با بک‌اند (Google Apps Script)
+        // ==========================================
+        
+        async function fetchBackend(payload) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                throw new Error("خطا در برقراری ارتباط با سرور. لطفاً اتصال اینترنت خود را بررسی نمایید.");
+            }
+        }
+
+        // ۱. استعلام وضعیت شماره موبایل
+        async function checkUserPhone() {
+            const phoneInput = document.getElementById('inpPhone').value;
+            const phone = toEngDigits(phoneInput.trim());
+            
+            if (!phone || phone.length < 10) {
+                return alert('لطفاً شماره موبایل خود را به درستی وارد نمایید.');
+            }
+
+            toggleLoader(true, 'در حال استعلام وضعیت...');
+            try {
+                const res = await fetchBackend({ action: 'check_phone', phone_number: phone });
+                toggleLoader(false);
+
+                if (!res.success) {
+                    return alert(res.error || "خطای ناشناخته رخ داده است.");
+                }
+
+                // مسیردهی کاربر بر اساس پاسخ بک‌اند
+                if (res.status === 'not_found') {
+                    goToStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
+                } else if (res.status === 'pending') {
+                    goToStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+                } else if (res.status === 'blocked') {
+                    goToStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
+                } else if (res.status === 'active') {
+                    goToStep('view-login', 'ورود به حساب کاربری', `خوش آمدید! لطفاً رمز عبور خود را وارد کنید`);
+                }
+            } catch (error) {
+                toggleLoader(false);
+                alert(error.message);
+            }
+        }
+
+        // ۲. ورود با رمز عبور
+        async function submitLogin() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            const pass = document.getElementById('inpLoginPass').value.trim();
+
+            if (!pass || pass.length < 6) {
+                return alert('لطفاً رمز عبور خود را وارد نمایید (حداقل ۶ کاراکتر).');
+            }
+
+            toggleLoader(true, 'تایید هویت...');
+            try {
+                const res = await fetchBackend({ action: 'login', phone_number: phone, password: pass });
+                toggleLoader(false);
+
+                if (res.success) {
+                    // ذخیره شماره موبایل برای استفاده در داشبورد
+                    localStorage.setItem('rahino_user_phone', phone);
+                    alert('ورود موفقیت‌آمیز بود!');
+                    // TODO: Redirect to app-dashboard.html
+                    // window.location.href = 'app-dashboard.html';
+                } else {
+                    alert(res.error);
+                }
+            } catch (error) {
+                toggleLoader(false);
+                alert(error.message);
+            }
+        }
+
+        // ۳. ثبت‌نام کاربر جدید
+        async function submitRegistration() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            const name = document.getElementById('regName').value.trim();
+            const grade = document.getElementById('regGrade').value;
+            const major = document.getElementById('regMajor').value;
+            const school = document.getElementById('regSchool').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+            const secQ = document.getElementById('regSecQ').value;
+            const secA = document.getElementById('regSecA').value.trim();
+            const refCode = toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase());
+
+            // اعتبارسنجی
+            if (!name || !grade || !major || !school || !pass || !secQ || !secA) {
+                return alert('لطفاً تمامی فیلدهای فرم (به جز کد معرف) را تکمیل نمایید.');
+            }
+            if (pass.length < 6) {
+                return alert('به دلایل امنیتی، رمز عبور باید حداقل شامل ۶ کاراکتر باشد.');
+            }
+
+            const userData = {
+                phone: phone,
+                name: name,
+                grade: grade,
+                major: major,
+                school: school,
+                password: pass,
+                security_question: secQ,
+                security_answer: secA,
+                referral_code: refCode
+            };
+
+            toggleLoader(true, 'در حال تشکیل پرونده...');
+            try {
+                const res = await fetchBackend({ action: 'register', user_data: userData });
+                toggleLoader(false);
+
+                if (res.success) {
+                    // کاربر پس از ثبت نام همیشه به وضعیت pending هدایت می‌شود
+                    goToStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+                } else {
+                    alert(res.error);
+                }
+            } catch (error) {
+                toggleLoader(false);
+                alert(error.message);
+            }
         }
     </script>
 </body>
