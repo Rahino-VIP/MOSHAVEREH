@@ -505,6 +505,22 @@
             await loadRealDashboardData(userPhone);
         };
 
+        let globalUserPastReservations = []; // ذخیره تاریخ‌ها برای استفاده در مودال تاریخچه
+
+        // تابع ایمن برای تشخیص روزهای نزدیک (بدون کرش کردن مرورگر)
+        function getRelativeDayText(dbDateStr) {
+            let todayStr = getShamsiDate(new Date()).replace(/\//g, '-');
+            if (dbDateStr === todayStr) return 'امروز';
+
+            let tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+            if (dbDateStr === getShamsiDate(tmrw).replace(/\//g, '-')) return 'فردا';
+
+            let dayAfter = new Date(); dayAfter.setDate(dayAfter.getDate() + 2);
+            if (dbDateStr === getShamsiDate(dayAfter).replace(/\//g, '-')) return 'پس‌فردا';
+
+            return dbDateStr.replace(/-/g, '/'); // حالت عادی
+        }
+
         async function loadRealDashboardData(phone) {
             try {
                 const response = await fetch(GAS_URL, {
@@ -520,6 +536,14 @@
                     currentUser = user; 
                     const pansion = res.pansion;
                     const consult = res.consult;
+                    
+                    // دریافت تمام رزروها از بک‌اند جدید
+                    globalUserPastReservations = res.daily_dates || []; 
+                    
+                    // پیدا کردن نزدیک‌ترین رزرو آینده
+                    let todayShamsi = getShamsiDate(new Date()).replace(/\//g, '-');
+                    let upcomingDates = globalUserPastReservations.filter(d => d >= todayShamsi).sort();
+                    let nextDaily = upcomingDates.length > 0 ? upcomingDates[0] : null;
 
                     document.getElementById('uiUserFullName').innerText = `سلام، ${user.full_name.split(' ')[0]} عزیز`;
                     document.getElementById('uiUserGradeMajor').innerText = `پایه ${user.grade || 'نامشخص'} (${user.major || 'نامشخص'})`;
@@ -535,6 +559,15 @@
                         document.getElementById('cardDaily').style.display = 'none';
                         document.getElementById('navDaily').style.display = 'none'; 
                     } else {
+                        if (nextDaily) {
+                            document.getElementById('badgeDaily').innerText = 'دارای رزرو';
+                            document.getElementById('badgeDaily').className = 'srv-badge';
+                            document.getElementById('dailyActiveData').style.display = 'block';
+                            document.getElementById('dailyInactiveData').style.display = 'none';
+                            
+                            // اعمال هوشمند تاریخ
+                            document.getElementById('uiNextDailyDate').innerText = getRelativeDayText(nextDaily);
+                        }
                         await initializeBookingEngine();
                     }
 
@@ -545,6 +578,7 @@
                         document.getElementById('consultInactiveData').style.display = 'none';
                         document.getElementById('uiConType').innerText = `طرح ${consult.service_type}`;
                     }
+
                 } else {
                     alert(res.error || 'خطا در دریافت اطلاعات کاربری.');
                     logout();
@@ -777,22 +811,20 @@
         // =====================================
         // تاریخچه رزرو (اصلاح شده با مقایسه متنی)
         // =====================================
-        async function openHistoryModal() {
+        function openHistoryModal() {
             document.getElementById('historyModal').style.display = 'flex';
             const container = document.getElementById('historyListContainer');
             
-            if(userPastReservations.length > 0) {
+            if(globalUserPastReservations.length > 0) {
                 let html = '';
-                let sortedPast = [...userPastReservations].sort().reverse(); // از جدید به قدیم
-                let todayShamsi = getShamsiDate(new Date()); 
+                let sortedPast = [...globalUserPastReservations].sort().reverse(); // از جدید به قدیم
+                let todayShamsi = getShamsiDate(new Date()).replace(/\//g, '-'); 
                 
                 sortedPast.forEach(dateStr => {
-                    // 🐛 بررسی ایمن با مقایسه رشته‌ای به جای Date
                     let isUpcoming = (dateStr >= todayShamsi);
-                    
                     html += `
                         <div class="history-item">
-                            <div class="history-date">${getSmartDateTextSafe(dateStr)}</div>
+                            <div class="history-date">${getRelativeDayText(dateStr)}</div>
                             <div class="history-status ${isUpcoming ? 'status-upcoming' : 'status-done'}">${isUpcoming ? 'در انتظار مراجعه' : 'استفاده شده'}</div>
                         </div>
                     `;
