@@ -289,10 +289,13 @@
                         </div>
                         <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
                     </div>
-                    <div class="wallet-action">
+                    <div class="wallet-action" style="display: flex; flex-direction: column; gap: 8px;">
                         <button class="btn-add-fund" onclick="switchView('view-finance', document.getElementById('navFinance'))">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             افزایش موجودی
+                        </button>
+                        <button id="btnWithdraw" class="btn-action" style="display: none; color: var(--danger); border-color: rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 16px; font-size: 11px; font-weight: bold; width: 100%; background: var(--glass-highlight);" onclick="openWithdrawModal()">
+                            برداشت وجه
                         </button>
                     </div>
                 </div>
