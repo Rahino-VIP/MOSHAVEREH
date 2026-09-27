@@ -379,12 +379,12 @@
                 const res = await fetchBackend({ action: 'login', phone_number: phone, password: pass });
                 toggleLoader(false);
 
-                if (res.success) {
-                    // ذخیره شماره موبایل برای استفاده در داشبورد
-                    localStorage.setItem('rahino_user_phone', phone);
-                    alert('ورود موفقیت‌آمیز بود!');
-                    // TODO: Redirect to app-dashboard.html
-                    // window.location.href = 'app-dashboard.html';
+                // داخل فایل auth.html - تابع submitLogin
+ if (res.success) {
+    // ذخیره شماره موبایل به عنوان کلید ورود
+    localStorage.setItem('rahino_user_phone', phone);
+    // پرش به صفحه داشبورد
+    window.location.href = 'app-dashboard.html';
                 } else {
                     alert(res.error);
                 }
