@@ -479,27 +479,23 @@
             }
         }
 
-        // تابع هوشمند برای یافتن تاریخ دیتابیس در داشبورد (رفع مشکل خط تیره در سوپابیس)
-        function getSmartDateText(dateStr) {
-            const target = new Date(dateStr.replace(/-/g, '/'));
-            target.setHours(0, 0, 0, 0);
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const diffTime = target - today;
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 0) return 'امروز';
-            if (diffDays === 1) return 'فردا';
-            if (diffDays === 2) return 'پس‌فردا';
-            if (diffDays < 0) return 'منقضی شده';
-
-            const options = { month: 'long', day: 'numeric' };
-            return target.toLocaleDateString('fa-IR', options);
+        function getMonthName(m) {
+            const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+            return months[parseInt(m, 10) - 1] || '';
         }
 
-        // دریافت دیتای زنده داشبورد هنگام ورود
+        // 🐛 نسخه ضد-کرش برای پیدا کردن "امروز" و "فردا" در تاریخ شمسی
+        function getSmartDateTextSafe(dateStr) {
+            const matched = window14Dates.find(w => w.date === dateStr);
+            if (matched) {
+                if (matched.diffDays === 0) return 'امروز';
+                if (matched.diffDays === 1) return 'فردا';
+                if (matched.diffDays === 2) return 'پس‌فردا';
+                return `${matched.dayName} (${matched.date.split('/')[2]} ${getMonthName(matched.date.split('/')[1])})`;
+            }
+            return dateStr;
+        }
+
         window.onload = async function() {
             const userPhone = localStorage.getItem('rahino_user_phone');
             if (!userPhone) { 
@@ -529,7 +525,6 @@
                     document.getElementById('uiUserGradeMajor').innerText = `پایه ${user.grade || 'نامشخص'} (${user.major || 'نامشخص'})`;
                     document.getElementById('uiWalletBalance').innerHTML = `${Number(user.wallet_balance || 0).toLocaleString()} <span>تومان</span>`;
 
-                    // مدیریت وضعیت داشبورد
                     if (pansion) {
                         document.getElementById('badgePansion').innerText = 'فعال';
                         document.getElementById('badgePansion').className = 'srv-badge';
@@ -540,7 +535,6 @@
                         document.getElementById('cardDaily').style.display = 'none';
                         document.getElementById('navDaily').style.display = 'none'; 
                     } else {
-                        // در صورت نداشتن پانسیون ماهانه، موتور رزرو روزانه را استارت می‌زنیم
                         await initializeBookingEngine();
                     }
 
@@ -580,7 +574,7 @@
             window14Dates = [];
             for(let i=0; i<14; i++) {
                 let d = new Date(); d.setDate(d.getDate() + i);
-                window14Dates.push({ date: getShamsiDate(d), dayName: getShamsiDayName(d) });
+                window14Dates.push({ date: getShamsiDate(d), dayName: getShamsiDayName(d), diffDays: i });
             }
 
             try {
@@ -592,14 +586,12 @@
                 
                 if (res.success) {
                     dailyCapacities = res.capacities;
-                    userPastReservations = res.past_reservations; // اینها فرمت اسلش (/) دارند
+                    userPastReservations = res.past_reservations; 
                     isFirstEver = res.is_first_ever;
                     
-                    // بررسی و روشن کردن کارت داشبورد رزرو روزانه بر اساس دیتای واقعی
                     let futureReservations = userPastReservations.filter(rDate => window14Dates.some(w => w.date === rDate));
                     
                     if (futureReservations.length > 0) {
-                        // سورت تاریخ‌ها برای پیدا کردن نزدیک‌ترین
                         futureReservations.sort();
                         let nextRes = futureReservations[0];
                         
@@ -607,14 +599,12 @@
                         document.getElementById('badgeDaily').className = 'srv-badge';
                         document.getElementById('dailyActiveData').style.display = 'block';
                         document.getElementById('dailyInactiveData').style.display = 'none';
-                        document.getElementById('uiNextDailyDate').innerText = getSmartDateText(nextRes);
+                        document.getElementById('uiNextDailyDate').innerText = getSmartDateTextSafe(nextRes);
                     }
 
                     renderCalendar();
                 }
-            } catch (e) {
-                console.error("خطا در بارگذاری تقویم");
-            }
+            } catch (e) { console.error("خطا در بارگذاری تقویم"); }
         }
 
         function renderCalendar() {
@@ -689,9 +679,7 @@
                     discountAmount = res.discount_value / 1000; 
                     updatePricing();
                     alert('کد تخفیف با موفقیت اعمال شد.');
-                } else {
-                    alert(res.error);
-                }
+                } else { alert(res.error); }
             } catch (e) {
                 document.getElementById('mainLoader').style.display = 'none';
                 alert('خطا در بررسی کد');
@@ -769,11 +757,7 @@
                     user_name: safeName
                 };
 
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const res = await response.json();
                 document.getElementById('mainLoader').style.display = 'none';
 
@@ -791,48 +775,35 @@
         }
 
         // =====================================
-        // تاریخچه رزرو
+        // تاریخچه رزرو (اصلاح شده با مقایسه متنی)
         // =====================================
         async function openHistoryModal() {
             document.getElementById('historyModal').style.display = 'flex';
             const container = document.getElementById('historyListContainer');
-            container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">در حال دریافت اطلاعات...</div>';
             
-            const userPhone = localStorage.getItem('rahino_user_phone');
-            try {
-                // شبیه‌سازی دریافت تاریخچه از بک‌اند برای زمانی که تابع آن نوشته شود
-                // (در بک‌اند یک تابع به نام get_daily_history نیاز داریم که آرایه‌های reserved_dates را به خط برگرداند)
-                if(userPastReservations.length > 0) {
-                    let html = '';
-                    // سورت نزولی
-                    let sortedPast = [...userPastReservations].sort().reverse();
+            if(userPastReservations.length > 0) {
+                let html = '';
+                let sortedPast = [...userPastReservations].sort().reverse(); // از جدید به قدیم
+                let todayShamsi = getShamsiDate(new Date()); 
+                
+                sortedPast.forEach(dateStr => {
+                    // 🐛 بررسی ایمن با مقایسه رشته‌ای به جای Date
+                    let isUpcoming = (dateStr >= todayShamsi);
                     
-                    sortedPast.forEach(dateStr => {
-                        let targetDate = new Date(dateStr.replace(/-/g, '/'));
-                        targetDate.setHours(0,0,0,0);
-                        let today = new Date(); today.setHours(0,0,0,0);
-                        
-                        let isUpcoming = targetDate >= today;
-                        
-                        html += `
-                            <div class="history-item">
-                                <div class="history-date">${getSmartDateText(dateStr)}</div>
-                                <div class="history-status ${isUpcoming ? 'status-upcoming' : 'status-done'}">${isUpcoming ? 'در انتظار مراجعه' : 'استفاده شده'}</div>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">تاریخچه‌ای یافت نشد.</div>';
-                }
-            } catch (error) {
-                container.innerHTML = '<div style="text-align: center; color: var(--danger); font-size: 13px; margin-top: 10px;">خطا در واکشی اطلاعات</div>';
+                    html += `
+                        <div class="history-item">
+                            <div class="history-date">${getSmartDateTextSafe(dateStr)}</div>
+                            <div class="history-status ${isUpcoming ? 'status-upcoming' : 'status-done'}">${isUpcoming ? 'در انتظار مراجعه' : 'استفاده شده'}</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">تاریخچه‌ای یافت نشد.</div>';
             }
         }
 
-        function closeHistoryModal() {
-            document.getElementById('historyModal').style.display = 'none';
-        }
+        function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
     </script>
 </body>
 </html>
