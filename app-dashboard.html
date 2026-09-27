@@ -2,8 +2,8 @@
 <html lang="fa" dir="rtl" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>پرتال جامع راهینو</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرتال جامع پانسیون راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <style>
         :root { 
@@ -57,7 +57,6 @@
         .wallet-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: var(--primary); opacity: 0.15; border-radius: 50%; filter: blur(30px); z-index: 0; pointer-events: none; }
         .wallet-info { position: relative; z-index: 1; }
         .wallet-label { font-size: 12px; color: var(--text-muted); font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
-        .wallet-label svg { width: 16px; height: 16px; stroke-width: 2.5; fill: none; stroke: currentColor; }
         .wallet-amount { font-size: 26px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
         .wallet-amount span { font-size: 12px; color: var(--primary); font-weight: 900; margin-right: 5px; }
         
@@ -72,7 +71,6 @@
         .status-card { padding: 22px; transition: var(--transition); }
         .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .srv-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-        .srv-title svg { width: 22px; height: 22px; color: var(--primary); stroke-width: 2; fill: none; stroke: currentColor; }
         
         .srv-badge { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; }
         .srv-badge.inactive { background: rgba(113, 128, 150, 0.2); color: var(--text-muted); border-color: rgba(113, 128, 150, 0.3); }
@@ -95,10 +93,7 @@
 
         .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 440px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; padding: 10px 0; border-radius: 20px; transition: var(--transition); flex: 1; position: relative; cursor: pointer; }
-        .nav-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: var(--transition); }
-        .nav-item span { font-size: 10px; font-weight: 900; opacity: 0; transform: translateY(5px); transition: var(--transition); position: absolute; bottom: -2px; }
         .nav-item.active { color: var(--primary); }
-        .nav-item.active svg { transform: translateY(-8px); stroke-width: 2.5; }
         .nav-item.active span { opacity: 1; transform: translateY(0); }
 
         .loader-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -117,6 +112,48 @@
         .history-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 8px; }
         .status-done { background: rgba(113, 128, 150, 0.1); color: var(--text-muted); border: 1px solid rgba(113, 128, 150, 0.3);}
         .status-upcoming { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3);}
+
+        /* استایل‌های رزرو روزانه */
+        .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
+        .cal-card { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); position: relative; user-select: none; }
+        .cal-card.available:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
+        .cal-card.selected { background: var(--primary-fade); border-color: var(--primary); color: var(--primary); }
+        .cal-card.selected::after { content: '✅'; position: absolute; top: -8px; right: -8px; font-size: 16px; background: var(--surface); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .cal-card.full { opacity: 0.4; cursor: not-allowed; border-color: var(--border); background: rgba(0, 0, 0, 0.05); }
+        .cal-card.past-booked { background: rgba(16, 185, 129, 0.05); border-color: var(--success); cursor: not-allowed; opacity: 0.8; }
+        .cal-day { font-size: 14px; font-weight: 900; margin-bottom: 6px; }
+        .cal-date { font-size: 11px; margin-bottom: 8px; color: var(--text-muted); }
+        .cal-cap { font-size: 11px; font-weight: bold; background: var(--bg-color); padding: 4px 8px; border-radius: 8px; display: inline-block; border: 1px solid var(--glass-border); }
+
+        .checkout-box { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .price-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 10px; color: var(--text-muted); }
+        .price-final { font-size: 24px; font-weight: 900; color: var(--success); margin-top: 15px; border-top: 1px dashed var(--glass-border); padding-top: 15px; text-align: left; }
+        
+        .payment-info { background: var(--primary-fade); border: 1px solid rgba(92, 184, 159, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 25px; text-align: center; }
+        .copy-btn { 
+            background: var(--glass-highlight); border: 1px dashed var(--primary); color: var(--primary);
+            border-radius: 12px; cursor: pointer; padding: 10px 24px; font-size: 13px; font-weight: bold;
+            transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            width: fit-content; margin: 0 auto;
+        }
+        .copy-btn:hover { background: var(--primary-fade); border-style: solid; transform: translateY(-2px); }
+        
+        .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--glass-border); padding: 30px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 20px; background: var(--glass-highlight); transition: var(--transition); }
+        .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
+        .file-upload input { display: none; }
+        
+        .rules-container { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 25px; overflow: hidden; }
+        .rules-scroll-box { max-height: 120px; overflow-y: auto; padding: 15px 20px; font-size: 12px; color: var(--text-muted); line-height: 2; text-align: justify; }
+        .rules-checkbox-label { display: flex; gap: 12px; align-items: center; padding: 15px 20px; background: rgba(239, 68, 68, 0.05); border-top: 1px solid rgba(239, 68, 68, 0.1); font-size: 12px; cursor: pointer; color: var(--danger); font-weight: bold; transition: var(--transition); }
+        .rules-checkbox-label:hover { background: rgba(239, 68, 68, 0.1); }
+        .rules-checkbox-label input { accent-color: var(--danger); width: 18px; height: 18px; cursor: pointer; }
+        
+        .form-group { margin-bottom: 22px; }
+        .form-input { width: 100%; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); text-align: center; font-weight: bold; }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -131,7 +168,7 @@
         <header class="app-header">
             <div class="user-greeting">
                 <div class="avatar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    👤
                 </div>
                 <div class="greeting-text">
                     <h2 id="uiUserFullName">...</h2>
@@ -139,11 +176,11 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="icon-btn glass-panel" onclick="toggleTheme()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <button class="icon-btn glass-panel" onclick="toggleTheme()" title="تغییر تم">
+                    🌗
                 </button>
-                <button class="icon-btn glass-panel" onclick="logout()" style="border-color: rgba(239, 68, 68, 0.3); color: var(--danger);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <button class="icon-btn glass-panel" onclick="logout()" title="خروج از حساب" style="border-color: rgba(239, 68, 68, 0.3); color: var(--danger);">
+                    🚪
                 </button>
             </div>
         </header>
@@ -153,17 +190,11 @@
             <div id="view-dashboard" class="view-section active">
                 <div class="wallet-card glass-panel">
                     <div class="wallet-info">
-                        <div class="wallet-label">
-                            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                            موجودی کیف پول شما
-                        </div>
+                        <div class="wallet-label">موجودی کیف پول شما</div>
                         <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
                     </div>
                     <div class="wallet-action">
-                        <button class="btn-add-fund" onclick="switchView('view-finance', document.getElementById('navFinance'))">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            افزایش موجودی
-                        </button>
+                        <button class="btn-add-fund" onclick="switchView('view-finance', document.getElementById('navFinance'))">افزایش موجودی</button>
                     </div>
                 </div>
 
@@ -173,10 +204,7 @@
                     
                     <div class="status-card glass-panel full-width" id="cardDaily">
                         <div class="status-header">
-                            <div class="srv-title">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                رزروهای روزانه
-                            </div>
+                            <div class="srv-title">رزروهای روزانه</div>
                             <div class="srv-badge inactive" id="badgeDaily">بدون رزرو</div>
                         </div>
 
@@ -204,10 +232,7 @@
 
                     <div class="status-card glass-panel" id="cardPansion">
                         <div class="status-header">
-                            <div class="srv-title">
-                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                پانسیون ماهانه
-                            </div>
+                            <div class="srv-title">پانسیون ماهانه</div>
                             <div class="srv-badge inactive" id="badgePansion">غیرفعال</div>
                         </div>
                         
@@ -238,10 +263,7 @@
 
                     <div class="status-card glass-panel" id="cardConsult">
                         <div class="status-header">
-                            <div class="srv-title">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                                مشاوره قطب‌نما
-                            </div>
+                            <div class="srv-title">مشاوره قطب‌نما</div>
                             <div class="srv-badge inactive" id="badgeConsult">غیرفعال</div>
                         </div>
 
@@ -255,6 +277,9 @@
                                     <span class="detail-label">انقضا:</span>
                                     <span class="detail-val" id="uiConDays" style="color: var(--text-main);">--</span>
                                 </div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-action primary">تمدید سریع</button>
                             </div>
                         </div>
 
@@ -273,7 +298,64 @@
 
             <div id="view-daily" class="view-section">
                 <div class="section-title">تقویم رزرو روزانه</div>
-                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش رزرو روزانه در حال آماده سازی است...</div>
+                
+                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; text-align: center; font-weight: bold;">روزهای مورد نظر خود را در بازه ۱۴ روز آینده انتخاب کنید:</div>
+                
+                <div class="calendar-grid" id="calendarGrid"></div>
+
+                <div class="checkout-box">
+                    <div class="price-row"><span>روزهای انتخاب شده (جدید):</span><strong id="newDaysCountTxt">0 روز</strong></div>
+                    <div class="price-row"><span>تعداد روزهای قبلی شما در این بازه:</span><strong id="pastDaysCountTxt" style="color: var(--primary);">0 روز</strong></div>
+                    <div class="price-row"><span>هزینه پایه (هر روز):</span><strong id="rateAppliedTxt">0 تومان</strong></div>
+                    
+                    <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                        <input type="text" id="discountCode" class="form-input" placeholder="کد تخفیف (در صورت وجود)" style="padding: 10px; font-size: 13px; margin-bottom: 5px;">
+                        <button class="btn btn-action" style="padding: 10px;" onclick="applyDiscount()">اعمال کد تخفیف</button>
+                    </div>
+                    
+                    <div id="discountNotice" style="color: var(--warning); font-size: 12px; font-weight: bold; margin-top: 5px; text-align: right;"></div>
+                    <div class="price-final"><span style="color: var(--text-main); font-size: 16px;">مبلغ کل پرداخت: </span><span id="finalPriceTxt">0</span> <span style="font-size: 14px; color: var(--text-muted);">تومان</span></div>
+                </div>
+
+                <div class="payment-info">
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">لطفاً مبلغ فوق را به شماره کارت زیر واریز نمایید:</div>
+                    <div style="font-size: 26px; font-weight: 900; color: var(--text-main); letter-spacing: 3px; margin-bottom: 5px; font-family: monospace;" id="cardNumber">6219861810380484</div>
+                    <div style="font-size: 14px; color: var(--text-muted); font-weight: bold; margin-bottom: 18px;">به نام: <span style="color: var(--primary);">ارشاد شفیعی</span></div>
+                    <button class="copy-btn" onclick="copyCard()" id="btnCopyCard">📋 کپی شماره کارت</button>
+                </div>
+
+                <label class="file-upload" id="uploadBox">
+                    <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
+                    <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
+                </label>
+
+                <div class="rules-container">
+                    <div class="rules-scroll-box">
+                        <strong style="color: var(--primary); font-size: 13px;">قوانین انضباطی و محیطی سالن مطالعه راهینو:</strong>
+                        <ul style="padding-right: 18px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; list-style-type: disc;">
+                            <li>امکان بازگشت وجه پس از ثبت رزرو وجود ندارد.</li>
+                            <li>فیش واریزی باید متعلق به همین تراکنش باشد.</li>
+                            <li>حفظ سکوت و آرامش، رعایت اخلاق و حرمت‌های اجتماعی، احترام به حقوق دیگران و برخورد مناسب با مسئولین و سایر دانش‌آموزان الزامی است.</li>
+                            <li>در تایم‌های مطالعه، هرگونه پیاده‌روی بی‌مورد، مراجعه به میز دیگران برای صحبت، و پچ‌پچ کردن اکیداً ممنوع است.</li>
+                            <li>استفاده از تلفن همراه در بخش‌های مختلف سالن مطالعه ممنوع می‌باشد.</li>
+                            <li>صرف غذا تنها در تایم‌های مشخص‌شده برای ناهار و صرفاً در بخش‌های مجاز (آشپزخانه یا چیل‌زون) امکان‌پذیر است.</li>
+                            <li>تمامی دانش‌آموزان موظفند در اپلیکیشن بوفه ثبت‌نام نموده و کلیه خریدهای خوراکی خود را منحصراً از طریق این پلتفرم انجام دهند.</li>
+                            <li>حفظ نظم و پاکیزگی سالن الزامی است و دانش‌آموزان باید قبل از خروج، میز خود را کاملاً مرتب کرده و زباله‌هایشان را جمع‌آوری نمایند.</li>
+                            <li>از آوردن وسایل زینتی و قیمتی خودداری شود؛ مؤسسه هیچ‌گونه مسئولیتی در قبال مفقودی اشیاء قیمتی، طلا و پول دانش‌آموز ندارد.</li>
+                            <li>چنانچه دانش‌آموز به اموال سالن خسارتی وارد کند، موظف است هزینه خسارت وارده را شخصاً پرداخت نماید.</li>
+                            <li>پس از خروج دانش‌آموز از مجموعه، مسئولیت هرگونه اتفاق و رفت‌وآمد بر عهده اولیا می‌باشد.</li>
+                            <li>بروز حوادث ناشی از بی‌احتیاطی (مانند سوختگی با آب جوش یا شوخی‌های پرخطر) از کنترل سرپرستان خارج بوده و مؤسسه مسئولیتی جز تذکر یا اخراج فرد مخل نظم نخواهد داشت.</li>
+                            <li style="color: var(--danger); font-weight: bold;">در صورت عدم رعایت هر یک از قوانین فوق و دریافت تذکرهای مداوم از سوی سرپرستان، بدون هیچ‌گونه تعارفی از ادامه حضور شخص متخلف در پانسیون جلوگیری به عمل خواهد آمد.</li>
+                        </ul>
+                    </div>
+                    <label class="rules-checkbox-label">
+                        <input type="checkbox" id="rulesCheckbox">
+                        <span>تمام قوانین فوق را خوانده و می‌پذیرم. (تخلف = لغو دسترسی)</span>
+                    </label>
+                </div>
+
+                <button class="btn btn-primary" id="btnSubmitBooking" onclick="submitBooking()" disabled>تایید نهایی و رزرو قطعی 🔒</button>
             </div>
 
             <div id="view-monthly" class="view-section">
@@ -294,26 +376,11 @@
         </main>
 
         <nav class="bottom-nav glass-panel">
-            <div class="nav-item active" id="navDashboard" onclick="switchView('view-dashboard', this)">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                <span>داشبورد</span>
-            </div>
-            <div class="nav-item" id="navDaily" onclick="switchView('view-daily', this)">
-                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span>رزرو روزانه</span>
-            </div>
-            <div class="nav-item" id="navMonthly" onclick="switchView('view-monthly', this)">
-                <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                <span>رزرو ماهانه</span>
-            </div>
-            <div class="nav-item" id="navFinance" onclick="switchView('view-finance', this)">
-                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                <span>امور مالی</span>
-            </div>
-            <div class="nav-item" id="navProfile" onclick="switchView('view-profile', this)">
-                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <span>پروفایل</span>
-            </div>
+            <div class="nav-item active" id="navDashboard" onclick="switchView('view-dashboard', this)"><span>داشبورد</span></div>
+            <div class="nav-item" id="navDaily" onclick="switchView('view-daily', this)"><span>رزرو روزانه</span></div>
+            <div class="nav-item" id="navMonthly" onclick="switchView('view-monthly', this)"><span>رزرو ماهانه</span></div>
+            <div class="nav-item" id="navFinance" onclick="switchView('view-finance', this)"><span>امور مالی</span></div>
+            <div class="nav-item" id="navProfile" onclick="switchView('view-profile', this)"><span>پروفایل</span></div>
         </nav>
 
     </div>
@@ -321,22 +388,27 @@
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    تاریخچه رزروهای روزانه
-                </div>
-                <button class="close-btn" onclick="closeHistoryModal()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <div class="modal-title">تاریخچه رزروهای روزانه</div>
+                <button class="close-btn" onclick="closeHistoryModal()">X</button>
             </div>
-            <div class="history-list" id="historyListContainer">
-                <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">در حال دریافت اطلاعات...</div>
-            </div>
+            <div class="history-list" id="historyListContainer"></div>
         </div>
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
+
+        let currentUser = null; 
+        let window14Dates = []; 
+        let dailyCapacities = {};
+        let userPastReservations = []; 
+        let selectedNewDates = []; 
+        let isFirstEver = false;
+        let finalAmountToPay = 0; 
+        let base64Image = "";
+        let appliedDiscountCode = "";
+        let discountAmount = 0;
+        const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
         function toggleTheme() {
             const html = document.documentElement;
@@ -443,6 +515,7 @@
 
                 if (res.success) {
                     const user = res.user;
+                    currentUser = user; 
                     const pansion = res.pansion;
                     const consult = res.consult;
                     const nextDaily = res.next_daily_date;
@@ -459,6 +532,7 @@
                         document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
                         
                         document.getElementById('cardDaily').style.display = 'none';
+                        document.getElementById('navDaily').style.display = 'none'; 
                     } else {
                         if (nextDaily) {
                             document.getElementById('badgeDaily').innerText = 'دارای رزرو';
@@ -467,6 +541,7 @@
                             document.getElementById('dailyInactiveData').style.display = 'none';
                             document.getElementById('uiNextDailyDate').innerText = getSmartDateText(nextDaily);
                         }
+                        await initializeBookingEngine();
                     }
 
                     if (consult) {
@@ -484,6 +559,209 @@
             } catch (error) {
                 document.getElementById('mainLoader').style.display = 'none';
                 alert('خطا در ارتباط با سرور. لطفاً اینترنت خود را بررسی کنید.');
+            }
+        }
+
+        /* --- توابع رزرو روزانه --- */
+        function getShamsiDate(dateObj) { 
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}/${m}/${d}`;
+        }
+        function getShamsiDayName(dateObj) { 
+            const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(dateObj);
+            return parts.find(p => p.type === 'weekday').value;
+        }
+
+        async function initializeBookingEngine() {
+            window14Dates = [];
+            for(let i=0; i<14; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                window14Dates.push({ date: getShamsiDate(d), dayName: getShamsiDayName(d) });
+            }
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'get_daily_capacities', phone_number: currentUser.phone_number, dates: window14Dates.map(d => d.date) })
+                });
+                const res = await response.json();
+                
+                if (res.success) {
+                    dailyCapacities = res.capacities;
+                    userPastReservations = res.past_reservations;
+                    isFirstEver = res.is_first_ever;
+                    renderCalendar();
+                }
+            } catch (e) {
+                console.error("خطا در بارگذاری تقویم", e);
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid'); grid.innerHTML = ''; selectedNewDates = [];
+            window14Dates.forEach(d => {
+                let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; 
+                let available = capInfo.available_capacity;
+                let isPastBooked = userPastReservations.includes(d.date);
+                
+                let cardClass = 'cal-card'; let onclickEvent = ''; let statusText = `${available} ظرفیت خالی`;
+
+                if (isPastBooked) { cardClass += ' past-booked'; statusText = 'رزرو شما ✅'; } 
+                else if (available <= 0) { cardClass += ' full'; statusText = 'تکمیل ❌'; } 
+                else { cardClass += ' available'; onclickEvent = `onclick="toggleDate('${d.date}', this)"`; }
+
+                grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${d.date.substring(5)}</div><div class="cal-cap">${statusText}</div></div>`;
+            });
+            updatePricing();
+        }
+
+        function toggleDate(dateStr, element) {
+            if(element.classList.contains('selected')) { element.classList.remove('selected'); selectedNewDates = selectedNewDates.filter(d => d !== dateStr); } 
+            else { element.classList.add('selected'); selectedNewDates.push(dateStr); }
+            updatePricing(); validateSubmitButton();
+        }
+
+        function updatePricing() {
+            let activeBookedDays = userPastReservations.length; 
+            let newSelectedDays = selectedNewDates.length;
+            let totalD = activeBookedDays + newSelectedDays;
+            let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
+            
+            let payableAmount = newSelectedDays * applicableRate; 
+            let discountMsg = "";
+
+            if (isFirstEver && newSelectedDays > 0) { 
+                payableAmount -= 50; 
+                discountMsg = "🎁 ۵۰ هزار تومان تخفیف اولین ورود اعمال شد!"; 
+            } else if (activeBookedDays > 0 && newSelectedDays > 0) { 
+                discountMsg = `🎉 به دلیل رزروهای قبلی، روزهای جدید با تخفیف محاسبه شد!`; 
+            }
+
+            if (discountAmount > 0) {
+                payableAmount -= discountAmount;
+                discountMsg += `\n💰 ${discountAmount} هزار تومان تخفیف کد اعمال شد.`;
+            }
+
+            finalAmountToPay = payableAmount > 0 ? payableAmount * 1000 : 0;
+            
+            document.getElementById('newDaysCountTxt').innerText = `${newSelectedDays} روز`;
+            document.getElementById('pastDaysCountTxt').innerText = `${activeBookedDays} روز`;
+            document.getElementById('rateAppliedTxt').innerText = `${applicableRate} هزار تومان`;
+            document.getElementById('finalPriceTxt').innerText = finalAmountToPay.toLocaleString();
+            document.getElementById('discountNotice').innerText = discountMsg;
+        }
+
+        async function applyDiscount() {
+            const code = document.getElementById('discountCode').value.trim().toUpperCase();
+            if(!code) return;
+            
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'check_discount', code: code, phone_number: currentUser.phone_number, type: 'daily' })
+                });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) {
+                    appliedDiscountCode = code;
+                    discountAmount = res.discount_value; // مبلغ به هزار تومان
+                    updatePricing();
+                    alert('کد تخفیف اعمال شد.');
+                } else {
+                    alert(res.error);
+                }
+            } catch (e) {
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطا در بررسی کد تخفیف');
+            }
+        }
+
+        function copyCard() {
+            navigator.clipboard.writeText('6219861810380484').then(() => {
+                const btn = document.getElementById('btnCopyCard');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ کپی شد!';
+                btn.style.background = 'var(--success)';
+                btn.style.color = 'white';
+                btn.style.borderColor = 'var(--success)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = 'var(--glass-highlight)';
+                    btn.style.color = 'var(--primary)';
+                    btn.style.borderColor = 'var(--primary)';
+                }, 2000);
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('uploadText').innerText = `⏳ در حال بهینه‌سازی فایل...`;
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        const MAX = 1000;
+                        if(w > h && w > MAX) { h *= MAX/w; w = MAX; }
+                        else if(h > MAX) { w *= MAX/h; h = MAX; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        
+                        base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                        document.getElementById('uploadText').innerText = `✅ فایل آماده شد: ${file.name}`;
+                        document.getElementById('uploadBox').style.borderColor = "var(--success)";
+                        document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
+                        validateSubmitButton();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('rulesCheckbox').addEventListener('change', validateSubmitButton);
+        function validateSubmitButton() { document.getElementById('btnSubmitBooking').disabled = !(selectedNewDates.length > 0 && base64Image && document.getElementById('rulesCheckbox').checked); }
+
+        async function submitBooking() {
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('loaderTxt').innerText = 'در حال ثبت رزرو و ارسال فیش...';
+            try {
+                const payload = {
+                    action: 'submit_daily_booking',
+                    phone_number: currentUser.phone_number,
+                    dates: selectedNewDates,
+                    amount: finalAmountToPay,
+                    receipt_base64: base64Image,
+                    discount_code: appliedDiscountCode,
+                    user_name: currentUser.full_name
+                };
+
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) {
+                    alert('🎉 رزرو شما با موفقیت قطعی شد.\nرسید به ربات بله ارسال گردید.');
+                    window.location.reload(); 
+                } else {
+                    alert(res.error || 'خطا در ثبت رزرو');
+                    await initializeBookingEngine(); // رفرش ظرفیت ها
+                }
+            } catch (e) { 
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطای ثبت نهایی:\n' + e.message); 
             }
         }
     </script>
