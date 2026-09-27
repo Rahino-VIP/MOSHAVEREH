@@ -26,6 +26,8 @@
         }
 
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        /* 🐛 رفع مشکل سیاه شدن آیکون‌ها */
+        svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
         
         body { 
             background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%);
@@ -699,7 +701,9 @@
             window14Dates = [];
             for(let i=0; i<14; i++) {
                 let d = new Date(); d.setDate(d.getDate() + i);
-                window14Dates.push({ date: getShamsiDateSafe(d), dayName: getShamsiDayName(d) });
+                const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(d);
+                let dayName = parts.find(p => p.type === 'weekday').value;
+                window14Dates.push({ date: getShamsiDateSafe(d), dayName: dayName });
             }
 
             try {
@@ -711,9 +715,14 @@
                 
                 if (res.success) {
                     dailyCapacities = res.capacities;
-                    // یکسان سازی فرمت تاریخ ها به خط تیره
-                    userPastReservations = res.past_reservations.map(d => d.replace(/\//g, '-')); 
-                    isFirstEver = res.is_first_ever;
+                    
+                    // 🐛 راه حل قطعی: استفاده از همان دیتای بی‌نقص داشبورد (که تاریخچه را درست کرد)
+                    // فقط روزهایی را جدا می‌کنیم که در بازه ۱۴ روز آینده هستند
+                    userPastReservations = globalUserPastReservations.filter(rDate => window14Dates.some(w => w.date === rDate));
+                    
+                    // اگر کاربر در کل دیتابیس هیچ رزروی نداشته باشد، اولین ورود است
+                    isFirstEver = (globalUserPastReservations.length === 0);
+                    
                     renderCalendar();
                 }
             } catch (e) {
