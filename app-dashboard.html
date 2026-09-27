@@ -394,42 +394,9 @@
         window.onload = async function() {
             // برای تست اگر کدی نبود مستقیماً صفحه رو نشون بده (شبیه‌سازی)
             // در محیط واقعی کامنت خط زیر را بردارید:
-            // const userPhone = localStorage.getItem('rahino_user_phone');
-            // if (!userPhone) { window.location.href = 'auth.html'; return; }
+            const userPhone = localStorage.getItem('rahino_user_phone');
+            if (!userPhone) { window.location.href = 'auth.html'; return; }
             
-            // شبیه‌سازی درخواست به گوگل اسکریپت برای پر کردن داشبورد
-            simulateDashboardLoad();
-        };
-
-        // این تابع شبیه‌ساز را بعد از راه‌اندازی کامل بک‌اند با تابع fetch جایگزین می‌کنیم
-        function simulateDashboardLoad() {
-            setTimeout(() => {
-                document.getElementById('mainLoader').style.display = 'none';
-
-                // نام و کیف پول
-                document.getElementById('uiUserFullName').innerText = 'سلام، ارشاد عزیز';
-                document.getElementById('uiUserGradeMajor').innerText = 'پایه دوازدهم (ریاضی)';
-                document.getElementById('uiWalletBalance').innerHTML = `۲,۵۰۰,۰۰۰ <span>تومان</span>`;
-
-                // روشن کردن کارت رزرو روزانه
-                // باگ‌گیری از دیتابیس pan_reservations
-                document.getElementById('badgeDaily').innerText = 'دارای رزرو';
-                document.getElementById('badgeDaily').className = 'srv-badge';
-                document.getElementById('dailyActiveData').style.display = 'block';
-                document.getElementById('dailyInactiveData').style.display = 'none';
-                document.getElementById('uiNextDailyDate').innerText = 'فردا (۲۸ مهر)';
-
-                // روشن کردن کارت پانسیون ماهانه
-                document.getElementById('badgePansion').innerText = 'فعال';
-                document.getElementById('badgePansion').className = 'srv-badge';
-                document.getElementById('pansionActiveData').style.display = 'block';
-                document.getElementById('pansionInactiveData').style.display = 'none';
-                document.getElementById('uiPanType').innerText = 'طرح VIP';
-                document.getElementById('uiPanDays').innerText = '۱۲ روز دیگر';
-
-            }, 800);
-        }
-
         // انیمیشن منوی پایین
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
