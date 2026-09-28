@@ -966,7 +966,8 @@
                 } else { alert(res.error); }
             } catch (e) { 
                 document.getElementById('mainLoader').style.display = 'none';
-                alert('خطا در ارتباط با سرور'); 
+                alert('خطا در ارتباط با سرور: \n' + e.message);
+                console.error(e);
             }
         }
 
@@ -1024,7 +1025,8 @@
                 } else { alert(res.error); }
             } catch (e) { 
                 document.getElementById('mainLoader').style.display = 'none';
-                alert('خطا در ارسال فیش'); 
+                alert('خطا در ارسال فیش: \n' + e.message); 
+                console.error(e);
             }
         }
 
@@ -1146,7 +1148,8 @@
                 }
             } catch (error) {
                 document.getElementById('mainLoader').style.display = 'none';
-                alert('خطا در ارتباط با سرور.');
+                alert('خطا در ارتباط با سرور: \n' + error.message);
+                console.error(error);
             }
         }
 
@@ -1309,7 +1312,8 @@
                 }
             } catch (e) {
                 document.getElementById('mainLoader').style.display = 'none';
-                alert('خطا در بررسی کد');
+                alert('خطا در بررسی کد: \n' + e.message);
+                console.error(e);
             }
         }
 
@@ -1407,7 +1411,8 @@
                 }
             } catch (e) { 
                 document.getElementById('mainLoader').style.display = 'none';
-                alert('خطای ارتباط با سرور.'); 
+                alert('خطای ارتباط با سرور: \n' + e.message); 
+                console.error(e);
             }
         }
 
