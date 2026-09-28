@@ -854,8 +854,49 @@
             document.getElementById('btnSubmitMonthly').disabled = (monState.receiptBase64 === "");
         }
 
-        function submitMonthly() {
-            alert('طراحی فرانت‌اند با موفقیت انجام شد. فاکتور، تاریخ‌ها و فیش آماده ارسال به بک‌اند هستند.');
+        async function submitMonthly() {
+            document.getElementById('mainLoader').style.display = 'flex';
+            
+            // محاسبه هوشمند تاریخ پایان قرارداد
+            let durationVal = document.getElementById('monDuration').value;
+            let duration = durationVal === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(durationVal);
+            let txType = document.getElementById('monTxType').value;
+            let baseDateStr = txType === 'new' ? document.getElementById('monStartDate').value : document.getElementById('monRenewBaseDate').value;
+            let endDateStr = addMonthsJS(baseDateStr, duration);
+
+            try {
+                const payload = {
+                    action: 'submit_monthly_booking',
+                    tx_type: txType,
+                    phone_number: currentUser.phone_number,
+                    user_name: currentUser.full_name,
+                    plan_type: monState.planType,
+                    duration_months: duration,
+                    start_date: baseDateStr,
+                    end_date: endDateStr,
+                    total_base: monFinance.totalBase,
+                    discount: monFinance.discount,
+                    final_price: monFinance.finalPrice,
+                    upfront: monFinance.upfront,
+                    pay_method: document.getElementById('monPayMethod').value,
+                    receipt_base64: monState.receiptBase64,
+                    installments: monFinance.installments
+                };
+
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) {
+                    alert('🎉 قرارداد شما با موفقیت ثبت شد.\nرسید و جزئیات اقساط فعال گردید.');
+                    window.location.reload(); 
+                } else {
+                    alert(res.error || 'خطا در ثبت قرارداد.');
+                }
+            } catch (e) { 
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطا در ارتباط با سرور.'); 
+            }
         }
 
         // 🌗 تم سیستم
