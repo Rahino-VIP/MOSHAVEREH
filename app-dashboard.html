@@ -243,6 +243,31 @@
         .wallet-label svg { width: 18px !important; height: 18px !important; }
         .srv-title svg { width: 24px !important; height: 24px !important; flex-shrink: 0; }
         .bottom-nav .nav-item svg { width: 24px !important; height: 24px !important; margin-bottom: 2px; }
+
+        /* 💎 استایل‌های درگاه اشتراک (Gateway) */
+        .gateway-card { background: linear-gradient(135deg, #f0b2b6 0%, #d9858a 100%); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(217, 133, 138, 0.2); }
+        .gateway-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        .gw-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; position: relative; z-index: 1; }
+        .gw-status { background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px; color: white; }
+        .gw-title { font-size: 26px; font-weight: 900; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); direction: ltr; text-align: right;}
+        .gw-progress-container { background: rgba(0,0,0,0.15); padding: 15px; border-radius: 12px; position: relative; z-index: 1; }
+        .gw-progress-texts { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 10px; color: white;}
+        .progress-track { height: 6px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; direction: rtl;}
+        .progress-fill { height: 100%; background: #10b981; border-radius: 4px; transition: width 1s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);}
+        
+        .dashed-add-box { border: 2px dashed rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; text-align: center; color: var(--text-muted); font-weight: bold; font-size: 15px; margin-bottom: 25px; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: var(--transition); }
+        .dashed-add-box:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-fade); }
+        
+        .btn-gw { display: block; width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; transition: var(--transition); text-align: center; margin-bottom: 15px; color: white; }
+        .btn-gw.store { background: var(--primary); box-shadow: 0 8px 20px var(--primary-fade); }
+        .btn-gw.store:hover { transform: translateY(-2px); background: var(--primary-hover); }
+        .btn-gw.trade { background: var(--accent); box-shadow: 0 8px 20px var(--accent-fade); }
+        .btn-gw.trade:hover { transform: translateY(-2px); background: var(--accent-hover); }
+        
+        /* کارت‌های طرح‌های ثبت نام جدید */
+        .plan-cards-premium { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .plan-card-pro { background: var(--glass-highlight); border: 2px solid var(--glass-border); border-radius: 20px; padding: 20px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center; }
+        .plan-card-pro:hover { border-color: var(--primary); transform: translateY(-3px); }
     </style>
 </head>
 <body>
@@ -469,83 +494,40 @@
             <!-- ===============================
                  سایر بخش‌ها (آینده)
             ================================ -->
-            <!-- SECTION: MONTHLY BOOKING -->
+            <!-- SECTION: MONTHLY BOOKING (GATEWAY) -->
             <div id="view-monthly" class="view-section">
-                <div class="section-title" style="margin-bottom: 5px;">رزرو و تمدید ماهانه پانسیون</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; font-weight: bold;">طرح اختصاصی خود را با امکان پرداخت منعطف انتخاب کنید.</div>
-                
-                <div class="status-card glass-panel" style="margin-bottom: 20px; padding: 15px;">
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">نوع تراکنش شما:</label>
-                        <select id="monTxType" class="form-input" onchange="updateMonthlyForm()" style="padding: 12px; font-size: 13px;">
-                            <option value="new">ثبت‌نام جدید (بدون میز فعال)</option>
-                            <option value="renew">تمدید قرارداد فعلی</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="monStartDateGroup" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px; display: block;">📅 تاریخ شروع قرارداد:</label>
-                        <select id="monStartDate" class="form-input" onchange="calculateMonthly()" style="padding: 12px; font-size: 13px;"></select>
-                    </div>
-
-                    <div class="form-group" id="monRenewDateGroup" style="display: none; margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: bold; color: var(--warning); margin-bottom: 8px; display: block;">⏳ شروع تمدید (پس از پایان قرارداد فعلی):</label>
-                        <input type="text" id="monRenewBaseDate" class="form-input" readonly style="padding: 12px; font-size: 13px; background: rgba(0,0,0,0.05); color: var(--text-muted);">
-                    </div>
+                <div class="header-title" style="display:flex; justify-content:center; align-items:center; position:relative; margin-bottom: 30px;">
+                    <h1 style="font-size: 20px; font-weight: 900; color: var(--primary);">پروفایل و اشتراک من</h1>
                 </div>
 
-                <div class="section-title">انتخاب طرح و مدت زمان</div>
-                <div class="selection-grid" id="monPlanGrid">
-                    <div class="option-card selected" id="card_vip" onclick="selectMonthlyPlan('vip', 3600000)">
-                        <div class="opt-badge" style="background:var(--primary); position:absolute; top:0; right:15px; color:white; padding:3px 10px; border-radius:0 0 8px 8px; font-size:10px; font-weight:bold;">محبوب‌ترین</div>
-                        <div class="opt-title" style="font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; margin-top: 10px;">طرح VIP</div>
-                        <div class="opt-price" style="font-size: 14px; color: var(--primary); font-weight: bold;">۳,۶۰۰,۰۰۰ <span style="font-size:10px;color:var(--text-muted);">/ ماه</span></div>
+                <div id="activeSubGateway" style="display: none;">
+                    <div style="font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; display:flex; align-items:center; gap:5px;">
+                        اشتراک‌های فعال شما 💎
                     </div>
-                    <div class="option-card" id="card_cip" onclick="selectMonthlyPlan('cip', 4400000)">
-                        <div class="opt-title" style="font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; margin-top: 10px;">طرح CIP (اتاق ۴ نفره)</div>
-                        <div class="opt-price" style="font-size: 14px; color: var(--primary); font-weight: bold;">۴,۴۰۰,۰۰۰ <span style="font-size:10px;color:var(--text-muted);">/ ماه</span></div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">مدت قرارداد:</label>
-                        <select id="monDuration" class="form-input" onchange="calculateMonthly()" style="padding: 12px; font-size: 13px;">
-                            <option value="1">۱ ماهه</option>
-                            <option value="3">۳ ماهه</option>
-                            <option value="konkur">تا کنکور</option>
-                        </select>
-                    </div>
-                    <div style="flex: 1.5;">
-                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">نحوه پرداخت:</label>
-                        <select id="monPayMethod" class="form-input" onchange="calculateMonthly()" style="padding: 12px; font-size: 13px;">
-                            <option value="cash">نقدی (تخفیف کامل)</option>
-                            <option value="monthly">اقساط ماهانه</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="checkout-box" style="margin-bottom: 25px;">
-                    <h3 style="color: var(--primary); font-size: 14px; margin-bottom: 15px; text-align: center;">🧾 فاکتور قرارداد</h3>
-                    <div class="price-row"><span>مبلغ پایه:</span><strong id="monLblBase">0 تومان</strong></div>
-                    <div class="price-row" style="color: var(--success);"><span>سود شما (تخفیف):</span><strong id="monLblDisc">0 تومان</strong></div>
-                    <div class="price-final"><span style="color: var(--text-main); font-size: 14px;">مبلغ نهایی قرارداد: </span><span id="monLblFinal">0</span> <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
                     
-                    <div style="background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.4); padding: 15px; border-radius: 12px; margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; color: var(--danger); margin-bottom: 10px;">
-                            <span>پرداخت آنی (پیش‌پرداخت):</span><span id="monLblUpfront">0 تومان</span>
-                        </div>
-                        <div id="monInstList" style="font-size: 12px; color: var(--text-muted); line-height: 1.8;"></div>
+                    <div id="gwCardContainer">
+                        
                     </div>
+                    
+                    <div class="dashed-add-box" onclick="alert('در آپدیت بعدی فرم فروشگاه باز می‌شود.')">
+                        <span style="font-size: 24px; color: #a855f7;">+</span> افزودن طرح مشاوره به اکانت
+                    </div>
+
+                    <button class="btn-gw store" onclick="alert('انتقال به بخش تمدید و خرید جدید...')">🛒 ورود به فروشگاه (تمدید و خرید طرح جدید)</button>
+                    <button class="btn-gw trade" onclick="alert('انتقال به بخش تعویض و ارتقا...')">🔄 تعویض و ارتقای طرح (Trade-in)</button>
                 </div>
 
-                <label class="file-upload" id="monUploadBox">
-                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش پیش‌پرداخت را آپلود کنید</div>
-                    <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
-                </label>
-
-                <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
+                <div id="noSubGateway" style="display: none;">
+                    <div class="dashed-add-box" style="border-color: var(--primary); color: var(--primary); background: var(--primary-fade); cursor: default;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        شما هنوز میز اختصاصی رزرو نکرده‌اید
+                    </div>
+                    <div class="section-title">👑 طرح‌های پانسیون (ثبت‌نام جدید)</div>
+                    
+                    <div class="plan-cards-premium" id="newPlansContainer">
+                        
+                    </div>
+                </div>
             </div>
             
             <div id="view-finance" class="view-section">
@@ -1163,38 +1145,34 @@
                     initMonthlyBooking();
 
                     // بررسی وضعیت پانسیون
-                    // دریافت المان متن کارت مشاوره برای تغییر داینامیک
                     const consultInactiveText = document.querySelector('#consultInactiveData p');
+                    let availablePlans = res.pansion_plans || []; // طرح‌ها از سرور گرفته شده‌اند
 
-                    // ۱. بررسی وضعیت پانسیون (شخصی‌سازی داشبورد بر اساس داشتن میز ماهانه)
+                    // ۱. منطق کنترل پنل داشبورد و درگاه ماهانه
                     if (pansion) {
-                        // -<-- حالت دوم: کاربر رزرو ماهانه دارد
+                        // -<-- کاربر میز دارد (پنهان کردن رزرو روزانه و نمایش Gateway فعال)
                         document.getElementById('badgePansion').innerText = 'فعال';
                         document.getElementById('badgePansion').className = 'srv-badge';
                         document.getElementById('pansionActiveData').style.display = 'block';
                         document.getElementById('pansionInactiveData').style.display = 'none';
                         document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
-                        if(pansion.end_date) {
-                           document.getElementById('uiPanDays').innerText = getShamsiDateSafe(new Date(pansion.end_date)).replace(/-/g, '/');
-                        }
+                        if(pansion.end_date) document.getElementById('uiPanDays').innerText = getShamsiDateSafe(new Date(pansion.end_date)).replace(/-/g, '/');
                         
-                        // حذف کامل کارت رزرو روزانه از داشبورد
+                        // حذف کارت و منوی رزرو روزانه
                         document.getElementById('cardDaily').style.display = 'none';
+                        document.getElementById('navDaily').style.display = 'none';
                         
-                        // تغییر متن مشاوره (تشویق به استفاده از تخفیف)
-                        if(consultInactiveText) {
-                            consultInactiveText.innerHTML = `شما اشتراک پانسیون دارید! با فعال‌سازی بخش مشاوره از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.`;
-                        }
+                        if(consultInactiveText) consultInactiveText.innerHTML = `شما اشتراک پانسیون دارید! با فعال‌سازی بخش مشاوره از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.`;
+                        
+                        // رندر کردن کارت نوار پیشرفت در تب ماهانه
+                        renderGatewayActive(pansion);
                     } else {
-                        // -<-- حالت اول: کاربر رزرو ماهانه ندارد
-                        document.getElementById('cardDaily').style.display = 'block'; // کارت روزانه نمایش داده شود
+                        // -<-- کاربر میز ندارد (نمایش رزرو روزانه و نمایش Gateway ثبت‌نام)
+                        document.getElementById('cardDaily').style.display = 'block';
+                        document.getElementById('navDaily').style.display = 'flex';
                         
-                        // تغییر متن مشاوره (تشویق به خرید پانسیون برای گرفتن تخفیف)
-                        if(consultInactiveText) {
-                            consultInactiveText.innerHTML = `با ثبت‌نام در پانسیون ماهانه، از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> روی طرح‌های مشاوره بهره‌مند شوید.`;
-                        }
+                        if(consultInactiveText) consultInactiveText.innerHTML = `با ثبت‌نام در پانسیون ماهانه، از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> روی طرح‌های مشاوره بهره‌مند شوید.`;
                         
-                        // روشن کردن اطلاعات کارت رزرو روزانه
                         if (nextDaily) {
                             document.getElementById('badgeDaily').innerText = 'دارای رزرو';
                             document.getElementById('badgeDaily').className = 'srv-badge';
@@ -1203,6 +1181,9 @@
                             document.getElementById('uiNextDailyDate').innerText = getRelativeDayText(nextDaily);
                         }
                         await initializeBookingEngine();
+
+                        // رندر کردن ۳ کارت طرح‌های پانسیون در تب ماهانه
+                        renderGatewayInactive(availablePlans, user.grade);
                     }
 
                     // ۲. بررسی وضعیت قطب‌نما (مشاوره)
@@ -1225,6 +1206,80 @@
                 alert('خطا در ارتباط با سرور: \n' + error.message);
                 console.error(error);
             }
+        }
+
+        // =====================================
+        // توابع درگاه (Gateway) اشتراک ماهانه
+        // =====================================
+        function renderGatewayActive(pansion) {
+            document.getElementById('activeSubGateway').style.display = 'block';
+            document.getElementById('noSubGateway').style.display = 'none';
+            
+            let start = new Date(pansion.start_date);
+            let end = new Date(pansion.end_date);
+            let today = new Date();
+            
+            // محاسبه روزهای گذشته و باقیمانده برای نوار پیشرفت
+            let totalDays = Math.max(1, Math.ceil((end - start) / (1000 * 3600 * 24)));
+            let passedDays = Math.max(0, Math.ceil((today - start) / (1000 * 3600 * 24)));
+            let remainDays = Math.max(0, Math.ceil((end - today) / (1000 * 3600 * 24)));
+            let progressPercent = Math.min(100, (passedDays / totalDays) * 100);
+            
+            let endShamsi = getShamsiDateSafe(end).replace(/-/g, '/');
+            
+            let html = `
+                <div class="gateway-card">
+                    <div class="gw-header">
+                        <div>
+                            <div style="font-size: 11px; opacity: 0.9;">پانسیون و میز اختصاصی</div>
+                            <div class="gw-title">طرح ${pansion.service_type.toUpperCase()}</div>
+                        </div>
+                        <div class="gw-status">✔ فعال</div>
+                    </div>
+                    <div class="gw-progress-container">
+                        <div class="gw-progress-texts">
+                            <span>تا ${endShamsi}</span>
+                            <span>${remainDays} روز مانده</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('gwCardContainer').innerHTML = html;
+        }
+
+        function renderGatewayInactive(plans, userGrade) {
+            document.getElementById('activeSubGateway').style.display = 'none';
+            document.getElementById('noSubGateway').style.display = 'block';
+            
+            let container = document.getElementById('newPlansContainer');
+            container.innerHTML = '';
+            
+            // فیلتر کردن طرح دانش‌آموزی برای پشت‌کنکوری‌ها
+            let isPostKonkur = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ'));
+            
+            plans.forEach(plan => {
+                if (plan.type === 'student_plan' && isPostKonkur) return; 
+                
+                let badge = plan.type === 'vip' ? '<span style="font-size: 10px; background: var(--success); color: white; padding: 2px 6px; border-radius: 6px; position:absolute; top: 15px; left: 15px;">محبوب</span>' : '';
+                
+                let html = `
+                    <div class="plan-card-pro" onclick="alert('رفتن به فرم خرید: طرح ${plan.title}')">
+                        ${badge}
+                        <div>
+                            <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 4px;">طرح ${plan.title}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">ظرفیت باقیمانده: ${plan.capacity || 'تکمیل'} نفر</div>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 16px; font-weight: 900; color: var(--primary);">${Number(plan.base_price).toLocaleString()}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">تومان / ماهانه</div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
         }
 
         // =====================================
