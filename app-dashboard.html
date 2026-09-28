@@ -939,6 +939,19 @@
             return `${y}-${m}-${d}`; 
         }
 
+        function getSmartDateTextSafe(dateStr) {
+            let todayStr = getShamsiDateSafe(new Date());
+            if (dateStr === todayStr) return 'امروز';
+
+            let tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+            if (dateStr === getShamsiDateSafe(tmrw)) return 'فردا';
+
+            let dayAfter = new Date(); dayAfter.setDate(dayAfter.getDate() + 2);
+            if (dateStr === getShamsiDateSafe(dayAfter)) return 'پس‌فردا';
+
+            return dateStr.replace(/-/g, '/');
+        }
+
         function getShamsiDayName(dateObj) { 
             const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(dateObj);
             return parts.find(p => p.type === 'weekday').value;
