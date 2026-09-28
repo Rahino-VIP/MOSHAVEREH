@@ -281,25 +281,6 @@
             ================================ -->
             <div id="view-dashboard" class="view-section active">
                 
-                <div class="wallet-card glass-panel">
-                    <div class="wallet-info">
-                        <div class="wallet-label">
-                            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                            موجودی کیف پول شما
-                        </div>
-                        <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
-                    </div>
-                    <div class="wallet-action" style="display: flex; flex-direction: column; gap: 8px;">
-                        <button class="btn-add-fund" onclick="switchView('view-finance', document.getElementById('navFinance'))">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            افزایش موجودی
-                        </button>
-                        <button id="btnWithdraw" class="btn-action" style="display: none; color: var(--danger); border-color: rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 16px; font-size: 11px; font-weight: bold; width: 100%; background: var(--glass-highlight);" onclick="openWithdrawModal()">
-                            برداشت وجه
-                        </button>
-                    </div>
-                </div>
-
                 <div class="section-title">وضعیت قراردادهای من</div>
 
                 <div class="status-grid">
@@ -570,6 +551,21 @@
             <div id="view-finance" class="view-section">
                 <div class="section-title">امور مالی و اقساط پانسیون</div>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; font-weight: bold;">در این بخش می‌توانید وضعیت پرداخت‌ها و اقساط طرح‌های پانسیون خود را مشاهده و مدیریت کنید.</p>
+
+                <div class="wallet-card glass-panel" style="margin-bottom: 25px;">
+                    <div class="wallet-info">
+                        <div class="wallet-label">
+                            <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                            موجودی کیف پول شما
+                        </div>
+                        <div class="wallet-amount" id="uiWalletBalance">۰ <span>تومان</span></div>
+                    </div>
+                    <div class="wallet-action" style="display: flex; flex-direction: column; gap: 8px;">
+                        <button id="btnWithdraw" class="btn-action" style="display: none; color: var(--danger); border-color: rgba(239, 68, 68, 0.3); padding: 8px 16px; border-radius: 16px; font-size: 11px; font-weight: bold; width: 100%; background: var(--glass-highlight);" onclick="openWithdrawModal()">
+                            برداشت وجه
+                        </button>
+                    </div>
+                </div>
                 
                 <div id="installmentsContainer">
                     <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">در حال دریافت اطلاعات مالی...</div>
@@ -1167,17 +1163,38 @@
                     initMonthlyBooking();
 
                     // بررسی وضعیت پانسیون
+                    // دریافت المان متن کارت مشاوره برای تغییر داینامیک
+                    const consultInactiveText = document.querySelector('#consultInactiveData p');
+
+                    // ۱. بررسی وضعیت پانسیون (شخصی‌سازی داشبورد بر اساس داشتن میز ماهانه)
                     if (pansion) {
+                        // -<-- حالت دوم: کاربر رزرو ماهانه دارد
                         document.getElementById('badgePansion').innerText = 'فعال';
                         document.getElementById('badgePansion').className = 'srv-badge';
                         document.getElementById('pansionActiveData').style.display = 'block';
                         document.getElementById('pansionInactiveData').style.display = 'none';
                         document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
+                        if(pansion.end_date) {
+                           document.getElementById('uiPanDays').innerText = getShamsiDateSafe(new Date(pansion.end_date)).replace(/-/g, '/');
+                        }
                         
+                        // حذف کامل کارت رزرو روزانه از داشبورد
                         document.getElementById('cardDaily').style.display = 'none';
-                        document.getElementById('navDaily').style.display = 'none'; 
+                        
+                        // تغییر متن مشاوره (تشویق به استفاده از تخفیف)
+                        if(consultInactiveText) {
+                            consultInactiveText.innerHTML = `شما اشتراک پانسیون دارید! با فعال‌سازی بخش مشاوره از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.`;
+                        }
                     } else {
-                        // روشن کردن کارت رزرو روزانه
+                        // -<-- حالت اول: کاربر رزرو ماهانه ندارد
+                        document.getElementById('cardDaily').style.display = 'block'; // کارت روزانه نمایش داده شود
+                        
+                        // تغییر متن مشاوره (تشویق به خرید پانسیون برای گرفتن تخفیف)
+                        if(consultInactiveText) {
+                            consultInactiveText.innerHTML = `با ثبت‌نام در پانسیون ماهانه، از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> روی طرح‌های مشاوره بهره‌مند شوید.`;
+                        }
+                        
+                        // روشن کردن اطلاعات کارت رزرو روزانه
                         if (nextDaily) {
                             document.getElementById('badgeDaily').innerText = 'دارای رزرو';
                             document.getElementById('badgeDaily').className = 'srv-badge';
@@ -1188,13 +1205,16 @@
                         await initializeBookingEngine();
                     }
 
-                    // بررسی وضعیت قطب‌نما
+                    // ۲. بررسی وضعیت قطب‌نما (مشاوره)
                     if (consult) {
                         document.getElementById('badgeConsult').innerText = 'فعال';
                         document.getElementById('badgeConsult').className = 'srv-badge';
                         document.getElementById('consultActiveData').style.display = 'block';
                         document.getElementById('consultInactiveData').style.display = 'none';
                         document.getElementById('uiConType').innerText = `طرح ${consult.service_type}`;
+                        if(consult.end_date) {
+                           document.getElementById('uiConDays').innerText = getShamsiDateSafe(new Date(consult.end_date)).replace(/-/g, '/');
+                        }
                     }
                 } else {
                     alert(res.error || 'خطا در دریافت اطلاعات کاربری.');
