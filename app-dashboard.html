@@ -832,7 +832,11 @@
         const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
         // متغیرهای رزرو ماهانه
-        let monState = { txType: 'new', planType: 'none', basePrice: 0, duration: '1', payMethod: 'cash', startDate: '', renewBaseDate: '', konkurMonths: 9, receiptBase64: "" };
+        let monState = { 
+            txType: 'new', planType: 'none', basePrice: 0, duration: '1', payMethod: 'cash', 
+            startDate: '', renewBaseDate: '', konkurMonths: 9, receiptBase64: "",
+            promoCode: "", promoDiscount: 0, referralDiscount: 0 
+        };
         let monFinance = { totalBase: 0, discount: 0, finalPrice: 0, upfront: 0, installments: [] };
 
         // امور مالی
@@ -1195,9 +1199,13 @@
         // 🗓 درگاه ماهانه (فروشگاه، کارت‌ها و فاکتور)
         // ==========================================
         function calcKonkurMonths() {
-            let konkurDate = new Date('2027-07-10');
-            let diffDays = Math.ceil((konkurDate - new Date()) / (1000 * 3600 * 24));
+            // محاسبه دقیق تا 15 تیر 1406
+            let konkurDate = new Date('2027-07-06'); // 15 تیر 1406
+            let diffTime = konkurDate - new Date();
+            let diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+            // استفاده از 30.41 برای میانگین دقیق طول ماه
             monState.konkurMonths = diffDays > 0 ? Math.max(1, Math.round((diffDays / 30.41) * 10) / 10) : 1;
+            
             let segKonkur = document.getElementById('segDurKonkur');
             if(segKonkur) segKonkur.innerText = `تا کنکور (${Math.ceil(monState.konkurMonths)} ماه)`;
         }
@@ -1222,8 +1230,34 @@
             });
             let chipsContainer = document.getElementById('monDateChipsContainer');
             if(chipsContainer) chipsContainer.innerHTML = chipsHtml;
+            
+            // استخراج قوانین به صورت داینامیک
+            updateRules();
         }
 
+        function updateRules() {
+            let rules = [];
+            let nGrade = currentUser.grade || 'all';
+
+            const extractRules = (category) => {
+                if (!dbData || !dbData.rules) return;
+                dbData.rules.filter(r => r.target_category === category && (r.target_grade === 'all' || r.target_grade === nGrade))
+                    .forEach(r => {
+                        let lines = r.rule_text.split(/\n|\*/).filter(line => line.trim() !== '');
+                        rules.push(...lines);
+                    });
+            };
+
+            extractRules('all');
+            if (monState.planType !== 'none') extractRules('pansion');
+            // در صورت نیاز به قوانین مشاوره، اینجا اضافه می‌شود
+
+            const rulesContainer = document.getElementById('dynamicRules');
+            if (rulesContainer) {
+                if (rules.length > 0) rulesContainer.innerHTML = rules.map(r => `<li>${r.trim()}</li>`).join('');
+                else rulesContainer.innerHTML = '<li>قوانین انضباطی و مالی را می‌پذیرم.</li>';
+            }
+        }
         function renderGatewayActive(pansion) {
             document.getElementById('activeSubGateway').style.display = 'block';
             document.getElementById('noSubGateway').style.display = 'none';
@@ -1279,11 +1313,14 @@
             let container = document.getElementById('newPlansContainer');
             container.innerHTML = ''; container.className = 'store-grid';
             
-            let isPostKonkur = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ'));
+            // فیلتر هوشمند برای پنهان کردن طرح دانش‌آموزی
+            let isPostKonkurOrUni = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ') || userGrade.includes('دانشجو'));
             
             plans.forEach(plan => {
-                if (plan.type === 'student_plan' && isPostKonkur) return; 
-                let capacity = parseInt(plan.capacity) || 0; let isFull = capacity <= 0;
+                if (plan.type === 'student_plan' && isPostKonkurOrUni) return; 
+                
+                let capacity = parseInt(plan.capacity) || 0; 
+                let isFull = capacity <= 0;
                 let capHtml = isFull 
                     ? `<div class="cap-status cap-full"><svg viewBox="0 0 24 24" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> تکمیل ظرفیت (بدون کنسلی)</div>`
                     : `<div class="cap-status cap-available"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> افزودن به پلن (موجود: ${capacity} نفر)</div>`;
@@ -1310,7 +1347,6 @@
                     </div>`;
             });
         }
-
         function selectNewPlan(type, price) {
             monState.planType = type; monState.basePrice = price;
             document.querySelectorAll('.store-card').forEach(card => card.classList.remove('selected'));
@@ -1356,61 +1392,95 @@
         function calculateMonthly() {
             let duration = monState.duration === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(monState.duration);
             let totalBase = monState.basePrice * duration;
-            let discount = 0; let finalPrice = 0;
-
-            if (duration === 1) {
-                finalPrice = totalBase;
-                document.getElementById('segPayInst').style.display = 'none';
+            let finalPrice = totalBase;
+            
+            // مدیریت نمایش گزینه‌های پرداخت بر اساس مبلغ کل
+            const segPayInst = document.getElementById('segPayInst');
+            if (totalBase < 3500000 || duration === 1) {
+                if (segPayInst) segPayInst.style.display = 'none';
                 if(monState.payMethod === 'monthly') setMonPay('cash');
             } else {
-                document.getElementById('segPayInst').style.display = 'block';
-                if (monState.payMethod === 'cash') {
-                    discount = totalBase * 0.05; 
-                    finalPrice = totalBase - discount;
-                } else {
-                    finalPrice = totalBase; 
-                }
+                if (segPayInst) segPayInst.style.display = 'block';
             }
 
-            monFinance.totalBase = totalBase; monFinance.discount = discount; monFinance.finalPrice = finalPrice; monFinance.installments = [];
+            // 🧠 موتور محاسبه تخفیف زمانی (بر اساس ماه و روش پرداخت)
+            let timeDiscountRate = 0;
+            if (duration >= 9) { // فرض بر این است که تا کنکور معمولاً بالای 9 ماه است
+                 timeDiscountRate = monState.payMethod === 'cash' ? 0.15 : 0.08;
+            } else if (duration === 3) {
+                 timeDiscountRate = monState.payMethod === 'cash' ? 0.05 : 0.03;
+            }
+            let timeDiscountAmount = totalBase * timeDiscountRate;
+            finalPrice -= timeDiscountAmount;
 
+            // اعمال کد تخفیف درصدی/مبلغی (پیش‌فرض سیستم)
+            let promoDiscountAmount = 0;
+            if (monState.promoDiscount > 0) {
+                 promoDiscountAmount = monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount;
+                 finalPrice -= promoDiscountAmount;
+            }
+            
+            // اعمال تخفیف معرف برای ثبت‌نام اولیه
+            let referralDiscountAmount = 0;
+            if (isFirstEver && currentUser.invited_by && !monState.referralDiscountApplied) {
+                 referralDiscountAmount = 100000;
+                 finalPrice -= referralDiscountAmount;
+            }
+
+            let totalDiscount = timeDiscountAmount + promoDiscountAmount + referralDiscountAmount;
+            
+            monFinance.totalBase = totalBase; 
+            monFinance.discount = totalDiscount; 
+            monFinance.finalPrice = finalPrice; 
+            monFinance.installments = [];
+
+            // نمایش مقادیر در فاکتور
             document.getElementById('monLblBase').innerText = totalBase.toLocaleString() + ' تومان';
-            document.getElementById('monLblDisc').innerText = discount.toLocaleString() + ' تومان';
+            document.getElementById('monLblDisc').innerText = totalDiscount.toLocaleString() + ' تومان';
             document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
 
             let listHtml = '';
+            
+            // 🧠 منطق اختصاصی اقساط
             if (monState.payMethod === 'monthly' && duration > 1) {
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let baseInstDate = new Date(); 
                 
                 if (duration <= 3) {
+                    // برنامه قسط‌بندی برای 3 ماه: 50٪ نقد، مابقی طی یک چک یک‌ماهه
                     let upfrontRounded = roundDown100k(finalPrice * 0.50);
                     let remaining = finalPrice - upfrontRounded;
                     monFinance.upfront = upfrontRounded;
-                    let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 45); 
+                    
+                    let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
                     monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                     
                     listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
                                 <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li>`;
                 } else {
-                    let upfrontRounded = roundDown100k(Math.min(finalPrice * 0.40, 15000000));
+                    // برنامه قسط‌بندی برای سالانه (تا کنکور): 20٪ نقد، مابقی 4 قسط 20٪ (ماه 1، 2، 4، 6)
+                    let upfrontRounded = roundDown100k(finalPrice * 0.20);
                     let remaining = finalPrice - upfrontRounded;
                     monFinance.upfront = upfrontRounded;
                     
-                    let checkAmt = roundDown100k(remaining / 3);
-                    let lastCheckAmt = remaining - (checkAmt * 2);
-                    let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 2);
-                    let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 4);
-                    let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 6);
+                    let checkAmt = roundDown100k(finalPrice * 0.20);
+                    let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 3);
+                    
+                    let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1);
+                    let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2);
+                    let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4);
+                    let d4 = new Date(baseInstDate); d4.setMonth(baseInstDate.getMonth() + 6);
                     
                     monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
                     monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
-                    monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
+                    monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: checkAmt, installment_number: 3 });
+                    monFinance.installments.push({ due_date: d4.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 4 });
                     
                     listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
                                 <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li>
                                 <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b></li>
-                                <li>قسط سوم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b></li>`;
+                                <li>قسط سوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b></li>
+                                <li>قسط چهارم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d4)}</b></li>`;
                 }
             } else {
                 monFinance.upfront = finalPrice;
