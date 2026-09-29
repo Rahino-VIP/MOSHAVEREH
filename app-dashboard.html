@@ -538,14 +538,12 @@
                     </div>
                     <div class="section-title">👑 طرح‌های پانسیون (ثبت‌نام جدید)</div>
                     
-                    <div class="plan-cards-premium" id="newPlansContainer">
-                        
+                    <div id="newPlansContainer" class="store-grid"></div>
+
                     <div id="bookingCheckoutSection" style="display: none; margin-top: 30px; animation: fadeInView 0.4s;">
                         <div class="section-title">⏱️ تاریخ شروع و مدت زمان</div>
                         
-                        
                         <div class="date-chips" id="monDateChipsContainer" style="margin-bottom: 15px;"></div>
-                        
                         
                         <div class="dur-segments" style="margin-bottom: 25px;">
                             <button class="dur-seg active" id="segDur1" onclick="setMonDur('1')">۱ ماهه</button>
@@ -559,7 +557,6 @@
                             <button class="dur-seg" id="segPayInst" onclick="setMonPay('monthly')">اقساط ماهانه</button>
                         </div>
 
-                        
                         <div class="checkout-box" style="border-color: var(--glass-border); margin-bottom: 25px;">
                             <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 10px; display: flex; justify-content: space-between;">
                                 🧾 صورتحساب
@@ -579,17 +576,14 @@
                         </div>
 
                         <label class="file-upload" id="monUploadBox">
-                            <svg viewBox="0 0 24 24" width="32" height="32"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش واریزی را آپلود کنید</div>
                             <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
                         </label>
 
                         <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
                     </div>
-                        
-                    </div>
                 </div>
-            </div>
             
             <div id="view-finance" class="view-section">
                 <div class="section-title">امور مالی و اقساط پانسیون</div>
@@ -1317,23 +1311,9 @@
             
             let container = document.getElementById('newPlansContainer');
             container.innerHTML = '';
-            container.className = 'store-grid';
             
             let isPostKonkur = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ'));
             
-            // ۱. کارت پیش‌فرض (فعلاً نمی‌خوام)
-            container.innerHTML += `
-                <div class="store-card selected" id="card_none" onclick="selectNewPlan('none', 0)">
-                    <div style="position:absolute; top:15px; right:15px; color:var(--success);" id="check_none">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
-                    </div>
-                    <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center; margin-top: 25px;">فعلاً پانسیون نمی‌خوام</div>
-                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; text-align: center;">بدون رزرو میز مطالعه</div>
-                    <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 30px; text-align: center;">۰ <span style="font-size: 12px;">تومان</span></div>
-                </div>
-            `;
-            
-            // ۲. ساخت داینامیک کارت‌ها بر اساس دیتابیس
             plans.forEach(plan => {
                 if (plan.type === 'student_plan' && isPostKonkur) return; 
                 
@@ -1358,7 +1338,7 @@
                 
                 let html = `
                     <div class="${cardClass}" id="card_${plan.type}" ${onclickAttr}>
-                        <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center;">طرح ${plan.title}</div>
+                        <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center;">${plan.title}</div>
                         <div style="font-size: 11px; color: var(--text-muted); font-weight: bold; text-align: center;">${plan.description || ''}</div>
                         <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 15px; text-align: center;">${Number(plan.base_price).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">/ ماه</span></div>
                         ${capHtml}
@@ -1369,29 +1349,22 @@
             });
         }
 
-        // منطق کلیک و انتخاب طرح
         function selectNewPlan(type, price) {
             monState.planType = type;
             monState.basePrice = price;
             
-            // برداشتن استایل انتخاب از همه کارت‌ها
             document.querySelectorAll('.store-card').forEach(card => card.classList.remove('selected'));
             
-            // اعمال استایل به کارت انتخاب شده
             let selectedCard = document.getElementById('card_' + type);
             if(selectedCard) selectedCard.classList.add('selected');
 
-            // نمایش یا مخفی کردن فرم گام بعدی (پرداخت)
-            if(type === 'none') {
-                document.getElementById('bookingCheckoutSection').style.display = 'none';
-            } else {
-                document.getElementById('bookingCheckoutSection').style.display = 'block';
-                // اسکرول نرم به سمت فاکتور
-                setTimeout(() => document.getElementById('bookingCheckoutSection').scrollIntoView({ behavior: 'smooth' }), 100);
+            let checkoutBox = document.getElementById('bookingCheckoutSection');
+            if(checkoutBox) {
+                checkoutBox.style.display = 'block';
+                setTimeout(() => checkoutBox.scrollIntoView({ behavior: 'smooth' }), 100);
                 calculateMonthly();
             }
         }
-
         // =====================================
         // موتور رزرو روزانه (تقویم و پرداخت)
         // =====================================
