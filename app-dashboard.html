@@ -263,6 +263,20 @@
         .btn-gw.store:hover { transform: translateY(-2px); background: var(--primary-hover); }
         .btn-gw.trade { background: var(--accent); box-shadow: 0 8px 20px var(--accent-fade); }
         .btn-gw.trade:hover { transform: translateY(-2px); background: var(--accent-hover); }
+
+        /* 💎 استایل کارت‌های فروشگاه مشابه طرح درخواستی */
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; direction: rtl; }
+        .store-card { background: var(--glass-highlight); border: 2px solid var(--glass-border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; position: relative; }
+        .store-card:hover:not(.disabled) { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .store-card.selected { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .store-card.disabled { opacity: 0.6; cursor: not-allowed; border-color: var(--glass-border); }
+        
+        .cap-status { font-size: 12px; font-weight: bold; padding: 8px; border-radius: 8px; text-align: center; margin: 15px 0; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .cap-available { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .cap-full { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        .feat-list { list-style: none; font-size: 11px; color: var(--text-main); margin-top: auto; border-top: 1px dashed var(--glass-border); padding-top: 15px; }
+        .feat-list li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.6; }
         
         /* کارت‌های طرح‌های ثبت نام جدید */
         .plan-cards-premium { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
@@ -525,6 +539,53 @@
                     <div class="section-title">👑 طرح‌های پانسیون (ثبت‌نام جدید)</div>
                     
                     <div class="plan-cards-premium" id="newPlansContainer">
+                        
+                    <div id="bookingCheckoutSection" style="display: none; margin-top: 30px; animation: fadeInView 0.4s;">
+                        <div class="section-title">⏱️ تاریخ شروع و مدت زمان</div>
+                        
+                        
+                        <div class="date-chips" id="monDateChipsContainer" style="margin-bottom: 15px;"></div>
+                        
+                        
+                        <div class="dur-segments" style="margin-bottom: 25px;">
+                            <button class="dur-seg active" id="segDur1" onclick="setMonDur('1')">۱ ماهه</button>
+                            <button class="dur-seg" id="segDur3" onclick="setMonDur('3')">۳ ماهه</button>
+                            <button class="dur-seg" id="segDurKonkur" onclick="setMonDur('konkur')">تا کنکور</button>
+                        </div>
+
+                        <div class="section-title">💳 نحوه پرداخت</div>
+                        <div class="dur-segments" style="margin-bottom: 25px;">
+                            <button class="dur-seg active" id="segPayCash" onclick="setMonPay('cash')">نقدی (تخفیف کامل)</button>
+                            <button class="dur-seg" id="segPayInst" onclick="setMonPay('monthly')">اقساط ماهانه</button>
+                        </div>
+
+                        
+                        <div class="checkout-box" style="border-color: var(--glass-border); margin-bottom: 25px;">
+                            <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 10px; display: flex; justify-content: space-between;">
+                                🧾 صورتحساب
+                                <span id="monLblDurationBadge" style="font-size: 11px; background: var(--primary-fade); color: var(--primary); padding: 4px 8px; border-radius: 8px;">۱ ماهه</span>
+                            </h3>
+                            
+                            <div class="price-row"><span>مبلغ پایه:</span><strong id="monLblBase">0 تومان</strong></div>
+                            <div class="price-row" style="color: var(--success);"><span>سود شما (تخفیف):</span><strong id="monLblDisc">0 تومان</strong></div>
+                            <div class="price-final"><span style="color: var(--text-main); font-size: 14px;">مبلغ نهایی قرارداد: </span><span id="monLblFinal" style="color: var(--primary);">0</span> <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
+                            
+                            <div style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 15px; border-radius: 12px; margin-top: 15px;">
+                                <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; color: var(--danger); margin-bottom: 10px;">
+                                    <span>پرداخت آنی (پیش‌پرداخت):</span><span id="monLblUpfront">0 تومان</span>
+                                </div>
+                                <div id="monInstList" style="font-size: 12px; color: var(--text-muted); line-height: 1.8;"></div>
+                            </div>
+                        </div>
+
+                        <label class="file-upload" id="monUploadBox">
+                            <svg viewBox="0 0 24 24" width="32" height="32"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش واریزی را آپلود کنید</div>
+                            <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
+                        </label>
+
+                        <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
+                    </div>
                         
                     </div>
                 </div>
@@ -1256,30 +1317,79 @@
             
             let container = document.getElementById('newPlansContainer');
             container.innerHTML = '';
+            container.className = 'store-grid';
             
-            // فیلتر کردن طرح دانش‌آموزی برای پشت‌کنکوری‌ها
             let isPostKonkur = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ'));
             
+            // ۱. کارت پیش‌فرض (فعلاً نمی‌خوام)
+            container.innerHTML += `
+                <div class="store-card selected" id="card_none" onclick="selectNewPlan('none', 0)">
+                    <div style="position:absolute; top:15px; right:15px; color:var(--success);" id="check_none">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center; margin-top: 25px;">فعلاً پانسیون نمی‌خوام</div>
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; text-align: center;">بدون رزرو میز مطالعه</div>
+                    <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 30px; text-align: center;">۰ <span style="font-size: 12px;">تومان</span></div>
+                </div>
+            `;
+            
+            // ۲. ساخت داینامیک کارت‌ها بر اساس دیتابیس
             plans.forEach(plan => {
                 if (plan.type === 'student_plan' && isPostKonkur) return; 
                 
-                let badge = plan.type === 'vip' ? '<span style="font-size: 10px; background: var(--success); color: white; padding: 2px 6px; border-radius: 6px; position:absolute; top: 15px; left: 15px;">محبوب</span>' : '';
+                let capacity = parseInt(plan.capacity) || 0;
+                let isFull = capacity <= 0;
+                
+                let capHtml = isFull 
+                    ? `<div class="cap-status cap-full"><svg viewBox="0 0 24 24" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> تکمیل ظرفیت (بدون کنسلی)</div>`
+                    : `<div class="cap-status cap-available"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> افزودن به پلن (موجود: ${capacity} نفر)</div>`;
+                
+                let featuresHtml = '';
+                if(plan.features) {
+                    featuresHtml = '<ul class="feat-list">' + plan.features.split('\n').map(l => {
+                        let text = l.replace('✅', '').trim();
+                        if(!text) return '';
+                        return `<li><span style="color:var(--success); flex-shrink:0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></span> <span>${text}</span></li>`;
+                    }).join('') + '</ul>';
+                }
+                
+                let onclickAttr = isFull ? '' : `onclick="selectNewPlan('${plan.type}', ${plan.base_price})"`;
+                let cardClass = isFull ? 'store-card disabled' : 'store-card';
                 
                 let html = `
-                    <div class="plan-card-pro" onclick="alert('رفتن به فرم خرید: طرح ${plan.title}')">
-                        ${badge}
-                        <div>
-                            <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 4px;">طرح ${plan.title}</div>
-                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">ظرفیت باقیمانده: ${plan.capacity || 'تکمیل'} نفر</div>
-                        </div>
-                        <div style="text-align: left;">
-                            <div style="font-size: 16px; font-weight: 900; color: var(--primary);">${Number(plan.base_price).toLocaleString()}</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">تومان / ماهانه</div>
-                        </div>
+                    <div class="${cardClass}" id="card_${plan.type}" ${onclickAttr}>
+                        <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center;">طرح ${plan.title}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: bold; text-align: center;">${plan.description || ''}</div>
+                        <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 15px; text-align: center;">${Number(plan.base_price).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">/ ماه</span></div>
+                        ${capHtml}
+                        ${featuresHtml}
                     </div>
                 `;
                 container.innerHTML += html;
             });
+        }
+
+        // منطق کلیک و انتخاب طرح
+        function selectNewPlan(type, price) {
+            monState.planType = type;
+            monState.basePrice = price;
+            
+            // برداشتن استایل انتخاب از همه کارت‌ها
+            document.querySelectorAll('.store-card').forEach(card => card.classList.remove('selected'));
+            
+            // اعمال استایل به کارت انتخاب شده
+            let selectedCard = document.getElementById('card_' + type);
+            if(selectedCard) selectedCard.classList.add('selected');
+
+            // نمایش یا مخفی کردن فرم گام بعدی (پرداخت)
+            if(type === 'none') {
+                document.getElementById('bookingCheckoutSection').style.display = 'none';
+            } else {
+                document.getElementById('bookingCheckoutSection').style.display = 'block';
+                // اسکرول نرم به سمت فاکتور
+                setTimeout(() => document.getElementById('bookingCheckoutSection').scrollIntoView({ behavior: 'smooth' }), 100);
+                calculateMonthly();
+            }
         }
 
         // =====================================
