@@ -608,19 +608,27 @@
                             <button class="dur-seg" id="segDurKonkur" onclick="setMonDur('konkur')">تا کنکور</button>
                         </div>
 
+                        
+                        <div class="form-group" style="margin-bottom: 15px; display: flex; gap: 10px;">
+                            <input type="text" id="monDiscountCode" class="form-input" placeholder="کد تخفیف (اختیاری)" style="flex: 2; margin-bottom: 0; padding: 12px; font-size: 12px; text-transform: uppercase;">
+                            <button class="btn-action primary" style="flex: 1; border-radius: 16px; margin: 0; padding: 12px;" onclick="applyMonDiscount()">اعمال کد</button>
+                        </div>
+                        <div id="monDiscountNotice" style="color: var(--success); font-size: 11px; font-weight: bold; margin-bottom: 20px; line-height: 1.6;"></div>
+
                         <div class="section-title">💳 نحوه پرداخت</div>
                         <div class="dur-segments" style="margin-bottom: 25px;">
                             <button class="dur-seg active" id="segPayCash" onclick="setMonPay('cash')">نقدی (تخفیف کامل)</button>
-                            <button class="dur-seg" id="segPayInst" onclick="setMonPay('monthly')">اقساط ماهانه</button>
+                            <button class="dur-seg" id="segPayInst" onclick="setMonPay('monthly')" style="display: none;">اقساط ماهانه</button>
                         </div>
 
+                        
                         <div class="checkout-box" style="border-color: var(--glass-border); margin-bottom: 25px;">
                             <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 10px; display: flex; justify-content: space-between;">
                                 🧾 صورتحساب
                                 <span id="monLblDurationBadge" style="font-size: 11px; background: var(--primary-fade); color: var(--primary); padding: 4px 8px; border-radius: 8px;">۱ ماهه</span>
                             </h3>
                             <div class="price-row"><span>مبلغ پایه:</span><strong id="monLblBase">0 تومان</strong></div>
-                            <div class="price-row" style="color: var(--success);"><span>سود شما (تخفیف):</span><strong id="monLblDisc">0 تومان</strong></div>
+                            <div class="price-row" style="color: var(--success);"><span>مجموع تخفیف‌ها:</span><strong id="monLblDisc">0 تومان</strong></div>
                             <div class="price-final"><span style="color: var(--text-main); font-size: 14px;">مبلغ نهایی قرارداد: </span><span id="monLblFinal" style="color: var(--primary);">0</span> <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
                             
                             <div style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 15px; border-radius: 12px; margin-top: 15px;">
@@ -631,6 +639,40 @@
                             </div>
                         </div>
 
+                        
+                        <div class="rules-container">
+                            <div class="rules-scroll-box">
+                                <strong style="color: var(--primary); font-size: 13px;">📜 قوانین و مقررات پذیرش:</strong>
+                                <ul id="dynamicRules">
+                                    
+                                </ul>
+                            </div>
+                            <label class="rules-checkbox-label">
+                                <input type="checkbox" id="monRulesCheckbox" onchange="validateMonSubmit()">
+                                <span>تمامی قوانین فوق را خواندم و شرایط آن را می‌پذیرم.</span>
+                            </label>
+                        </div>
+
+                        
+                        <div style="background: var(--surface); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; text-align: center; border: 2px solid var(--primary); box-shadow: var(--shadow);">
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">مبلغ قابل پرداخت در این لحظه (جهت فعال‌سازی پرونده):</div>
+                            <div id="monLblPayNowBig" style="font-size: 28px; font-weight: 900; color: var(--success); margin-bottom: 20px;">۰ تومان</div>
+                            
+                            <div style="background: var(--bg-color); border: 1px dashed var(--border); padding: 15px; border-radius: 12px;">
+                                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">لطفاً مبلغ فوق را به حساب زیر واریز نمایید:</div>
+                                <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; margin-bottom: 5px; color: var(--text-main);">6219 8618 1038 0484</div>
+                                <div style="font-size: 12px; font-weight: bold; color: var(--primary);">به نام: ارشاد شفیعی فرد - بانک سامان</div>
+                            </div>
+                        </div>
+
+                        <label class="file-upload" id="monUploadBox">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش واریزی را آپلود کنید</div>
+                            <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
+                        </label>
+
+                        <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
+                    </div>
                         <label class="file-upload" id="monUploadBox">
                             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش واریزی را آپلود کنید</div>
@@ -836,10 +878,9 @@
         let monState = { 
             txType: 'new', planType: 'none', basePrice: 0, duration: '1', payMethod: 'cash', 
             startDate: '', renewBaseDate: '', konkurMonths: 9, receiptBase64: "",
-            promoCode: "", promoDiscount: 0, referralDiscount: 0 
+            promoCode: "", promoDiscount: 0, isFirstMonthly: true 
         };
         let monFinance = { totalBase: 0, discount: 0, finalPrice: 0, upfront: 0, installments: [] };
-
         // امور مالی
         let currentInstallmentId = null; let currentInstallmentAmount = 0; let instBase64Image = "";
 
@@ -1202,16 +1243,33 @@
         // ==========================================
         function calcKonkurMonths() {
             // محاسبه دقیق تا 15 تیر 1406
-            let konkurDate = new Date('2027-07-06'); // 15 تیر 1406
+            let konkurDate = new Date('2027-07-06'); 
             let diffTime = konkurDate - new Date();
             let diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-            // استفاده از 30.41 برای میانگین دقیق طول ماه
             monState.konkurMonths = diffDays > 0 ? Math.max(1, Math.round((diffDays / 30.41) * 10) / 10) : 1;
             
             let segKonkur = document.getElementById('segDurKonkur');
             if(segKonkur) segKonkur.innerText = `تا کنکور (${Math.ceil(monState.konkurMonths)} ماه)`;
         }
 
+        // استخراج و نمایش قوانین
+        function updateRules() {
+            let rules = [];
+            let nGrade = currentUser ? currentUser.grade : 'all';
+            
+            if (dbData && dbData.rules) {
+                dbData.rules.filter(r => r.target_category === 'all' || (monState.planType !== 'none' && r.target_category === 'pansion')).forEach(r => {
+                    let lines = r.rule_text.split(/\n|\*/).filter(line => line.trim() !== '');
+                    rules.push(...lines);
+                });
+            }
+
+            const rulesContainer = document.getElementById('dynamicRules');
+            if (rulesContainer) {
+                if (rules.length > 0) rulesContainer.innerHTML = rules.map(r => `<li>${r.trim()}</li>`).join('');
+                else rulesContainer.innerHTML = '<li>قوانین انضباطی و مالی آموزشگاه را می‌پذیرم.</li>';
+            }
+        }
         function initMonthlyBooking() {
             calcKonkurMonths();
             let today = new Date();
@@ -1232,34 +1290,9 @@
             });
             let chipsContainer = document.getElementById('monDateChipsContainer');
             if(chipsContainer) chipsContainer.innerHTML = chipsHtml;
-            
-            // استخراج قوانین به صورت داینامیک
             updateRules();
         }
 
-        function updateRules() {
-            let rules = [];
-            let nGrade = currentUser.grade || 'all';
-
-            const extractRules = (category) => {
-                if (!dbData || !dbData.rules) return;
-                dbData.rules.filter(r => r.target_category === category && (r.target_grade === 'all' || r.target_grade === nGrade))
-                    .forEach(r => {
-                        let lines = r.rule_text.split(/\n|\*/).filter(line => line.trim() !== '');
-                        rules.push(...lines);
-                    });
-            };
-
-            extractRules('all');
-            if (monState.planType !== 'none') extractRules('pansion');
-            // در صورت نیاز به قوانین مشاوره، اینجا اضافه می‌شود
-
-            const rulesContainer = document.getElementById('dynamicRules');
-            if (rulesContainer) {
-                if (rules.length > 0) rulesContainer.innerHTML = rules.map(r => `<li>${r.trim()}</li>`).join('');
-                else rulesContainer.innerHTML = '<li>قوانین انضباطی و مالی را می‌پذیرم.</li>';
-            }
-        }
         function renderGatewayActive(pansion) {
             document.getElementById('activeSubGateway').style.display = 'block';
             document.getElementById('noSubGateway').style.display = 'none';
@@ -1396,37 +1429,38 @@
             let totalBase = monState.basePrice * duration;
             let finalPrice = totalBase;
             
-            // مدیریت نمایش گزینه‌های پرداخت بر اساس مبلغ کل
+            // نمایش/مخفی کردن دکمه اقساط (فقط بالای 3.5 میلیون)
             const segPayInst = document.getElementById('segPayInst');
-            if (totalBase < 3500000 || duration === 1) {
+            if (totalBase < 3500000) {
                 if (segPayInst) segPayInst.style.display = 'none';
-                if(monState.payMethod === 'monthly') setMonPay('cash');
+                if(monState.payMethod === 'monthly') setMonPay('cash'); // بازگشت اجباری به نقدی
             } else {
                 if (segPayInst) segPayInst.style.display = 'block';
             }
 
-            // 🧠 موتور محاسبه تخفیف زمانی (بر اساس ماه و روش پرداخت)
+            // 🧠 محاسبه تخفیف‌های زمانی (نقد و اقساط)
             let timeDiscountRate = 0;
-            if (duration >= 9) { // فرض بر این است که تا کنکور معمولاً بالای 9 ماه است
+            if (monState.duration === 'konkur' || duration >= 9) {
                  timeDiscountRate = monState.payMethod === 'cash' ? 0.15 : 0.08;
-            } else if (duration === 3) {
+            } else if (monState.duration === '3' || duration === 3) {
                  timeDiscountRate = monState.payMethod === 'cash' ? 0.05 : 0.03;
             }
             let timeDiscountAmount = totalBase * timeDiscountRate;
             finalPrice -= timeDiscountAmount;
 
-            // اعمال کد تخفیف درصدی/مبلغی (پیش‌فرض سیستم)
+            // 🧠 اعمال کد تخفیف دستی
             let promoDiscountAmount = 0;
             if (monState.promoDiscount > 0) {
                  promoDiscountAmount = monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount;
                  finalPrice -= promoDiscountAmount;
             }
             
-            // اعمال تخفیف معرف برای ثبت‌نام اولیه
+            // 🧠 اعمال تخفیف معرفی دوستان (فقط برای ثبت نام جدید)
             let referralDiscountAmount = 0;
-            if (isFirstEver && currentUser.invited_by && !monState.referralDiscountApplied) {
+            let isFirstMonthlyReg = !document.getElementById('pansionActiveData') || document.getElementById('pansionActiveData').style.display === 'none';
+            if (isFirstMonthlyReg && currentUser && currentUser.invited_by) {
                  referralDiscountAmount = 100000;
-                 finalPrice -= referralDiscountAmount;
+                 finalPrice = Math.max(0, finalPrice - referralDiscountAmount);
             }
 
             let totalDiscount = timeDiscountAmount + promoDiscountAmount + referralDiscountAmount;
@@ -1436,20 +1470,30 @@
             monFinance.finalPrice = finalPrice; 
             monFinance.installments = [];
 
-            // نمایش مقادیر در فاکتور
             document.getElementById('monLblBase').innerText = totalBase.toLocaleString() + ' تومان';
             document.getElementById('monLblDisc').innerText = totalDiscount.toLocaleString() + ' تومان';
             document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
 
             let listHtml = '';
             
-            // 🧠 منطق اختصاصی اقساط
-            if (monState.payMethod === 'monthly' && duration > 1) {
+            // 🧠 منطق جدید اقساط
+            if (monState.payMethod === 'monthly' && totalBase >= 3500000) {
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let baseInstDate = new Date(); 
                 
-                if (duration <= 3) {
-                    // برنامه قسط‌بندی برای 3 ماه: 50٪ نقد، مابقی طی یک چک یک‌ماهه
+                if (duration === 1) {
+                    // یک ماهه (50% نقد، 50% ده روز بعد)
+                    let upfrontRounded = roundDown100k(finalPrice * 0.50);
+                    let remaining = finalPrice - upfrontRounded;
+                    monFinance.upfront = upfrontRounded;
+                    
+                    let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 10); 
+                    monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+                    
+                    listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                                <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
+                } else if (duration === 3) {
+                    // سه ماهه (50% نقد، 50% یک ماه بعد)
                     let upfrontRounded = roundDown100k(finalPrice * 0.50);
                     let remaining = finalPrice - upfrontRounded;
                     monFinance.upfront = upfrontRounded;
@@ -1458,11 +1502,10 @@
                     monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
                     
                     listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
-                                <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li>`;
+                                <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه بعد)</li>`;
                 } else {
-                    // برنامه قسط‌بندی برای سالانه (تا کنکور): 20٪ نقد، مابقی 4 قسط 20٪ (ماه 1، 2، 4، 6)
+                    // سالانه / تا کنکور (20% نقد، 4 چک 20% در ماه‌های 1، 2، 4، 6)
                     let upfrontRounded = roundDown100k(finalPrice * 0.20);
-                    let remaining = finalPrice - upfrontRounded;
                     monFinance.upfront = upfrontRounded;
                     
                     let checkAmt = roundDown100k(finalPrice * 0.20);
@@ -1490,10 +1533,17 @@
             }
 
             document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
+            document.getElementById('monLblPayNowBig').innerText = monFinance.upfront.toLocaleString() + ' تومان';
             document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
+
+            // آپدیت متن بخش تخفیف
+            let noticeMsg = "";
+            if (referralDiscountAmount > 0) noticeMsg += `🎁 ۱۰۰ هزار تومان تخفیف معرف برای اولین ثبت‌نام اعمال شد!<br>`;
+            if (promoDiscountAmount > 0) noticeMsg += `✅ کد تخفیف با موفقیت اعمال شد.`;
+            document.getElementById('monDiscountNotice').innerHTML = noticeMsg;
+
             validateMonSubmit();
         }
-
         function handleMonFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
@@ -1520,7 +1570,29 @@
             }
         }
 
-        function validateMonSubmit() { document.getElementById('btnSubmitMonthly').disabled = (monState.receiptBase64 === ""); }
+        async function applyMonDiscount() {
+            const code = document.getElementById('monDiscountCode').value.trim().toUpperCase();
+            if(!code) return;
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'check_discount', code: code, phone_number: currentUser.phone_number, type: 'monthly' }) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+                if (res.success) { 
+                    monState.promoCode = code; 
+                    monState.promoDiscount = res.discount_value || 0; 
+                    calculateMonthly(); 
+                    alert('کد تخفیف اعمال شد.'); 
+                } 
+                else { alert(res.error); }
+            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا در بررسی کد'); }
+        }
+
+        function validateMonSubmit() { 
+            let hasReceipt = monState.receiptBase64 !== "";
+            let rulesChecked = document.getElementById('monRulesCheckbox') ? document.getElementById('monRulesCheckbox').checked : true;
+            document.getElementById('btnSubmitMonthly').disabled = !(hasReceipt && rulesChecked); 
+        }
 
         async function submitMonthly() {
             document.getElementById('mainLoader').style.display = 'flex';
