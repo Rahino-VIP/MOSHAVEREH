@@ -281,7 +281,6 @@
                             <p id="authHeaderSub">جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید</p>
                         </div>
 
-                        <!-- 1: ورود شماره <--
                         <div class="view-section active" id="view-phone">
                             <div class="form-group">
                                 <input type="tel" id="inpPhone" class="form-input" placeholder="شماره موبایل (مثال: 09123456789)" maxlength="11" style="text-align: center; font-size: 16px; letter-spacing: 2px; direction: ltr;">
@@ -289,7 +288,6 @@
                             <button class="btn-submit" onclick="checkUserPhone()">تایید و ادامه</button>
                         </div>
 
-                        <!-- 2: رمز عبور <--
                         <div class="view-section" id="view-login">
                             <div class="alert-banner alert-success">حساب کاربری یافت شد. لطفاً رمز عبور خود را وارد کنید.</div>
                             <div class="form-group">
@@ -302,7 +300,6 @@
                             </div>
                         </div>
 
-                        <!-- 3: ثبت نام <--
                         <div class="view-section" id="view-register">
                             <div class="alert-banner alert-warning">شماره شما در سیستم ثبت نشده است. جهت تشکیل پرونده، اطلاعات زیر را تکمیل نمایید.</div>
                             <div class="form-group"><input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل"></div>
@@ -324,7 +321,6 @@
                             <button class="btn-action" style="width:100%; margin-top:10px; background: transparent;" onclick="goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">انصراف و بازگشت</button>
                         </div>
 
-                        <!-- 4: وضعیت تعلیق و مسدود <--
                         <div class="view-section" id="view-pending">
                             <div class="alert-banner alert-warning">
                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -704,9 +700,7 @@
             <button class="btn-submit" id="btnSubmitInst" onclick="submitInstallment()" disabled>ارسال فیش و تایید پرداخت</button>
         </div>
     </div>
-    <!-- ===============================
-         اسکریپت‌ها (منطق جاوااسکریپت)
-    ================================ -->
+    
     <script>
         // ==========================================
         // 🔗 تنظیمات و متغیرهای سراسری
