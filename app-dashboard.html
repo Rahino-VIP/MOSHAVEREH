@@ -829,6 +829,7 @@
         let selectedNewDates = []; let isFirstEver = false; let finalAmountToPay = 0; 
         let base64Image = ""; let appliedDiscountCode = ""; let discountAmount = 0; 
         let selectedPayMethod = "card"; let globalUserPastReservations = []; 
+        let dbData = { rules: [] }; // 👈 این خط مشکل is not defined را حل می‌کند
         const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
         // متغیرهای رزرو ماهانه
@@ -1100,6 +1101,7 @@
 
                 if (res.success) {
                     currentUser = res.user; 
+                    dbData.rules = res.rules || [];
                     const pansion = res.pansion;
                     const consult = res.consult;
                     globalUserPastReservations = res.daily_dates || []; 
