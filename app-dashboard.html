@@ -221,7 +221,17 @@
 
         /* لودر و مودال */
         .loader-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        /* 🐛 رفع مشکل ثابت ماندن لودر */
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite !important; margin-bottom: 15px; }
+
+        /* 💎 استایل آکاردئون برای جلوگیری از شلوغی کارت‌ها */
+        .feat-details { margin-top: 15px; border-top: 1px dashed var(--glass-border); padding-top: 10px; }
+        .feat-summary { font-size: 11px; font-weight: 900; color: var(--primary); cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 5px; outline: none; transition: 0.3s; background: var(--primary-fade); border-radius: 8px;}
+        .feat-summary::-webkit-details-marker { display: none; } /* مخفی کردن فلش پیش‌فرض کروم */
+        .feat-summary:hover { background: rgba(99, 152, 137, 0.15); }
+        .feat-list { list-style: none; font-size: 11px; color: var(--text-main); margin-top: 15px; text-align: right; }
+        .feat-list li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.6; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 150; display: none; align-items: flex-end; justify-content: center; }
         .modal-content { background: var(--bg-color); width: 100%; max-width: 480px; border-radius: 32px 32px 0 0; padding: 25px 20px; animation: slideUpModal 0.4s ease; max-height: 80vh; overflow-y: auto; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px;}
@@ -275,9 +285,6 @@
         .cap-available { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
         .cap-full { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
         
-        .feat-list { list-style: none; font-size: 11px; color: var(--text-main); margin-top: auto; border-top: 1px dashed var(--glass-border); padding-top: 15px; }
-        .feat-list li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.6; }
-
         /* 💎 استایل‌های دکمه‌های کپسولی فرم پرداخت */
         .date-chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 20px; }
         .date-chip { flex: 0 0 auto; background: var(--glass-highlight); border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 16px; font-size: 12px; font-weight: bold; cursor: pointer; transition: var(--transition); text-align: center; min-width: 100px; color: var(--text-main); }
@@ -810,51 +817,79 @@
         }
 
         // موتور اصلی محاسبات فاکتور
+        function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
+
         function calculateMonthly() {
             let duration = monState.duration === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(monState.duration);
             let totalBase = monState.basePrice * duration;
-            let discount = 0; let finalPrice = 0; let upfront = 0;
-            let instAmount = 0; let instCount = 0;
+            let discount = 0; let finalPrice = 0;
 
+            // محاسبه قیمت نهایی (تخفیف فقط برای پرداخت نقدی اعمال می‌شود)
             if (duration === 1) {
-                finalPrice = totalBase; upfront = finalPrice;
+                finalPrice = totalBase;
                 document.getElementById('segPayInst').style.display = 'none';
                 if(monState.payMethod === 'monthly') setMonPay('cash');
             } else {
                 document.getElementById('segPayInst').style.display = 'block';
                 if (monState.payMethod === 'cash') {
                     discount = totalBase * 0.05; 
-                    finalPrice = totalBase - discount; upfront = finalPrice;
-                } else if (monState.payMethod === 'monthly') {
-                    discount = 50000 * duration; 
                     finalPrice = totalBase - discount;
-                    instAmount = monState.basePrice - 50000;
-                    upfront = instAmount; 
-                    instCount = duration - 1;
+                } else {
+                    finalPrice = totalBase; 
                 }
             }
 
-            monFinance.totalBase = totalBase; monFinance.discount = discount; monFinance.finalPrice = finalPrice; monFinance.upfront = upfront; monFinance.installments = [];
+            monFinance.totalBase = totalBase; monFinance.discount = discount; monFinance.finalPrice = finalPrice; monFinance.installments = [];
 
             document.getElementById('monLblBase').innerText = totalBase.toLocaleString() + ' تومان';
             document.getElementById('monLblDisc').innerText = discount.toLocaleString() + ' تومان';
             document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
-            document.getElementById('monLblUpfront').innerText = upfront.toLocaleString() + ' تومان';
 
-            let baseDateStr = monState.startDate || getShamsiDateSafe(new Date());
             let listHtml = '';
-
-            if (instCount > 0) {
-                listHtml += '<div style="font-weight:bold; margin-bottom:8px; color: var(--text-main);">زمان‌بندی اقساط بعدی:</div>';
-                for (let i = 1; i <= instCount; i++) {
-                    let dueDate = addMonthsJS(baseDateStr, i);
-                    monFinance.installments.push({ amount: instAmount, due_date: dueDate, installment_number: i });
-                    listHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--glass-border); padding:6px 0;"><span>قسط ${i} (${dueDate.replace(/-/g,'/')})</span><span style="font-weight:bold; color:var(--text-main);">${instAmount.toLocaleString()} تومان</span></div>`;
+            
+            // 🧠 منطق جدید و دقیق اقساط (برداشته شده از register-step2)
+            if (monState.payMethod === 'monthly' && duration > 1) {
+                const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+                let baseInstDate = new Date(); 
+                
+                if (duration <= 3) {
+                    let upfrontRounded = roundDown100k(finalPrice * 0.50);
+                    let remaining = finalPrice - upfrontRounded;
+                    monFinance.upfront = upfrontRounded;
+                    
+                    let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 45); 
+                    monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+                    
+                    listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                                <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li>`;
+                } else {
+                    let upfrontRounded = roundDown100k(Math.min(finalPrice * 0.40, 15000000));
+                    let remaining = finalPrice - upfrontRounded;
+                    monFinance.upfront = upfrontRounded;
+                    
+                    let checkAmt = roundDown100k(remaining / 3);
+                    let lastCheckAmt = remaining - (checkAmt * 2);
+                    
+                    let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 2);
+                    let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 4);
+                    let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 6);
+                    
+                    monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
+                    monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
+                    monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 });
+                    
+                    listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                                <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li>
+                                <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b></li>
+                                <li>قسط سوم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b></li>`;
                 }
             } else {
+                monFinance.upfront = finalPrice;
                 listHtml = '<div style="text-align:center; color:var(--text-muted);">فاقد اقساط بعدی (تسویه کامل)</div>';
             }
-            document.getElementById('monInstList').innerHTML = listHtml;
+
+            document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
+            document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
             validateMonSubmit();
         }
         
@@ -891,11 +926,10 @@
         async function submitMonthly() {
             document.getElementById('mainLoader').style.display = 'flex';
             
-            // محاسبه هوشمند تاریخ پایان قرارداد
-            let durationVal = document.getElementById('monDuration').value;
-            let duration = durationVal === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(durationVal);
-            let txType = document.getElementById('monTxType').value;
-            let baseDateStr = txType === 'new' ? document.getElementById('monStartDate').value : document.getElementById('monRenewBaseDate').value;
+            // 🐛 رفع ارور خواندن مقادیر null از فرم‌های قدیمی
+            let duration = monState.duration === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(monState.duration);
+            let txType = monState.txType;
+            let baseDateStr = monState.startDate || getShamsiDateSafe(new Date());
             let endDateStr = addMonthsJS(baseDateStr, duration);
 
             try {
@@ -912,7 +946,7 @@
                     discount: monFinance.discount,
                     final_price: monFinance.finalPrice,
                     upfront: monFinance.upfront,
-                    pay_method: document.getElementById('monPayMethod').value,
+                    pay_method: monState.payMethod, // خواندن مستقیم از متغیر ذخیره شده
                     receipt_base64: monState.receiptBase64,
                     installments: monFinance.installments
                 };
@@ -930,9 +964,10 @@
             } catch (e) { 
                 document.getElementById('mainLoader').style.display = 'none';
                 alert('خطا در ارتباط با سرور.'); 
+                console.error(e);
             }
         }
-
+        
         // 🌗 تم سیستم
         function toggleTheme() {
             const html = document.documentElement;
@@ -1327,11 +1362,18 @@
                 
                 let featuresHtml = '';
                 if(plan.features) {
-                    featuresHtml = '<ul class="feat-list">' + plan.features.split('\n').map(l => {
+                    let listItems = plan.features.split('\n').map(l => {
                         let text = l.replace('✅', '').trim();
                         if(!text) return '';
                         return `<li><span style="color:var(--success); flex-shrink:0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></span> <span>${text}</span></li>`;
-                    }).join('') + '</ul>';
+                    }).join('');
+                    
+                    featuresHtml = `
+                        <details class="feat-details">
+                            <summary class="feat-summary">مشاهده امکانات و جزئیات طرح 🔻</summary>
+                            <ul class="feat-list">${listItems}</ul>
+                        </details>
+                    `;
                 }
                 
                 let onclickAttr = isFull ? '' : `onclick="selectNewPlan('${plan.type}', ${plan.base_price})"`;
