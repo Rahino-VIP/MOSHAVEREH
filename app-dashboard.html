@@ -6,7 +6,9 @@
     <title>پرتال جامع راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <style>
-        /* 🎨 متغیرهای رنگی و پایه */
+        /* ==========================================
+           🎨 متغیرهای رنگی و پایه
+           ========================================== */
         :root { 
             --primary: #5cb89f; --primary-hover: #4a9e86; --primary-fade: rgba(92, 184, 159, 0.15);
             --accent: #e67381; --accent-hover: #d15b69; --accent-fade: rgba(230, 115, 129, 0.15);
@@ -32,18 +34,15 @@
             background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
-            color: var(--text-main); 
-            display: flex; 
-            justify-content: center; 
-            min-height: 100vh; 
+            color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; 
         }
 
-        [data-theme="dark"] body { 
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #4a2f3d 100%); 
-        }
-        
+        [data-theme="dark"] body { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #4a2f3d 100%); }
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
+        /* ==========================================
+           📱 ساختار اصلی اپلیکیشن
+           ========================================== */
         .app-container { width: 100%; max-width: 480px; position: relative; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         .glass-panel { background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: var(--shadow-soft); }
 
@@ -58,15 +57,16 @@
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
         .app-content { flex: 1; padding: 10px 20px 100px 20px; overflow-y: auto; position: relative; }
-
+        
         .view-section { display: none; animation: fadeInView 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .view-section.active { display: block; }
         @keyframes fadeInView { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🔐 استایل‌های بخش احراز هویت */
+        /* ==========================================
+           🔐 استایل‌های بخش احراز هویت
+           ========================================== */
         .auth-container { width: 100%; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; min-height: 85vh;}
         .auth-card { padding: 40px 30px; border-radius: 32px; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(25px); box-shadow: var(--shadow-soft); text-align: center;}
-        .header-logo { width: 85px; height: 85px; border-radius: 25%; object-fit: cover; margin-bottom: 15px; border: 2px solid var(--glass-border); padding: 4px; background: var(--glass-highlight); }
         .auth-header-title h1 { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
         .auth-header-title p { font-size: 13px; color: var(--text-muted); font-weight: bold; line-height: 1.6; margin-bottom: 25px;}
         .alert-banner { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 20px; margin-bottom: 25px; border: 1px solid transparent; font-size: 13px; font-weight: bold; line-height: 1.7; text-align: center;}
@@ -76,45 +76,39 @@
         .promo-hint { font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.7; font-weight: bold; padding: 0 10px; text-align: justify; }
         .promo-hint span { color: var(--accent); background: var(--glass-highlight); padding: 2px 6px; border-radius: 6px;}
 
-        .wallet-card { padding: 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
-        .wallet-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: var(--primary); opacity: 0.15; border-radius: 50%; filter: blur(30px); z-index: 0; pointer-events: none; }
-        .wallet-info { position: relative; z-index: 1; }
-        .wallet-label { font-size: 12px; color: var(--text-muted); font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
-        .wallet-amount { font-size: 26px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
-        .wallet-amount span { font-size: 12px; color: var(--primary); font-weight: 900; margin-right: 5px; }
-        
+        /* ==========================================
+           📊 استایل‌های عمومی (کارت‌ها و دکمه‌ها)
+           ========================================== */
         .section-title { font-size: 15px; font-weight: 900; color: var(--text-muted); margin-bottom: 15px; padding-right: 5px; }
-        
         .status-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 25px; }
-        @media (min-width: 600px) { .status-grid { grid-template-columns: 1fr 1fr; } .status-card.full-width { grid-column: 1 / -1; } }
-
         .status-card { padding: 22px; transition: var(--transition); }
         .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .srv-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-        
         .srv-badge { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; }
         .srv-badge.inactive { background: rgba(113, 128, 150, 0.2); color: var(--text-muted); border-color: rgba(113, 128, 150, 0.3); }
-        
         .srv-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .srv-details.single-col { grid-template-columns: 1fr; }
-        
         .detail-item { background: var(--glass-highlight); padding: 12px 15px; border-radius: 16px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 5px; }
         .detail-item.row-style { flex-direction: row; justify-content: space-between; align-items: center; }
-        
         .detail-label { font-size: 11px; color: var(--text-muted); font-weight: 800;}
         .detail-val { font-size: 13px; font-weight: 900; color: var(--text-main); direction: ltr; text-align: right; }
         .detail-val.highlight { color: var(--primary); direction: rtl; }
-
         .card-actions { display: flex; gap: 10px; }
         .btn-action { flex: 1; padding: 12px; border-radius: 16px; border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-main); font-size: 12px; font-weight: 900; cursor: pointer; transition: var(--transition); text-align: center; display: flex; justify-content: center; align-items: center; gap: 6px; }
         .btn-action:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-fade); }
         .btn-action.primary { background: var(--primary); color: white; border: none; box-shadow: 0 6px 15px var(--primary-fade);}
         .btn-action.primary:hover { transform: translateY(-2px); color: white; }
 
-        .btn-add-fund { background: var(--text-main); color: var(--bg-color); border: none; padding: 10px 16px; border-radius: 16px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; transition: var(--transition); }
-        .btn-add-fund:hover { transform: scale(1.05); }
+        /* فرم‌ها و اینپوت‌ها */
+        .form-group { margin-bottom: 22px; }
+        .form-input { width: 100%; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); text-align: center; font-weight: bold; }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
+        .btn-submit { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 25px rgba(92, 184, 159, 0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
-        /* --- استایل‌های فرم رزرو روزانه (تقویم) --- */
+        /* ==========================================
+           🗓 رزرو روزانه (تقویم و پرداخت)
+           ========================================== */
         .calendar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
         .cal-card { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); position: relative; user-select: none; }
         .cal-card.available:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-fade); }
@@ -129,35 +123,75 @@
         .checkout-box { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
         .price-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 10px; color: var(--text-muted); }
         .price-final { font-size: 24px; font-weight: 900; color: var(--success); margin-top: 15px; border-top: 1px dashed var(--glass-border); padding-top: 15px; text-align: left; }
-        
         .payment-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; margin-bottom: 20px; border-top: 1px dashed var(--glass-border); padding-top: 20px; }
         .pay-option { background: var(--glass-highlight); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); font-size: 13px; font-weight: bold; }
         .pay-option.active { border-color: var(--primary); background: var(--primary-fade); color: var(--primary); }
         .pay-option input { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
-
         .payment-info { background: var(--primary-fade); border: 1px solid rgba(92, 184, 159, 0.3); border-radius: 16px; padding: 15px; margin-bottom: 25px; text-align: center; }
         .copy-btn { background: var(--glass-highlight); border: 1px dashed var(--primary); color: var(--primary); border-radius: 12px; cursor: pointer; padding: 10px 24px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; margin: 0 auto; }
-        
         .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--glass-border); padding: 30px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 20px; background: var(--glass-highlight); transition: var(--transition); }
         .file-upload:hover { border-color: var(--primary); background: var(--primary-fade); }
         .file-upload input { display: none; }
-        
         .rules-container { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 25px; overflow: hidden; }
         .rules-scroll-box { max-height: 120px; overflow-y: auto; padding: 15px 20px; font-size: 12px; color: var(--text-muted); line-height: 2; text-align: justify; }
         .rules-scroll-box ul { padding-right: 25px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; list-style-position: outside; }
         .rules-checkbox-label { display: flex; gap: 12px; align-items: center; padding: 15px 20px; background: rgba(239, 68, 68, 0.05); border-top: 1px solid rgba(239, 68, 68, 0.1); font-size: 12px; cursor: pointer; color: var(--danger); font-weight: bold; transition: var(--transition); }
         .rules-checkbox-label input { accent-color: var(--danger); width: 18px; height: 18px; cursor: pointer; }
+
+        /* ==========================================
+           💎 رزرو ماهانه (فروشگاه و کارت‌ها)
+           ========================================== */
+        .gateway-card { background: linear-gradient(135deg, #f0b2b6 0%, #d9858a 100%); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(217, 133, 138, 0.2); }
+        .gateway-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        .gw-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; position: relative; z-index: 1; }
+        .gw-status { background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px; color: white; }
+        .gw-title { font-size: 26px; font-weight: 900; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); direction: ltr; text-align: right;}
+        .gw-progress-container { background: rgba(0,0,0,0.15); padding: 15px; border-radius: 12px; position: relative; z-index: 1; }
+        .gw-progress-texts { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 10px; color: white;}
+        .progress-track { height: 6px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; direction: rtl;}
+        .progress-fill { height: 100%; background: #10b981; border-radius: 4px; transition: width 1s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);}
+        .dashed-add-box { border: 2px dashed rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; text-align: center; color: var(--text-muted); font-weight: bold; font-size: 15px; margin-bottom: 25px; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: var(--transition); }
+        .dashed-add-box:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-fade); }
+        .btn-gw { display: block; width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; transition: var(--transition); text-align: center; margin-bottom: 15px; color: white; }
+        .btn-gw.store { background: var(--primary); box-shadow: 0 8px 20px var(--primary-fade); }
+        .btn-gw.trade { background: var(--accent); box-shadow: 0 8px 20px var(--accent-fade); }
         
-        .form-group { margin-bottom: 22px; }
-        .form-input { width: 100%; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); text-align: center; font-weight: bold; }
-        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; direction: rtl; }
+        .store-card { background: var(--glass-highlight); border: 2px solid var(--glass-border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; position: relative; }
+        .store-card:hover:not(.disabled) { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .store-card.selected { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .store-card.disabled { opacity: 0.6; cursor: not-allowed; border-color: var(--glass-border); }
+        .cap-status { font-size: 12px; font-weight: bold; padding: 8px; border-radius: 8px; text-align: center; margin: 15px 0; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .cap-available { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .cap-full { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        .date-chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 20px; }
+        .date-chip { flex: 0 0 auto; background: var(--glass-highlight); border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 16px; font-size: 12px; font-weight: bold; cursor: pointer; transition: var(--transition); text-align: center; min-width: 100px; color: var(--text-main); }
+        .date-chip.active { border-color: var(--primary); background: var(--primary-fade); color: var(--primary); box-shadow: 0 4px 10px var(--primary-fade); }
+        .dur-segments { display: flex; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
+        .dur-seg { flex: 1; padding: 14px 5px; text-align: center; font-size: 12px; font-weight: bold; color: var(--text-muted); cursor: pointer; transition: var(--transition); border: none; background: transparent; border-left: 1px solid var(--glass-border); }
+        .dur-seg:last-child { border-left: none; }
+        .dur-seg.active { background: var(--primary-fade); color: var(--primary); font-weight: 900; }
+        
+        .feat-details { margin-top: 15px; border-top: 1px dashed var(--glass-border); padding-top: 10px; }
+        .feat-summary { font-size: 11px; font-weight: 900; color: var(--primary); cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 5px; outline: none; transition: 0.3s; background: var(--primary-fade); border-radius: 8px;}
+        .feat-summary::-webkit-details-marker { display: none; }
+        .feat-list { list-style: none; font-size: 11px; color: var(--text-main); margin-top: 15px; text-align: right; }
+        .feat-list li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.6; }
 
-        .btn-submit { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 25px rgba(92, 184, 159, 0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        /* ==========================================
+           💰 امور مالی و کیف پول
+           ========================================== */
+        .wallet-card { padding: 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
+        .wallet-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: var(--primary); opacity: 0.15; border-radius: 50%; filter: blur(30px); z-index: 0; pointer-events: none; }
+        .wallet-info { position: relative; z-index: 1; }
+        .wallet-label { font-size: 12px; color: var(--text-muted); font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
+        .wallet-amount { font-size: 26px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
+        .wallet-amount span { font-size: 12px; color: var(--primary); font-weight: 900; margin-right: 5px; }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
-
+        /* ==========================================
+           🌐 عناصر مشترک (نوار پایین و مودال‌ها)
+           ========================================== */
         .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 440px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; padding: 10px 0; border-radius: 20px; transition: var(--transition); flex: 1; position: relative; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
@@ -175,6 +209,7 @@
         .modal-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
         .close-btn { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted); width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
         .close-btn:hover { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+        
         .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item { padding: 15px; border-radius: 16px; background: var(--glass-highlight); border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
         .history-date { font-size: 13px; font-weight: 900; color: var(--text-main); }
@@ -188,55 +223,8 @@
         .srv-title svg { width: 24px !important; height: 24px !important; flex-shrink: 0; }
         .bottom-nav .nav-item svg { width: 24px !important; height: 24px !important; margin-bottom: 2px; }
 
-        /* 💎 استایل‌های درگاه اشتراک (Gateway) */
-        .gateway-card { background: linear-gradient(135deg, #f0b2b6 0%, #d9858a 100%); border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(217, 133, 138, 0.2); }
-        .gateway-card::after { content: ''; position: absolute; right: -20px; top: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-        .gw-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; position: relative; z-index: 1; }
-        .gw-status { background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px; color: white; }
-        .gw-title { font-size: 26px; font-weight: 900; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); direction: ltr; text-align: right;}
-        .gw-progress-container { background: rgba(0,0,0,0.15); padding: 15px; border-radius: 12px; position: relative; z-index: 1; }
-        .gw-progress-texts { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 10px; color: white;}
-        .progress-track { height: 6px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; direction: rtl;}
-        .progress-fill { height: 100%; background: #10b981; border-radius: 4px; transition: width 1s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);}
-        
-        .dashed-add-box { border: 2px dashed rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; text-align: center; color: var(--text-muted); font-weight: bold; font-size: 15px; margin-bottom: 25px; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: var(--transition); }
-        .dashed-add-box:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-fade); }
-        
-        .btn-gw { display: block; width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; transition: var(--transition); text-align: center; margin-bottom: 15px; color: white; }
-        .btn-gw.store { background: var(--primary); box-shadow: 0 8px 20px var(--primary-fade); }
-        .btn-gw.store:hover { transform: translateY(-2px); background: var(--primary-hover); }
-        .btn-gw.trade { background: var(--accent); box-shadow: 0 8px 20px var(--accent-fade); }
-        .btn-gw.trade:hover { transform: translateY(-2px); background: var(--accent-hover); }
-
-        /* 💎 استایل کارت‌های فروشگاه مشابه طرح درخواستی */
-        .store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; direction: rtl; }
-        .store-card { background: var(--glass-highlight); border: 2px solid var(--glass-border); border-radius: 16px; padding: 20px; text-align: right; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; position: relative; }
-        .store-card:hover:not(.disabled) { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
-        .store-card.selected { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
-        .store-card.disabled { opacity: 0.6; cursor: not-allowed; border-color: var(--glass-border); }
-        
-        .cap-status { font-size: 12px; font-weight: bold; padding: 8px; border-radius: 8px; text-align: center; margin: 15px 0; display: flex; justify-content: center; align-items: center; gap: 5px; }
-        .cap-available { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .cap-full { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-        
-        /* 💎 استایل‌های دکمه‌های کپسولی فرم پرداخت */
-        .date-chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 20px; }
-        .date-chip { flex: 0 0 auto; background: var(--glass-highlight); border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 16px; font-size: 12px; font-weight: bold; cursor: pointer; transition: var(--transition); text-align: center; min-width: 100px; color: var(--text-main); }
-        .date-chip.active { border-color: var(--primary); background: var(--primary-fade); color: var(--primary); box-shadow: 0 4px 10px var(--primary-fade); }
-
-        .dur-segments { display: flex; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
-        .dur-seg { flex: 1; padding: 14px 5px; text-align: center; font-size: 12px; font-weight: bold; color: var(--text-muted); cursor: pointer; transition: var(--transition); border: none; background: transparent; border-left: 1px solid var(--glass-border); }
-        .dur-seg:last-child { border-left: none; }
-        .dur-seg.active { background: var(--primary-fade); color: var(--primary); font-weight: 900; }
-        
-        /* آکاردئون توضیحات طرح */
-        .feat-details { margin-top: 15px; border-top: 1px dashed var(--glass-border); padding-top: 10px; }
-        .feat-summary { font-size: 11px; font-weight: 900; color: var(--primary); cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 5px; outline: none; transition: 0.3s; background: var(--primary-fade); border-radius: 8px;}
-        .feat-summary::-webkit-details-marker { display: none; }
-        .feat-summary:hover { background: rgba(99, 152, 137, 0.15); }
-        .feat-list { list-style: none; font-size: 11px; color: var(--text-main); margin-top: 15px; text-align: right; }
-        .feat-list li { margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.6; }
-
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -271,7 +259,7 @@
         <main class="app-content" id="mainContentArea">
 
             <!-- ===============================
-                 بخش‌های احراز هویت (ورود و ثبت‌نام)
+                 🔐 احراز هویت (Auth)
             ================================ -->
             <div id="view-auth-wrap" style="display: none;">
                 <div class="auth-container">
@@ -281,6 +269,7 @@
                             <p id="authHeaderSub">جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید</p>
                         </div>
 
+                        <!-- 1: Phone -->
                         <div class="view-section active" id="view-phone">
                             <div class="form-group">
                                 <input type="tel" id="inpPhone" class="form-input" placeholder="شماره موبایل (مثال: 09123456789)" maxlength="11" style="text-align: center; font-size: 16px; letter-spacing: 2px; direction: ltr;">
@@ -288,6 +277,7 @@
                             <button class="btn-submit" onclick="checkUserPhone()">تایید و ادامه</button>
                         </div>
 
+                        <!-- 2: Login -->
                         <div class="view-section" id="view-login">
                             <div class="alert-banner alert-success">حساب کاربری یافت شد. لطفاً رمز عبور خود را وارد کنید.</div>
                             <div class="form-group">
@@ -300,6 +290,7 @@
                             </div>
                         </div>
 
+                        <!-- 3: Register -->
                         <div class="view-section" id="view-register">
                             <div class="alert-banner alert-warning">شماره شما در سیستم ثبت نشده است. جهت تشکیل پرونده، اطلاعات زیر را تکمیل نمایید.</div>
                             
@@ -307,13 +298,7 @@
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px;">
                                 <select id="regGrade" class="form-input" style="padding: 12px; font-size: 13px;">
-                                    <option value="" disabled selected>پایه تحصیلی</option>
-                                    <option value="متوسطه اول">متوسطه اول</option>
-                                    <option value="دهم">دهم</option>
-                                    <option value="یازدهم">یازدهم</option>
-                                    <option value="دوازدهم">دوازدهم</option>
-                                    <option value="پشت کنکوری">پشت کنکوری</option>
-                                    <option value="دانشجو">دانشجو</option>
+                                    <option value="" disabled selected>پایه تحصیلی</option><option value="متوسطه اول">متوسطه اول</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">پشت کنکوری</option><option value="دانشجو">دانشجو</option>
                                 </select>
                                 <input type="text" id="regMajor" class="form-input" placeholder="رشته تحصیلی" style="padding: 12px; font-size: 13px;">
                             </div>
@@ -322,10 +307,7 @@
                             
                             <div class="form-group">
                                 <select id="regSecQ" class="form-input" style="font-size: 13px;">
-                                    <option value="" disabled selected>سوال امنیتی جهت بازیابی رمز عبور</option>
-                                    <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
-                                    <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option>
-                                    <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
+                                    <option value="" disabled selected>سوال امنیتی جهت بازیابی رمز عبور</option><option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option><option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option><option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
                                 </select>
                             </div>
                             <div class="form-group"><input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی (جهت یادآوری)"></div>
@@ -335,8 +317,7 @@
                             <div class="form-group" style="margin-top: 25px; border-top: 1px dashed var(--glass-border); padding-top: 20px;">
                                 <input type="text" id="regReferral" class="form-input" placeholder="کد معرف دوستان (اختیاری)" style="text-transform: uppercase; border-color: rgba(230, 115, 129, 0.4); text-align: center; letter-spacing: 2px;">
                                 <div class="promo-hint" style="text-align: right; line-height: 1.8;">
-                                    🎁 با ثبت کد معرف، در اولین رزرو روزانه خود <span>۲۰ هزار تومان</span> و در اولین رزرو ماهانه <span>۱۰۰ هزار تومان</span> تخفیف می‌گیرید!<br>
-                                    (شخص معرفی‌کننده نیز پس از اولین رزرو شما، به ترتیب <span>۵۰ و ۱۵۰ هزار تومان</span> شارژ کیف پول دریافت می‌کند).
+                                    🎁 با ثبت کد معرف، در اولین رزرو روزانه خود <span>۲۰ هزار تومان</span> و در اولین رزرو ماهانه <span>۱۰۰ هزار تومان</span> تخفیف می‌گیرید!
                                 </div>
                             </div>
                             
@@ -344,25 +325,22 @@
                             <button class="btn-action" style="width:100%; margin-top:10px; background: transparent;" onclick="goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">انصراف و بازگشت</button>
                         </div>
 
+                        <!-- 4: Recovery -->
                         <div class="view-section" id="view-recovery">
                             <div class="alert-banner alert-warning">
                                 <div id="recoveryQuestionText">برای بازیابی رمز، لطفاً پاسخ سوال امنیتی خود را وارد کنید.</div>
                             </div>
-                    
                             <input type="hidden" id="recovPhoneStore">
-                            <div class="form-group">
-                                <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ سوال امنیتی شما">
-                            </div>
-                            <div class="form-group">
-                                <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
-                            </div>
+                            <div class="form-group"><input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ سوال امنیتی شما"></div>
+                            <div class="form-group"><input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)"></div>
                             <button class="btn-submit" onclick="submitRecovery()">ذخیره رمز عبور جدید</button>
                             <button class="btn-action" style="width:100%; margin-top:10px; background: transparent;" onclick="goToAuthStep('view-login', 'ورود به حساب کاربری', 'لطفاً رمز عبور خود را وارد کنید')">بازگشت به ورود</button>
                         </div>
 
+                        <!-- 5: Status -->
                         <div class="view-section" id="view-pending">
                             <div class="alert-banner alert-warning">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 <div style="font-size: 16px; font-weight: 900;">در انتظار بررسی مدیریت</div>
                                 <div style="font-weight: normal;">پرونده شما ثبت شده است. لطفاً منتظر بمانید تا حساب شما توسط مدیریت تایید گردد.</div>
                             </div>
@@ -380,8 +358,9 @@
                     </div>
                 </div>
             </div>
+
             <!-- ===============================
-                 بخش داشبورد اصلی
+                 📊 داشبورد اصلی
             ================================ -->
             <div id="view-dashboard" class="view-section">
                 <div class="section-title">وضعیت قراردادهای من</div>
@@ -498,7 +477,7 @@
             </div>
 
             <!-- ===============================
-                 بخش رزرو روزانه
+                 📅 رزرو روزانه
             ================================ -->
             <div id="view-daily" class="view-section">
                 <div class="section-title" style="margin-bottom: 5px;">تقویم رزرو روزانه</div>
@@ -546,7 +525,7 @@
                     </div>
 
                     <label class="file-upload" id="uploadBox">
-                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <svg viewBox="0 0 24 24" width="32" height="32"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                         <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش واریزی را اینجا آپلود کنید</div>
                         <input type="file" id="receiptFile" accept="image/*" onchange="handleFileSelect(event)">
                     </label>
@@ -573,7 +552,7 @@
             </div>
 
             <!-- ===============================
-                 بخش رزرو ماهانه (Gateway)
+                 💎 رزرو ماهانه (Gateway فروشگاه)
             ================================ -->
             <div id="view-monthly" class="view-section">
                 <div class="header-title" style="display:flex; justify-content:center; align-items:center; position:relative; margin-bottom: 30px;">
@@ -586,16 +565,16 @@
                     <div class="dashed-add-box" onclick="alert('در آپدیت بعدی فرم فروشگاه باز می‌شود.')">
                         <span style="font-size: 24px; color: #a855f7;">+</span> افزودن طرح مشاوره به اکانت
                     </div>
-                    <button class="btn-gw store" onclick="alert('انتقال به بخش تمدید و خرید جدید...')">🛒 ورود به فروشگاه (تمدید و خرید طرح جدید)</button>
+                    <button class="btn-gw store" onclick="alert('انتقال به فرم تمدید...')">🛒 تمدید طرح</button>
                     <button class="btn-gw trade" onclick="alert('انتقال به بخش تعویض و ارتقا...')">🔄 تعویض و ارتقای طرح (Trade-in)</button>
                 </div>
 
                 <div id="noSubGateway" style="display: none;">
                     <div class="dashed-add-box" style="border-color: var(--primary); color: var(--primary); background: var(--primary-fade); cursor: default;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                         شما هنوز میز اختصاصی رزرو نکرده‌اید
                     </div>
-                    <div class="section-title">👑 طرح‌های پانسیون (ثبت‌نام جدید)</div>
+                    <div class="section-title">👑 طرح‌های پانسیون (ثبت‌‌نام جدید)</div>
                     
                     <div id="newPlansContainer" class="store-grid"></div>
 
@@ -608,7 +587,6 @@
                             <button class="dur-seg" id="segDurKonkur" onclick="setMonDur('konkur')">تا کنکور</button>
                         </div>
 
-                        
                         <div class="form-group" style="margin-bottom: 15px; display: flex; gap: 10px;">
                             <input type="text" id="monDiscountCode" class="form-input" placeholder="کد تخفیف (اختیاری)" style="flex: 2; margin-bottom: 0; padding: 12px; font-size: 12px; text-transform: uppercase;">
                             <button class="btn-action primary" style="flex: 1; border-radius: 16px; margin: 0; padding: 12px;" onclick="applyMonDiscount()">اعمال کد</button>
@@ -621,7 +599,6 @@
                             <button class="dur-seg" id="segPayInst" onclick="setMonPay('monthly')" style="display: none;">اقساط ماهانه</button>
                         </div>
 
-                        
                         <div class="checkout-box" style="border-color: var(--glass-border); margin-bottom: 25px;">
                             <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 10px; display: flex; justify-content: space-between;">
                                 🧾 صورتحساب
@@ -639,13 +616,10 @@
                             </div>
                         </div>
 
-                        
                         <div class="rules-container">
                             <div class="rules-scroll-box">
                                 <strong style="color: var(--primary); font-size: 13px;">📜 قوانین و مقررات پذیرش:</strong>
-                                <ul id="dynamicRules">
-                                    
-                                </ul>
+                                <ul id="dynamicRules"></ul>
                             </div>
                             <label class="rules-checkbox-label">
                                 <input type="checkbox" id="monRulesCheckbox" onchange="validateMonSubmit()">
@@ -653,7 +627,6 @@
                             </label>
                         </div>
 
-                        
                         <div style="background: var(--surface); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; text-align: center; border: 2px solid var(--primary); box-shadow: var(--shadow);">
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">مبلغ قابل پرداخت در این لحظه (جهت فعال‌سازی پرونده):</div>
                             <div id="monLblPayNowBig" style="font-size: 28px; font-weight: 900; color: var(--success); margin-bottom: 20px;">۰ تومان</div>
@@ -666,15 +639,7 @@
                         </div>
 
                         <label class="file-upload" id="monUploadBox">
-                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش واریزی را آپلود کنید</div>
-                            <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
-                        </label>
-
-                        <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
-                    </div>
-                        <label class="file-upload" id="monUploadBox">
-                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <svg viewBox="0 0 24 24" width="32" height="32"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;" id="monUploadText">تصویر فیش واریزی را آپلود کنید</div>
                             <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
                         </label>
@@ -684,6 +649,9 @@
                 </div>
             </div>
             
+            <!-- ===============================
+                 💰 امور مالی
+            ================================ -->
             <div id="view-finance" class="view-section">
                 <div class="section-title">امور مالی و اقساط پانسیون</div>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; font-weight: bold;">در این بخش می‌توانید وضعیت پرداخت‌ها و اقساط طرح‌های پانسیون خود را مشاهده و مدیریت کنید.</p>
@@ -709,7 +677,7 @@
             </div>
             
             <!-- ===============================
-                 بخش پروفایل کاربری
+                 👤 پروفایل کاربری
             ================================ -->
             <div id="view-profile" class="view-section">
                 <div class="section-title">پروفایل کاربری</div>
@@ -781,6 +749,9 @@
 
         </main>
 
+        <!-- ===============================
+             🌐 نوار پایین (Bottom Nav)
+        ================================ -->
         <nav class="bottom-nav glass-panel" style="display: none;">
             <div class="nav-item active" id="navDashboard" onclick="switchView('view-dashboard', this)">
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -806,15 +777,17 @@
 
     </div>
 
-    <!-- Modals -->
+    <!-- ===============================
+         🪟 مودال‌ها (Modals)
+    ================================ -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     تاریخچه رزروهای روزانه
                 </div>
-                <button class="close-btn" onclick="closeHistoryModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                <button class="close-btn" onclick="closeHistoryModal()"><svg viewBox="0 0 24 24" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
             <div class="history-list" id="historyListContainer"></div>
         </div>
@@ -865,13 +838,13 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec';
 
         let currentUser = null; 
+        let dbData = { rules: [] }; 
         
         // متغیرهای رزرو روزانه
         let window14Dates = []; let dailyCapacities = {}; let userPastReservations = []; 
         let selectedNewDates = []; let isFirstEver = false; let finalAmountToPay = 0; 
         let base64Image = ""; let appliedDiscountCode = ""; let discountAmount = 0; 
         let selectedPayMethod = "card"; let globalUserPastReservations = []; 
-        let dbData = { rules: [] }; // 👈 این خط مشکل is not defined را حل می‌کند
         const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
         // متغیرهای رزرو ماهانه
@@ -881,6 +854,7 @@
             promoCode: "", promoDiscount: 0, isFirstMonthly: true 
         };
         let monFinance = { totalBase: 0, discount: 0, finalPrice: 0, upfront: 0, installments: [] };
+
         // امور مالی
         let currentInstallmentId = null; let currentInstallmentAmount = 0; let instBase64Image = "";
 
@@ -913,7 +887,7 @@
             let tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
             if (dbDateStr === getShamsiDateSafe(tmrw)) return 'فردا';
             let dayAfter = new Date(); dayAfter.setDate(dayAfter.getDate() + 2);
-            if (dbDateStr === getShamsiDateSafe(dayAfter)) return 'پس‌فردا';
+            if (dbDateStr === getShamsiDateSafe(dayAfter)) return 'پس‌‌فردا';
             return dbDateStr.replace(/-/g, '/');
         }
 
@@ -924,13 +898,6 @@
             return getShamsiDateSafe(d);
         }
 
-        function copyCard() {
-            navigator.clipboard.writeText('6219861810380484').then(() => {
-                alert('✅ شماره کارت کپی شد.');
-            });
-        }
-
-        // تابع هوشمند برای محاسبه امن اختلاف روزهای دو تاریخ شمسی استرینگ (بدون باگ new Date)
         function calcShamsiRemainDays(endDateStr) {
             if (!endDateStr) return 0;
             let endParts = endDateStr.replace(/\//g, '-').split('-');
@@ -943,6 +910,10 @@
             let todayDays = (parseInt(todayParts[0]) * 365) + (parseInt(todayParts[1]) * 30) + parseInt(todayParts[2]);
             
             return Math.max(0, endDays - todayDays);
+        }
+
+        function copyCard() {
+            navigator.clipboard.writeText('6219861810380484').then(() => alert('✅ شماره کارت کپی شد.'));
         }
 
         // ==========================================
@@ -1028,7 +999,6 @@
                 } else if (res.status === 'blocked') {
                     goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
                 } else if (res.status === 'active') {
-                    // در زمان لاگین، سوال امنیتی شخص را برای فرم ریکاوری (در صورت نیاز) در حافظه نگه می‌داریم
                     if(res.security_question) {
                         document.getElementById('recoveryQuestionText').innerText = `سوال: ${res.security_question}`;
                         document.getElementById('recovPhoneStore').value = phone;
@@ -1060,29 +1030,22 @@
 
         async function submitRegistration() {
             const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
-            
-            // جلوگیری از ارسال مقادیر نامعتبر
             let gradeEl = document.getElementById('regGrade');
             let secQEl = document.getElementById('regSecQ');
             let gradeVal = gradeEl.value === "" ? null : gradeEl.value;
             let secQVal = secQEl.value === "" ? null : secQEl.value;
 
             const userData = {
-                phone: phone, 
-                name: document.getElementById('regName').value.trim(),
-                grade: gradeVal, 
-                major: document.getElementById('regMajor').value.trim(),
-                school: document.getElementById('regSchool').value.trim(), 
-                password: document.getElementById('regPass').value.trim(),
-                security_question: secQVal,
-                security_answer: document.getElementById('regSecA').value.trim(),
+                phone: phone, name: document.getElementById('regName').value.trim(),
+                grade: gradeVal, major: document.getElementById('regMajor').value.trim(),
+                school: document.getElementById('regSchool').value.trim(), password: document.getElementById('regPass').value.trim(),
+                security_question: secQVal, security_answer: document.getElementById('regSecA').value.trim(),
                 referral_code: toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase())
             };
 
             if (!userData.name || !userData.grade || !userData.major || !userData.school || !userData.password || !userData.security_question || !userData.security_answer) {
                 return alert('تکمیل تمامی فیلدها (به جز کد معرف) الزامی است.');
             }
-
             if (userData.password.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
 
             document.getElementById('mainLoader').style.display = 'flex';
@@ -1107,10 +1070,7 @@
 
             document.getElementById('mainLoader').style.display = 'flex';
             try {
-                const response = await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'recover_password', phone_number: phone, answer: answer, new_password: newPass }) 
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'recover_password', phone_number: phone, answer: answer, new_password: newPass }) });
                 const res = await response.json();
                 document.getElementById('mainLoader').style.display = 'none';
 
@@ -1118,16 +1078,13 @@
                     alert('✅ رمز عبور شما با موفقیت تغییر کرد. لطفاً با رمز جدید وارد شوید.');
                     document.getElementById('inpLoginPass').value = '';
                     goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
-                } else {
-                    alert(res.error || 'پاسخ سوال امنیتی اشتباه است.');
-                }
+                } else { alert(res.error || 'پاسخ سوال امنیتی اشتباه است.'); }
             } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
         }
 
         function logout() {
             if(confirm("آیا از حساب کاربری خود خارج می‌شوید؟")) {
-                localStorage.removeItem('rahino_user_phone');
-                window.location.reload();
+                localStorage.removeItem('rahino_user_phone'); window.location.reload();
             }
         }
 
@@ -1156,27 +1113,22 @@
                     
                     let wBal = Number(currentUser.wallet_balance || 0);
                     document.getElementById('uiWalletBalance').innerHTML = `${wBal.toLocaleString()} <span>تومان</span>`;
-
                     if (wBal >= 500000) document.getElementById('btnWithdraw').style.display = 'block';
 
                     renderInstallments(res.installments);
                     initMonthlyBooking();
                     renderProfile();
 
-                    const consultInactiveText = document.querySelector('#consultInactiveData p');
                     let availablePlans = res.pansion_plans || [];
 
-                    // شخصی‌سازی داشبورد و درگاه ماهانه
-                    // ۱. منطق کنترل پنل داشبورد و درگاه ماهانه
+                    // ۱. وضعیت داشبورد و درگاه ماهانه
                     if (pansion) {
                         document.getElementById('badgePansion').innerText = 'فعال';
                         document.getElementById('badgePansion').className = 'srv-badge';
                         document.getElementById('pansionActiveData').style.display = 'block';
                         document.getElementById('pansionInactiveData').style.display = 'none';
                         
-                        // تزریق اطلاعات به کارت بزرگ شده داشبورد
                         document.getElementById('uiPanType').innerHTML = `<span style="direction:ltr; display:inline-block;">${pansion.service_type.toUpperCase()}</span>`;
-                        
                         let safeStartDate = pansion.start_date ? pansion.start_date.replace(/-/g, '/') : '--';
                         let safeEndDate = pansion.end_date ? pansion.end_date.replace(/-/g, '/') : '--';
                         let remainDays = calcShamsiRemainDays(pansion.end_date);
@@ -1185,8 +1137,7 @@
                         document.getElementById('uiPanEnd').innerText = safeEndDate;
                         document.getElementById('uiPanRemainTxt').innerText = `${remainDays} روز`;
                         
-                        // محاسبه حدودی پیشرفت برای داشبورد (با فرض هر ماه 30 روز)
-                        let totalEstDays = 30; // مقدار پیش‌فرض
+                        let totalEstDays = 30; 
                         if(pansion.start_date && pansion.end_date) {
                              let sParts = pansion.start_date.replace(/\//g, '-').split('-');
                              let eParts = pansion.end_date.replace(/\//g, '-').split('-');
@@ -1200,14 +1151,10 @@
                         document.getElementById('cardDaily').style.display = 'none';
                         document.getElementById('navDaily').style.display = 'none';
                         
-                        if(consultInactiveText) consultInactiveText.innerHTML = `شما اشتراک پانسیون دارید! با فعال‌سازی بخش مشاوره از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.`;
-                        
                         renderGatewayActive(pansion);
                     } else {
                         document.getElementById('cardDaily').style.display = 'block';
                         document.getElementById('navDaily').style.display = 'flex';
-                        
-                        if(consultInactiveText) consultInactiveText.innerHTML = `با ثبت‌نام در پانسیون ماهانه، از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> روی طرح‌های مشاوره بهره‌مند شوید.`;
                         
                         if (nextDaily) {
                             document.getElementById('badgeDaily').innerText = 'دارای رزرو';
@@ -1252,13 +1199,14 @@
             if(segKonkur) segKonkur.innerText = `تا کنکور (${Math.ceil(monState.konkurMonths)} ماه)`;
         }
 
-        // استخراج و نمایش قوانین
         function updateRules() {
             let rules = [];
             let nGrade = currentUser ? currentUser.grade : 'all';
             
             if (dbData && dbData.rules) {
-                dbData.rules.filter(r => r.target_category === 'all' || (monState.planType !== 'none' && r.target_category === 'pansion')).forEach(r => {
+                dbData.rules.filter(r => (r.target_category === 'all' || r.target_category === 'pansion') && 
+                                         (r.target_grade === 'all' || r.target_grade === nGrade))
+                .forEach(r => {
                     let lines = r.rule_text.split(/\n|\*/).filter(line => line.trim() !== '');
                     rules.push(...lines);
                 });
@@ -1270,6 +1218,7 @@
                 else rulesContainer.innerHTML = '<li>قوانین انضباطی و مالی آموزشگاه را می‌پذیرم.</li>';
             }
         }
+
         function initMonthlyBooking() {
             calcKonkurMonths();
             let today = new Date();
@@ -1331,15 +1280,6 @@
                 </div>
             `;
             document.getElementById('gwCardContainer').innerHTML = html;
-
-            // آپدیت متن دکمه ورود به فروشگاه
-            const storeBtn = document.querySelector('.btn-gw.store');
-            if(storeBtn) {
-                storeBtn.innerHTML = '🛒 تمدید طرح';
-                storeBtn.onclick = function() {
-                    alert('در آپدیت بعدی فرم تمدید باز می‌شود.');
-                };
-            }
         }
 
         function renderGatewayInactive(plans, userGrade) {
@@ -1348,7 +1288,6 @@
             let container = document.getElementById('newPlansContainer');
             container.innerHTML = ''; container.className = 'store-grid';
             
-            // فیلتر هوشمند برای پنهان کردن طرح دانش‌آموزی
             let isPostKonkurOrUni = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ') || userGrade.includes('دانشجو'));
             
             plans.forEach(plan => {
@@ -1357,17 +1296,17 @@
                 let capacity = parseInt(plan.capacity) || 0; 
                 let isFull = capacity <= 0;
                 let capHtml = isFull 
-                    ? `<div class="cap-status cap-full"><svg viewBox="0 0 24 24" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> تکمیل ظرفیت (بدون کنسلی)</div>`
-                    : `<div class="cap-status cap-available"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> افزودن به پلن (موجود: ${capacity} نفر)</div>`;
+                    ? `<div class="cap-status cap-full"><svg viewBox="0 0 24 24" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> تکمیل ظرفیت</div>`
+                    : `<div class="cap-status cap-available"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> موجودی: ${capacity} نفر</div>`;
                 
                 let featuresHtml = '';
                 if(plan.features) {
                     let listItems = plan.features.split('\n').map(l => {
                         let text = l.replace('✅', '').trim();
                         if(!text) return '';
-                        return `<li><span style="color:var(--success); flex-shrink:0;"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></span> <span>${text}</span></li>`;
+                        return `<li><span style="color:var(--success); flex-shrink:0;"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></span> <span>${text}</span></li>`;
                     }).join('');
-                    featuresHtml = `<details class="feat-details"><summary class="feat-summary">مشاهده امکانات و جزئیات طرح 🔻</summary><ul class="feat-list">${listItems}</ul></details>`;
+                    featuresHtml = `<details class="feat-details"><summary class="feat-summary">مشاهده امکانات طرح 🔻</summary><ul class="feat-list">${listItems}</ul></details>`;
                 }
                 
                 let onclickAttr = isFull ? '' : `onclick="selectNewPlan('${plan.type}', ${plan.base_price})"`;
@@ -1382,6 +1321,7 @@
                     </div>`;
             });
         }
+
         function selectNewPlan(type, price) {
             monState.planType = type; monState.basePrice = price;
             document.querySelectorAll('.store-card').forEach(card => card.classList.remove('selected'));
@@ -1429,16 +1369,15 @@
             let totalBase = monState.basePrice * duration;
             let finalPrice = totalBase;
             
-            // نمایش/مخفی کردن دکمه اقساط (فقط بالای 3.5 میلیون)
             const segPayInst = document.getElementById('segPayInst');
-            if (totalBase < 3500000) {
+            if (totalBase < 3500000 || duration === 1) {
                 if (segPayInst) segPayInst.style.display = 'none';
-                if(monState.payMethod === 'monthly') setMonPay('cash'); // بازگشت اجباری به نقدی
+                if(monState.payMethod === 'monthly') setMonPay('cash'); 
             } else {
                 if (segPayInst) segPayInst.style.display = 'block';
             }
 
-            // 🧠 محاسبه تخفیف‌های زمانی (نقد و اقساط)
+            // 🧠 تخفیف زمانی (نقد/اقساط)
             let timeDiscountRate = 0;
             if (monState.duration === 'konkur' || duration >= 9) {
                  timeDiscountRate = monState.payMethod === 'cash' ? 0.15 : 0.08;
@@ -1448,17 +1387,17 @@
             let timeDiscountAmount = totalBase * timeDiscountRate;
             finalPrice -= timeDiscountAmount;
 
-            // 🧠 اعمال کد تخفیف دستی
+            // 🧠 کد تخفیف دستی
             let promoDiscountAmount = 0;
             if (monState.promoDiscount > 0) {
                  promoDiscountAmount = monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount;
                  finalPrice -= promoDiscountAmount;
             }
             
-            // 🧠 اعمال تخفیف معرفی دوستان (فقط برای ثبت نام جدید)
+            // 🧠 تخفیف معرفی دوستان
             let referralDiscountAmount = 0;
             let isFirstMonthlyReg = !document.getElementById('pansionActiveData') || document.getElementById('pansionActiveData').style.display === 'none';
-            if (isFirstMonthlyReg && currentUser && currentUser.invited_by) {
+            if (isFirstMonthlyReg && currentUser && currentUser.invited_by && !monState.referralDiscountApplied) {
                  referralDiscountAmount = 100000;
                  finalPrice = Math.max(0, finalPrice - referralDiscountAmount);
             }
@@ -1476,24 +1415,12 @@
 
             let listHtml = '';
             
-            // 🧠 منطق جدید اقساط
-            if (monState.payMethod === 'monthly' && totalBase >= 3500000) {
+            // 🧠 منطق اقساط
+            if (monState.payMethod === 'monthly' && totalBase >= 3500000 && duration > 1) {
                 const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
                 let baseInstDate = new Date(); 
                 
-                if (duration === 1) {
-                    // یک ماهه (50% نقد، 50% ده روز بعد)
-                    let upfrontRounded = roundDown100k(finalPrice * 0.50);
-                    let remaining = finalPrice - upfrontRounded;
-                    monFinance.upfront = upfrontRounded;
-                    
-                    let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 10); 
-                    monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-                    
-                    listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
-                                <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز دیگر)</li>`;
-                } else if (duration === 3) {
-                    // سه ماهه (50% نقد، 50% یک ماه بعد)
+                if (duration <= 3) {
                     let upfrontRounded = roundDown100k(finalPrice * 0.50);
                     let remaining = finalPrice - upfrontRounded;
                     monFinance.upfront = upfrontRounded;
@@ -1504,7 +1431,6 @@
                     listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
                                 <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه بعد)</li>`;
                 } else {
-                    // سالانه / تا کنکور (20% نقد، 4 چک 20% در ماه‌های 1، 2، 4، 6)
                     let upfrontRounded = roundDown100k(finalPrice * 0.20);
                     monFinance.upfront = upfrontRounded;
                     
@@ -1533,10 +1459,12 @@
             }
 
             document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
-            document.getElementById('monLblPayNowBig').innerText = monFinance.upfront.toLocaleString() + ' تومان';
+            
+            let payNowBig = document.getElementById('monLblPayNowBig');
+            if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
+            
             document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
 
-            // آپدیت متن بخش تخفیف
             let noticeMsg = "";
             if (referralDiscountAmount > 0) noticeMsg += `🎁 ۱۰۰ هزار تومان تخفیف معرف برای اولین ثبت‌نام اعمال شد!<br>`;
             if (promoDiscountAmount > 0) noticeMsg += `✅ کد تخفیف با موفقیت اعمال شد.`;
@@ -1544,6 +1472,25 @@
 
             validateMonSubmit();
         }
+
+        async function applyMonDiscount() {
+            const code = document.getElementById('monDiscountCode').value.trim().toUpperCase();
+            if(!code) return;
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'check_discount', code: code, phone_number: currentUser.phone_number, type: 'monthly' }) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+                if (res.success) { 
+                    monState.promoCode = code; 
+                    monState.promoDiscount = res.discount_value || 0; 
+                    calculateMonthly(); 
+                    alert('کد تخفیف اعمال شد.'); 
+                } 
+                else { alert(res.error); }
+            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا در بررسی کد'); }
+        }
+
         function handleMonFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
@@ -1568,24 +1515,6 @@
                 };
                 reader.readAsDataURL(file);
             }
-        }
-
-        async function applyMonDiscount() {
-            const code = document.getElementById('monDiscountCode').value.trim().toUpperCase();
-            if(!code) return;
-            document.getElementById('mainLoader').style.display = 'flex';
-            try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'check_discount', code: code, phone_number: currentUser.phone_number, type: 'monthly' }) });
-                const res = await response.json();
-                document.getElementById('mainLoader').style.display = 'none';
-                if (res.success) { 
-                    monState.promoCode = code; 
-                    monState.promoDiscount = res.discount_value || 0; 
-                    calculateMonthly(); 
-                    alert('کد تخفیف اعمال شد.'); 
-                } 
-                else { alert(res.error); }
-            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا در بررسی کد'); }
         }
 
         function validateMonSubmit() { 
@@ -1829,7 +1758,7 @@
         }
 
         // ==========================================
-        // 📜 تاریخچه داشبورد
+        // 📜 تاریخچه و پروفایل
         // ==========================================
         function openHistoryModal() {
             document.getElementById('historyModal').style.display = 'flex';
@@ -1845,14 +1774,10 @@
         }
         function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
 
-        // ==========================================
-        // 👤 بخش پروفایل کاربری
-        // ==========================================
         function renderProfile() {
             if(!currentUser) return;
             document.getElementById('profNameTitle').innerText = currentUser.full_name || 'کاربر راهینو';
             document.getElementById('profPhoneTitle').innerText = currentUser.phone_number || '--';
-            
             document.getElementById('profName').value = currentUser.full_name || '';
             document.getElementById('profGrade').value = currentUser.grade || 'دوازدهم';
             document.getElementById('profMajor').value = currentUser.major || '';
@@ -1861,47 +1786,30 @@
             document.getElementById('profCity').value = currentUser.city || '';
             document.getElementById('profFather').value = currentUser.father_phone || '';
             document.getElementById('profMother').value = currentUser.mother_phone || '';
-            
             document.getElementById('profReferralCode').innerText = currentUser.referral_code || 'در حال صدور...';
         }
 
         async function submitProfileUpdate() {
             const payload = {
-                action: 'update_profile',
-                phone_number: currentUser.phone_number,
-                full_name: document.getElementById('profName').value.trim(),
-                grade: document.getElementById('profGrade').value,
-                major: document.getElementById('profMajor').value.trim(),
-                school_name: document.getElementById('profSchool').value.trim(),
-                province: document.getElementById('profProvince').value.trim(),
-                city: document.getElementById('profCity').value.trim(),
-                father_phone: toEngDigits(document.getElementById('profFather').value.trim()),
+                action: 'update_profile', phone_number: currentUser.phone_number, full_name: document.getElementById('profName').value.trim(),
+                grade: document.getElementById('profGrade').value, major: document.getElementById('profMajor').value.trim(),
+                school_name: document.getElementById('profSchool').value.trim(), province: document.getElementById('profProvince').value.trim(),
+                city: document.getElementById('profCity').value.trim(), father_phone: toEngDigits(document.getElementById('profFather').value.trim()),
                 mother_phone: toEngDigits(document.getElementById('profMother').value.trim())
             };
-
             document.getElementById('mainLoader').style.display = 'flex';
             try {
                 const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const res = await response.json();
                 document.getElementById('mainLoader').style.display = 'none';
-
-                if (res.success) {
-                    alert('✅ پروفایل شما با موفقیت بروزرسانی شد.');
-                    window.location.reload();
-                } else {
-                    alert(res.error || 'خطا در بروزرسانی.');
-                }
-            } catch (e) {
-                document.getElementById('mainLoader').style.display = 'none';
-                alert('خطا در ارتباط با سرور.');
-            }
+                if (res.success) { alert('✅ پروفایل شما با موفقیت بروزرسانی شد.'); window.location.reload(); } 
+                else { alert(res.error || 'خطا در بروزرسانی.'); }
+            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا در ارتباط با سرور.'); }
         }
 
         function copyReferral() {
             const code = document.getElementById('profReferralCode').innerText;
-            if(code && code !== '--' && code !== 'در حال صدور...') {
-                navigator.clipboard.writeText(code).then(() => alert('✅ کد معرف کپی شد!'));
-            }
+            if(code && code !== '--' && code !== 'در حال صدور...') { navigator.clipboard.writeText(code).then(() => alert('✅ کد معرف کپی شد!')); }
         }
     </script>
 </body>
