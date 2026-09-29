@@ -666,9 +666,75 @@
                 </div>
             </div>
             
+            <!-- ===============================
+                 بخش پروفایل کاربری
+            ================================ -->
             <div id="view-profile" class="view-section">
                 <div class="section-title">پروفایل کاربری</div>
-                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">بخش پروفایل در حال آماده سازی است...</div>
+                
+                <div class="glass-panel" style="padding: 25px; margin-bottom: 25px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div class="avatar" style="width: 70px; height: 70px; margin: 0 auto 15px; border-radius: 22px; font-size: 28px;">👤</div>
+                        <h3 style="font-size: 18px; font-weight: 900; color: var(--text-main);" id="profNameTitle">--</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-top: 5px; letter-spacing: 1px;" id="profPhoneTitle">--</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">نام و نام خانوادگی</label>
+                        <input type="text" id="profName" class="form-input" style="text-align: right;">
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">پایه تحصیلی</label>
+                            <select id="profGrade" class="form-input" style="padding: 12px; font-size: 13px; text-align: right;">
+                                <option value="متوسطه اول">متوسطه اول</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">پشت کنکوری</option><option value="دانشجو">دانشجو</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">رشته تحصیلی</label>
+                            <input type="text" id="profMajor" class="form-input" style="padding: 12px; font-size: 13px; text-align: right;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">نام مدرسه / دانشگاه</label>
+                        <input type="text" id="profSchool" class="form-input" style="text-align: right;">
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">استان</label>
+                            <input type="text" id="profProvince" class="form-input" style="padding: 12px; font-size: 13px; text-align: right;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">شهر</label>
+                            <input type="text" id="profCity" class="form-input" style="padding: 12px; font-size: 13px; text-align: right;">
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">شماره پدر</label>
+                            <input type="tel" id="profFather" class="form-input" style="padding: 12px; font-size: 13px; letter-spacing: 1px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">شماره مادر</label>
+                            <input type="tel" id="profMother" class="form-input" style="padding: 12px; font-size: 13px; letter-spacing: 1px;">
+                        </div>
+                    </div>
+
+                    <button class="btn-submit" onclick="submitProfileUpdate()">ذخیره تغییرات 💾</button>
+                </div>
+
+                <div class="section-title">معرفی به دوستان (کسب درآمد)</div>
+                <div class="glass-panel" style="padding: 25px; text-align: center; margin-bottom: 25px;">
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px; line-height: 1.8;">
+                        کد معرف اختصاصی شما. با دعوت دوستانتان هم شما و هم آن‌ها از تخفیف‌های ویژه (تا ۱۵۰ هزار تومان شارژ کیف پول) بهره‌مند شوید!
+                    </div>
+                    <div style="background: var(--primary-fade); border: 1px dashed var(--primary); padding: 15px; border-radius: 16px; font-size: 20px; font-weight: 900; color: var(--primary); letter-spacing: 2px; margin-bottom: 15px;" id="profReferralCode">--</div>
+                    <button class="btn-action primary" style="width: 100%; border-radius: 16px;" onclick="copyReferral()">کپی کد معرف 📋</button>
+                </div>
             </div>
 
         </main>
@@ -1048,6 +1114,7 @@
 
                     renderInstallments(res.installments);
                     initMonthlyBooking();
+                    renderProfile();
 
                     const consultInactiveText = document.querySelector('#consultInactiveData p');
                     let availablePlans = res.pansion_plans || [];
@@ -1633,6 +1700,65 @@
             } else { container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 10px;">تاریخچه‌ای یافت نشد.</div>'; }
         }
         function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
+        // ==========================================
+        // 👤 بخش پروفایل کاربری
+        // ==========================================
+        function renderProfile() {
+            if(!currentUser) return;
+            document.getElementById('profNameTitle').innerText = currentUser.full_name || 'کاربر راهینو';
+            document.getElementById('profPhoneTitle').innerText = currentUser.phone_number || '--';
+            
+            document.getElementById('profName').value = currentUser.full_name || '';
+            document.getElementById('profGrade').value = currentUser.grade || 'دوازدهم';
+            document.getElementById('profMajor').value = currentUser.major || '';
+            document.getElementById('profSchool').value = currentUser.school_name || '';
+            document.getElementById('profProvince').value = currentUser.province || '';
+            document.getElementById('profCity').value = currentUser.city || '';
+            document.getElementById('profFather').value = currentUser.father_phone || '';
+            document.getElementById('profMother').value = currentUser.mother_phone || '';
+            
+            document.getElementById('profReferralCode').innerText = currentUser.referral_code || 'در حال صدور...';
+        }
+
+        async function submitProfileUpdate() {
+            const payload = {
+                action: 'update_profile',
+                phone_number: currentUser.phone_number,
+                full_name: document.getElementById('profName').value.trim(),
+                grade: document.getElementById('profGrade').value,
+                major: document.getElementById('profMajor').value.trim(),
+                school_name: document.getElementById('profSchool').value.trim(),
+                province: document.getElementById('profProvince').value.trim(),
+                city: document.getElementById('profCity').value.trim(),
+                father_phone: toEngDigits(document.getElementById('profFather').value.trim()),
+                mother_phone: toEngDigits(document.getElementById('profMother').value.trim())
+            };
+
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) {
+                    alert('✅ پروفایل شما با موفقیت بروزرسانی شد.');
+                    window.location.reload();
+                } else {
+                    alert(res.error || 'خطا در بروزرسانی.');
+                }
+            } catch (e) {
+                document.getElementById('mainLoader').style.display = 'none';
+                alert('خطا در ارتباط با سرور.');
+            }
+        }
+
+        function copyReferral() {
+            const code = document.getElementById('profReferralCode').innerText;
+            if(code && code !== '--' && code !== 'در حال صدور...') {
+                navigator.clipboard.writeText(code).then(() => alert('✅ کد معرف کپی شد!'));
+            }
+        }
     </script>
 </body>
 </html>
