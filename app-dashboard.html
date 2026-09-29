@@ -379,8 +379,8 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="status-card glass-panel" id="cardPansion">
+                    
+                    <div class="status-card glass-panel full-width" id="cardPansion">
                         <div class="status-header">
                             <div class="srv-title">
                                 <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -390,18 +390,29 @@
                         </div>
                         
                         <div id="pansionActiveData" style="display: none;">
-                            <div class="srv-details single-col">
+                            <div class="srv-details" style="grid-template-columns: 1fr 1fr;">
                                 <div class="detail-item row-style">
                                     <span class="detail-label">نوع میز:</span>
                                     <span class="detail-val highlight" id="uiPanType">--</span>
                                 </div>
                                 <div class="detail-item row-style">
-                                    <span class="detail-label">انقضا:</span>
-                                    <span class="detail-val" id="uiPanDays" style="color: var(--text-main);">--</span>
+                                    <span class="detail-label">روزهای باقیمانده:</span>
+                                    <span class="detail-val" id="uiPanRemainTxt" style="color: var(--warning);">--</span>
                                 </div>
                             </div>
+                            
+                            <div style="background: rgba(0,0,0,0.1); padding: 12px; border-radius: 12px; margin-bottom: 20px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px;">
+                                    <span>شروع: <span id="uiPanStart">--</span></span>
+                                    <span>انقضا: <span id="uiPanEnd">--</span></span>
+                                </div>
+                                <div style="height: 6px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; direction: rtl;">
+                                    <div id="uiPanProgressBar" style="height: 100%; background: var(--success); width: 0%; transition: 1s;"></div>
+                                </div>
+                            </div>
+
                             <div class="card-actions">
-                                <button class="btn-action primary" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">تمدید سریع</button>
+                                <button class="btn-action primary" onclick="switchView('view-monthly', document.getElementById('navMonthly'))">تمدید و مدیریت اشتراک</button>
                             </div>
                         </div>
 
@@ -769,6 +780,21 @@
             });
         }
 
+        // تابع هوشمند برای محاسبه امن اختلاف روزهای دو تاریخ شمسی استرینگ (بدون باگ new Date)
+        function calcShamsiRemainDays(endDateStr) {
+            if (!endDateStr) return 0;
+            let endParts = endDateStr.replace(/\//g, '-').split('-');
+            let todayStr = getShamsiDateSafe(new Date());
+            let todayParts = todayStr.replace(/\//g, '-').split('-');
+            
+            if (endParts.length !== 3 || todayParts.length !== 3) return 0;
+            
+            let endDays = (parseInt(endParts[0]) * 365) + (parseInt(endParts[1]) * 30) + parseInt(endParts[2]);
+            let todayDays = (parseInt(todayParts[0]) * 365) + (parseInt(todayParts[1]) * 30) + parseInt(todayParts[2]);
+            
+            return Math.max(0, endDays - todayDays);
+        }
+
         // ==========================================
         // 🌗 مدیریت تم و لایوت SPA
         // ==========================================
@@ -928,18 +954,41 @@
                     let availablePlans = res.pansion_plans || [];
 
                     // شخصی‌سازی داشبورد و درگاه ماهانه
+                    // ۱. منطق کنترل پنل داشبورد و درگاه ماهانه
                     if (pansion) {
                         document.getElementById('badgePansion').innerText = 'فعال';
                         document.getElementById('badgePansion').className = 'srv-badge';
                         document.getElementById('pansionActiveData').style.display = 'block';
                         document.getElementById('pansionInactiveData').style.display = 'none';
-                        document.getElementById('uiPanType').innerText = `طرح ${pansion.service_type}`;
-                        if(pansion.end_date) document.getElementById('uiPanDays').innerText = getShamsiDateSafe(new Date(pansion.end_date)).replace(/-/g, '/');
+                        
+                        // تزریق اطلاعات به کارت بزرگ شده داشبورد
+                        document.getElementById('uiPanType').innerHTML = `<span style="direction:ltr; display:inline-block;">${pansion.service_type.toUpperCase()}</span>`;
+                        
+                        let safeStartDate = pansion.start_date ? pansion.start_date.replace(/-/g, '/') : '--';
+                        let safeEndDate = pansion.end_date ? pansion.end_date.replace(/-/g, '/') : '--';
+                        let remainDays = calcShamsiRemainDays(pansion.end_date);
+                        
+                        document.getElementById('uiPanStart').innerText = safeStartDate;
+                        document.getElementById('uiPanEnd').innerText = safeEndDate;
+                        document.getElementById('uiPanRemainTxt').innerText = `${remainDays} روز`;
+                        
+                        // محاسبه حدودی پیشرفت برای داشبورد (با فرض هر ماه 30 روز)
+                        let totalEstDays = 30; // مقدار پیش‌فرض
+                        if(pansion.start_date && pansion.end_date) {
+                             let sParts = pansion.start_date.replace(/\//g, '-').split('-');
+                             let eParts = pansion.end_date.replace(/\//g, '-').split('-');
+                             let sDays = (parseInt(sParts[0]) * 365) + (parseInt(sParts[1]) * 30) + parseInt(sParts[2]);
+                             let eDays = (parseInt(eParts[0]) * 365) + (parseInt(eParts[1]) * 30) + parseInt(eParts[2]);
+                             totalEstDays = Math.max(1, eDays - sDays);
+                        }
+                        let progressVal = Math.min(100, Math.max(0, 100 - ((remainDays / totalEstDays) * 100)));
+                        document.getElementById('uiPanProgressBar').style.width = `${progressVal}%`;
                         
                         document.getElementById('cardDaily').style.display = 'none';
                         document.getElementById('navDaily').style.display = 'none';
                         
                         if(consultInactiveText) consultInactiveText.innerHTML = `شما اشتراک پانسیون دارید! با فعال‌سازی بخش مشاوره از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.`;
+                        
                         renderGatewayActive(pansion);
                     } else {
                         document.getElementById('cardDaily').style.display = 'block';
@@ -1012,23 +1061,50 @@
         function renderGatewayActive(pansion) {
             document.getElementById('activeSubGateway').style.display = 'block';
             document.getElementById('noSubGateway').style.display = 'none';
-            let start = new Date(pansion.start_date); let end = new Date(pansion.end_date); let today = new Date();
-            let totalDays = Math.max(1, Math.ceil((end - start) / (1000 * 3600 * 24)));
-            let passedDays = Math.max(0, Math.ceil((today - start) / (1000 * 3600 * 24)));
-            let remainDays = Math.max(0, Math.ceil((end - today) / (1000 * 3600 * 24)));
-            let progressPercent = Math.min(100, (passedDays / totalDays) * 100);
             
-            document.getElementById('gwCardContainer').innerHTML = `
+            let remainDays = calcShamsiRemainDays(pansion.end_date);
+            let safeEndDate = pansion.end_date ? pansion.end_date.replace(/-/g, '/') : '--';
+            
+            let totalEstDays = 30;
+            if(pansion.start_date && pansion.end_date) {
+                 let sParts = pansion.start_date.replace(/\//g, '-').split('-');
+                 let eParts = pansion.end_date.replace(/\//g, '-').split('-');
+                 let sDays = (parseInt(sParts[0]) * 365) + (parseInt(sParts[1]) * 30) + parseInt(sParts[2]);
+                 let eDays = (parseInt(eParts[0]) * 365) + (parseInt(eParts[1]) * 30) + parseInt(eParts[2]);
+                 totalEstDays = Math.max(1, eDays - sDays);
+            }
+            let progressPercent = Math.min(100, Math.max(0, 100 - ((remainDays / totalEstDays) * 100)));
+            
+            let html = `
                 <div class="gateway-card">
                     <div class="gw-header">
-                        <div><div style="font-size: 11px; opacity: 0.9;">پانسیون و میز اختصاصی</div><div class="gw-title">طرح ${pansion.service_type.toUpperCase()}</div></div>
+                        <div>
+                            <div style="font-size: 11px; opacity: 0.9;">پانسیون و میز اختصاصی</div>
+                            <div class="gw-title" style="direction: rtl;">طرح <span style="direction: ltr; display: inline-block; font-family: sans-serif;">${pansion.service_type.toUpperCase()}</span></div>
+                        </div>
                         <div class="gw-status">✔ فعال</div>
                     </div>
                     <div class="gw-progress-container">
-                        <div class="gw-progress-texts"><span>تا ${getShamsiDateSafe(end).replace(/-/g, '/')}</span><span>${remainDays} روز مانده</span></div>
-                        <div class="progress-track"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>
+                        <div class="gw-progress-texts">
+                            <span>تا ${safeEndDate}</span>
+                            <span>${remainDays} روز مانده</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                        </div>
                     </div>
-                </div>`;
+                </div>
+            `;
+            document.getElementById('gwCardContainer').innerHTML = html;
+
+            // آپدیت متن دکمه ورود به فروشگاه
+            const storeBtn = document.querySelector('.btn-gw.store');
+            if(storeBtn) {
+                storeBtn.innerHTML = '🛒 تمدید طرح';
+                storeBtn.onclick = function() {
+                    alert('در آپدیت بعدی فرم تمدید باز می‌شود.');
+                };
+            }
         }
 
         function renderGatewayInactive(plans, userGrade) {
