@@ -294,6 +294,19 @@
         .dur-seg { flex: 1; padding: 14px 5px; text-align: center; font-size: 12px; font-weight: bold; color: var(--text-muted); cursor: pointer; transition: var(--transition); border: none; background: transparent; border-left: 1px solid var(--glass-border); }
         .dur-seg:last-child { border-left: none; }
         .dur-seg.active { background: var(--primary-fade); color: var(--primary); font-weight: 900; }
+
+        /* 🔐 استایل‌های بخش احراز هویت (ورود و ثبت‌نام) */
+        .auth-container { width: 100%; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; min-height: 85vh;}
+        .auth-card { padding: 40px 30px; border-radius: 32px; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(25px); box-shadow: var(--shadow-soft); text-align: center;}
+        .header-logo { width: 85px; height: 85px; border-radius: 25%; object-fit: cover; margin-bottom: 15px; border: 2px solid var(--glass-border); padding: 4px; background: var(--glass-highlight); }
+        .auth-header-title h1 { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
+        .auth-header-title p { font-size: 13px; color: var(--text-muted); font-weight: bold; line-height: 1.6; margin-bottom: 25px;}
+        .alert-banner { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 20px; margin-bottom: 25px; border: 1px solid transparent; font-size: 13px; font-weight: bold; line-height: 1.7; text-align: center;}
+        .alert-success { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--success); }
+        .alert-warning { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--warning); }
+        .alert-danger { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--danger); }
+        .promo-hint { font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.7; font-weight: bold; padding: 0 10px; text-align: justify; }
+        .promo-hint span { color: var(--accent); background: var(--glass-highlight); padding: 2px 6px; border-radius: 6px;}
         
         /* کارت‌های طرح‌های ثبت نام جدید */
         .plan-cards-premium { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
@@ -330,7 +343,80 @@
             </div>
         </header>
 
-        <main class="app-content">
+        <main class="app-content" id="mainContentArea">
+            <!-- ===============================
+                 بخش‌های احراز هویت (Auth)
+            ================================ -->
+            <div id="view-auth-wrap" style="display: none;">
+                <div class="auth-container">
+                    <div class="auth-card">
+                        <div class="auth-header-title">
+                            <!-- لوگو اختیاری است، اگر آدرس ندارید این خط را پاک کنید <--
+                            <!-- <img src="YOUR_LOGO_URL" class="header-logo"> -->
+                            <h1 id="authHeaderTitle">پرتال جامع پانسیون راهینو</h1>
+                            <p id="authHeaderSub">جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید</p>
+                        </div>
+
+                        <div class="view-section active" id="view-phone">
+                            <div class="form-group">
+                                <input type="tel" id="inpPhone" class="form-input" placeholder="شماره موبایل (مثال: 09123456789)" maxlength="11" style="text-align: center; font-size: 16px; letter-spacing: 2px; direction: ltr;">
+                            </div>
+                            <button class="btn-submit" onclick="checkUserPhone()">تایید و ادامه</button>
+                        </div>
+
+                        <div class="view-section" id="view-login">
+                            <div class="alert-banner alert-success">حساب کاربری یافت شد. لطفاً رمز عبور خود را وارد کنید.</div>
+                            <div class="form-group">
+                                <input type="password" id="inpLoginPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)" style="text-align: center; font-size: 18px; letter-spacing: 3px; direction: ltr;">
+                            </div>
+                            <button class="btn-submit" onclick="submitLogin()">ورود به پرتال اختصاصی</button>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button class="btn-action" style="flex: 1; font-size: 12px; background: transparent;" onclick="goToAuthStep('view-recovery', 'بازیابی رمز عبور', 'پاسخ سوال امنیتی خود را وارد کنید')">فراموشی رمز</button>
+                                <button class="btn-action" style="flex: 1; font-size: 12px; background: transparent;" onclick="goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">تغییر شماره</button>
+                            </div>
+                        </div>
+
+                        <div class="view-section" id="view-register">
+                            <div class="alert-banner alert-warning">شماره شما در سیستم ثبت نشده است. جهت تشکیل پرونده، اطلاعات زیر را تکمیل نمایید.</div>
+                            <div class="form-group"><input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی کامل"></div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px;">
+                                <select id="regGrade" class="form-input" style="padding: 12px; font-size: 13px;">
+                                    <option value="" disabled selected>پایه تحصیلی</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">پشت کنکوری</option>
+                                </select>
+                                <select id="regMajor" class="form-input" style="padding: 12px; font-size: 13px;">
+                                    <option value="" disabled selected>رشته</option><option value="ریاضی">ریاضی فیزیک</option><option value="تجربی">علوم تجربی</option><option value="انسانی">علوم انسانی</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><input type="text" id="regSchool" class="form-input" placeholder="نام مدرسه / آموزشگاه"></div>
+                            <div class="form-group"><input type="password" id="regPass" class="form-input" placeholder="تعیین رمز عبور (حداقل ۶ کاراکتر)"></div>
+                            <div class="form-group" style="margin-top: 25px; border-top: 1px dashed var(--glass-border); padding-top: 20px;">
+                                <input type="text" id="regReferral" class="form-input" placeholder="کد معرف دوستان (اختیاری)" style="text-transform: uppercase; border-color: rgba(230, 115, 129, 0.4); text-align: center; letter-spacing: 2px;">
+                                <div class="promo-hint">در صورت داشتن کد معرف، با ثبت آن از <span>تخفیف ویژه</span> در خدمات بهره‌مند می‌شوید.</div>
+                            </div>
+                            <button class="btn-submit" onclick="submitRegistration()">ثبت‌نام و تشکیل پرونده</button>
+                            <button class="btn-action" style="width:100%; margin-top:10px; background: transparent;" onclick="goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">انصراف و بازگشت</button>
+                        </div>
+
+                        <div class="view-section" id="view-pending">
+                            <div class="alert-banner alert-warning">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <div style="font-size: 16px; font-weight: 900;">در انتظار بررسی مدیریت</div>
+                                <div style="font-weight: normal;">پرونده شما ثبت شده است. لطفاً منتظر بمانید تا حساب شما توسط مدیریت تایید گردد.</div>
+                            </div>
+                            <button class="btn-action" style="width:100%; background: transparent;" onclick="goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">بازگشت</button>
+                        </div>
+
+                        <div class="view-section" id="view-blocked">
+                            <div class="alert-banner alert-danger">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                                <div style="font-size: 16px; font-weight: 900;">دسترسی مسدود است</div>
+                                <div style="font-weight: normal;">حساب کاربری شما مسدود گردیده است. جهت پیگیری با پشتیبانی تماس بگیرید.</div>
+                            </div>
+                            <button class="btn-action" style="width:100%; background: transparent;" onclick="goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید')">بازگشت</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- ===============================
                  بخش داشبورد اصلی
@@ -981,14 +1067,6 @@
         }
         if(localStorage.getItem('theme') === 'light') document.documentElement.removeAttribute('data-theme');
 
-        // 🚪 خروج
-        function logout() {
-            if(confirm("آیا از حساب کاربری خود خارج می‌شوید؟")) {
-                localStorage.removeItem('rahino_user_phone');
-                window.location.href = 'auth.html';
-            }
-        }
-
         // 🔄 تغییر صفحات SPA
         function switchView(viewId, navElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -1039,15 +1117,120 @@
             return dbDateStr.replace(/-/g, '/');
         }
 
-        // 🚀 لود اولیه داشبورد
+        // =====================================
+        // 🚀 هسته مرکزی (مدیریت ورود و صفحات)
+        // =====================================
+        function toEngDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) : ''; }
+
+        // پنهان کردن هدر و منوی پایین در زمان ورود
+        function toggleAppLayout(isLoggedIn) {
+            document.querySelector('.app-header').style.display = isLoggedIn ? 'flex' : 'none';
+            document.querySelector('.bottom-nav').style.display = isLoggedIn ? 'flex' : 'none';
+            
+            if(isLoggedIn) {
+                document.getElementById('view-auth-wrap').style.display = 'none';
+                switchView('view-dashboard', document.getElementById('navDashboard')); // ویوی پیشفرض داشبورد
+            } else {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById('view-auth-wrap').style.display = 'block';
+                goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید');
+            }
+        }
+
         window.onload = async function() {
             const userPhone = localStorage.getItem('rahino_user_phone');
             if (!userPhone) { 
-                window.location.href = 'auth.html'; 
-                return; 
+                document.getElementById('mainLoader').style.display = 'none';
+                toggleAppLayout(false); // انتقال به صفحه لاگین
+            } else {
+                toggleAppLayout(true);  // کاربر لاگین است، داشبورد را نشان بده
+                await loadRealDashboardData(userPhone);
             }
-            await loadRealDashboardData(userPhone);
         };
+
+        // =====================================
+        // 🔐 توابع احراز هویت (Auth)
+        // =====================================
+        function goToAuthStep(stepId, title, sub) {
+            document.getElementById('view-auth-wrap').querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+            document.getElementById('authHeaderTitle').innerText = title;
+            document.getElementById('authHeaderSub').innerText = sub;
+        }
+
+        async function checkUserPhone() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            if (!phone || phone.length < 10) return alert('شماره موبایل نامعتبر است.');
+
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'check_phone', phone_number: phone }) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (!res.success) return alert(res.error);
+
+                if (res.status === 'not_found') goToAuthStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
+                else if (res.status === 'pending') goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+                else if (res.status === 'blocked') goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
+                else if (res.status === 'active') goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
+            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+        }
+
+        async function submitLogin() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            const pass = document.getElementById('inpLoginPass').value.trim();
+            if (!pass || pass.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'login', phone_number: phone, password: pass }) });
+                const res = await response.json();
+                
+                if (res.success) {
+                    localStorage.setItem('rahino_user_phone', phone);
+                    window.location.reload(); // رفرش صفحه برای بارگذاری تمیز داشبورد
+                } else {
+                    document.getElementById('mainLoader').style.display = 'none';
+                    alert(res.error);
+                }
+            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+        }
+
+        async function submitRegistration() {
+            const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+            const userData = {
+                phone: phone,
+                name: document.getElementById('regName').value.trim(),
+                grade: document.getElementById('regGrade').value,
+                major: document.getElementById('regMajor').value,
+                school: document.getElementById('regSchool').value.trim(),
+                password: document.getElementById('regPass').value.trim(),
+                referral_code: toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase())
+            };
+
+            if (!userData.name || !userData.grade || !userData.major || !userData.school || !userData.password) {
+                return alert('تکمیل تمامی فیلدها الزامی است.');
+            }
+
+            document.getElementById('mainLoader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'register', user_data: userData }) });
+                const res = await response.json();
+                document.getElementById('mainLoader').style.display = 'none';
+
+                if (res.success) goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+                else alert(res.error);
+            } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+        }
+
+        // جایگزینی تابع خروج قدیمی با این نسخه برای SPA
+        function logout() {
+            if(confirm("آیا از حساب کاربری خود خارج می‌شوید؟")) {
+                localStorage.removeItem('rahino_user_phone');
+                window.location.reload();
+            }
+        }
 
         // --- متغیرهای جدید امور مالی ---
         let currentInstallmentId = null;
