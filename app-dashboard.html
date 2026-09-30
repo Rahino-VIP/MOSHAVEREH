@@ -352,8 +352,8 @@
                     <div class="dashed-add-box" onclick="alert('در آپدیت بعدی فرم فروشگاه باز می‌شود.')">
                         <span style="font-size: 24px; color: #a855f7;">+</span> افزودن طرح مشاوره به اکانت
                     </div>
-                    <button class="btn-gw store" onclick="alert('انتقال به فرم تمدید...')">🛒 تمدید طرح</button>
-                    <button class="btn-gw trade" onclick="alert('انتقال به بخش تعویض و ارتقا...')">🔄 تعویض و ارتقای طرح (Trade-in)</button>
+                    <button class="btn-gw store" onclick="openRenewal()">🛒 تمدید همین طرح</button>
+<button class="btn-gw trade" onclick="alert('انتقال به بخش تعویض و ارتقا...')">🔄 تعویض و ارتقای طرح (Trade-in)</button>
                 </div>
 
                 <div id="noSubGateway" style="display: none;">
@@ -367,8 +367,10 @@
 
                     <div id="bookingCheckoutSection" style="display: none; margin-top: 30px; animation: fadeInView 0.4s;">
                         
-                        <div class="section-title">📅 تاریخ شروع</div>
-                        <div class="date-chips" id="monDateChipsContainer" style="margin-bottom: 20px;"></div>
+                        <div id="monDateSelectionBox">
+                            <div class="section-title">📅 تاریخ شروع</div>
+                            <div class="date-chips" id="monDateChipsContainer" style="margin-bottom: 20px;"></div>
+                        </div>
                         
                         <div class="section-title">⏱️ مدت زمان رزرو</div>
                         <div class="dur-segments" style="margin-bottom: 25px;">
