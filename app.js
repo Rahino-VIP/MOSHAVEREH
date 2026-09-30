@@ -357,32 +357,6 @@ async function rewardReferrer(referralCode, rewardAmount, messageBody) {
 // ==========================================
 // 🗓 رزرو ماهانه
 // ==========================================
-function calcKonkurMonths() {
-    let konkurDate = new Date('2027-07-06T00:00:00'); // ۱۵ تیر ۱۴۰۶ (میلادی)
-    let today = new Date();
-    
-    // ۱. محاسبه کل روزها از همین لحظه تا کنکور
-    let totalDaysToKonkur = Math.ceil((konkurDate - today) / (1000 * 3600 * 24));
-    
-    let diffDays = totalDaysToKonkur;
-    
-    // ۲. کسر کردن روزهایی که قبلاً رزرو شده یا آفست تاریخ شروع
-    if (monState.txType === 'renew' && monState.renewRemainDays) {
-        // در حالت تمدید، روزهای باقیمانده قرارداد قبلی را از کل روزها کم می‌کنیم
-        diffDays = totalDaysToKonkur - monState.renewRemainDays;
-    } else {
-        // در حالت ثبت‌نام جدید، اگر شخص "فردا" یا "پس‌‌فردا" را انتخاب کرده بود، آن ۱ یا ۲ روز را کم می‌کنیم
-        diffDays = totalDaysToKonkur - (monState.startDateIndex || 0);
-    }
-    
-    // ۳. تبدیل روز به ماه (با حفظ یک رقم اعشار)
-    let months = diffDays > 0 ? (diffDays / 30.41) : 1;
-    monState.konkurMonths = Math.round(months * 10) / 10;
-    
-    let segKonkur = document.getElementById('segDurKonkur');
-    if(segKonkur) segKonkur.innerText = `تا کنکور (۱۵ تیر ۱۴۰۶)`;
-}
-
 function updateRules() {
     let rules = [];
     let nGrade = currentUser ? currentUser.grade : 'all';
@@ -403,7 +377,6 @@ function updateRules() {
 }
 
 function initMonthlyBooking() {
-    calcKonkurMonths();
     let today = new Date();
     let options = [
         { text: `امروز`, date: getShamsiDateSafe(today) },
@@ -415,7 +388,6 @@ function initMonthlyBooking() {
     options.forEach((o, index) => {
         let activeCls = index === 0 ? 'active' : '';
         if(index === 0) { monState.startDate = o.date; monState.startDateIndex = 0; }
-        // ارسال index تاریخ برای محاسبه دقیق اقساط
         chipsHtml += `<div class="date-chip ${activeCls}" onclick="setMonDate('${o.date}', ${index}, this)">
                         <div style="font-size:13px; font-weight:900;">${o.text}</div>
                         <div style="font-size:10px; font-weight:normal; margin-top:4px;">${o.date.replace(/-/g,'/')}</div>
@@ -424,7 +396,8 @@ function initMonthlyBooking() {
     document.getElementById('monDateChipsContainer').innerHTML = chipsHtml;
     updateRules();
 }
-function renderGatewayActive(pansion) { /* (همان کدهای قبلی رندر کارت فعال) */ 
+
+function renderGatewayActive(pansion) { 
     document.getElementById('activeSubGateway').style.display = 'block';
     document.getElementById('noSubGateway').style.display = 'none';
     let remainDays = calcShamsiRemainDays(pansion.end_date);
@@ -449,7 +422,6 @@ function renderGatewayInactive(plans, userGrade) {
             ? `<div class="cap-status cap-full">تکمیل ظرفیت</div>`
             : `<div class="cap-status cap-available">موجودی: ${capacity} نفر</div>`;
         
-        // ✨ بازسازی بخش توضیحات و امکانات طرح‌ها (Accordion)
         let featuresHtml = '';
         if(plan.features) {
             let listItems = plan.features.split('\n').map(l => {
@@ -479,7 +451,6 @@ function renderGatewayInactive(plans, userGrade) {
     });
 }
 
-// 🧠 تابع اصلی تمدید هوشمند
 function openRenewal() {
     if (!activePansion) return;
     
@@ -492,9 +463,6 @@ function openRenewal() {
     monState.basePrice = activePlanData.base_price;
     monState.startDate = activePansion.end_date; 
     monState.renewRemainDays = remainDays;
-
-    // پس از تنظیم حالت تمدید، ماه‌های کنکور را دوباره حساب کن
-    calcKonkurMonths();
 
     let checkoutBox = document.getElementById('bookingCheckoutSection');
     if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
@@ -509,10 +477,8 @@ function openRenewal() {
     setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
 }
 
-// آپدیت تابع انتخاب طرح جدید
 function selectNewPlan(type, price) {
     monState.txType = 'new'; 
-    calcKonkurMonths(); // محاسبه بر اساس امروز
     
     let checkoutBox = document.getElementById('bookingCheckoutSection');
     if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
@@ -534,14 +500,20 @@ function selectNewPlan(type, price) {
     setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
 }
 
-function setMonDur(dur) { monState.duration = dur; document.querySelectorAll('.dur-seg').forEach(el => el.classList.remove('active')); document.getElementById('segDur' + (dur==='konkur'?'Konkur':dur)).classList.add('active'); calculateMonthly(); }
+function setMonDur(dur) { 
+    monState.duration = dur; 
+    document.querySelectorAll('.dur-seg').forEach(el => el.classList.remove('active')); 
+    document.getElementById('segDur' + dur).classList.add('active'); 
+    calculateMonthly(); 
+}
+
 function setMonPay(method) { monState.payMethod = method; document.getElementById('segPayCash').classList.remove('active'); document.getElementById('segPayInst').classList.remove('active'); if(method === 'cash') document.getElementById('segPayCash').classList.add('active'); else document.getElementById('segPayInst').classList.add('active'); calculateMonthly(); }
 function setMonDate(dateStr, index, element) { monState.startDate = dateStr; monState.startDateIndex = index; document.querySelectorAll('.date-chip').forEach(el => el.classList.remove('active')); element.classList.add('active'); calculateMonthly(); }
 function setMonPlan(plan) { monState.payPlan = plan; document.getElementById('segPayCash').classList.remove('active'); document.getElementById('segPayInst').classList.remove('active'); if(plan === 'cash') document.getElementById('segPayCash').classList.add('active'); else document.getElementById('segPayInst').classList.add('active'); calculateMonthly(); }
 function setMonSource(method) { monState.payMethod = method; document.getElementById('monLblCard').classList.remove('active'); document.getElementById('monLblWallet').classList.remove('active'); if (method === 'card') document.getElementById('monLblCard').classList.add('active'); else document.getElementById('monLblWallet').classList.add('active'); calculateMonthly(); }
 
 function calculateMonthly() {
-    let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
+    let duration = parseInt(monState.duration);
     let totalBase = monState.basePrice * duration;
     let finalPrice = totalBase;
     
@@ -556,22 +528,15 @@ function calculateMonthly() {
     let timeDiscountRate = 0;
     let badgeText = '۱ ماهه';
 
-    // 🧠 ۱. منطق جدید و داینامیک تخفیف‌ها
-    if (monState.duration === 'konkur') {
-        if (duration >= 6) {
-            timeDiscountRate = monState.payPlan === 'cash' ? 0.15 : 0.08;
-            let offText = monState.payPlan === 'cash' ? '۱۵٪ تخفیف' : '۸٪ تخفیف قسطی';
-            badgeText = `تا کنکور (${duration} ماه) - ${offText}`;
-        } else if (duration >= 3) {
-            timeDiscountRate = monState.payPlan === 'cash' ? 0.10 : 0.05;
-            let offText = monState.payPlan === 'cash' ? '۱۰٪ تخفیف' : '۵٪ تخفیف قسطی';
-            badgeText = `تا کنکور (${duration} ماه) - ${offText}`;
-        } else {
-            timeDiscountRate = monState.payPlan === 'cash' ? 0.05 : 0.03;
-            let offText = monState.payPlan === 'cash' ? '۵٪ تخفیف' : '۳٪ تخفیف قسطی';
-            badgeText = `تا کنکور (${duration} ماه) - ${offText}`;
-        }
-    } else if (duration === 3 || duration === '3') {
+    if (duration === 9) {
+         timeDiscountRate = monState.payPlan === 'cash' ? 0.15 : 0.08;
+         let offText = monState.payPlan === 'cash' ? '۱۵٪ تخفیف' : '۸٪ تخفیف قسطی';
+         badgeText = `۹ ماهه - ${offText}`;
+    } else if (duration === 6) {
+         timeDiscountRate = monState.payPlan === 'cash' ? 0.10 : 0.06;
+         let offText = monState.payPlan === 'cash' ? '۱۰٪ تخفیف' : '۶٪ تخفیف قسطی';
+         badgeText = `۶ ماهه - ${offText}`;
+    } else if (duration === 3) {
          timeDiscountRate = monState.payPlan === 'cash' ? 0.05 : 0.03;
          let offText = monState.payPlan === 'cash' ? '۵٪ تخفیف' : '۳٪ تخفیف قسطی';
          badgeText = `۳ ماهه - ${offText}`;
@@ -602,7 +567,6 @@ function calculateMonthly() {
 
     let listHtml = '';
     
-    // 🧠 ۲. منطق هوشمند اقساط (تسویه تضمینی قبل از اتمام ۶۰٪ زمان قرارداد)
     if (monState.payPlan === 'monthly' && totalBase >= 3400000) {
         const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }); 
         
@@ -613,55 +577,72 @@ function calculateMonthly() {
             baseInstDate.setDate(baseInstDate.getDate() + (monState.startDateIndex || 0));
         }
         
-        let upfrontPercent = 0.20;
-        let numInst = 4;
-        let intervals = [1, 2, 3, 4]; // فواصل به ماه
-        
-        // تولید داینامیک تعداد و فاصله اقساط بر اساس مدت قرارداد
-        if (duration < 3) {
-            upfrontPercent = 0.50;
-            numInst = 1;
-            intervals = [0.33]; // معادل ۱۰ روز
-        } else if (duration < 5) {
-            upfrontPercent = 0.30;
-            numInst = 2;
-            intervals = [1, 2];
-        } else if (duration < 7) {
-            upfrontPercent = 0.20;
-            numInst = 3;
-            intervals = [1, 2, 3];
-        } else {
-            upfrontPercent = 0.20;
-            numInst = 4;
-            intervals = [1, 2, 3, 4];
-        }
-
-        let upfrontRounded = roundDown100k(finalPrice * upfrontPercent); 
-        let remaining = finalPrice - upfrontRounded; 
-        monFinance.upfront = upfrontRounded;
-        
-        let checkAmt = roundDown100k(remaining / numInst);
-        let lastCheckAmt = remaining - (checkAmt * (numInst - 1));
-        
-        listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>`;
-        
-        for (let i = 0; i < numInst; i++) {
-            let instDate = new Date(baseInstDate);
-            if (intervals[i] === 0.33) {
-                instDate.setDate(instDate.getDate() + 10);
-            } else {
-                instDate.setMonth(instDate.getMonth() + intervals[i]);
-            }
+        if (duration === 1) {
+            let upfrontRounded = roundDown50k(finalPrice * 0.50); 
+            let remaining = finalPrice - upfrontRounded; 
+            monFinance.upfront = upfrontRounded;
             
-            let amt = (i === numInst - 1) ? lastCheckAmt : checkAmt;
-            monFinance.installments.push({ 
-                due_date: instDate.toISOString().split('T')[0], 
-                amount: amt, 
-                installment_number: i + 1 
-            });
+            let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 10); 
             
-            let hintText = intervals[i] === 0.33 ? "۱۰ روز پس از شروع" : `${intervals[i]} ماه پس از شروع`;
-            listHtml += `<li>موعد قسط ${i+1} (${amt.toLocaleString()} تومان): <b>${formatter.format(instDate)}</b> (${hintText})</li>`;
+            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+            
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                        <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز پس از شروع)</li>`;
+                        
+        } else if (duration === 3) {
+            let upfrontRounded = roundDown50k(finalPrice * 0.50); 
+            let remaining = finalPrice - upfrontRounded; 
+            monFinance.upfront = upfrontRounded;
+            
+            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
+            
+            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+            
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                        <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه پس از شروع)</li>`;
+                        
+        } else if (duration === 6) {
+            let upfrontRounded = roundDown50k(finalPrice * 0.25); 
+            monFinance.upfront = upfrontRounded;
+            
+            let checkAmt = roundDown50k(finalPrice * 0.25); 
+            let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 2);
+            
+            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
+            let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2); 
+            let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4); 
+            
+            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 }); 
+            monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 }); 
+            monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 }); 
+            
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                        <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱ ماه پس از شروع)</li>
+                        <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b> (۲ ماه پس از شروع)</li>
+                        <li>قسط سوم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b> (۴ ماه پس از شروع)</li>`;
+                        
+        } else if (duration === 9) {
+            let upfrontRounded = roundDown50k(finalPrice * 0.20); 
+            monFinance.upfront = upfrontRounded;
+            
+            let checkAmt = roundDown50k(finalPrice * 0.20); 
+            let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 3);
+            
+            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
+            let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2); 
+            let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4); 
+            let d4 = new Date(baseInstDate); d4.setMonth(baseInstDate.getMonth() + 6);
+            
+            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 }); 
+            monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 }); 
+            monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: checkAmt, installment_number: 3 }); 
+            monFinance.installments.push({ due_date: d4.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 4 });
+            
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                        <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱ ماه پس از شروع)</li>
+                        <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b> (۲ ماه پس از شروع)</li>
+                        <li>قسط سوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b> (۴ ماه پس از شروع)</li>
+                        <li>قسط چهارم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d4)}</b> (۶ ماه پس از شروع)</li>`;
         }
     } else { 
         monFinance.upfront = finalPrice; 
