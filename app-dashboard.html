@@ -384,23 +384,9 @@
                         <div id="monDiscountNotice" style="color: var(--success); font-size: 11px; font-weight: bold; margin-bottom: 20px; line-height: 1.6;"></div>
 
                         <div class="section-title">💳 نوع تسویه</div>
-                        <div class="dur-segments" style="margin-bottom: 15px;">
+                        <div class="dur-segments" style="margin-bottom: 25px;">
                             <button class="dur-seg active" id="segPayCash" onclick="setMonPlan('cash')">نقدی (تخفیف کامل)</button>
                             <button class="dur-seg" id="segPayInst" onclick="setMonPlan('monthly')" style="display: none;">اقساط</button>
-                        </div>
-
-                        <div class="payment-options">
-                            <label class="pay-option active" id="monLblCard" onclick="setMonSource('card')">
-                                <input type="radio" name="monPaySource" value="card" checked>
-                                <span>📸 واریز بانکی (آپلود فیش)</span>
-                            </label>
-                            <label class="pay-option" id="monLblWallet" onclick="setMonSource('wallet')">
-                                <input type="radio" name="monPaySource" value="wallet">
-                                <span style="display:flex; justify-content:space-between; width:100%;">
-                                    💳 پرداخت از کیف پول
-                                    <span id="monWalletStatusBadge" style="font-size:11px; color: var(--text-muted);">موجودی: --</span>
-                                </span>
-                            </label>
                         </div>
 
                         <div class="checkout-box" style="border-color: var(--glass-border); margin-bottom: 25px;">
@@ -420,14 +406,18 @@
                             </div>
                         </div>
 
-                        <div class="rules-container">
-                            <div class="rules-scroll-box">
-                                <strong style="color: var(--primary); font-size: 13px;">📜 قوانین و مقررات پذیرش:</strong>
-                                <ul id="dynamicRules"></ul>
-                            </div>
-                            <label class="rules-checkbox-label">
-                                <input type="checkbox" id="monRulesCheckbox" onchange="validateMonSubmit()">
-                                <span>تمامی قوانین فوق را خواندم و شرایط آن را می‌پذیرم.</span>
+                        <div class="section-title">💸 نحوه پرداخت (فیش یا کیف پول)</div>
+                        <div class="payment-options">
+                            <label class="pay-option active" id="monLblCard" onclick="setMonSource('card')">
+                                <input type="radio" name="monPaySource" value="card" checked>
+                                <span>📸 واریز بانکی (آپلود فیش)</span>
+                            </label>
+                            <label class="pay-option" id="monLblWallet" onclick="setMonSource('wallet')">
+                                <input type="radio" name="monPaySource" value="wallet">
+                                <span style="display:flex; justify-content:space-between; width:100%;">
+                                    💳 پرداخت از کیف پول
+                                    <span id="monWalletStatusBadge" style="font-size:11px; color: var(--text-muted);">موجودی: --</span>
+                                </span>
                             </label>
                         </div>
 
@@ -461,7 +451,18 @@
                             <input type="file" id="monReceiptFile" accept="image/*" onchange="handleMonFileSelect(event)">
                         </label>
 
-                        <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد 🔒</button>
+                        <div class="rules-container">
+                            <div class="rules-scroll-box">
+                                <strong style="color: var(--primary); font-size: 13px;">📜 قوانین و مقررات پذیرش:</strong>
+                                <ul id="dynamicRules"></ul>
+                            </div>
+                            <label class="rules-checkbox-label">
+                                <input type="checkbox" id="monRulesCheckbox" onchange="validateMonSubmit()">
+                                <span>تمامی قوانین فوق را خواندم و شرایط آن را می‌پذیرم.</span>
+                            </label>
+                        </div>
+
+                        <button class="btn-submit" id="btnSubmitMonthly" onclick="submitMonthly()" disabled>تایید نهایی و ثبت قرارداد </button>
                     </div>
                 </div>
             </div>
