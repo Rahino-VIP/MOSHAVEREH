@@ -353,7 +353,7 @@
                         <span style="font-size: 24px; color: #a855f7;">+</span> افزودن طرح مشاوره به اکانت
                     </div>
                     <button class="btn-gw store" onclick="openRenewal()">🛒 تمدید همین طرح</button>
-                    <button class="btn-gw trade" onclick="alert('انتقال به بخش تعویض و ارتقا...')">🔄 تعویض و ارتقای طرح (Trade-in)</button>
+<button class="btn-gw trade" style="background: var(--danger); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);" onclick="openCancellation()">❌ درخواست لغو قرارداد</button>
                 </div>
 
                 <div id="noSubGateway" style="display: none;">
@@ -691,6 +691,17 @@
                 <input type="file" id="instReceiptFile" accept="image/*" onchange="handleInstFileSelect(event)">
             </label>
             <button class="btn-submit" id="btnSubmitInst" onclick="submitInstallment()" disabled>ارسال فیش و تایید پرداخت</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cancelModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" style="color: var(--danger);">❌ درخواست لغو قرارداد</div>
+                <button class="close-btn" onclick="closeCancelModal()">X</button>
+            </div>
+            <div id="cancelModalBody" style="font-size:13px; line-height:1.8; margin-top: 10px;"></div>
+            <button class="btn-submit" style="background: var(--danger); margin-top: 15px; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);" onclick="submitCancellation()">تایید و ارسال درخواست لغو</button>
         </div>
     </div>
     
