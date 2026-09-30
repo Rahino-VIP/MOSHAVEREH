@@ -366,12 +366,15 @@
                     <div id="newPlansContainer" class="store-grid"></div>
 
                     <div id="bookingCheckoutSection" style="display: none; margin-top: 30px; animation: fadeInView 0.4s;">
-                        <div class="section-title">⏱️ تاریخ شروع و مدت زمان</div>
-                        <div class="date-chips" id="monDateChipsContainer" style="margin-bottom: 15px;"></div>
+                        
+                        <div class="section-title">📅 تاریخ شروع</div>
+                        <div class="date-chips" id="monDateChipsContainer" style="margin-bottom: 20px;"></div>
+                        
+                        <div class="section-title">⏱️ مدت زمان رزرو</div>
                         <div class="dur-segments" style="margin-bottom: 25px;">
                             <button class="dur-seg active" id="segDur1" onclick="setMonDur('1')">۱ ماهه</button>
                             <button class="dur-seg" id="segDur3" onclick="setMonDur('3')">۳ ماهه</button>
-                            <button class="dur-seg" id="segDurKonkur" onclick="setMonDur('konkur')">تا کنکور</button>
+                            <button class="dur-seg" id="segDurKonkur" onclick="setMonDur('konkur')">تا کنکور (۱۵ تیر ۱۴۰۶)</button>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px; display: flex; gap: 10px;">
@@ -380,10 +383,24 @@
                         </div>
                         <div id="monDiscountNotice" style="color: var(--success); font-size: 11px; font-weight: bold; margin-bottom: 20px; line-height: 1.6;"></div>
 
-                        <div class="section-title">💳 نحوه پرداخت</div>
-                        <div class="dur-segments" style="margin-bottom: 25px;">
-                            <button class="dur-seg active" id="segPayCash" onclick="setMonPay('cash')">نقدی (تخفیف کامل)</button>
-                            <button class="dur-seg" id="segPayInst" onclick="setMonPay('monthly')" style="display: none;">اقساط ماهانه</button>
+                        <div class="section-title">💳 نوع تسویه</div>
+                        <div class="dur-segments" style="margin-bottom: 15px;">
+                            <button class="dur-seg active" id="segPayCash" onclick="setMonPlan('cash')">نقدی (تخفیف کامل)</button>
+                            <button class="dur-seg" id="segPayInst" onclick="setMonPlan('monthly')" style="display: none;">اقساط</button>
+                        </div>
+
+                        <div class="payment-options">
+                            <label class="pay-option active" id="monLblCard" onclick="setMonSource('card')">
+                                <input type="radio" name="monPaySource" value="card" checked>
+                                <span>📸 واریز بانکی (آپلود فیش)</span>
+                            </label>
+                            <label class="pay-option" id="monLblWallet" onclick="setMonSource('wallet')">
+                                <input type="radio" name="monPaySource" value="wallet">
+                                <span style="display:flex; justify-content:space-between; width:100%;">
+                                    💳 پرداخت از کیف پول
+                                    <span id="monWalletStatusBadge" style="font-size:11px; color: var(--text-muted);">موجودی: --</span>
+                                </span>
+                            </label>
                         </div>
 
                         <div class="checkout-box" style="border-color: var(--glass-border); margin-bottom: 25px;">
@@ -414,14 +431,27 @@
                             </label>
                         </div>
 
-                        <div style="background: rgba(15, 23, 42, 0.2); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; text-align: center; border: 2px solid var(--primary);">
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">مبلغ قابل پرداخت در این لحظه (جهت فعال‌سازی پرونده):</div>
-                            <div id="monLblPayNowBig" style="font-size: 28px; font-weight: 900; color: var(--success); margin-bottom: 20px;">۰ تومان</div>
+                        <div id="monPayCardBox" style="background: rgba(15, 23, 42, 0.2); padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid var(--primary);">
+                            <div style="text-align:center;">
+                                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">مبلغ قابل پرداخت در این لحظه:</div>
+                                <div id="monLblPayNowBig" style="font-size: 28px; font-weight: 900; color: var(--success); margin-bottom: 20px;">۰ تومان</div>
+                            </div>
                             
-                            <div style="background: var(--bg-color); border: 1px dashed var(--glass-border); padding: 15px; border-radius: 12px;">
+                            <div style="background: var(--bg-color); border: 1px dashed var(--glass-border); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                                 <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">لطفاً مبلغ فوق را به حساب زیر واریز نمایید:</div>
-                                <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; margin-bottom: 5px; color: var(--text-main);">6219 8618 1038 0484</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+                                    <div style="font-size: 20px; font-weight: 900; letter-spacing: 3px; direction: ltr; color: var(--text-main);">6219861810380484</div>
+                                    <button class="icon-btn" style="width:32px; height:32px;" onclick="copyToClipboard('6219861810380484')" title="کپی"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                                </div>
                                 <div style="font-size: 12px; font-weight: bold; color: var(--primary);">به نام: ارشاد شفیعی فرد - بانک سامان</div>
+                                
+                                <div id="monIbanBox" style="display: none; border-top: 1px dashed var(--glass-border); padding-top: 15px; margin-top: 15px;">
+                                    <div style="font-size: 11px; color: var(--warning); margin-bottom: 10px; font-weight:bold; line-height: 1.6;">⚠️ به دلیل سقف انتقال، برای مبالغ بالای ۱۵ میلیون از شماره شبا (پایا/ساتنا) استفاده کنید:</div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="font-size: 14px; font-weight: 900; letter-spacing: 1px; direction: ltr; color: var(--text-main);">IR 2005 6061 1828 0061 0861 8001</div>
+                                        <button class="icon-btn" style="width:32px; height:32px;" onclick="copyToClipboard('IR200560611828006108618001')" title="کپی شبا"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -506,10 +536,7 @@
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div class="avatar" style="width: 75px; height: 75px; margin: 0 auto 15px; border-radius: 22px; background: var(--primary-fade); color: var(--primary);">
                             <svg viewBox="0 0 24 24" width="45" height="45" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="8" r="4"></circle>
-                                <path d="M4 22v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"></path>
-                                <path d="M8 8c-2 2-3 5-3 8"></path>
-                                <path d="M16 8c2 2 3 5 3 8"></path>
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
                             </svg>
                         </div>
                         <h3 style="font-size: 18px; font-weight: 900; color: var(--text-main);" id="profNameTitle">--</h3>
