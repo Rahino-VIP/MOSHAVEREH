@@ -3,7 +3,7 @@
 // ==========================================
 const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; // 👈 لینک سوپابیس خود را اینجا بگذارید
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; // 👈 کلید Anon سوپابیس خود را اینجا بگذارید
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec';
 
@@ -262,16 +262,19 @@ function logout() {
 // ==========================================
 // ⚡ دریافت پرسرعت داده‌های داشبورد (مستقیم از سوپابیس)
 // ==========================================
+// ==========================================
+// ⚡ دریافت پرسرعت داده‌های داشبورد (مستقیم از سوپابیس)
+// ==========================================
 async function loadRealDashboardData(phone) {
     try {
         const [userRes, pansionRes, consultRes, instRes, servicesRes, rulesRes, dailyRes] = await Promise.all([
-            supabase.from('users').select('*').eq('phone_number', phone).single(),
-            supabase.from('pan_monthly_subs').select('*').eq('phone_number', phone).eq('status', 'active'),
-            supabase.from('subscriptions').select('*').eq('user_phone', phone).eq('status', 'active').eq('service_category', 'consult'),
-            supabase.from('pan_installments').select('*').eq('phone_number', phone),
-            supabase.from('services').select('*').eq('category', 'pansion').eq('is_active', true),
-            supabase.from('terms_and_rules').select('*'),
-            supabase.from('pan_reservations').select('reserved_dates').eq('phone_number', phone)
+            supabaseClient.from('users').select('*').eq('phone_number', phone).single(),
+            supabaseClient.from('pan_monthly_subs').select('*').eq('phone_number', phone).eq('status', 'active'),
+            supabaseClient.from('subscriptions').select('*').eq('user_phone', phone).eq('status', 'active').eq('service_category', 'consult'),
+            supabaseClient.from('pan_installments').select('*').eq('phone_number', phone),
+            supabaseClient.from('services').select('*').eq('category', 'pansion').eq('is_active', true),
+            supabaseClient.from('terms_and_rules').select('*'),
+            supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', phone)
         ]);
 
         document.getElementById('mainLoader').style.display = 'none';
@@ -284,6 +287,7 @@ async function loadRealDashboardData(phone) {
 
         currentUser = userRes.data; 
         dbData.rules = rulesRes.data || [];
+// ... ادامه کدها دقیقاً مثل قبل است ...
         
         let pansion = (pansionRes.data && pansionRes.data.length > 0) ? pansionRes.data[0] : null;
         if(pansion) pansion.service_type = pansion.plan_type; 
