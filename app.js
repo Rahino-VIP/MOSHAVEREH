@@ -140,32 +140,45 @@ function goToAuthStep(stepId, title, sub) {
     if (subEl) subEl.innerText = sub;
 }
 
+// =====================================
+// 🔐 توابع احراز هویت (مستقیم با سوپابیس)
+// =====================================
 async function checkUserPhone() {
     const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
     if (!phone || phone.length < 10) return alert('شماره موبایل نامعتبر است.');
 
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'check_phone', phone_number: phone }) });
-        const res = await response.json();
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('status, full_name, security_question')
+            .eq('phone_number', phone)
+            .single();
+            
         document.getElementById('mainLoader').style.display = 'none';
 
-        if (!res.success) return alert(res.error);
-
-        if (res.status === 'not_found') {
+        if (error && error.code === 'PGRST116') {
+            // کاربر پیدا نشد (خطای 116 در سوپابیس یعنی رکوردی نیست)
             goToAuthStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
-        } else if (res.status === 'pending') {
-            goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
-        } else if (res.status === 'blocked') {
-            goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
-        } else if (res.status === 'active') {
-            if(res.security_question) {
-                document.getElementById('recoveryQuestionText').innerText = `سوال: ${res.security_question}`;
-                document.getElementById('recovPhoneStore').value = phone;
+        } else if (data) {
+            if (data.status === 'pending') {
+                goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+            } else if (data.status === 'blocked') {
+                goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
+            } else {
+                if(data.security_question) {
+                    document.getElementById('recoveryQuestionText').innerText = `سوال: ${data.security_question}`;
+                    document.getElementById('recovPhoneStore').value = phone;
+                }
+                goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
             }
-            goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
+        } else {
+            alert('خطا در بررسی وضعیت کاربر.');
         }
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطا در ارتباط با دیتابیس"); 
+    }
 }
 
 async function submitLogin() {
@@ -175,17 +188,29 @@ async function submitLogin() {
 
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'login', phone_number: phone, password: pass }) });
-        const res = await response.json();
-        
-        if (res.success) {
-            localStorage.setItem('rahino_user_phone', phone);
-            window.location.reload(); 
-        } else {
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('status')
+            .eq('phone_number', phone)
+            .eq('password', pass)
+            .single();
+            
+        if (error || !data) {
             document.getElementById('mainLoader').style.display = 'none';
-            alert(res.error || 'رمز عبور اشتباه است.');
+            return alert('رمز عبور اشتباه است.');
         }
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+        
+        if (data.status !== 'active') {
+            document.getElementById('mainLoader').style.display = 'none';
+            return alert('حساب کاربری شما مسدود یا در انتظار تایید است.');
+        }
+
+        localStorage.setItem('rahino_user_phone', phone);
+        window.location.reload(); 
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطا در ارتباط با دیتابیس"); 
+    }
 }
 
 async function submitRegistration() {
@@ -197,31 +222,38 @@ async function submitRegistration() {
     let secQVal = secQEl.value === "" ? null : secQEl.value;
 
     const userData = {
-        phone: phone, 
-        name: document.getElementById('regName').value.trim(),
+        phone_number: phone, 
+        full_name: document.getElementById('regName').value.trim(),
         grade: gradeVal, 
         major: document.getElementById('regMajor').value.trim(),
-        school: document.getElementById('regSchool').value.trim(), 
+        school_name: document.getElementById('regSchool').value.trim(), 
         password: document.getElementById('regPass').value.trim(),
         security_question: secQVal,
         security_answer: document.getElementById('regSecA').value.trim(),
-        referral_code: toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase())
+        invited_by: toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase()) || null,
+        status: 'pending',
+        wallet_balance: 0
     };
 
-    if (!userData.name || !userData.grade || !userData.major || !userData.school || !userData.password || !userData.security_question || !userData.security_answer) {
+    if (!userData.full_name || !userData.grade || !userData.major || !userData.school_name || !userData.password || !userData.security_question || !userData.security_answer) {
         return alert('تکمیل تمامی فیلدها (به جز کد معرف) الزامی است.');
     }
     if (userData.password.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
 
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'register', user_data: userData }) });
-        const res = await response.json();
+        const { error } = await supabaseClient.from('users').insert([userData]);
         document.getElementById('mainLoader').style.display = 'none';
 
-        if (res.success) goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
-        else alert(res.error);
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+        if (!error) {
+            goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+        } else {
+            alert('خطا در ثبت‌نام: ' + error.message);
+        }
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطا در ارتباط با دیتابیس"); 
+    }
 }
 
 async function submitRecovery() {
@@ -235,21 +267,42 @@ async function submitRecovery() {
 
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const response = await fetch(GAS_URL, { 
-            method: 'POST', 
-            body: JSON.stringify({ action: 'recover_password', phone_number: phone, answer: answer, new_password: newPass }) 
-        });
-        const res = await response.json();
+        // اول چک می‌کنیم جواب درست است یا نه
+        const { data, error: fetchError } = await supabaseClient
+            .from('users')
+            .select('security_answer')
+            .eq('phone_number', phone)
+            .single();
+
+        if (fetchError || !data) {
+            document.getElementById('mainLoader').style.display = 'none';
+            return alert('کاربری با این مشخصات یافت نشد.');
+        }
+
+        if (data.security_answer.trim() !== answer.trim()) {
+            document.getElementById('mainLoader').style.display = 'none';
+            return alert('پاسخ سوال امنیتی اشتباه است.');
+        }
+
+        // اگر جواب درست بود، رمز را آپدیت می‌کنیم
+        const { error: updateError } = await supabaseClient
+            .from('users')
+            .update({ password: newPass })
+            .eq('phone_number', phone);
+
         document.getElementById('mainLoader').style.display = 'none';
 
-        if (res.success) {
+        if (!updateError) {
             alert('✅ رمز عبور شما با موفقیت تغییر کرد. لطفاً با رمز جدید وارد شوید.');
             document.getElementById('inpLoginPass').value = '';
             goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
         } else {
-            alert(res.error || 'پاسخ سوال امنیتی اشتباه است.');
+            alert('خطا در تغییر رمز عبور.');
         }
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با سرور"); }
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطا در ارتباط با دیتابیس"); 
+    }
 }
 
 function logout() {
