@@ -464,66 +464,60 @@ function renderGatewayInactive(plans, userGrade) {
     });
 }
 
-function selectNewPlan(type, price) {
-    monState.txType = 'new'; // 👈 ریست به ثبت‌نام جدید
-    document.getElementById('monDateSelectionBox').style.display = 'block'; // نمایش انتخاب تاریخ
-    
-    monState.planType = type; monState.basePrice = price;
-    document.querySelectorAll('.store-card').forEach(card => card.classList.remove('selected'));
-    document.getElementById('card_' + type).classList.add('selected');
-    document.getElementById('bookingCheckoutSection').style.display = 'block';
-    
-    updateRules(); calculateMonthly();
-    setTimeout(() => document.getElementById('bookingCheckoutSection').scrollIntoView({ behavior: 'smooth' }), 100);
-}
-
 // 🧠 تابع اصلی تمدید هوشمند
-// 🧠 تابع اصلی تمدید هوشمند (همراه با دیباگر)
 function openRenewal() {
-    console.log("✅ دکمه تمدید کلیک شد!");
-    console.log("وضعیت طرح فعلی (activePansion):", activePansion);
+    if (!activePansion) return;
     
-    if (!activePansion) {
-        alert('شما در حال حاضر طرح فعالی برای تمدید ندارید.');
-        return;
-    }
-    
-    // پیدا کردن قیمت پایه طرح فعلی از بین لیست طرح‌ها
-    let activePlanData = availablePansionPlans.find(p => p.type === activePansion.service_type) || { base_price: 3600000 };
+    // اطمینان از دریافت نوع طرح (پشتیبانی از هر دو نام فیلد)
+    let pType = activePansion.plan_type || activePansion.service_type;
+    let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
     let remainDays = calcShamsiRemainDays(activePansion.end_date);
 
-    console.log("اطلاعات طرح پیدا شده برای تمدید:", activePlanData);
-    console.log("روزهای باقیمانده از طرح فعلی:", remainDays);
-
     monState.txType = 'renew';
-    monState.planType = activePansion.service_type;
+    monState.planType = pType;
     monState.basePrice = activePlanData.base_price;
     monState.startDate = activePansion.end_date; // 👈 شروع دقیقاً از روز پایان طرح قبلی
     monState.renewRemainDays = remainDays;
 
-    // مخفی کردن انتخاب تاریخ و نمایش فرم پرداخت
-    let dateBox = document.getElementById('monDateSelectionBox');
-    if (dateBox) {
-        dateBox.style.display = 'none';
-        console.log("باکس تاریخ مخفی شد.");
-    } else {
-        console.log("⚠️ اخطار: آیدی monDateSelectionBox در HTML یافت نشد!");
-    }
-    
+    // 💡 ترفند کلیدی: بیرون کشیدن فرم از باکس مخفی شده
     let checkoutBox = document.getElementById('bookingCheckoutSection');
-    if (checkoutBox) {
-        checkoutBox.style.display = 'block';
-    } else {
-        console.log("⚠️ اخطار: آیدی bookingCheckoutSection در HTML یافت نشد!");
-    }
+    if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
+
+    // مخفی کردن انتخاب تاریخ
+    let dateBox = document.getElementById('monDateSelectionBox'); 
+    if (dateBox) dateBox.style.display = 'none';
+    
+    // نمایش فرم
+    if (checkoutBox) checkoutBox.style.display = 'block';
     
     updateRules();
     calculateMonthly();
+    setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
+}
+
+// آپدیت تابع انتخاب طرح جدید (برای هماهنگی با ترفند بالا)
+function selectNewPlan(type, price) {
+    monState.txType = 'new'; 
     
-    setTimeout(() => {
-        if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' });
-        console.log("🚀 فرم تمدید با موفقیت باز و محاسبات انجام شد.");
-    }, 100);
+    // 💡 بیرون کشیدن فرم از باکس مخفی شده
+    let checkoutBox = document.getElementById('bookingCheckoutSection');
+    if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
+
+    let dateBox = document.getElementById('monDateSelectionBox'); 
+    if(dateBox) dateBox.style.display = 'block'; 
+    
+    monState.planType = type; 
+    monState.basePrice = price;
+    
+    document.querySelectorAll('.store-card').forEach(card => card.classList.remove('selected')); 
+    let selectedCard = document.getElementById('card_' + type);
+    if(selectedCard) selectedCard.classList.add('selected');
+    
+    if (checkoutBox) checkoutBox.style.display = 'block';
+    
+    updateRules(); 
+    calculateMonthly(); 
+    setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
 }
 
 function setMonDur(dur) { 
