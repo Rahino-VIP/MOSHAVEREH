@@ -888,15 +888,20 @@ async function submitBooking() {
 // ==========================================
 // ❌ توابع لغو قرارداد
 // ==========================================
+
+// آپدیت: محاسبه دقیق اختلاف روزها (شامل اعداد منفی برای قراردادهایی که هنوز شروع نشده‌اند)
 function calcShamsiPassedDays(startDateStr) {
     if (!startDateStr) return 0;
     let startParts = startDateStr.replace(/\//g, '-').split('-');
     let todayStr = getShamsiDateSafe(new Date());
     let todayParts = todayStr.replace(/\//g, '-').split('-');
     if (startParts.length !== 3 || todayParts.length !== 3) return 0;
+    
     let startDays = (parseInt(startParts[0]) * 365) + (parseInt(startParts[1]) * 30) + parseInt(startParts[2]);
     let todayDays = (parseInt(todayParts[0]) * 365) + (parseInt(todayParts[1]) * 30) + parseInt(todayParts[2]);
-    return Math.max(0, todayDays - startDays); // روزهای گذشته
+    
+    // عدد خام را برمی‌گردانیم تا بفهمیم به تاریخ شروع رسیده‌ایم یا نه
+    return todayDays - startDays; 
 }
 
 function openCancellation() {
@@ -906,10 +911,29 @@ function openCancellation() {
     let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
     let basePrice = activePlanData.base_price;
     
-    // محاسبه روزها و گرد کردن ماه‌ها به سمت بالا
-    let passedDays = calcShamsiPassedDays(activePansion.start_date);
-    let monthsUsed = passedDays === 0 ? 1 : Math.ceil(passedDays / 30);
-    let deduction = monthsUsed * basePrice; // هزینه بدون تخفیف
+    // ۱. دریافت تعداد روزهای گذشته
+    let rawDiff = calcShamsiPassedDays(activePansion.start_date);
+    
+    let deduction = 0;
+    let deductionText = '';
+    
+    // ۲. منطق هوشمند جریمه لغو
+    if (rawDiff < 0) {
+        // حالت اول: هنوز به تاریخ شروع نرسیده‌ایم (مثلاً رزرو برای پس‌فردا بوده)
+        deduction = 0;
+        deductionText = `<span style="color: var(--success);">۰ تومان (قرارداد هنوز شروع نشده)</span>`;
+    } else if (rawDiff <= 3) {
+        // حالت دوم: بین روز اول (۰) تا روز سوم (۳)
+        // اگر همون روز اول لغو کنه، ۱ روز رو حساب می‌کنیم
+        let daysToCharge = rawDiff === 0 ? 1 : rawDiff; 
+        deduction = daysToCharge * 200000;
+        deductionText = `${deduction.toLocaleString()} تومان (روزی ۲۰۰ هزار تومان برای ${daysToCharge} روز)`;
+    } else {
+        // حالت سوم: بیشتر از ۳ روز گذشته (قانون گرد کردن به بالا و بدون تخفیف)
+        let monthsUsed = Math.ceil(rawDiff / 30);
+        deduction = monthsUsed * basePrice;
+        deductionText = `${deduction.toLocaleString()} تومان (${monthsUsed} ماه کامل بدون تخفیف)`;
+    }
     
     // محاسبه کل پولی که شخص تا الان داده (پیش‌پرداخت + اقساط پرداخت شده)
     let totalPaid = Number(activePansion.paid_amount || 0);
@@ -921,17 +945,24 @@ function openCancellation() {
     let refund = totalPaid - deduction;
     let refundText = refund > 0 ? `${refund.toLocaleString()} تومان` : `0 تومان (بدهی: ${Math.abs(refund).toLocaleString()} تومان)`;
 
+    // ۳. رابط کاربری خواناتر و تاریک‌تر برای نمایش دقیق مبالغ
     let html = `
-        <div style="background: var(--glass-highlight); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--glass-border);">
-            <div class="price-row"><span>شروع قرارداد:</span><strong>${activePansion.start_date.replace(/-/g, '/')}</strong></div>
-            <div class="price-row"><span>روزهای گذشته:</span><strong>${passedDays} روز</strong></div>
-            <div class="price-row"><span>ماه‌های محاسبه شده:</span><strong style="color:var(--danger);">${monthsUsed} ماه (بدون تخفیف)</strong></div>
-            <div class="price-row"><span>مبلغ کسر شده:</span><strong style="color:var(--danger);">${deduction.toLocaleString()} تومان</strong></div>
-            <hr style="border: 0; border-top: 1px dashed var(--glass-border); margin: 10px 0;">
-            <div class="price-row"><span>پرداختی شما تاکنون:</span><strong style="color:var(--success);">${totalPaid.toLocaleString()} تومان</strong></div>
-            <div class="price-row" style="margin-top: 10px; font-size: 14px;"><span>مبلغ قابل عودت:</span><strong style="color:var(--primary); direction:ltr;">${refundText}</strong></div>
+        <div style="background: rgba(15, 23, 42, 0.7); padding: 20px; border-radius: 14px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: inset 0 2px 15px rgba(0,0,0,0.3);">
+            <div class="price-row" style="margin-bottom: 12px;"><span>شروع قرارداد:</span><strong style="color:var(--text-main);">${activePansion.start_date.replace(/-/g, '/')}</strong></div>
+            <div class="price-row" style="margin-bottom: 12px;"><span>روزهای گذشته:</span><strong style="color:var(--text-main);">${rawDiff < 0 ? 0 : rawDiff} روز</strong></div>
+            <div class="price-row" style="margin-bottom: 12px;"><span>مبلغ کسر شده:</span><strong style="color:var(--warning);">${deductionText}</strong></div>
+            
+            <hr style="border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.2); margin: 15px 0;">
+            
+            <div class="price-row" style="margin-bottom: 12px;"><span>پرداختی شما تاکنون:</span><strong style="color:var(--success);">${totalPaid.toLocaleString()} تومان</strong></div>
+            <div class="price-row" style="margin-top: 15px; font-size: 15px; background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                <span>مبلغ قابل عودت:</span><strong style="color:var(--primary); direction:ltr;">${refundText}</strong>
+            </div>
         </div>
-        <div style="font-size:11px; color:var(--text-muted); text-align:justify;">⚠️ توجه: این محاسبه بر اساس قیمت پایه (بدون تخفیف) انجام شده است. پس از تایید درخواست، میز شما آزاد شده و مبلغ عودتی به کیف پول شما واریز خواهد شد.</div>
+        
+        <div style="font-size:11.5px; color:var(--text-main); text-align:justify; line-height: 1.8; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
+            <strong style="color:var(--danger);">⚠️ توجه:</strong> پس از تایید درخواست توسط مدیریت، میز شما آزاد شده و مبلغ محاسبه شده در کیف پول شما شارژ خواهد شد. مبالغ کسر شده بعد از ۳ روز حضور، به صورت ماهانه و بدون احتساب تخفیف لحاظ می‌گردند.
+        </div>
     `;
     
     document.getElementById('cancelModalBody').innerHTML = html;
