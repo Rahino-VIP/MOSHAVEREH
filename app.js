@@ -359,8 +359,14 @@ async function rewardReferrer(referralCode, rewardAmount, messageBody) {
 // ==========================================
 function calcKonkurMonths() {
     let konkurDate = new Date('2027-07-06T00:00:00'); 
-    let today = new Date();
-    let diffDays = Math.ceil((konkurDate - today) / (1000 * 3600 * 24));
+    let baseDate = new Date();
+    
+    // اگر در حالت تمدید هستیم، مبدأ را تاریخ پایان قرارداد قبلی قرار بده
+    if (monState.txType === 'renew' && monState.startDate) {
+        baseDate = new Date(monState.startDate);
+    }
+    
+    let diffDays = Math.ceil((konkurDate - baseDate) / (1000 * 3600 * 24));
     let months = diffDays > 0 ? (diffDays / 30.41) : 1;
     monState.konkurMonths = Math.round(months * 10) / 10;
     
@@ -468,7 +474,6 @@ function renderGatewayInactive(plans, userGrade) {
 function openRenewal() {
     if (!activePansion) return;
     
-    // اطمینان از دریافت نوع طرح (پشتیبانی از هر دو نام فیلد)
     let pType = activePansion.plan_type || activePansion.service_type;
     let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
     let remainDays = calcShamsiRemainDays(activePansion.end_date);
@@ -476,18 +481,18 @@ function openRenewal() {
     monState.txType = 'renew';
     monState.planType = pType;
     monState.basePrice = activePlanData.base_price;
-    monState.startDate = activePansion.end_date; // 👈 شروع دقیقاً از روز پایان طرح قبلی
+    monState.startDate = activePansion.end_date; 
     monState.renewRemainDays = remainDays;
 
-    // 💡 ترفند کلیدی: بیرون کشیدن فرم از باکس مخفی شده
+    // پس از تنظیم حالت تمدید، ماه‌های کنکور را دوباره حساب کن
+    calcKonkurMonths();
+
     let checkoutBox = document.getElementById('bookingCheckoutSection');
     if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
 
-    // مخفی کردن انتخاب تاریخ
     let dateBox = document.getElementById('monDateSelectionBox'); 
     if (dateBox) dateBox.style.display = 'none';
     
-    // نمایش فرم
     if (checkoutBox) checkoutBox.style.display = 'block';
     
     updateRules();
@@ -495,11 +500,11 @@ function openRenewal() {
     setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
 }
 
-// آپدیت تابع انتخاب طرح جدید (برای هماهنگی با ترفند بالا)
+// آپدیت تابع انتخاب طرح جدید
 function selectNewPlan(type, price) {
     monState.txType = 'new'; 
+    calcKonkurMonths(); // محاسبه بر اساس امروز
     
-    // 💡 بیرون کشیدن فرم از باکس مخفی شده
     let checkoutBox = document.getElementById('bookingCheckoutSection');
     if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
 
@@ -520,47 +525,20 @@ function selectNewPlan(type, price) {
     setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
 }
 
-function setMonDur(dur) { 
-    monState.duration = dur; 
-    document.querySelectorAll('.dur-seg').forEach(el => el.classList.remove('active')); 
-    document.getElementById('segDur' + (dur==='konkur'?'Konkur':dur)).classList.add('active'); 
-    calculateMonthly(); 
-}
-
+function setMonDur(dur) { monState.duration = dur; document.querySelectorAll('.dur-seg').forEach(el => el.classList.remove('active')); document.getElementById('segDur' + (dur==='konkur'?'Konkur':dur)).classList.add('active'); calculateMonthly(); }
 function setMonPay(method) { monState.payMethod = method; document.getElementById('segPayCash').classList.remove('active'); document.getElementById('segPayInst').classList.remove('active'); if(method === 'cash') document.getElementById('segPayCash').classList.add('active'); else document.getElementById('segPayInst').classList.add('active'); calculateMonthly(); }
-function setMonDate(dateStr, index, element) { 
-    monState.startDate = dateStr; 
-    monState.startDateIndex = index; // 👈 ذخیره اندیس تاریخ
-    document.querySelectorAll('.date-chip').forEach(el => el.classList.remove('active')); 
-    element.classList.add('active'); 
-    calculateMonthly(); 
-}
-function setMonPlan(plan) { 
-    monState.payPlan = plan; 
-    document.getElementById('segPayCash').classList.remove('active'); 
-    document.getElementById('segPayInst').classList.remove('active'); 
-    if(plan === 'cash') document.getElementById('segPayCash').classList.add('active'); 
-    else document.getElementById('segPayInst').classList.add('active'); 
-    calculateMonthly(); 
-}
-
-function setMonSource(method) {
-    monState.payMethod = method;
-    document.getElementById('monLblCard').classList.remove('active'); 
-    document.getElementById('monLblWallet').classList.remove('active');
-    if (method === 'card') document.getElementById('monLblCard').classList.add('active'); 
-    else document.getElementById('monLblWallet').classList.add('active'); 
-    calculateMonthly();
-}
+function setMonDate(dateStr, index, element) { monState.startDate = dateStr; monState.startDateIndex = index; document.querySelectorAll('.date-chip').forEach(el => el.classList.remove('active')); element.classList.add('active'); calculateMonthly(); }
+function setMonPlan(plan) { monState.payPlan = plan; document.getElementById('segPayCash').classList.remove('active'); document.getElementById('segPayInst').classList.remove('active'); if(plan === 'cash') document.getElementById('segPayCash').classList.add('active'); else document.getElementById('segPayInst').classList.add('active'); calculateMonthly(); }
+function setMonSource(method) { monState.payMethod = method; document.getElementById('monLblCard').classList.remove('active'); document.getElementById('monLblWallet').classList.remove('active'); if (method === 'card') document.getElementById('monLblCard').classList.add('active'); else document.getElementById('monLblWallet').classList.add('active'); calculateMonthly(); }
 
 function calculateMonthly() {
     let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
     let totalBase = monState.basePrice * duration;
     let finalPrice = totalBase;
     
-    // ✨ شرط اقساط تغییر کرد به 3.4 میلیون تومان
+    // ✨ شرط اقساط تغییر کرد: بالای 3.4 میلیون تومان حتی برای یک ماهه
     const segPayInst = document.getElementById('segPayInst');
-    if (totalBase < 3400000 || duration === 1) {
+    if (totalBase < 3400000) {
         if (segPayInst) segPayInst.style.display = 'none';
         if(monState.payPlan === 'monthly') setMonPlan('cash'); 
     } else {
@@ -604,35 +582,31 @@ function calculateMonthly() {
     document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
 
     let listHtml = '';
-    // ✨ شرط اقساط تغییر کرد به 3.4 میلیون تومان
+    
+    // ✨ منطق اقساط 
     if (monState.payPlan === 'monthly' && totalBase >= 3400000) {
         const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }); 
         
-        // ⏱️ محاسبه تاریخ مبدا اقساط (از زمان شروع قرارداد جدید)
         let baseInstDate = new Date(); 
         if (monState.txType === 'renew' && monState.renewRemainDays) {
-            // اگر تمدید بود، مبدا اقساط رو ببر به تاریخی که طرح جدید شروع میشه
             baseInstDate.setDate(baseInstDate.getDate() + monState.renewRemainDays);
         } else {
-            // اگر ثبت‌نام جدید بود، مبدا اقساط میشه همون امروز/فردا/پس‌‌فردا
             baseInstDate.setDate(baseInstDate.getDate() + (monState.startDateIndex || 0));
         }
         
-        if (duration === 1 || duration === '1') {
-            // یک ماهه (۵۰٪ نقد، ۵۰٪ ده روز بعد از شروع قرارداد)
+        if (monState.duration === '1' || duration === 1) {
             let upfrontRounded = roundDown100k(finalPrice * 0.50); 
             let remaining = finalPrice - upfrontRounded; 
             monFinance.upfront = upfrontRounded;
             
             let d1 = new Date(baseInstDate); 
-            d1.setDate(baseInstDate.getDate() + 10); // 👈 دقیقاً 10 روز بعد از شروع قرارداد
+            d1.setDate(baseInstDate.getDate() + 10); 
             
             monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
             
             listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
                         <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز پس از شروع قرارداد)</li>`;
-        } else if (duration === 3 || duration === '3') {
-            // سه ماهه (۵۰٪ نقد، ۵۰٪ یک ماه بعد از شروع قرارداد)
+        } else if (monState.duration === '3' || duration === 3) {
             let upfrontRounded = roundDown100k(finalPrice * 0.50); 
             let remaining = finalPrice - upfrontRounded; 
             monFinance.upfront = upfrontRounded;
@@ -645,7 +619,6 @@ function calculateMonthly() {
             listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
                         <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه پس از شروع قرارداد)</li>`;
         } else {
-            // سالانه / تا کنکور (۲۰٪ نقد، ۴ چک ۲۰٪ در ماه‌های ۱، ۲، ۴، ۶ بعد از شروع قرارداد)
             let upfrontRounded = roundDown100k(finalPrice * 0.20); 
             monFinance.upfront = upfrontRounded;
             
@@ -672,6 +645,7 @@ function calculateMonthly() {
         monFinance.upfront = finalPrice; 
         listHtml = '<div style="text-align:center; color:var(--text-muted);">فاقد اقساط بعدی (تسویه کامل)</div>'; 
     }
+
     document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
     let payNowBig = document.getElementById('monLblPayNowBig'); if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
     document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
@@ -682,7 +656,6 @@ function calculateMonthly() {
         else ibanBox.style.display = 'none';
     }
 
-    // ✨ نمایش شفاف مبلغ کسری از کیف پول
     let wBal = Number(currentUser.wallet_balance || 0);
     let walletBadge = document.getElementById('monWalletStatusBadge');
     if (walletBadge) {
