@@ -327,7 +327,8 @@ async function loadRealDashboardData(phone) {
             supabaseClient.from('pan_installments').select('*').eq('phone_number', phone),
             supabaseClient.from('services').select('*').eq('category', 'pansion').eq('is_active', true),
             supabaseClient.from('terms_and_rules').select('*'),
-            supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', phone)
+            supabaseClient.from('pan_reservations').select('reserved_dates').eq('phone_number', phone),
+            supabaseClient.from('messages').select('*').eq('phone_number', phone).order('created_at', { ascending: false })
         ]);
 
         document.getElementById('mainLoader').style.display = 'none';
@@ -340,7 +341,6 @@ async function loadRealDashboardData(phone) {
 
         currentUser = userRes.data; 
         dbData.rules = rulesRes.data || [];
-// ... ادامه کدها دقیقاً مثل قبل است ...
         
         let pansion = (pansionRes.data && pansionRes.data.length > 0) ? pansionRes.data[0] : null;
         if(pansion) pansion.service_type = pansion.plan_type; 
@@ -371,6 +371,7 @@ async function loadRealDashboardData(phone) {
         renderInstallments(installments);
         initMonthlyBooking();
         renderProfile();
+        renderMessages(messagesRes.data || []);
 
         const consultInactiveText = document.querySelector('#consultInactiveData p');
 
@@ -1026,6 +1027,28 @@ function openHistoryModal() {
 }
 function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
 
+function renderMessages(messages) {
+    const container = document.getElementById('messagesContainer');
+    if(!messages || messages.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px;">پیامی ندارید.</div>';
+        return;
+    }
+    let html = '';
+    messages.forEach(msg => {
+        let isRead = msg.is_read;
+        html += `
+            <div style="padding: 15px; border-bottom: 1px solid var(--glass-border); ${isRead ? 'opacity: 0.6;' : ''}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color: var(--text-main); font-size: 13px;">${msg.title} ${isRead ? '' : '<span style="color:var(--danger); font-size:10px;">(جدید)</span>'}</strong>
+                    <span style="font-size: 10px; color: var(--text-muted);">${getRelativeDayText(msg.created_at.split('T')[0])}</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.8; text-align: justify;">${msg.body}</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
 function renderProfile() {
     if(!currentUser) return;
     document.getElementById('profNameTitle').innerText = currentUser.full_name || 'کاربر راهینو';
@@ -1038,7 +1061,10 @@ function renderProfile() {
     document.getElementById('profCity').value = currentUser.city || '';
     document.getElementById('profFather').value = currentUser.father_phone || '';
     document.getElementById('profMother').value = currentUser.mother_phone || '';
-    document.getElementById('profReferralCode').innerText = currentUser.referral_code || 'در حال صدور...';
+
+    let refCode = currentUser.referral_code || 'در حال صدور...';
+    document.getElementById('profReferralCode').innerText = refCode;
+    document.getElementById('txtCodeSpan').innerText = refCode;
 }
 
 async function submitProfileUpdate() {
@@ -1060,6 +1086,6 @@ async function submitProfileUpdate() {
 }
 
 function copyReferral() {
-    const code = document.getElementById('profReferralCode').innerText;
-    if(code && code !== '--' && code !== 'در حال صدور...') { navigator.clipboard.writeText(code).then(() => alert('✅ کد معرف کپی شد!')); }
+    const textToCopy = document.getElementById('referralTextToCopy').innerText;
+    navigator.clipboard.writeText(textToCopy).then(() => alert('✅ متن دعوت کپی شد!'));
 }
