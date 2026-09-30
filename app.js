@@ -810,8 +810,9 @@ function renderProfile() {
     if(!currentUser) return;
     document.getElementById('profNameTitle').innerText = currentUser.full_name || 'کاربر راهینو';
     document.getElementById('profPhoneTitle').innerText = currentUser.phone_number || '--';
+    
     document.getElementById('profName').value = currentUser.full_name || '';
-    document.getElementById('profGrade').value = currentUser.grade || 'دوازدهم';
+    document.getElementById('profGrade').value = currentUser.grade || ''; // فیلد گرید حالا ثابت (readonly) است
     document.getElementById('profMajor').value = currentUser.major || '';
     document.getElementById('profSchool').value = currentUser.school_name || '';
     document.getElementById('profProvince').value = currentUser.province || '';
@@ -819,6 +820,14 @@ function renderProfile() {
     document.getElementById('profFather').value = currentUser.father_phone || '';
     document.getElementById('profMother').value = currentUser.mother_phone || '';
     
+    // کادر نحوه آشنایی: اگر در دیتابیس خالی است، نمایش داده شود
+    let refSourceGroup = document.getElementById('profRefSourceGroup');
+    if (!currentUser.referral_source) {
+        refSourceGroup.style.display = 'block';
+    } else {
+        refSourceGroup.style.display = 'none';
+    }
+
     let refCode = currentUser.referral_code || 'در حال صدور...';
     document.getElementById('profReferralCode').innerText = refCode;
     document.getElementById('txtCodeSpan').innerText = refCode;
@@ -826,21 +835,41 @@ function renderProfile() {
 
 async function submitProfileUpdate() {
     const payload = {
-        full_name: document.getElementById('profName').value.trim(), grade: document.getElementById('profGrade').value,
-        major: document.getElementById('profMajor').value.trim(), school_name: document.getElementById('profSchool').value.trim(),
-        province: document.getElementById('profProvince').value.trim(), city: document.getElementById('profCity').value.trim(),
-        father_phone: toEngDigits(document.getElementById('profFather').value.trim()), mother_phone: toEngDigits(document.getElementById('profMother').value.trim())
+        full_name: document.getElementById('profName').value.trim(), 
+        // پایه تحصیلی (grade) دیگر از اینجا ارسال نمی‌شود چون ثابت است
+        major: document.getElementById('profMajor').value.trim(), 
+        school_name: document.getElementById('profSchool').value.trim(), 
+        province: document.getElementById('profProvince').value.trim(), 
+        city: document.getElementById('profCity').value.trim(), 
+        father_phone: toEngDigits(document.getElementById('profFather').value.trim()), 
+        mother_phone: toEngDigits(document.getElementById('profMother').value.trim())
     };
+
+    // اگر کادر نحوه آشنایی فعال بود و کاربر گزینه‌ای انتخاب کرد، آن را به دیتابیس بفرست
+    if (!currentUser.referral_source) {
+        let refSourceVal = document.getElementById('profRefSource').value;
+        if (refSourceVal) {
+            payload.referral_source = refSourceVal;
+        }
+    }
+
     document.getElementById('mainLoader').style.display = 'flex';
     try {
         const { error } = await supabaseClient.from('users').update(payload).eq('phone_number', currentUser.phone_number);
         document.getElementById('mainLoader').style.display = 'none';
-        if (!error) { alert('✅ پروفایل بروزرسانی شد.'); window.location.reload(); } else { alert('خطا در بروزرسانی.'); }
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا'); }
+        if (!error) { 
+            alert('اطلاعات با موفقیت ذخیره شد.'); 
+            window.location.reload(); 
+        } else { 
+            alert('خطا در بروزرسانی.'); 
+        }
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert('خطا در ارتباط با سرور.'); 
+    }
 }
-
 function copyReferral() {
     const refCode = currentUser.referral_code || 'RH-XXXXX';
-    const textToCopy = `سلام! 👋 من تو سامانه هوشمند قطب‌نمای راهینو ثبت‌‌نام کردم.\n\nاگه موقع ثبت‌نام کد معرف من رو وارد کنی، همون اول ۱۰۰ هزار تومان هدیه می‌گیری و روی طرحت تخفیف می‌خوره! 🎁\n\nکد معرف اختصاصی من: ${refCode}\nلینک ثبت‌‌نام: https://rahino-edu.ir/register`;
-    navigator.clipboard.writeText(textToCopy).then(() => alert('✅ متن دعوت کپی شد!'));
+    const textToCopy = `سلام! من تو پانسیون مطالعاتی راهینو ثبت‌نام کردم.\n\nاگه موقع ثبت‌نام کد معرف من رو وارد کنی، همون اول ۱۰۰ هزار تومان برای رزرو ماهانه و ۲۰ هزار تومان برای رزرو روزانه تخفیف می‌گیری!\n\nکد معرف اختصاصی من: ${refCode}\nلینک ثبت‌نام: https://booking.rahinovip.ir`;
+    navigator.clipboard.writeText(textToCopy).then(() => alert('متن دعوت کپی شد.'));
 }
