@@ -932,7 +932,7 @@ function openCancellation() {
     }
     
     // ۳. محاسبه فوق‌دقیق پرداختی‌ها (پیش‌پرداخت + اقساط)
-    let totalPaid = Number(activePansion.paid_amount || 0); // مبلغ پیش‌پرداخت
+    let totalPaid = Number(activePansion.paid_upfront || 0); // مبلغ پیش‌پرداخت
     let paidInstSum = 0; // مجموع اقساط پرداخت شده
     
     if (globalUserInstallments && globalUserInstallments.length > 0) {
