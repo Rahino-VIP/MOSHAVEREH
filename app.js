@@ -34,6 +34,9 @@ let currentInstallmentId = null; let currentInstallmentAmount = 0; let instBase6
 // ==========================================
 function toEngDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) : ''; }
 function roundDown100k(amount) { return Math.floor(amount / 100000) * 100000; }
+function roundDown50k(amount) { 
+    return Math.floor(amount / 50000) * 50000; 
+}
 function generateReferralCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = 'RH-';
