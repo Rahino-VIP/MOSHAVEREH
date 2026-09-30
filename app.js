@@ -409,13 +409,45 @@ function renderGatewayInactive(plans, userGrade) {
     document.getElementById('noSubGateway').style.display = 'block';
     let container = document.getElementById('newPlansContainer');
     container.innerHTML = ''; container.className = 'store-grid';
+    
     let isPostKonkurOrUni = userGrade && (userGrade.includes('پشت') || userGrade.includes('فارغ') || userGrade.includes('دانشجو'));
+    
     plans.forEach(plan => {
         if (plan.type === 'student_plan' && isPostKonkurOrUni) return; 
-        let capacity = parseInt(plan.capacity) || 0; let isFull = capacity <= 0;
-        let capHtml = isFull ? `<div class="cap-status cap-full">تکمیل ظرفیت</div>` : `<div class="cap-status cap-available">موجودی: ${capacity} نفر</div>`;
+        
+        let capacity = parseInt(plan.capacity) || 0; 
+        let isFull = capacity <= 0;
+        let capHtml = isFull 
+            ? `<div class="cap-status cap-full">تکمیل ظرفیت</div>`
+            : `<div class="cap-status cap-available">موجودی: ${capacity} نفر</div>`;
+        
+        // ✨ بازسازی بخش توضیحات و امکانات طرح‌ها (Accordion)
+        let featuresHtml = '';
+        if(plan.features) {
+            let listItems = plan.features.split('\n').map(l => {
+                let text = l.replace('✅', '').trim();
+                if(!text) return '';
+                return `<li style="display:flex; align-items:flex-start; gap:6px; margin-bottom:8px;">
+                            <span style="color:var(--success); flex-shrink:0;">✔️</span> 
+                            <span>${text}</span>
+                        </li>`;
+            }).join('');
+            featuresHtml = `<details class="feat-details">
+                                <summary class="feat-summary">مشاهده امکانات و توضیحات طرح 🔻</summary>
+                                <ul class="feat-list" style="list-style:none; padding:0; margin-top:10px; font-size:11px; text-align:right;">${listItems}</ul>
+                            </details>`;
+        }
+        
         let onclickAttr = isFull ? '' : `onclick="selectNewPlan('${plan.type}', ${plan.base_price})"`;
-        container.innerHTML += `<div class="${isFull ? 'store-card disabled' : 'store-card'}" id="card_${plan.type}" ${onclickAttr}><div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center;">${plan.title}</div><div style="font-size: 11px; color: var(--text-muted); font-weight: bold; text-align: center;">${plan.description || ''}</div><div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 15px; text-align: center;">${Number(plan.base_price).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">/ ماه</span></div>${capHtml}</div>`;
+        let cardClass = isFull ? 'store-card disabled' : 'store-card';
+        
+        container.innerHTML += `
+            <div class="${cardClass}" id="card_${plan.type}" ${onclickAttr}>
+                <div style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; text-align: center;">${plan.title}</div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: bold; text-align: center;">${plan.description || ''}</div>
+                <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-top: 15px; text-align: center;">${Number(plan.base_price).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">/ ماه</span></div>
+                ${capHtml} ${featuresHtml}
+            </div>`;
     });
 }
 
@@ -459,8 +491,9 @@ function calculateMonthly() {
     let totalBase = monState.basePrice * duration;
     let finalPrice = totalBase;
     
+    // ✨ شرط اقساط تغییر کرد به 3.4 میلیون تومان
     const segPayInst = document.getElementById('segPayInst');
-    if (totalBase < 3500000 || duration === 1) {
+    if (totalBase < 3400000 || duration === 1) {
         if (segPayInst) segPayInst.style.display = 'none';
         if(monState.payPlan === 'monthly') setMonPlan('cash'); 
     } else {
@@ -504,7 +537,8 @@ function calculateMonthly() {
     document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
 
     let listHtml = '';
-    if (monState.payPlan === 'monthly' && totalBase >= 3500000 && duration > 1) {
+    // ✨ شرط اقساط تغییر کرد به 3.4 میلیون تومان
+    if (monState.payPlan === 'monthly' && totalBase >= 3400000 && duration > 1) {
         const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }); let baseInstDate = new Date(); 
         if (duration <= 3) {
             let upfrontRounded = roundDown100k(finalPrice * 0.50); let remaining = finalPrice - upfrontRounded; monFinance.upfront = upfrontRounded;
@@ -523,21 +557,21 @@ function calculateMonthly() {
     let payNowBig = document.getElementById('monLblPayNowBig'); if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
     document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
 
-    // کنترل نمایش باکس شبا
     let ibanBox = document.getElementById('monIbanBox');
     if (ibanBox) {
         if (monFinance.upfront >= 15000000) ibanBox.style.display = 'block';
         else ibanBox.style.display = 'none';
     }
 
-    // کنترل نمایش کیف پول یا آپلود فیش
+    // ✨ نمایش شفاف مبلغ کسری از کیف پول
     let wBal = Number(currentUser.wallet_balance || 0);
     let walletBadge = document.getElementById('monWalletStatusBadge');
     if (walletBadge) {
         if (monState.payMethod === 'wallet' && wBal < monFinance.upfront) {
             walletBadge.style.color = 'var(--danger)'; walletBadge.innerText = 'موجودی ناکافی';
         } else {
-            walletBadge.style.color = 'var(--text-muted)'; walletBadge.innerText = `موجودی: ${wBal.toLocaleString()}`;
+            walletBadge.style.color = 'var(--text-muted)'; 
+            walletBadge.innerText = `موجودی: ${wBal.toLocaleString()} | کسر: ${monFinance.upfront.toLocaleString()}`;
         }
     }
 
