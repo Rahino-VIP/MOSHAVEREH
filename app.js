@@ -1,27 +1,28 @@
 // ==========================================
-// 🔗 تنظیمات و متغیرهای سراسری
+// 🔗 تنظیمات و اتصال مستقیم به سوپابیس
 // ==========================================
+const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; // 👈 لینک سوپابیس خود را اینجا بگذارید
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; // 👈 کلید Anon سوپابیس خود را اینجا بگذارید
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec';
 
 let currentUser = null; 
 let dbData = { rules: [] }; 
 
-// متغیرهای رزرو روزانه
+// متغیرهای رزرو روزانه و ماهانه (بدون تغییر)
 let window14Dates = []; let dailyCapacities = {}; let userPastReservations = []; 
 let selectedNewDates = []; let isFirstEver = false; let finalAmountToPay = 0; 
 let base64Image = ""; let appliedDiscountCode = ""; let discountAmount = 0; 
 let selectedPayMethod = "card"; let globalUserPastReservations = []; 
 const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
-// متغیرهای رزرو ماهانه
 let monState = { 
     txType: 'new', planType: 'none', basePrice: 0, duration: '1', payMethod: 'cash', 
     startDate: '', renewBaseDate: '', konkurMonths: 9, receiptBase64: "",
     promoCode: "", promoDiscount: 0, isFirstMonthly: true, referralDiscountApplied: false 
 };
 let monFinance = { totalBase: 0, discount: 0, finalPrice: 0, upfront: 0, installments: [] };
-
-// امور مالی
 let currentInstallmentId = null; let currentInstallmentAmount = 0; let instBase64Image = "";
 
 // ==========================================
@@ -258,98 +259,129 @@ function logout() {
 }
 
 // ==========================================
-// 📊 دریافت داده‌های داشبورد
+// ⚡ دریافت پرسرعت داده‌های داشبورد (مستقیم از سوپابیس)
 // ==========================================
 async function loadRealDashboardData(phone) {
     try {
-        const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_dashboard_data', phone_number: phone }) });
-        const res = await response.json();
+        // خواندن موازی تمام اطلاعات برای حداکثر سرعت (زیر 1 ثانیه)
+        const [userRes, pansionRes, consultRes, instRes, servicesRes, rulesRes, dailyRes] = await Promise.all([
+            supabase.from('users').select('*').eq('phone_number', phone).single(),
+            supabase.from('pan_monthly_subs').select('*').eq('phone_number', phone).eq('status', 'active'),
+            supabase.from('subscriptions').select('*').eq('user_phone', phone).eq('status', 'active').eq('service_category', 'consult'),
+            supabase.from('pan_installments').select('*').eq('phone_number', phone),
+            supabase.from('services').select('*').eq('category', 'pansion').eq('is_active', true),
+            supabase.from('terms_and_rules').select('*'),
+            supabase.from('pan_reservations').select('reserved_dates').eq('phone_number', phone)
+        ]);
+
         document.getElementById('mainLoader').style.display = 'none';
 
-        if (res.success) {
-            currentUser = res.user; 
-            dbData.rules = res.rules || [];
-            const pansion = res.pansion;
-            const consult = res.consult;
-            globalUserPastReservations = res.daily_dates || []; 
-            
-            let todayShamsi = getShamsiDateSafe(new Date());
-            let upcomingDates = globalUserPastReservations.filter(d => d >= todayShamsi).sort();
-            let nextDaily = upcomingDates.length > 0 ? upcomingDates[0] : null;
-
-            document.getElementById('uiUserFullName').innerText = `سلام، ${currentUser.full_name.split(' ')[0]} عزیز`;
-            document.getElementById('uiUserGradeMajor').innerText = `پایه ${currentUser.grade || 'نامشخص'} (${currentUser.major || 'نامشخص'})`;
-            
-            let wBal = Number(currentUser.wallet_balance || 0);
-            document.getElementById('uiWalletBalance').innerHTML = `${wBal.toLocaleString()} <span>تومان</span>`;
-            if (wBal >= 500000) document.getElementById('btnWithdraw').style.display = 'block';
-
-            renderInstallments(res.installments);
-            initMonthlyBooking();
-            renderProfile();
-
-            let availablePlans = res.pansion_plans || [];
-
-            if (pansion) {
-                document.getElementById('badgePansion').innerText = 'فعال';
-                document.getElementById('badgePansion').className = 'srv-badge';
-                document.getElementById('pansionActiveData').style.display = 'block';
-                document.getElementById('pansionInactiveData').style.display = 'none';
-                
-                document.getElementById('uiPanType').innerHTML = `<span style="direction:ltr; display:inline-block;">${pansion.service_type.toUpperCase()}</span>`;
-                let safeStartDate = pansion.start_date ? pansion.start_date.replace(/-/g, '/') : '--';
-                let safeEndDate = pansion.end_date ? pansion.end_date.replace(/-/g, '/') : '--';
-                let remainDays = calcShamsiRemainDays(pansion.end_date);
-                
-                document.getElementById('uiPanStart').innerText = safeStartDate;
-                document.getElementById('uiPanEnd').innerText = safeEndDate;
-                document.getElementById('uiPanRemainTxt').innerText = `${remainDays} روز`;
-                
-                let totalEstDays = 30; 
-                if(pansion.start_date && pansion.end_date) {
-                     let sParts = pansion.start_date.replace(/\//g, '-').split('-');
-                     let eParts = pansion.end_date.replace(/\//g, '-').split('-');
-                     let sDays = (parseInt(sParts[0]) * 365) + (parseInt(sParts[1]) * 30) + parseInt(sParts[2]);
-                     let eDays = (parseInt(eParts[0]) * 365) + (parseInt(eParts[1]) * 30) + parseInt(eParts[2]);
-                     totalEstDays = Math.max(1, eDays - sDays);
-                }
-                let progressVal = Math.min(100, Math.max(0, 100 - ((remainDays / totalEstDays) * 100)));
-                document.getElementById('uiPanProgressBar').style.width = `${progressVal}%`;
-                
-                document.getElementById('cardDaily').style.display = 'none';
-                document.getElementById('navDaily').style.display = 'none';
-                
-                renderGatewayActive(pansion);
-            } else {
-                document.getElementById('cardDaily').style.display = 'block';
-                document.getElementById('navDaily').style.display = 'flex';
-                
-                if (nextDaily) {
-                    document.getElementById('badgeDaily').innerText = 'دارای رزرو';
-                    document.getElementById('badgeDaily').className = 'srv-badge';
-                    document.getElementById('dailyActiveData').style.display = 'block';
-                    document.getElementById('dailyInactiveData').style.display = 'none';
-                    document.getElementById('uiNextDailyDate').innerText = getRelativeDayText(nextDaily);
-                }
-                await initializeBookingEngine();
-                renderGatewayInactive(availablePlans, currentUser.grade);
-            }
-
-            if (consult) {
-                document.getElementById('badgeConsult').innerText = 'فعال';
-                document.getElementById('badgeConsult').className = 'srv-badge';
-                document.getElementById('consultActiveData').style.display = 'block';
-                document.getElementById('consultInactiveData').style.display = 'none';
-                document.getElementById('uiConType').innerText = `طرح ${consult.service_type}`;
-                if(consult.end_date) document.getElementById('uiConDays').innerText = getShamsiDateSafe(new Date(consult.end_date)).replace(/-/g, '/');
-            }
-        } else {
-            alert(res.error || 'خطا در دریافت اطلاعات کاربری.');
+        if (userRes.error || !userRes.data) {
+            alert('خطا: اطلاعات کاربری یافت نشد.');
             logout();
+            return;
         }
+
+        currentUser = userRes.data; 
+        dbData.rules = rulesRes.data || [];
+        
+        let pansion = (pansionRes.data && pansionRes.data.length > 0) ? pansionRes.data[0] : null;
+        if(pansion) pansion.service_type = pansion.plan_type; // همگام‌سازی فیلدها
+        let consult = (consultRes.data && consultRes.data.length > 0) ? consultRes.data[0] : null;
+        let installments = instRes.data || [];
+        let availablePlans = servicesRes.data || [];
+
+        // استخراج تاریخ‌های رزرو روزانه
+        let allDailyDates = [];
+        if(dailyRes.data) {
+            dailyRes.data.forEach(r => {
+                let dates = r.reserved_dates;
+                try { if(typeof dates === 'string') dates = JSON.parse(dates); } catch(e){}
+                if(Array.isArray(dates)) allDailyDates.push(...dates);
+            });
+        }
+        globalUserPastReservations = allDailyDates;
+
+        let todayShamsi = getShamsiDateSafe(new Date());
+        let upcomingDates = globalUserPastReservations.filter(d => d >= todayShamsi).sort();
+        let nextDaily = upcomingDates.length > 0 ? upcomingDates[0] : null;
+
+        // تزریق سریع اطلاعات به داشبورد
+        document.getElementById('uiUserFullName').innerText = `سلام، ${currentUser.full_name.split(' ')[0]} عزیز`;
+        document.getElementById('uiUserGradeMajor').innerText = `پایه ${currentUser.grade || 'نامشخص'} (${currentUser.major || 'نامشخص'})`;
+        let wBal = Number(currentUser.wallet_balance || 0);
+        document.getElementById('uiWalletBalance').innerHTML = `${wBal.toLocaleString()} <span>تومان</span>`;
+        if (wBal >= 500000) document.getElementById('btnWithdraw').style.display = 'block';
+
+        renderInstallments(installments);
+        initMonthlyBooking();
+        renderProfile();
+
+        const consultInactiveText = document.querySelector('#consultInactiveData p');
+
+        // مدیریت پنل ماهانه
+        if (pansion) {
+            document.getElementById('badgePansion').innerText = 'فعال';
+            document.getElementById('badgePansion').className = 'srv-badge';
+            document.getElementById('pansionActiveData').style.display = 'block';
+            document.getElementById('pansionInactiveData').style.display = 'none';
+            
+            document.getElementById('uiPanType').innerHTML = `<span style="direction:ltr; display:inline-block;">${pansion.service_type.toUpperCase()}</span>`;
+            let safeStartDate = pansion.start_date ? pansion.start_date.replace(/-/g, '/') : '--';
+            let safeEndDate = pansion.end_date ? pansion.end_date.replace(/-/g, '/') : '--';
+            let remainDays = calcShamsiRemainDays(pansion.end_date);
+            
+            document.getElementById('uiPanStart').innerText = safeStartDate;
+            document.getElementById('uiPanEnd').innerText = safeEndDate;
+            document.getElementById('uiPanRemainTxt').innerText = `${remainDays} روز`;
+            
+            let totalEstDays = 30; 
+            if(pansion.start_date && pansion.end_date) {
+                 let sParts = pansion.start_date.replace(/\//g, '-').split('-');
+                 let eParts = pansion.end_date.replace(/\//g, '-').split('-');
+                 let sDays = (parseInt(sParts[0]) * 365) + (parseInt(sParts[1]) * 30) + parseInt(sParts[2]);
+                 let eDays = (parseInt(eParts[0]) * 365) + (parseInt(eParts[1]) * 30) + parseInt(eParts[2]);
+                 totalEstDays = Math.max(1, eDays - sDays);
+            }
+            let progressVal = Math.min(100, Math.max(0, 100 - ((remainDays / totalEstDays) * 100)));
+            document.getElementById('uiPanProgressBar').style.width = `${progressVal}%`;
+            
+            document.getElementById('cardDaily').style.display = 'none';
+            document.getElementById('navDaily').style.display = 'none';
+            
+            if(consultInactiveText) consultInactiveText.innerHTML = `شما اشتراک پانسیون دارید! با فعال‌سازی بخش مشاوره از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> بهره‌مند شوید.`;
+            
+            renderGatewayActive(pansion);
+        } else {
+            document.getElementById('cardDaily').style.display = 'block';
+            document.getElementById('navDaily').style.display = 'flex';
+            
+            if(consultInactiveText) consultInactiveText.innerHTML = `با ثبت‌نام در پانسیون ماهانه، از <b style="color: var(--accent);">۶۰٪ تخفیف المــاس</b> روی طرح‌های مشاوره بهره‌مند شوید.`;
+            
+            if (nextDaily) {
+                document.getElementById('badgeDaily').innerText = 'دارای رزرو';
+                document.getElementById('badgeDaily').className = 'srv-badge';
+                document.getElementById('dailyActiveData').style.display = 'block';
+                document.getElementById('dailyInactiveData').style.display = 'none';
+                document.getElementById('uiNextDailyDate').innerText = getRelativeDayText(nextDaily);
+            }
+            await initializeBookingEngine();
+            renderGatewayInactive(availablePlans, currentUser.grade);
+        }
+
+        if (consult) {
+            document.getElementById('badgeConsult').innerText = 'فعال';
+            document.getElementById('badgeConsult').className = 'srv-badge';
+            document.getElementById('consultActiveData').style.display = 'block';
+            document.getElementById('consultInactiveData').style.display = 'none';
+            document.getElementById('uiConType').innerText = `طرح ${consult.service_type}`;
+            if(consult.end_date) document.getElementById('uiConDays').innerText = getShamsiDateSafe(new Date(consult.end_date)).replace(/-/g, '/');
+        }
+
     } catch (error) {
         document.getElementById('mainLoader').style.display = 'none';
-        alert('خطا در ارتباط با سرور: \n' + error.message);
+        alert('خطا در دریافت اطلاعات دیتابیس.');
+        console.error(error);
     }
 }
 
