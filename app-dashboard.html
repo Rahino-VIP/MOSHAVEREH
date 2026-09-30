@@ -373,10 +373,11 @@
                         </div>
                         
                         <div class="section-title">⏱️ مدت زمان رزرو</div>
-                        <div class="dur-segments" style="margin-bottom: 25px;">
-                            <button class="dur-seg active" id="segDur1" onclick="setMonDur('1')">۱ ماهه</button>
-                            <button class="dur-seg" id="segDur3" onclick="setMonDur('3')">۳ ماهه</button>
-                            <button class="dur-seg" id="segDurKonkur" onclick="setMonDur('konkur')">تا کنکور (۱۵ تیر ۱۴۰۶)</button>
+                        <div class="dur-segments" style="margin-bottom: 25px; display: flex; gap: 5px;">
+                            <button class="dur-seg active" id="segDur1" onclick="setMonDur('1')" style="flex: 1;">۱ ماهه</button>
+                            <button class="dur-seg" id="segDur3" onclick="setMonDur('3')" style="flex: 1;">۳ ماهه</button>
+                            <button class="dur-seg" id="segDur6" onclick="setMonDur('6')" style="flex: 1;">۶ ماهه</button>
+                            <button class="dur-seg" id="segDur9" onclick="setMonDur('9')" style="flex: 1; border-left: none;">۹ ماهه</button>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px; display: flex; gap: 10px;">
