@@ -467,11 +467,48 @@
                  👤 پروفایل کاربری
             ================================ -->
             <div id="view-profile" class="view-section">
-                <div class="section-title">پروفایل کاربری</div>
+                
+                <div class="section-title" style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    صندوق پیام‌های من
+                </div>
+                <div class="glass-panel" style="padding: 15px; margin-bottom: 25px; max-height: 300px; overflow-y: auto;" id="messagesContainer">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px;">پیامی ندارید.</div>
+                </div>
+
+                <div class="section-title" style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    معرفی به دوستان (کسب درآمد)
+                </div>
+                <div class="glass-panel" style="padding: 25px 20px; text-align: center; margin-bottom: 25px; border: 1px dashed var(--primary);">
+                    <div style="font-size: 13px; color: var(--text-main); font-weight: bold; margin-bottom: 15px;">کد دعوت اختصاصی شما</div>
+                    <div style="background: var(--primary-fade); padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: 3px; margin-bottom: 20px;" id="profReferralCode">RH-XXXXX</div>
+                    
+                    <div style="font-size: 12px; color: var(--text-muted); line-height: 2; text-align: justify; margin-bottom: 20px;">
+                        سلام! من تو پانسیون مطالعاتی راهینو ثبت‌نام کردم.<br><br>
+                        اگه موقع ثبت‌نام کد معرف من رو وارد کنی، همون اول <span style="color: var(--success); font-weight: bold;">۱۰۰ هزار تومان</span> برای رزرو ماهانه و <span style="color: var(--success); font-weight: bold;">۲۰ هزار تومان</span> برای رزرو روزانه تخفیف می‌گیری!<br><br>
+                        کد معرف اختصاصی من: <strong style="color: var(--primary);" id="txtCodeSpan">RH-XXXXX</strong><br>
+                        لینک ثبت‌نام: https://booking.rahinovip.ir
+                    </div>
+                    
+                    <button class="btn-action primary" style="width: 100%; border-radius: 16px;" onclick="copyReferral()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        کپی متن و ارسال برای دوستان
+                    </button>
+                </div>
+
+                <div class="section-title" style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    پروفایل کاربری
+                </div>
                 
                 <div class="glass-panel" style="padding: 25px; margin-bottom: 25px;">
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <div class="avatar" style="width: 70px; height: 70px; margin: 0 auto 15px; border-radius: 22px; font-size: 28px;">👤</div>
+                        <div class="avatar" style="width: 75px; height: 75px; margin: 0 auto 15px; border-radius: 22px; background: var(--primary-fade); color: var(--primary);">
+                            <svg viewBox="0 0 24 24" width="45" height="45" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M4 21v-2a4 4 0 0 1 3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M8 3.13a4 4 0 0 0 0 7.75"></path>
+                            </svg>
+                        </div>
                         <h3 style="font-size: 18px; font-weight: 900; color: var(--text-main);" id="profNameTitle">--</h3>
                         <p style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-top: 5px; letter-spacing: 1px;" id="profPhoneTitle">--</p>
                     </div>
@@ -484,9 +521,7 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                         <div class="form-group">
                             <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">پایه تحصیلی</label>
-                            <select id="profGrade" class="form-input" style="padding: 12px; font-size: 13px; text-align: right;">
-                                <option value="متوسطه اول">متوسطه اول</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="پشت کنکوری">پشت کنکوری</option><option value="دانشجو">دانشجو</option>
-                            </select>
+                            <input type="text" id="profGrade" class="form-input" style="padding: 12px; font-size: 13px; text-align: right; background: rgba(0,0,0,0.05); color: var(--text-muted); cursor: not-allowed;" readonly>
                         </div>
                         <div class="form-group">
                             <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">رشته تحصیلی</label>
@@ -495,8 +530,21 @@
                     </div>
                     
                     <div class="form-group">
-                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">نام مدرسه / دانشگاه</label>
+                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block; font-weight:bold;">نام مدرسه /داتشگاه</label>
                         <input type="text" id="profSchool" class="form-input" style="text-align: right;">
+                    </div>
+
+                    <div class="form-group" id="profRefSourceGroup" style="display: none;">
+                        <label style="font-size:11px; color:var(--primary); margin-bottom:8px; display:block; font-weight:bold;">نحوه آشنایی شما با راهینو چه بود؟</label>
+                        <select id="profRefSource" class="form-input" style="border-color: var(--primary);">
+                            <option value="" disabled selected>انتخاب کنید...</option>
+                            <option value="اینستاگرام">اینستاگرام</option>
+                            <option value="تلگرام">تلگرام</option>
+                            <option value="سایت راهینو">سایت راهینو</option>
+                            <option value="معرفی دوستان">معرفی دوستان</option>
+                            <option value="تراکت و تبلیغات">تراکت و تبلیغات</option>
+                            <option value="سایر">سایر موارد</option>
+                        </select>
                     </div>
                     
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -521,27 +569,10 @@
                         </div>
                     </div>
 
-                    <button class="btn-submit" onclick="submitProfileUpdate()">ذخیره تغییرات 💾</button>
-                </div>
-
-                <div class="section-title">صندوق پیام‌های من 📩</div>
-                <div class="glass-panel" style="padding: 15px; margin-bottom: 25px;" id="messagesContainer">
-                    <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px;">پیامی ندارید.</div>
-                </div>
-
-                <div class="section-title">معرفی به دوستان (کسب درآمد)</div>
-                <div style="background: #1f292e; border: 1px dashed var(--glass-border); padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                    <div style="font-size: 13px; color: var(--primary); font-weight: bold; margin-bottom: 15px;">کد دعوت اختصاصی شما</div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: 3px; margin-bottom: 20px;" id="profReferralCode">RH-XXXXX</div>
-                    
-                    <div style="font-size: 12px; color: var(--text-muted); line-height: 2; text-align: justify; margin-bottom: 20px;">
-                        سلام! 👋 من تو سامانه هوشمند قطب‌نمای راهینو ثبت‌نام کردم.<br><br>
-                        اگه موقع ثبت‌نام کد معرف من رو وارد کنی، همون اول <span style="color: var(--accent); font-weight: bold;">۱۰۰ هزار تومان هدیه</span> می‌گیری و روی طرحت تخفیف می‌خوره! 🎁<br><br>
-                        کد معرف اختصاصی من: <strong style="color: var(--primary);" id="txtCodeSpan">RH-XXXXX</strong><br>
-                        لینک ثبت‌نام: https://rahino-edu.ir/register
-                    </div>
-                    
-                    <button class="btn-action primary" style="width: 100%; border-radius: 16px; background: #6ba793; color: white;" onclick="copyReferral()">📋 کپی متن و ارسال برای دوستان</button>
+                    <button class="btn-submit" onclick="submitProfileUpdate()" style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        ذخیره اطلاعات
+                    </button>
                 </div>
             </div>
 
