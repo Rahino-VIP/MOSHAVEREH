@@ -348,12 +348,16 @@ async function rewardReferrer(referralCode, rewardAmount, messageBody) {
 // 🗓 رزرو ماهانه
 // ==========================================
 function calcKonkurMonths() {
-    let konkurDate = new Date('2027-07-06T00:00:00'); 
-    let diffDays = Math.ceil((konkurDate - new Date()) / (1000 * 3600 * 24));
-    let months = diffDays > 0 ? Math.max(1, Math.round((diffDays / 30.41) * 10) / 10) : 1;
-    monState.konkurMonths = months;
+    let konkurDate = new Date('2027-07-06T00:00:00'); // ۱۵ تیر ۱۴۰۶
+    let today = new Date();
+    let diffDays = Math.ceil((konkurDate - today) / (1000 * 3600 * 24));
+    
+    // عدم استفاده از گرد کردن رو به بالا برای حفظ رقم اعشار
+    let months = diffDays > 0 ? (diffDays / 30.41) : 1;
+    monState.konkurMonths = Math.round(months * 10) / 10; // عدد دقیق مثلا 9.2
+    
     let segKonkur = document.getElementById('segDurKonkur');
-    if(segKonkur) segKonkur.innerText = `تا کنکور (${Math.ceil(months)} ماه)`;
+    if(segKonkur) segKonkur.innerText = `تا کنکور (${monState.konkurMonths} ماه)`;
 }
 
 function updateRules() {
@@ -419,60 +423,135 @@ function selectNewPlan(type, price) {
     document.getElementById('bookingCheckoutSection').style.display = 'block';
     updateRules(); calculateMonthly();
 }
-function setMonDur(dur) { monState.duration = dur; document.querySelectorAll('.dur-seg').forEach(el => el.classList.remove('active')); document.getElementById('segDur' + (dur==='konkur'?'Konkur':dur)).classList.add('active'); document.getElementById('monLblDurationBadge').innerText = document.getElementById('segDur' + (dur==='konkur'?'Konkur':dur)).innerText; calculateMonthly(); }
+function setMonDur(dur) {
+    monState.duration = dur;
+    document.querySelectorAll('.dur-seg').forEach(el => el.classList.remove('active'));
+    if(dur === '1') document.getElementById('segDur1').classList.add('active');
+    if(dur === '3') document.getElementById('segDur3').classList.add('active');
+    if(dur === 'konkur') document.getElementById('segDurKonkur').classList.add('active');
+    
+    // متن بج (Badge) فاکتور حالا در تابع محاسبه داینامیک ساخته می‌شود
+    calculateMonthly();
+}
+
 function setMonPay(method) { monState.payMethod = method; document.getElementById('segPayCash').classList.remove('active'); document.getElementById('segPayInst').classList.remove('active'); if(method === 'cash') document.getElementById('segPayCash').classList.add('active'); else document.getElementById('segPayInst').classList.add('active'); calculateMonthly(); }
 function setMonDate(dateStr, element) { monState.startDate = dateStr; document.querySelectorAll('.date-chip').forEach(el => el.classList.remove('active')); element.classList.add('active'); calculateMonthly(); }
 
 function calculateMonthly() {
-    let duration = monState.duration === 'konkur' ? Math.ceil(monState.konkurMonths) : parseInt(monState.duration);
+    // 👈 استفاده مستقیم از عدد اعشاری بدون گرد کردن
+    let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
+    
+    // 👈 محاسبه دقیق: قیمت طرح ضربدر عدد اعشاری (مثلاً X * 9.2)
     let totalBase = monState.basePrice * duration;
     let finalPrice = totalBase;
     
+    const segPayInst = document.getElementById('segPayInst');
     if (totalBase < 3500000 || duration === 1) {
-        document.getElementById('segPayInst').style.display = 'none';
+        if (segPayInst) segPayInst.style.display = 'none';
         if(monState.payMethod === 'monthly') setMonPay('cash'); 
-    } else document.getElementById('segPayInst').style.display = 'block';
+    } else {
+        if (segPayInst) segPayInst.style.display = 'block';
+    }
 
-    let timeDiscountRate = (monState.duration === 'konkur' || duration >= 9) ? (monState.payMethod === 'cash' ? 0.15 : 0.08) : ((monState.duration === '3' || duration === 3) ? (monState.payMethod === 'cash' ? 0.05 : 0.03) : 0);
-    let timeDiscountAmount = totalBase * timeDiscountRate; finalPrice -= timeDiscountAmount;
+    // 🧠 تخفیف زمانی و تنظیم متن دقیق فاکتور (مشابه عکس ارسالی شما)
+    let timeDiscountRate = 0;
+    let badgeText = '۱ ماهه';
 
-    let promoDiscountAmount = monState.promoDiscount > 0 ? (monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount) : 0; finalPrice -= promoDiscountAmount;
+    if (monState.duration === 'konkur' || duration >= 9) {
+         timeDiscountRate = monState.payMethod === 'cash' ? 0.15 : 0.08;
+         let offText = monState.payMethod === 'cash' ? '۱۵٪ تخفیف' : '۸٪ تخفیف قسطی';
+         badgeText = `تا روز کنکور (${monState.konkurMonths} ماه) - ${offText}`;
+    } else if (monState.duration === '3' || duration === 3) {
+         timeDiscountRate = monState.payMethod === 'cash' ? 0.05 : 0.03;
+         let offText = monState.payMethod === 'cash' ? '۵٪ تخفیف' : '۳٪ تخفیف قسطی';
+         badgeText = `۳ ماهه - ${offText}`;
+    }
     
-    // تخفیف معرف ثبت‌نام ماهانه
+    // آپدیت متن لیبل صورتحساب
+    let badgeEl = document.getElementById('monLblDurationBadge');
+    if (badgeEl) badgeEl.innerText = badgeText;
+
+    let timeDiscountAmount = totalBase * timeDiscountRate;
+    finalPrice -= timeDiscountAmount;
+
+    let promoDiscountAmount = 0;
+    if (monState.promoDiscount > 0) {
+         promoDiscountAmount = monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount;
+         finalPrice -= promoDiscountAmount;
+    }
+    
     let referralDiscountAmount = 0;
-    if (monState.isFirstMonthly && currentUser && currentUser.invited_by) { referralDiscountAmount = 100000; finalPrice = Math.max(0, finalPrice - referralDiscountAmount); }
+    let isFirstMonthlyReg = !document.getElementById('pansionActiveData') || document.getElementById('pansionActiveData').style.display === 'none';
+    if (isFirstMonthlyReg && currentUser && currentUser.invited_by && !monState.referralDiscountApplied) {
+         referralDiscountAmount = 100000;
+         finalPrice = Math.max(0, finalPrice - referralDiscountAmount);
+    }
 
     let totalDiscount = timeDiscountAmount + promoDiscountAmount + referralDiscountAmount;
-    monFinance.totalBase = totalBase; monFinance.discount = totalDiscount; monFinance.finalPrice = finalPrice; monFinance.installments = [];
+    
+    monFinance.totalBase = totalBase; 
+    monFinance.discount = totalDiscount; 
+    monFinance.finalPrice = finalPrice; 
+    monFinance.installments = [];
 
     document.getElementById('monLblBase').innerText = totalBase.toLocaleString() + ' تومان';
     document.getElementById('monLblDisc').innerText = totalDiscount.toLocaleString() + ' تومان';
     document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
 
     let listHtml = '';
+    
     if (monState.payMethod === 'monthly' && totalBase >= 3500000 && duration > 1) {
-        const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' }); let baseInstDate = new Date(); 
+        const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
+        let baseInstDate = new Date(); 
+        
         if (duration <= 3) {
-            let upfrontRounded = roundDown100k(finalPrice * 0.50); let remaining = finalPrice - upfrontRounded; monFinance.upfront = upfrontRounded;
-            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه بعد)</li>`;
+            let upfrontRounded = roundDown100k(finalPrice * 0.50);
+            let remaining = finalPrice - upfrontRounded;
+            monFinance.upfront = upfrontRounded;
+            
+            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
+            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
+            
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                        <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه بعد)</li>`;
         } else {
-            let upfrontRounded = roundDown100k(finalPrice * 0.20); monFinance.upfront = upfrontRounded;
-            let checkAmt = roundDown100k(finalPrice * 0.20); let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 3);
-            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2); let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4); let d4 = new Date(baseInstDate); d4.setMonth(baseInstDate.getMonth() + 6);
-            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 }); monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 }); monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: checkAmt, installment_number: 3 }); monFinance.installments.push({ due_date: d4.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 4 });
-            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li><li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b></li><li>قسط سوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b></li><li>قسط چهارم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d4)}</b></li>`;
+            let upfrontRounded = roundDown100k(finalPrice * 0.20);
+            monFinance.upfront = upfrontRounded;
+            
+            let checkAmt = roundDown100k(finalPrice * 0.20);
+            let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 3);
+            
+            let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1);
+            let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2);
+            let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4);
+            let d4 = new Date(baseInstDate); d4.setMonth(baseInstDate.getMonth() + 6);
+            
+            monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 });
+            monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 });
+            monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: checkAmt, installment_number: 3 });
+            monFinance.installments.push({ due_date: d4.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 4 });
+            
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
+                        <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b></li>
+                        <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b></li>
+                        <li>قسط سوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b></li>
+                        <li>قسط چهارم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d4)}</b></li>`;
         }
-    } else { monFinance.upfront = finalPrice; listHtml = '<div style="text-align:center; color:var(--text-muted);">فاقد اقساط بعدی (تسویه کامل)</div>'; }
+    } else {
+        monFinance.upfront = finalPrice;
+        listHtml = '<div style="text-align:center; color:var(--text-muted);">فاقد اقساط بعدی (تسویه کامل)</div>';
+    }
 
     document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
-    let payNowBig = document.getElementById('monLblPayNowBig'); if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
+    let payNowBig = document.getElementById('monLblPayNowBig');
+    if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
     document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
 
     let noticeMsg = "";
     if (referralDiscountAmount > 0) noticeMsg += `🎁 ۱۰۰ هزار تومان هدیه اولین ثبت‌نام (معرف) اعمال شد!<br>`;
     if (promoDiscountAmount > 0) noticeMsg += `✅ کد تخفیف اعمال شد.`;
     document.getElementById('monDiscountNotice').innerHTML = noticeMsg;
+
     validateMonSubmit();
 }
 
