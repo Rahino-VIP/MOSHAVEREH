@@ -10,19 +10,22 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l
 let currentUser = null; 
 let dbData = { rules: [] }; 
 
-// متغیرهای رزرو روزانه و ماهانه (بدون تغییر)
+// متغیرهای رزرو روزانه
 let window14Dates = []; let dailyCapacities = {}; let userPastReservations = []; 
 let selectedNewDates = []; let isFirstEver = false; let finalAmountToPay = 0; 
 let base64Image = ""; let appliedDiscountCode = ""; let discountAmount = 0; 
 let selectedPayMethod = "card"; let globalUserPastReservations = []; 
 const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
 
+// متغیرهای رزرو ماهانه
 let monState = { 
     txType: 'new', planType: 'none', basePrice: 0, duration: '1', payMethod: 'cash', 
     startDate: '', renewBaseDate: '', konkurMonths: 9, receiptBase64: "",
     promoCode: "", promoDiscount: 0, isFirstMonthly: true, referralDiscountApplied: false 
 };
 let monFinance = { totalBase: 0, discount: 0, finalPrice: 0, upfront: 0, installments: [] };
+
+// امور مالی
 let currentInstallmentId = null; let currentInstallmentAmount = 0; let instBase64Image = "";
 
 // ==========================================
@@ -70,9 +73,7 @@ function calcShamsiRemainDays(endDateStr) {
 }
 
 function copyCard() {
-    navigator.clipboard.writeText('6219861810380484').then(() => {
-        alert('✅ شماره کارت کپی شد.');
-    });
+    navigator.clipboard.writeText('6219861810380484').then(() => alert('✅ شماره کارت کپی شد.'));
 }
 
 // ==========================================
@@ -98,7 +99,7 @@ function toggleAppLayout(isLoggedIn) {
     } else {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-auth-wrap').style.display = 'block';
-        goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌‌نام، شماره موبایل خود را وارد نمایید');
+        goToAuthStep('view-phone', 'پرتال جامع راهینو', 'جهت ورود یا ثبت‌نام، شماره موبایل خود را وارد نمایید');
     }
 }
 
@@ -263,7 +264,6 @@ function logout() {
 // ==========================================
 async function loadRealDashboardData(phone) {
     try {
-        // خواندن موازی تمام اطلاعات برای حداکثر سرعت (زیر 1 ثانیه)
         const [userRes, pansionRes, consultRes, instRes, servicesRes, rulesRes, dailyRes] = await Promise.all([
             supabase.from('users').select('*').eq('phone_number', phone).single(),
             supabase.from('pan_monthly_subs').select('*').eq('phone_number', phone).eq('status', 'active'),
@@ -286,12 +286,11 @@ async function loadRealDashboardData(phone) {
         dbData.rules = rulesRes.data || [];
         
         let pansion = (pansionRes.data && pansionRes.data.length > 0) ? pansionRes.data[0] : null;
-        if(pansion) pansion.service_type = pansion.plan_type; // همگام‌سازی فیلدها
+        if(pansion) pansion.service_type = pansion.plan_type; 
         let consult = (consultRes.data && consultRes.data.length > 0) ? consultRes.data[0] : null;
         let installments = instRes.data || [];
         let availablePlans = servicesRes.data || [];
 
-        // استخراج تاریخ‌های رزرو روزانه
         let allDailyDates = [];
         if(dailyRes.data) {
             dailyRes.data.forEach(r => {
@@ -306,7 +305,6 @@ async function loadRealDashboardData(phone) {
         let upcomingDates = globalUserPastReservations.filter(d => d >= todayShamsi).sort();
         let nextDaily = upcomingDates.length > 0 ? upcomingDates[0] : null;
 
-        // تزریق سریع اطلاعات به داشبورد
         document.getElementById('uiUserFullName').innerText = `سلام، ${currentUser.full_name.split(' ')[0]} عزیز`;
         document.getElementById('uiUserGradeMajor').innerText = `پایه ${currentUser.grade || 'نامشخص'} (${currentUser.major || 'نامشخص'})`;
         let wBal = Number(currentUser.wallet_balance || 0);
@@ -319,7 +317,6 @@ async function loadRealDashboardData(phone) {
 
         const consultInactiveText = document.querySelector('#consultInactiveData p');
 
-        // مدیریت پنل ماهانه
         if (pansion) {
             document.getElementById('badgePansion').innerText = 'فعال';
             document.getElementById('badgePansion').className = 'srv-badge';
@@ -389,7 +386,6 @@ async function loadRealDashboardData(phone) {
 // 🗓 درگاه ماهانه (فروشگاه، کارت‌ها و فاکتور)
 // ==========================================
 function calcKonkurMonths() {
-    // محاسبه دقیق تا 15 تیر 1406
     let konkurDate = new Date('2027-07-06T00:00:00'); 
     let today = new Date();
     let diffTime = konkurDate - today;
@@ -406,7 +402,6 @@ function updateRules() {
     let nGrade = currentUser ? currentUser.grade : 'all';
     
     if (dbData && dbData.rules) {
-        // فیلتر قوانین: همه‌عمومی + پانسیون (اگر طرحی انتخاب شده باشد)
         dbData.rules.filter(r => {
             let categoryMatch = (r.target_category === 'all' || (monState.planType !== 'none' && r.target_category === 'pansion'));
             let gradeMatch = (r.target_grade === 'all' || r.target_grade === nGrade);
@@ -536,7 +531,7 @@ function selectNewPlan(type, price) {
     let checkoutBox = document.getElementById('bookingCheckoutSection');
     if(checkoutBox) {
         checkoutBox.style.display = 'block';
-        updateRules(); // فراخوانی مجدد تا قوانین پانسیون خوانده شود
+        updateRules(); 
         setTimeout(() => checkoutBox.scrollIntoView({ behavior: 'smooth' }), 100);
         calculateMonthly();
     }
@@ -576,14 +571,13 @@ function calculateMonthly() {
     let finalPrice = totalBase;
     
     const segPayInst = document.getElementById('segPayInst');
-    if (totalBase < 3500000) {
+    if (totalBase < 3500000 || duration === 1) {
         if (segPayInst) segPayInst.style.display = 'none';
         if(monState.payMethod === 'monthly') setMonPay('cash'); 
     } else {
         if (segPayInst) segPayInst.style.display = 'block';
     }
 
-    // 🧠 تخفیف زمانی
     let timeDiscountRate = 0;
     if (monState.duration === 'konkur' || duration >= 9) {
          timeDiscountRate = monState.payMethod === 'cash' ? 0.15 : 0.08;
@@ -593,14 +587,12 @@ function calculateMonthly() {
     let timeDiscountAmount = totalBase * timeDiscountRate;
     finalPrice -= timeDiscountAmount;
 
-    // 🧠 کد تخفیف دستی
     let promoDiscountAmount = 0;
     if (monState.promoDiscount > 0) {
          promoDiscountAmount = monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount;
          finalPrice -= promoDiscountAmount;
     }
     
-    // 🧠 تخفیف معرفی دوستان
     let referralDiscountAmount = 0;
     let isFirstMonthlyReg = !document.getElementById('pansionActiveData') || document.getElementById('pansionActiveData').style.display === 'none';
     if (isFirstMonthlyReg && currentUser && currentUser.invited_by && !monState.referralDiscountApplied) {
@@ -621,7 +613,6 @@ function calculateMonthly() {
 
     let listHtml = '';
     
-    // 🧠 منطق اقساط
     if (monState.payMethod === 'monthly' && totalBase >= 3500000 && duration > 1) {
         const formatter = new Intl.DateTimeFormat('fa-IR', { month: 'long', day: 'numeric' });
         let baseInstDate = new Date(); 
@@ -842,7 +833,7 @@ async function applyDiscount() {
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
-        document.getElementById('uploadText').innerText = `⏳ در حال فشرده‌سازی...`;
+        document.getElementById('uploadText').innerText = `⏳ در حال فشرده‌‌سازی...`;
         const reader = new FileReader();
         reader.onload = function(e) { 
             const img = new Image();
@@ -1015,4 +1006,3 @@ function copyReferral() {
     const code = document.getElementById('profReferralCode').innerText;
     if(code && code !== '--' && code !== 'در حال صدور...') { navigator.clipboard.writeText(code).then(() => alert('✅ کد معرف کپی شد!')); }
 }
-</script>
