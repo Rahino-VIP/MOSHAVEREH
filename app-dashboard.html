@@ -281,7 +281,7 @@
                     <div class="price-row"><span>هزینه پایه (هر روز):</span><strong id="rateAppliedTxt">0 تومان</strong></div>
                     
                     <div class="form-group" style="margin-top: 15px; margin-bottom: 0; display: flex; gap: 10px;">
-                        <input type="text" id="discountCode" class="form-input" placeholder="کد معرف (در صورت وجود)" style="flex: 2; margin-bottom: 0; padding: 12px; font-size: 12px; text-transform: uppercase;">
+                        <input type="text" id="discountCode" class="form-input" placeholder="کد تخفیف (اختیاری)" style="flex: 2; margin-bottom: 0; padding: 12px; font-size: 12px; text-transform: uppercase;">
                         <button class="btn-action primary" style="flex: 1; border-radius: 16px; margin: 0; padding: 12px;" onclick="applyDiscount()">اعمال کد</button>
                     </div>
                     <div id="discountNotice" style="color: var(--warning); font-size: 11px; font-weight: bold; margin-top: 8px; text-align: justify; line-height: 1.6;"></div>
@@ -524,13 +524,24 @@
                     <button class="btn-submit" onclick="submitProfileUpdate()">ذخیره تغییرات 💾</button>
                 </div>
 
+                <div class="section-title">صندوق پیام‌های من 📩</div>
+                <div class="glass-panel" style="padding: 15px; margin-bottom: 25px;" id="messagesContainer">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px;">پیامی ندارید.</div>
+                </div>
+
                 <div class="section-title">معرفی به دوستان (کسب درآمد)</div>
-                <div class="glass-panel" style="padding: 25px; text-align: center; margin-bottom: 25px;">
-                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px; line-height: 1.8;">
-                        کد معرف اختصاصی شما. با دعوت دوستانتان هم شما و هم آن‌ها از تخفیف‌های ویژه (تا ۱۵۰ هزار تومان شارژ کیف پول) بهره‌مند شوید!
+                <div style="background: #1f292e; border: 1px dashed var(--glass-border); padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <div style="font-size: 13px; color: var(--primary); font-weight: bold; margin-bottom: 15px;">کد دعوت اختصاصی شما</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: 3px; margin-bottom: 20px;" id="profReferralCode">RH-XXXXX</div>
+                    
+                    <div style="font-size: 12px; color: var(--text-muted); line-height: 2; text-align: justify; margin-bottom: 20px;">
+                        سلام! 👋 من تو سامانه هوشمند قطب‌نمای راهینو ثبت‌نام کردم.<br><br>
+                        اگه موقع ثبت‌نام کد معرف من رو وارد کنی، همون اول <span style="color: var(--accent); font-weight: bold;">۱۰۰ هزار تومان هدیه</span> می‌گیری و روی طرحت تخفیف می‌خوره! 🎁<br><br>
+                        کد معرف اختصاصی من: <strong style="color: var(--primary);" id="txtCodeSpan">RH-XXXXX</strong><br>
+                        لینک ثبت‌نام: https://rahino-edu.ir/register
                     </div>
-                    <div style="background: var(--primary-fade); border: 1px dashed var(--primary); padding: 15px; border-radius: 16px; font-size: 20px; font-weight: 900; color: var(--primary); letter-spacing: 2px; margin-bottom: 15px;" id="profReferralCode">--</div>
-                    <button class="btn-action primary" style="width: 100%; border-radius: 16px;" onclick="copyReferral()">کپی کد معرف 📋</button>
+                    
+                    <button class="btn-action primary" style="width: 100%; border-radius: 16px; background: #6ba793; color: white;" onclick="copyReferral()">📋 کپی متن و ارسال برای دوستان</button>
                 </div>
             </div>
 
