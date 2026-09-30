@@ -919,33 +919,40 @@ function openCancellation() {
     
     // ۲. منطق هوشمند جریمه لغو
     if (rawDiff < 0) {
-        // حالت اول: هنوز به تاریخ شروع نرسیده‌ایم (مثلاً رزرو برای پس‌فردا بوده)
         deduction = 0;
         deductionText = `<span style="color: var(--success);">۰ تومان (قرارداد هنوز شروع نشده)</span>`;
     } else if (rawDiff <= 3) {
-        // حالت دوم: بین روز اول (۰) تا روز سوم (۳)
-        // اگر همون روز اول لغو کنه، ۱ روز رو حساب می‌کنیم
         let daysToCharge = rawDiff === 0 ? 1 : rawDiff; 
         deduction = daysToCharge * 200000;
         deductionText = `${deduction.toLocaleString()} تومان (روزی ۲۰۰ هزار تومان برای ${daysToCharge} روز)`;
     } else {
-        // حالت سوم: بیشتر از ۳ روز گذشته (قانون گرد کردن به بالا و بدون تخفیف)
         let monthsUsed = Math.ceil(rawDiff / 30);
         deduction = monthsUsed * basePrice;
         deductionText = `${deduction.toLocaleString()} تومان (${monthsUsed} ماه کامل بدون تخفیف)`;
     }
     
-    // محاسبه کل پولی که شخص تا الان داده (پیش‌پرداخت + اقساط پرداخت شده)
-    let totalPaid = Number(activePansion.paid_amount || 0);
-    if (globalUserInstallments) {
-        let paidInst = globalUserInstallments.filter(i => i.status === 'paid').reduce((sum, i) => sum + Number(i.amount), 0);
-        totalPaid += paidInst;
+    // ۳. محاسبه فوق‌دقیق پرداختی‌ها (پیش‌پرداخت + اقساط)
+    let totalPaid = Number(activePansion.paid_amount || 0); // مبلغ پیش‌پرداخت
+    let paidInstSum = 0; // مجموع اقساط پرداخت شده
+    
+    if (globalUserInstallments && globalUserInstallments.length > 0) {
+        // جمع زدن اقساطی که پرداخت یا تایید شده‌اند
+        paidInstSum = globalUserInstallments
+            .filter(i => i.status === 'paid' || i.status === 'approved')
+            .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+            
+        totalPaid += paidInstSum;
     }
+    
+    // نمایش در کنسول مرورگر برای اطمینان شما (با زدن F12 قابل مشاهده است)
+    console.log("پیش‌پرداخت:", Number(activePansion.paid_amount || 0));
+    console.log("جمع اقساط واریزی:", paidInstSum);
+    console.log("مجموع کل پولی که کاربر داده:", totalPaid);
     
     let refund = totalPaid - deduction;
     let refundText = refund > 0 ? `${refund.toLocaleString()} تومان` : `0 تومان (بدهی: ${Math.abs(refund).toLocaleString()} تومان)`;
 
-    // ۳. رابط کاربری خواناتر و تاریک‌تر برای نمایش دقیق مبالغ
+    // ۴. رابط کاربری 
     let html = `
         <div style="background: rgba(15, 23, 42, 0.7); padding: 20px; border-radius: 14px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: inset 0 2px 15px rgba(0,0,0,0.3);">
             <div class="price-row" style="margin-bottom: 12px;"><span>شروع قرارداد:</span><strong style="color:var(--text-main);">${activePansion.start_date.replace(/-/g, '/')}</strong></div>
