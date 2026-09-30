@@ -478,12 +478,22 @@ function selectNewPlan(type, price) {
 }
 
 // 🧠 تابع اصلی تمدید هوشمند
+// 🧠 تابع اصلی تمدید هوشمند (همراه با دیباگر)
 function openRenewal() {
-    if (!activePansion) return;
+    console.log("✅ دکمه تمدید کلیک شد!");
+    console.log("وضعیت طرح فعلی (activePansion):", activePansion);
+    
+    if (!activePansion) {
+        alert('شما در حال حاضر طرح فعالی برای تمدید ندارید.');
+        return;
+    }
     
     // پیدا کردن قیمت پایه طرح فعلی از بین لیست طرح‌ها
     let activePlanData = availablePansionPlans.find(p => p.type === activePansion.service_type) || { base_price: 3600000 };
     let remainDays = calcShamsiRemainDays(activePansion.end_date);
+
+    console.log("اطلاعات طرح پیدا شده برای تمدید:", activePlanData);
+    console.log("روزهای باقیمانده از طرح فعلی:", remainDays);
 
     monState.txType = 'renew';
     monState.planType = activePansion.service_type;
@@ -492,12 +502,28 @@ function openRenewal() {
     monState.renewRemainDays = remainDays;
 
     // مخفی کردن انتخاب تاریخ و نمایش فرم پرداخت
-    document.getElementById('monDateSelectionBox').style.display = 'none';
-    document.getElementById('bookingCheckoutSection').style.display = 'block';
+    let dateBox = document.getElementById('monDateSelectionBox');
+    if (dateBox) {
+        dateBox.style.display = 'none';
+        console.log("باکس تاریخ مخفی شد.");
+    } else {
+        console.log("⚠️ اخطار: آیدی monDateSelectionBox در HTML یافت نشد!");
+    }
+    
+    let checkoutBox = document.getElementById('bookingCheckoutSection');
+    if (checkoutBox) {
+        checkoutBox.style.display = 'block';
+    } else {
+        console.log("⚠️ اخطار: آیدی bookingCheckoutSection در HTML یافت نشد!");
+    }
     
     updateRules();
     calculateMonthly();
-    setTimeout(() => document.getElementById('bookingCheckoutSection').scrollIntoView({ behavior: 'smooth' }), 100);
+    
+    setTimeout(() => {
+        if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' });
+        console.log("🚀 فرم تمدید با موفقیت باز و محاسبات انجام شد.");
+    }, 100);
 }
 
 function setMonDur(dur) { 
