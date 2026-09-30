@@ -9,6 +9,7 @@ let currentUser = null;
 let dbData = { rules: [] }; 
 let activePansion = null;   
 let availablePansionPlans = [];
+let globalUserInstallments = [];
 
 let window14Dates = []; let dailyCapacities = {}; let userPastReservations = []; 
 let selectedNewDates = []; let isFirstEver = false; let finalAmountToPay = 0; 
@@ -254,6 +255,7 @@ async function loadRealDashboardData(phone) {
         if(pansion) pansion.service_type = pansion.plan_type; 
         let consult = (consultRes.data && consultRes.data.length > 0) ? consultRes.data[0] : null;
         let installments = instRes.data || [];
+        globalUserInstallments = installments; 
         let availablePlans = servicesRes.data || [];
 
         activePansion = pansion;       
@@ -521,7 +523,7 @@ function calculateMonthly() {
     let finalPrice = totalBase;
     
     const segPayInst = document.getElementById('segPayInst');
-    if (totalBase < 3400000 || duration === 1) {
+    if (totalBase < 3400000) {
         if (segPayInst) segPayInst.style.display = 'none';
         if(monState.payPlan === 'monthly') setMonPlan('cash'); 
     } else {
@@ -880,6 +882,97 @@ async function submitBooking() {
         document.getElementById('mainLoader').style.display = 'none';
         alert('🎉 رزرو شما با موفقیت قطعی شد.'); window.location.reload(); 
     } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطای ارتباط با دیتابیس.'); }
+}
+
+
+// ==========================================
+// ❌ توابع لغو قرارداد
+// ==========================================
+function calcShamsiPassedDays(startDateStr) {
+    if (!startDateStr) return 0;
+    let startParts = startDateStr.replace(/\//g, '-').split('-');
+    let todayStr = getShamsiDateSafe(new Date());
+    let todayParts = todayStr.replace(/\//g, '-').split('-');
+    if (startParts.length !== 3 || todayParts.length !== 3) return 0;
+    let startDays = (parseInt(startParts[0]) * 365) + (parseInt(startParts[1]) * 30) + parseInt(startParts[2]);
+    let todayDays = (parseInt(todayParts[0]) * 365) + (parseInt(todayParts[1]) * 30) + parseInt(todayParts[2]);
+    return Math.max(0, todayDays - startDays); // روزهای گذشته
+}
+
+function openCancellation() {
+    if (!activePansion) return;
+    
+    let pType = activePansion.plan_type || activePansion.service_type;
+    let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
+    let basePrice = activePlanData.base_price;
+    
+    // محاسبه روزها و گرد کردن ماه‌ها به سمت بالا
+    let passedDays = calcShamsiPassedDays(activePansion.start_date);
+    let monthsUsed = passedDays === 0 ? 1 : Math.ceil(passedDays / 30);
+    let deduction = monthsUsed * basePrice; // هزینه بدون تخفیف
+    
+    // محاسبه کل پولی که شخص تا الان داده (پیش‌پرداخت + اقساط پرداخت شده)
+    let totalPaid = Number(activePansion.paid_amount || 0);
+    if (globalUserInstallments) {
+        let paidInst = globalUserInstallments.filter(i => i.status === 'paid').reduce((sum, i) => sum + Number(i.amount), 0);
+        totalPaid += paidInst;
+    }
+    
+    let refund = totalPaid - deduction;
+    let refundText = refund > 0 ? `${refund.toLocaleString()} تومان` : `0 تومان (بدهی: ${Math.abs(refund).toLocaleString()} تومان)`;
+
+    let html = `
+        <div style="background: var(--glass-highlight); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--glass-border);">
+            <div class="price-row"><span>شروع قرارداد:</span><strong>${activePansion.start_date.replace(/-/g, '/')}</strong></div>
+            <div class="price-row"><span>روزهای گذشته:</span><strong>${passedDays} روز</strong></div>
+            <div class="price-row"><span>ماه‌های محاسبه شده:</span><strong style="color:var(--danger);">${monthsUsed} ماه (بدون تخفیف)</strong></div>
+            <div class="price-row"><span>مبلغ کسر شده:</span><strong style="color:var(--danger);">${deduction.toLocaleString()} تومان</strong></div>
+            <hr style="border: 0; border-top: 1px dashed var(--glass-border); margin: 10px 0;">
+            <div class="price-row"><span>پرداختی شما تاکنون:</span><strong style="color:var(--success);">${totalPaid.toLocaleString()} تومان</strong></div>
+            <div class="price-row" style="margin-top: 10px; font-size: 14px;"><span>مبلغ قابل عودت:</span><strong style="color:var(--primary); direction:ltr;">${refundText}</strong></div>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); text-align:justify;">⚠️ توجه: این محاسبه بر اساس قیمت پایه (بدون تخفیف) انجام شده است. پس از تایید درخواست، میز شما آزاد شده و مبلغ عودتی به کیف پول شما واریز خواهد شد.</div>
+    `;
+    
+    document.getElementById('cancelModalBody').innerHTML = html;
+    document.getElementById('cancelModal').style.display = 'flex';
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').style.display = 'none';
+}
+
+async function submitCancellation() {
+    document.getElementById('mainLoader').style.display = 'flex';
+    try {
+        // وضعیت قرارداد را به لغوشده تغییر می‌دهیم
+        const { error } = await supabaseClient.from('pan_monthly_subs')
+            .update({ status: 'canceled' }) 
+            .eq('id', activePansion.id);
+            
+        // ظرفیت طرح را یک واحد افزایش می‌دهیم تا میز آزاد شود
+        let pType = activePansion.plan_type || activePansion.service_type;
+        const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', pType).single();
+        if (srv) {
+            await supabaseClient.from('services').update({ capacity: srv.capacity + 1 }).eq('type', pType);
+        }
+        
+        // ارسال پیام سیستمی به کاربر
+        await supabaseClient.from('messages').insert([{
+            phone_number: currentUser.phone_number, 
+            title: '❌ درخواست لغو قرارداد',
+            body: 'درخواست لغو قرارداد شما با موفقیت در سیستم ثبت شد. میز شما آزاد گردید و مبلغ محاسبه شده پس از بررسی مدیریت به کیف پول شما واریز خواهد شد.', 
+            is_read: false, 
+            created_at: new Date().toISOString()
+        }]);
+
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('درخواست لغو با موفقیت ثبت شد.');
+        window.location.reload();
+    } catch(e) {
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('خطا در ثبت درخواست لغو.');
+    }
 }
 
 // ==========================================
