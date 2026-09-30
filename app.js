@@ -358,15 +358,24 @@ async function rewardReferrer(referralCode, rewardAmount, messageBody) {
 // 🗓 رزرو ماهانه
 // ==========================================
 function calcKonkurMonths() {
-    let konkurDate = new Date('2027-07-06T00:00:00'); 
-    let baseDate = new Date();
+    let konkurDate = new Date('2027-07-06T00:00:00'); // ۱۵ تیر ۱۴۰۶ (میلادی)
+    let today = new Date();
     
-    // اگر در حالت تمدید هستیم، مبدأ را تاریخ پایان قرارداد قبلی قرار بده
-    if (monState.txType === 'renew' && monState.startDate) {
-        baseDate = new Date(monState.startDate);
+    // ۱. محاسبه کل روزها از همین لحظه تا کنکور
+    let totalDaysToKonkur = Math.ceil((konkurDate - today) / (1000 * 3600 * 24));
+    
+    let diffDays = totalDaysToKonkur;
+    
+    // ۲. کسر کردن روزهایی که قبلاً رزرو شده یا آفست تاریخ شروع
+    if (monState.txType === 'renew' && monState.renewRemainDays) {
+        // در حالت تمدید، روزهای باقیمانده قرارداد قبلی را از کل روزها کم می‌کنیم
+        diffDays = totalDaysToKonkur - monState.renewRemainDays;
+    } else {
+        // در حالت ثبت‌نام جدید، اگر شخص "فردا" یا "پس‌‌فردا" را انتخاب کرده بود، آن ۱ یا ۲ روز را کم می‌کنیم
+        diffDays = totalDaysToKonkur - (monState.startDateIndex || 0);
     }
     
-    let diffDays = Math.ceil((konkurDate - baseDate) / (1000 * 3600 * 24));
+    // ۳. تبدیل روز به ماه (با حفظ یک رقم اعشار)
     let months = diffDays > 0 ? (diffDays / 30.41) : 1;
     monState.konkurMonths = Math.round(months * 10) / 10;
     
