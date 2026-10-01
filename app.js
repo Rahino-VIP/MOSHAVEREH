@@ -1423,79 +1423,167 @@ async function submitWithdraw() {
     alert('درخواست برداشت ثبت شد (تست بدون بک‌اند)'); document.getElementById('mainLoader').style.display = 'none'; window.location.reload(); 
 }
 
-function openInstallmentModal(id, amount) { currentInstallmentId = id; currentInstallmentAmount = amount; document.getElementById('instPayAmount').innerText = `${amount.toLocaleString()} تومان`; document.getElementById('installmentModal').style.display = 'flex'; }
-function closeInstallmentModal() { document.getElementById('installmentModal').style.display = 'none'; }
+// ==========================================
+// 💰 مدیریت و پرداخت اقساط
+// ==========================================
+let instPayMethod = 'card'; // پیش‌فرض روش پرداخت قسط
+
+function openInstallmentModal(id, amount) { 
+    currentInstallmentId = id; 
+    currentInstallmentAmount = amount; 
+    instBase64Image = "";
+    
+    document.getElementById('instPayAmount').innerText = `${amount.toLocaleString()} تومان`; 
+    document.getElementById('installmentModal').style.display = 'flex';
+    
+    // ریست کردن ظاهر آپلودر عکس
+    let uploadText = document.getElementById('instUploadText');
+    let uploadBox = document.getElementById('instUploadBox');
+    if(uploadText) uploadText.innerText = 'آپلود رسید واریز';
+    if(uploadBox) {
+        uploadBox.style.borderColor = 'var(--border)';
+        uploadBox.style.background = 'var(--bg-color)';
+    }
+    
+    selectInstPayMethod('card'); 
+}
+
+function closeInstallmentModal() { 
+    document.getElementById('installmentModal').style.display = 'none'; 
+}
+
+// انتخاب روش پرداخت برای قسط
+function selectInstPayMethod(method) {
+    instPayMethod = method;
+    let btnCard = document.getElementById('btnInstCard');
+    let btnWallet = document.getElementById('btnInstWallet');
+    let cardSection = document.getElementById('instCardSection');
+    let walletBadge = document.getElementById('instWalletStatusBadge');
+    
+    if (btnCard && btnWallet) {
+        // ریست استایل دکمه‌ها
+        btnCard.className = 'btn btn-outline';
+        btnWallet.className = 'btn btn-outline';
+        
+        if (method === 'card') {
+            btnCard.className = 'btn btn-primary';
+            cardSection.style.display = 'block';
+            walletBadge.innerText = '';
+        } else {
+            btnWallet.className = 'btn btn-primary';
+            cardSection.style.display = 'none';
+            
+            // بررسی موجودی کیف پول
+            let wBal = Number(currentUser.wallet_balance || 0);
+            if (wBal < currentInstallmentAmount) {
+                walletBadge.style.color = 'var(--danger)'; 
+                walletBadge.innerText = `موجودی ناکافی (موجودی شما: ${wBal.toLocaleString()} تومان)`;
+            } else {
+                walletBadge.style.color = 'var(--success)'; 
+                walletBadge.innerText = `موجودی کافی است (کسر: ${currentInstallmentAmount.toLocaleString()} تومان)`;
+            }
+        }
+    }
+    validateInstSubmit();
+}
+
+// کپی شماره کارت اختصاصی برای مودال اقساط
+function copyCardInst(btnElement) {
+    navigator.clipboard.writeText('6219861810380484').then(() => {
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = '✅ کپی شد!';
+        btnElement.style.background = 'var(--success)';
+        btnElement.style.color = 'white';
+        btnElement.style.borderColor = 'var(--success)';
+        
+        setTimeout(() => {
+            btnElement.innerHTML = originalText;
+            btnElement.style.background = 'transparent';
+            btnElement.style.color = 'var(--text-muted)';
+            btnElement.style.borderColor = 'var(--border)';
+        }, 2000);
+    });
+}
+
+// فشرده‌سازی عکس فیش قسط (مشابه رزرو روزانه و ماهانه)
 function handleInstFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
         document.getElementById('instUploadText').innerText = `⏳ در حال فشرده‌سازی...`;
         const reader = new FileReader();
         reader.onload = function(e) { 
-            const img = new Image(); img.onload = function() {
-                const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                if(w > h && w > 1000) { h *= 1000/w; w = 1000; } else if(h > 1000) { w *= 1000/h; h = 1000; }
-                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                instBase64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                document.getElementById('instUploadText').innerText = `✅ فیش آماده ارسال`; document.getElementById('btnSubmitInst').disabled = false;
-            }; img.src = e.target.result;
-        }; reader.readAsDataURL(file);
+            const img = new Image(); 
+            img.onload = function() {
+                const canvas = document.createElement('canvas'); 
+                let w = img.width, h = img.height;
+                const MAX_SIZE = 800; // فشرده‌سازی شدید و بهینه
+                if(w > h && w > MAX_SIZE) { h *= MAX_SIZE/w; w = MAX_SIZE; } 
+                else if(h > MAX_SIZE) { w *= MAX_SIZE/h; h = MAX_SIZE; }
+                canvas.width = w; canvas.height = h; 
+                const ctx = canvas.getContext('2d'); 
+                ctx.drawImage(img, 0, 0, w, h);
+                instBase64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                document.getElementById('instUploadText').innerText = `✅ فیش آماده ارسال`; 
+                document.getElementById('instUploadBox').style.borderColor = 'var(--success)';
+                document.getElementById('instUploadBox').style.background = 'rgba(16, 185, 129, 0.05)';
+                validateInstSubmit();
+            }; 
+            img.src = e.target.result;
+        }; 
+        reader.readAsDataURL(file);
     }
 }
 
+// ولیدیشن باز شدن دکمه پرداخت قسط
+function validateInstSubmit() {
+    let btn = document.getElementById('btnSubmitInst');
+    if (!btn) return;
+    
+    if (instPayMethod === 'wallet') {
+        btn.disabled = (Number(currentUser.wallet_balance || 0) < currentInstallmentAmount);
+    } else {
+        btn.disabled = (instBase64Image === "");
+    }
+}
+
+// ثبت نهایی پرداخت قسط و شلیک به بله
 async function submitInstallment() {
     document.getElementById('mainLoader').style.display = 'flex';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال پرداخت قسط...';
+    
     try {
-        const { error } = await supabaseClient.from('pan_installments').update({ receipt_base64: instBase64Image, status: 'paid' }).eq('id', currentInstallmentId);
-        document.getElementById('mainLoader').style.display = 'none';
-        if (!error) { alert('فیش ارسال و وضعیت به پرداخت‌شده تغییر یافت.'); window.location.reload(); } else { alert('خطا در ارتباط با سرور.'); }
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا'); }
-}
-
-function renderInstallments(installmentsData) {
-    const container = document.getElementById('installmentsContainer');
-    if(!installmentsData || installmentsData.length === 0) { 
-        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-weight: bold;">شما هیچ قسط ثبت‌شده‌ای ندارید.</div>'; 
-        return; 
-    }
-    
-    let html = ''; 
-    // مرتب‌سازی بر اساس متن تاریخ شمسی (به جای تبدیل به میلادی)
-    installmentsData.sort((a, b) => a.due_date.localeCompare(b.due_date));
-    
-    // گرفتن تاریخ امروز به شمسی
-    let todayShamsi = getShamsiDateSafe(new Date());
-
-    installmentsData.forEach(inst => {
-        let statusObj = { text: 'در انتظار پرداخت', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.1)', showBtn: true };
-        
-        if (inst.status === 'paid' || inst.status === 'approved') {
-            statusObj = { text: 'پرداخت شده', color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)', showBtn: false };
-        } else { 
-            // مقایسه مستقیم دو تاریخ شمسی با هم
-            if (inst.due_date < todayShamsi) { 
-                statusObj = { text: 'سررسید گذشته', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.1)', showBtn: true }; 
-            } 
+        if (instPayMethod === 'wallet') {
+            // کسر از کیف پول
+            let newBalance = Number(currentUser.wallet_balance || 0) - currentInstallmentAmount;
+            const { error: wError } = await supabaseClient.from('users').update({ wallet_balance: newBalance }).eq('phone_number', currentUser.phone_number);
+            if(wError) throw wError;
+            
+            // آپدیت وضعیت قسط
+            const { error } = await supabaseClient.from('pan_installments').update({ status: 'paid', receipt_base64: null }).eq('id', currentInstallmentId);
+            if(error) throw error;
+        } else {
+            // آپدیت قسط با عکس رسید
+            const { error } = await supabaseClient.from('pan_installments').update({ receipt_base64: instBase64Image, status: 'paid' }).eq('id', currentInstallmentId);
+            if(error) throw error;
         }
-        
-        let btnHtml = statusObj.showBtn ? `<button class="btn-action primary" style="width:100%; margin-top:15px;" onclick="openInstallmentModal('${inst.id}', ${inst.amount})">آپلود فیش و پرداخت</button>` : '';
-        
-        // نمایش مستقیم تاریخ شمسی بدون تبدیل مخرب جاوااسکریپت
-        let displayDate = inst.due_date.replace(/-/g, '/');
-        
-        html += `<div class="status-card glass-panel" style="margin-bottom: 15px; border-right: 4px solid ${statusObj.color};">
-                    <div class="status-header" style="margin-bottom: 10px;">
-                        <div class="srv-title" style="font-size: 14px;">قسط شماره ${inst.installment_number}</div>
-                        <div class="srv-badge" style="background: ${statusObj.bg}; color: ${statusObj.color}; border: none;">${statusObj.text}</div>
-                    </div>
-                    <div style="font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 10px;">${Number(inst.amount).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
-                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;">تاریخ سررسید: ${displayDate}</div>
-                    ${btnHtml}
-                 </div>`;
-    });
-    
-    container.innerHTML = html;
-}
 
+        // 🚀 ارسال آنی به ربات بله
+        const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
+        const payTypeFa = instPayMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
+        const payload = {
+            text: `🚨 پرداخت قسط جدید 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n💰 مبلغ: ${currentInstallmentAmount.toLocaleString()} تومان\n💳 روش: ${payTypeFa}`,
+            image_base64: instPayMethod === 'card' ? instBase64Image : ""
+        };
+        fetch(gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(err => console.log(err));
+
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('✅ پرداخت قسط با موفقیت در سیستم ثبت شد.'); 
+        window.location.reload(); 
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert('خطا در ارتباط با سرور.'); 
+    }
+}
 // ==========================================
 // 📜 تاریخچه و پروفایل
 // ==========================================
