@@ -868,6 +868,24 @@ async function submitMonthly() {
         const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', monState.planType).single();
         if (srv && srv.capacity > 0) await supabaseClient.from('services').update({ capacity: srv.capacity - 1 }).eq('type', monState.planType);
 
+        // ======== ارسال فیش به ربات بله (بدون تاخیر) ========
+        if (monState.payMethod === 'card' && monState.receiptBase64) {
+            const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
+            
+            const payload = {
+                // دیگر نیازی به ارسال آیدی بله نیست
+                text: `✅ یک ثبت‌نام ماهانه جدید!\n👤 موبایل: ${currentUser.phone_number}\n💰 مبلغ: ${monFinance.upfront.toLocaleString()} تومان`,
+                image_base64: monState.receiptBase64 
+            };
+
+            fetch(gasUrl, {
+                method: 'POST',
+                mode: 'no-cors', // شلیک کن و منتظر جواب نمان
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.log("ارسال رسید:", err));
+        }
+        // ====================================================
         document.getElementById('mainLoader').style.display = 'none';
         alert('🎉 قرارداد شما با موفقیت ثبت شد.'); window.location.reload(); 
     } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا در ثبت پایگاه داده.'); }
