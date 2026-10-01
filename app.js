@@ -665,16 +665,13 @@ function calculateMonthly() {
 
     if (duration === 9) {
          timeDiscountRate = monState.payPlan === 'cash' ? 0.15 : 0.08;
-         let offText = monState.payPlan === 'cash' ? '۱۵٪ تخفیف' : '۸٪ تخفیف قسطی';
-         badgeText = `۹ ماهه - ${offText}`;
+         badgeText = `۹ ماهه - ${monState.payPlan === 'cash' ? '۱۵٪ تخفیف' : '۸٪ تخفیف قسطی'}`;
     } else if (duration === 6) {
          timeDiscountRate = monState.payPlan === 'cash' ? 0.10 : 0.06;
-         let offText = monState.payPlan === 'cash' ? '۱۰٪ تخفیف' : '۶٪ تخفیف قسطی';
-         badgeText = `۶ ماهه - ${offText}`;
+         badgeText = `۶ ماهه - ${monState.payPlan === 'cash' ? '۱۰٪ تخفیف' : '۶٪ تخفیف قسطی'}`;
     } else if (duration === 3) {
          timeDiscountRate = monState.payPlan === 'cash' ? 0.05 : 0.03;
-         let offText = monState.payPlan === 'cash' ? '۵٪ تخفیف' : '۳٪ تخفیف قسطی';
-         badgeText = `۳ ماهه - ${offText}`;
+         badgeText = `۳ ماهه - ${monState.payPlan === 'cash' ? '۵٪ تخفیف' : '۳٪ تخفیف قسطی'}`;
     }
     
     let badgeEl = document.getElementById('monLblDurationBadge');
@@ -683,22 +680,41 @@ function calculateMonthly() {
     let timeDiscountAmount = totalBase * timeDiscountRate; 
     finalPrice -= timeDiscountAmount;
 
-    let promoDiscountAmount = monState.promoDiscount > 0 ? (monState.promoDiscount < 1 ? (totalBase * monState.promoDiscount) : monState.promoDiscount) : 0; 
-    finalPrice -= promoDiscountAmount;
-    
+    let noticeMsg = "";
+
+    // ۱. هدیه معرف (ثبت‌نام اول)
     let referralDiscountAmount = 0;
     let isFirstMonthlyReg = !document.getElementById('pansionActiveData') || document.getElementById('pansionActiveData').style.display === 'none';
     if (monState.isFirstMonthly && currentUser && currentUser.invited_by && isFirstMonthlyReg) { 
         referralDiscountAmount = 100000; 
-        finalPrice = Math.max(0, finalPrice - referralDiscountAmount); 
+        finalPrice -= referralDiscountAmount;
+        noticeMsg += `🎁 ۱۰۰ هزار تومان هدیه اولین ثبت‌نام (معرف) اعمال شد!<br>`;
     }
 
+    // ۲. اعمال کد تخفیف دقیقاً روی قیمتِ تخفیف‌خورده نهایی
+    let promoDiscountAmount = 0;
+    if (currentMonPromoData && finalPrice > 0) { 
+        if (currentMonPromoData.discount_type === 'percent') {
+            promoDiscountAmount = finalPrice * (currentMonPromoData.discount_value / 100);
+        } else {
+            promoDiscountAmount = currentMonPromoData.discount_value;
+        }
+        finalPrice -= promoDiscountAmount; 
+        noticeMsg += `✅ کد تخفیف اعمال شد.<br>`; 
+    }
+
+    finalPrice = Math.max(0, finalPrice);
     let totalDiscount = timeDiscountAmount + promoDiscountAmount + referralDiscountAmount;
-    monFinance.totalBase = totalBase; monFinance.discount = totalDiscount; monFinance.finalPrice = finalPrice; monFinance.installments = [];
+
+    monFinance.totalBase = totalBase; 
+    monFinance.discount = totalDiscount; 
+    monFinance.finalPrice = finalPrice; 
+    monFinance.installments = [];
 
     document.getElementById('monLblBase').innerText = totalBase.toLocaleString() + ' تومان';
     document.getElementById('monLblDisc').innerText = totalDiscount.toLocaleString() + ' تومان';
     document.getElementById('monLblFinal').innerText = finalPrice.toLocaleString();
+    if(document.getElementById('monDiscountNotice')) document.getElementById('monDiscountNotice').innerHTML = noticeMsg;
 
     let listHtml = '';
     
@@ -716,68 +732,42 @@ function calculateMonthly() {
             let upfrontRounded = roundDown50k(finalPrice * 0.50); 
             let remaining = finalPrice - upfrontRounded; 
             monFinance.upfront = upfrontRounded;
-            
             let d1 = new Date(baseInstDate); d1.setDate(baseInstDate.getDate() + 10); 
-            
             monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-            
-            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
-                        <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز پس از شروع)</li>`;
-                        
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱۰ روز پس از شروع)</li>`;
         } else if (duration === 3) {
             let upfrontRounded = roundDown50k(finalPrice * 0.50); 
             let remaining = finalPrice - upfrontRounded; 
             monFinance.upfront = upfrontRounded;
-            
             let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
-            
             monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: remaining, installment_number: 1 });
-            
-            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
-                        <li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه پس از شروع)</li>`;
-                        
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (یک ماه پس از شروع)</li>`;
         } else if (duration === 6) {
             let upfrontRounded = roundDown50k(finalPrice * 0.25); 
             monFinance.upfront = upfrontRounded;
-            
             let checkAmt = roundDown50k(finalPrice * 0.25); 
             let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 2);
-            
             let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
             let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2); 
             let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4); 
-            
             monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 }); 
             monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 }); 
             monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 3 }); 
-            
-            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
-                        <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱ ماه پس از شروع)</li>
-                        <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b> (۲ ماه پس از شروع)</li>
-                        <li>قسط سوم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b> (۴ ماه پس از شروع)</li>`;
-                        
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱ ماه پس از شروع)</li><li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b> (۲ ماه پس از شروع)</li><li>قسط سوم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b> (۴ ماه پس از شروع)</li>`;
         } else if (duration === 9) {
             let upfrontRounded = roundDown50k(finalPrice * 0.20); 
             monFinance.upfront = upfrontRounded;
-            
             let checkAmt = roundDown50k(finalPrice * 0.20); 
             let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 3);
-            
             let d1 = new Date(baseInstDate); d1.setMonth(baseInstDate.getMonth() + 1); 
             let d2 = new Date(baseInstDate); d2.setMonth(baseInstDate.getMonth() + 2); 
             let d3 = new Date(baseInstDate); d3.setMonth(baseInstDate.getMonth() + 4); 
             let d4 = new Date(baseInstDate); d4.setMonth(baseInstDate.getMonth() + 6);
-            
             monFinance.installments.push({ due_date: d1.toISOString().split('T')[0], amount: checkAmt, installment_number: 1 }); 
             monFinance.installments.push({ due_date: d2.toISOString().split('T')[0], amount: checkAmt, installment_number: 2 }); 
             monFinance.installments.push({ due_date: d3.toISOString().split('T')[0], amount: checkAmt, installment_number: 3 }); 
             monFinance.installments.push({ due_date: d4.toISOString().split('T')[0], amount: lastCheckAmt, installment_number: 4 });
-            
-            listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li>
-                        <li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱ ماه پس از شروع)</li>
-                        <li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b> (۲ ماه پس از شروع)</li>
-                        <li>قسط سوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b> (۴ ماه پس از شروع)</li>
-                        <li>قسط چهارم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d4)}</b> (۶ ماه پس از شروع)</li>`;
+            listHtml = `<li><strong style="color:var(--danger)">پیش‌‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>قسط اول (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d1)}</b> (۱ ماه پس از شروع)</li><li>قسط دوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d2)}</b> (۲ ماه پس از شروع)</li><li>قسط سوم (${checkAmt.toLocaleString()} تومان): <b>${formatter.format(d3)}</b> (۴ ماه پس از شروع)</li><li>قسط چهارم (${lastCheckAmt.toLocaleString()} تومان): <b>${formatter.format(d4)}</b> (۶ ماه پس از شروع)</li>`;
         }
     } else { 
         monFinance.upfront = finalPrice; 
@@ -787,12 +777,6 @@ function calculateMonthly() {
     document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
     let payNowBig = document.getElementById('monLblPayNowBig'); if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
     document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
-
-    let ibanBox = document.getElementById('monIbanBox');
-    if (ibanBox) {
-        if (monFinance.upfront >= 15000000) ibanBox.style.display = 'block';
-        else ibanBox.style.display = 'none';
-    }
 
     let wBal = Number(currentUser.wallet_balance || 0);
     let walletBadge = document.getElementById('monWalletStatusBadge');
@@ -815,53 +799,60 @@ function calculateMonthly() {
         if(uploadBox) uploadBox.style.display = 'flex';
     }
 
-    let noticeMsg = "";
-    if (referralDiscountAmount > 0) noticeMsg += `🎁 ۱۰۰ هزار تومان هدیه اولین ثبت‌نام (معرف) اعمال شد!<br>`;
-    if (promoDiscountAmount > 0) noticeMsg += `✅ کد تخفیف اعمال شد.`;
-    document.getElementById('monDiscountNotice').innerHTML = noticeMsg;
     validateMonSubmit();
 }
 
+let currentMonPromoData = null; // متغیر سراسری برای نگهداری تخفیف ماهانه
+
 async function applyMonDiscount() {
     const code = document.getElementById('monDiscountCode').value.trim().toUpperCase();
-    if (!code) return alert('لطفاً کد تخفیف را وارد کنید.');
-    
+    if (!code) return; 
+
     document.getElementById('mainLoader').style.display = 'flex';
-    
-    // محاسبه مبلغ پایه برای اینکه درصد تخفیف درست حساب شود
-    let duration = parseInt(monState.duration) || 1;
-    let totalBase = monState.basePrice * duration;
-    
-    const result = await validateAndApplyDiscount(code, 'monthly', totalBase);
-    
-    document.getElementById('mainLoader').style.display = 'none';
-    
-    if (result.success) {
-        monState.promoCode = code;
-        monState.promoDiscount = result.discountAmount; 
-        monState.promoId = result.promoId; // برای آپدیت تعداد استفاده بعد از پرداخت نهایی
-        
-        calculateMonthly(); // محاسبه مجدد و به‌روزرسانی فاکتور
-        alert('✅ کد تخفیف با موفقیت اعمال شد.');
-    } else {
-        alert(result.msg);
+    try {
+        const { data: promo, error } = await supabaseClient.from('promos_codes')
+            .select('*')
+            .eq('code', code)
+            .eq('is_active', true)
+            .single();
+
+        document.getElementById('mainLoader').style.display = 'none';
+
+        if (error || !promo) return alert('کد تخفیف نامعتبر است یا منقضی شده.');
+        if (promo.target_service !== 'all' && promo.target_service !== 'monthly') return alert('این کد برای خدمات ماهانه معتبر نیست.');
+        if (promo.max_uses && promo.used_count >= promo.max_uses) return alert('ظرفیت استفاده از این کد به پایان رسیده است.');
+
+        currentMonPromoData = promo; 
+        calculateMonthly(); // اعمال زنده روی فاکتور
+    } catch(e) {
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('خطا در ارتباط با سرور.');
     }
 }
 
 function handleMonFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
-        document.getElementById('monUploadText').innerText = `⏳ در حال فشرده‌سازی...`;
+        document.getElementById('monUploadText').innerText = `⏳ در حال فشرده‌سازی و بهینه‌سازی...`;
         const reader = new FileReader();
         reader.onload = function(e) { 
             const img = new Image();
             img.onload = function() {
-                const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                if(w > h && w > 1000) { h *= 1000/w; w = 1000; } else if(h > 1000) { w *= 1000/h; h = 1000; }
-                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                monState.receiptBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                const canvas = document.createElement('canvas'); 
+                let w = img.width, h = img.height;
+                const MAX_SIZE = 800; // کاهش سایز برای سرعت وحشتناک بالا
+                
+                if(w > h && w > MAX_SIZE) { h *= MAX_SIZE/w; w = MAX_SIZE; } 
+                else if(h > MAX_SIZE) { w *= MAX_SIZE/h; h = MAX_SIZE; }
+                
+                canvas.width = w; canvas.height = h; 
+                const ctx = canvas.getContext('2d'); 
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                monState.receiptBase64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
                 document.getElementById('monUploadText').innerText = `✅ فیش ضمیمه شد`;
-                document.getElementById('monUploadBox').style.borderColor = "var(--success)"; document.getElementById('monUploadBox').style.background = "rgba(16, 185, 129, 0.05)";
+                document.getElementById('monUploadBox').style.borderColor = "var(--success)"; 
+                document.getElementById('monUploadBox').style.background = "rgba(16, 185, 129, 0.05)";
                 validateMonSubmit();
             };
             img.src = e.target.result;
@@ -869,10 +860,11 @@ function handleMonFileSelect(event) {
         reader.readAsDataURL(file);
     }
 }
+
 function validateMonSubmit() { 
     let hasReceiptOrWallet = false;
     if (monState.payMethod === 'wallet') {
-        hasReceiptOrWallet = (currentUser.wallet_balance >= monFinance.upfront);
+        hasReceiptOrWallet = (Number(currentUser.wallet_balance || 0) >= monFinance.upfront);
     } else {
         hasReceiptOrWallet = (monState.receiptBase64 !== "");
     }
@@ -882,53 +874,85 @@ function validateMonSubmit() {
 
 async function submitMonthly() {
     document.getElementById('mainLoader').style.display = 'flex';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال پردازش فاکتورها...';
+    
     let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
-    let baseDateStr = monState.startDate || getShamsiDateSafe(new Date()); let endDateStr = addMonthsJS(baseDateStr, duration);
+    let baseDateStr = monState.startDate || getShamsiDateSafe(new Date()); 
+    let endDateStr = addMonthsJS(baseDateStr, duration);
+
     try {
+        // ۱. ساخت فاکتور کلی (جدول pan_invoices)[cite: 9]
+        let invDetails = `طرح: ${monState.planType} | مدت: ${duration} ماه | شروع: ${baseDateStr}`;
+        let payMethodDB = monState.payMethod === 'wallet' ? 'wallet' : (monState.payPlan === 'cash' ? 'cash' : 'monthly');
+        
+        const { data: invData, error: invError } = await supabaseClient.from('pan_invoices').insert([{
+            phone_number: currentUser.phone_number,
+            invoice_type: monState.txType === 'new' ? 'ثبت‌نام ماهانه' : 'تمدید ماهانه',
+            total_amount: monFinance.totalBase,
+            discount_amount: monFinance.discount,
+            final_amount: monFinance.finalPrice,
+            paid_upfront: monFinance.upfront,
+            payment_method: payMethodDB,
+            status: 'pending',
+            details_text: invDetails
+        }]).select('id').single();
+        if (invError) throw invError;
+
+        // ۲. ساخت رکورد اشتراک اصلی (جدول pan_monthly_subs بدون فیلدهای مالی)[cite: 7]
         const { error: subError } = await supabaseClient.from('pan_monthly_subs').insert([{
-            phone_number: currentUser.phone_number, plan_type: monState.planType, start_date: baseDateStr, end_date: endDateStr,
-            total_price: monFinance.finalPrice, paid_amount: monFinance.upfront, 
-            receipt_base64: monState.payMethod === 'card' ? monState.receiptBase64 : null, status: 'pending'
+            phone_number: currentUser.phone_number, 
+            plan_type: monState.planType, 
+            start_date: baseDateStr, 
+            end_date: endDateStr,
+            status: 'pending'
         }]);
         if (subError) throw subError;
 
-        if (monFinance.installments.length > 0) {
-            let instInserts = monFinance.installments.map(inst => ({ phone_number: currentUser.phone_number, amount: inst.amount, due_date: inst.due_date, installment_number: inst.installment_number, status: 'pending' }));
+        // ۳. ساخت اقساط آینده در صورت وجود و اتصال ب ه آیدی فاکتور (جدول pan_installments)[cite: 8]
+        if (monFinance.installments.length > 0 && invData) {
+            let instInserts = monFinance.installments.map(inst => ({ 
+                invoice_id: invData.id,
+                phone_number: currentUser.phone_number, 
+                amount: inst.amount, 
+                due_date: inst.due_date, 
+                installment_number: inst.installment_number, 
+                status: 'pending_upload' 
+            }));
             await supabaseClient.from('pan_installments').insert(instInserts);
         }
 
+        // ۴. کسر از کیف پول یا افزایش ظرفیت کدهای تخفیف
         if (monState.payMethod === 'wallet') {
-            await supabaseClient.from('users').update({ wallet_balance: currentUser.wallet_balance - monFinance.upfront }).eq('phone_number', currentUser.phone_number);
+            await supabaseClient.from('users').update({ wallet_balance: Number(currentUser.wallet_balance || 0) - monFinance.upfront }).eq('phone_number', currentUser.phone_number);
         }
 
-        if (monState.isFirstMonthly && currentUser.invited_by) await rewardReferrer(currentUser.invited_by, 150000, `یکی از دوستان شما با کد معرف شما اولین اشتراک ماهانه خود را ثبت کرد. ۱۵۰,۰۰۰ تومان پاداش به کیف پول شما اضافه شد!`);
+        if (monState.isFirstMonthly && currentUser.invited_by) await rewardReferrer(currentUser.invited_by, 150000, `یکی از دوستان شما اولین اشتراک ماهانه خود را ثبت کرد. ۱۵۰,۰۰۰ تومان پاداش به کیف پول شما اضافه شد!`);
         
         const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', monState.planType).single();
         if (srv && srv.capacity > 0) await supabaseClient.from('services').update({ capacity: srv.capacity - 1 }).eq('type', monState.planType);
 
-        // ======== ارسال فیش به ربات بله (بدون تاخیر) ========
-        if (monState.payMethod === 'card' && monState.receiptBase64) {
-            const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
-            
-            const payload = {
-                // دیگر نیازی به ارسال آیدی بله نیست
-                text: `✅ یک ثبت‌نام ماهانه جدید!\n👤 موبایل: ${currentUser.phone_number}\n💰 مبلغ: ${monFinance.upfront.toLocaleString()} تومان`,
-                image_base64: monState.receiptBase64 
-            };
-
-            fetch(gasUrl, {
-                method: 'POST',
-                mode: 'no-cors', // شلیک کن و منتظر جواب نمان
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).catch(err => console.log("ارسال رسید:", err));
+        if (currentMonPromoData) {
+            await supabaseClient.from('promos_codes').update({ used_count: currentMonPromoData.used_count + 1 }).eq('id', currentMonPromoData.id);
         }
-        // ====================================================
-        document.getElementById('mainLoader').style.display = 'none';
-        alert('🎉 قرارداد شما با موفقیت ثبت شد.'); window.location.reload(); 
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطا در ثبت پایگاه داده.'); }
-}
 
+        // ۵. شلیک بی‌درنگ رسید به گوگل اسکریپت[cite: 6]
+        const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
+        const payTypeFa = monState.payMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
+        const payload = {
+            text: `🚨 ثبت‌نام/تمدید ماهانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📦 طرح: ${monState.planType} (${duration} ماهه)\n💰 پرداختی الان: ${monFinance.upfront.toLocaleString()} تومان\n💳 روش: ${payTypeFa}`,
+            image_base64: monState.payMethod === 'card' ? monState.receiptBase64 : ""
+        };
+        fetch(gasUrl, { method: 'POST', body: JSON.stringify(payload) }).catch(err => console.log(err));
+
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('🎉 قرارداد شما با موفقیت در سیستم ثبت شد.'); 
+        window.location.reload(); 
+    } catch (e) { 
+        console.error(e);
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert('خطا در ثبت پایگاه داده.'); 
+    }
+}
 // ==========================================
 // 📅 رزرو روزانه (موتور جدید با بررسی ظرفیت)
 // ==========================================
