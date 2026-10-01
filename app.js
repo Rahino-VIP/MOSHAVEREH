@@ -940,12 +940,14 @@ async function initializeBookingEngine() {
         window14Dates.push({ date: getShamsiDateSafe(d), dayName: parts.find(p => p.type === 'weekday').value });
     }
     
-    // دریافت ظرفیت‌های روزانه از دیتابیس
     let justDates = window14Dates.map(d => d.date.replace(/\//g, '-'));
     try {
-        const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
+        const { data: capData, error } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
+        if (error) console.error("Capacity Fetch Error:", error);
         dailyCapacities = {};
-        if (capData) capData.forEach(d => { dailyCapacities[d.target_date.replace(/-/g, '/')] = d; });
+        if (capData) {
+            capData.forEach(d => { dailyCapacities[d.target_date.replace(/-/g, '/')] = d; });
+        }
     } catch(e) { console.error("خطا در دریافت ظرفیت", e); }
     
     renderCalendar();
@@ -985,26 +987,28 @@ function selectPayMethod(method) {
 }
 
 function updatePricing() {
-    let activeBookedDays = globalUserPastReservations.length; 
+    // فقط روزهایی از گذشته را می‌شماریم که جزو همین بازه ۱۴ روزه روی تقویم باشند
+    let activeBookedDaysInWindow = globalUserPastReservations.filter(pastDate => 
+        window14Dates.some(w => w.date === pastDate)
+    ).length; 
+
     let newSelectedDays = selectedNewDates.length; 
-    let totalD = activeBookedDays + newSelectedDays;
+    let totalD = activeBookedDaysInWindow + newSelectedDays;
     
     // محاسبه نرخ پلکانی
     let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
-    let payableAmount = (newSelectedDays * applicableRate) * 1000; // تبدیل هزار تومان به تومان
+    let payableAmount = (newSelectedDays * applicableRate) * 1000; 
     let discountMsg = "";
 
     let isFirstEverDaily = (globalUserPastReservations.length === 0);
     
-    // 👈 رفع مشکل سوم و ششم: ۵۰ هزار تومان تخفیف ثابت برای اولین رزرو
     if (isFirstEverDaily && newSelectedDays > 0) {
         payableAmount -= 50000;
         discountMsg += `🎁 ۵۰,۰۰۰ تومان هدیه اولین رزرو سیستم اعمال شد!<br>`;
-    } else if (activeBookedDays > 0 && newSelectedDays > 0) {
-        discountMsg += `🎉 رزروهای جدید با نرخ تخفیف‌دار (${applicableRate} هزار تومانی) محاسبه شد!<br>`;
+    } else if (activeBookedDaysInWindow > 0 && newSelectedDays > 0) {
+        discountMsg += `🎉 به دلیل رزروهای شما در این بازه، روزهای جدید با تخفیف (نرخ ${applicableRate} تومانی) محاسبه شد!<br>`;
     }
 
-    // 👈 تخفیف ۲۰ تومانی کد معرف (علاوه بر ۵۰ تومن بالا)
     let referralDiscountAmount = 0;
     if (isFirstEverDaily && currentUser.invited_by && newSelectedDays > 0) { 
         referralDiscountAmount = 20000; 
@@ -1012,7 +1016,6 @@ function updatePricing() {
     }
     payableAmount -= referralDiscountAmount;
 
-    // کسر مبلغ کد تخفیف دستی (در صورت وجود)
     if (discountAmount > 0) { 
         payableAmount -= discountAmount; 
         discountMsg += `✅ کد تخفیف با موفقیت اعمال شد.<br>`; 
@@ -1021,7 +1024,7 @@ function updatePricing() {
     finalAmountToPay = Math.max(0, payableAmount);
 
     document.getElementById('newDaysCountTxt').innerText = `${newSelectedDays} روز`; 
-    document.getElementById('pastDaysCountTxt').innerText = `${activeBookedDays} روز`;
+    document.getElementById('pastDaysCountTxt').innerText = `${activeBookedDaysInWindow} روز`;
     document.getElementById('rateAppliedTxt').innerText = `${applicableRate} هزار تومان`; 
     document.getElementById('finalPriceTxt').innerText = finalAmountToPay.toLocaleString();
     
@@ -1102,7 +1105,6 @@ async function submitBooking() {
     try {
         let dbSelectedDates = selectedNewDates.map(d => d.replace(/\//g, '-'));
         
-        // چک کردن مجدد ظرفیت قبل از رزرو قطعی
         const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbSelectedDates);
         let isConflict = false;
         if(capCheck) capCheck.forEach(c => { if(c.available_capacity <= 0) isConflict = true; });
@@ -1113,14 +1115,26 @@ async function submitBooking() {
             return; 
         }
 
+        // شلیک رسید به سمت بله بدون تاخیر
+        if (selectedPayMethod === 'card' && base64Image) {
+            const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec"; // لینک گوگل خودت رو اینجا بزار
+            const payload = {
+                text: `🚨 رزرو جدید روزانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان`,
+                image_base64: base64Image 
+            };
+            fetch(gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(err => console.log(err));
+        }
+
+        // درج در دیتابیس (فقط ستون‌هایی که در جدول شما وجود دارند)
         const { error } = await supabaseClient.from('pan_reservations').insert([{
-            phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(dbSelectedDates),
-            total_amount: finalAmountToPay, pay_method: selectedPayMethod, receipt_base64: selectedPayMethod === 'card' ? base64Image : null,
-            status: 'pending'
+            phone_number: currentUser.phone_number, 
+            reserved_dates: JSON.stringify(dbSelectedDates),
+            paid_amount: finalAmountToPay, 
+            receipt_base64: selectedPayMethod === 'card' ? base64Image : null
         }]);
+        
         if (error) throw error;
 
-        // کسر ظرفیت روزهای انتخاب شده از دیتابیس
         for (let dateStr of selectedNewDates) {
             let currentAvailable = dailyCapacities[dateStr]?.available_capacity ?? 4; 
             await supabaseClient.from('pan_daily_capacity').upsert({ target_date: dateStr.replace(/\//g, '-'), available_capacity: currentAvailable - 1 });
@@ -1135,9 +1149,12 @@ async function submitBooking() {
 
         document.getElementById('mainLoader').style.display = 'none';
         alert('🎉 رزرو شما با موفقیت قطعی شد.'); window.location.reload(); 
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطای ارتباط با دیتابیس.'); }
+    } catch (e) { 
+        console.error(e);
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert('خطای ارتباط با دیتابیس.'); 
+    }
 }
-
 // ==========================================
 // ❌ توابع لغو قرارداد
 // ==========================================
