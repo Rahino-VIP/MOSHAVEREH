@@ -1584,6 +1584,51 @@ async function submitInstallment() {
         alert('خطا در ارتباط با سرور.'); 
     }
 }
+
+function renderInstallments(installmentsData) {
+    const container = document.getElementById('installmentsContainer');
+    if(!installmentsData || installmentsData.length === 0) { 
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-weight: bold;">شما هیچ قسط ثبت‌شده‌ای ندارید.</div>'; 
+        return; 
+    }
+    
+    let html = ''; 
+    // مرتب‌سازی بر اساس متن تاریخ شمسی (به جای تبدیل به میلادی)
+    installmentsData.sort((a, b) => a.due_date.localeCompare(b.due_date));
+    
+    // گرفتن تاریخ امروز به شمسی
+    let todayShamsi = getShamsiDateSafe(new Date());
+
+    installmentsData.forEach(inst => {
+        let statusObj = { text: 'در انتظار پرداخت', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.1)', showBtn: true };
+        
+        if (inst.status === 'paid' || inst.status === 'approved') {
+            statusObj = { text: 'پرداخت شده', color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)', showBtn: false };
+        } else { 
+            // مقایسه مستقیم دو تاریخ شمسی با هم
+            if (inst.due_date < todayShamsi) { 
+                statusObj = { text: 'سررسید گذشته', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.1)', showBtn: true }; 
+            } 
+        }
+        
+        let btnHtml = statusObj.showBtn ? `<button class="btn-action primary" style="width:100%; margin-top:15px;" onclick="openInstallmentModal('${inst.id}', ${inst.amount})">پرداخت قسط</button>` : '';
+        
+        // نمایش مستقیم تاریخ شمسی بدون تبدیل مخرب جاوااسکریپت
+        let displayDate = inst.due_date.replace(/-/g, '/');
+        
+        html += `<div class="status-card glass-panel" style="margin-bottom: 15px; border-right: 4px solid ${statusObj.color};">
+                    <div class="status-header" style="margin-bottom: 10px;">
+                        <div class="srv-title" style="font-size: 14px;">قسط شماره ${inst.installment_number}</div>
+                        <div class="srv-badge" style="background: ${statusObj.bg}; color: ${statusObj.color}; border: none;">${statusObj.text}</div>
+                    </div>
+                    <div style="font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 10px;">${Number(inst.amount).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">تومان</span></div>
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;">تاریخ سررسید: ${displayDate}</div>
+                    ${btnHtml}
+                 </div>`;
+    });
+    
+    container.innerHTML = html;
+}
 // ==========================================
 // 📜 تاریخچه و پروفایل
 // ==========================================
