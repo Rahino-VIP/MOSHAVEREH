@@ -874,41 +874,41 @@ function validateMonSubmit() {
 
 async function submitMonthly() {
     document.getElementById('mainLoader').style.display = 'flex';
-    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال پردازش فاکتورها...';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ثبت قرارداد در سیستم...';
     
     let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
     let baseDateStr = monState.startDate || getShamsiDateSafe(new Date()); 
     let endDateStr = addMonthsJS(baseDateStr, duration);
 
     try {
-        // ۱. ساخت فاکتور کلی (جدول pan_invoices)[cite: 9]
+        // ۱. ثبت فاکتور اصلی با وضعیت approved (تایید شده از همان ابتدا)
         let invDetails = `طرح: ${monState.planType} | مدت: ${duration} ماه | شروع: ${baseDateStr}`;
         let payMethodDB = monState.payMethod === 'wallet' ? 'wallet' : (monState.payPlan === 'cash' ? 'cash' : 'monthly');
         
         const { data: invData, error: invError } = await supabaseClient.from('pan_invoices').insert([{
             phone_number: currentUser.phone_number,
-            invoice_type: monState.txType === 'new' ? 'ثبت‌نام ماهانه' : 'تمدید ماهانه',
+            invoice_type: monState.txType === 'new' ? 'ثبت‌‌نام ماهانه' : 'تمدید ماهانه',
             total_amount: monFinance.totalBase,
             discount_amount: monFinance.discount,
             final_amount: monFinance.finalPrice,
             paid_upfront: monFinance.upfront,
             payment_method: payMethodDB,
-            status: 'pending',
+            status: 'approved', // 👈 از همان ابتدا تایید شده
             details_text: invDetails
         }]).select('id').single();
         if (invError) throw invError;
 
-        // ۲. ساخت رکورد اشتراک اصلی (جدول pan_monthly_subs بدون فیلدهای مالی)[cite: 7]
+        // ۲. ثبت اشتراک ماهانه با وضعیت active (فعال از همان ابتدا)
         const { error: subError } = await supabaseClient.from('pan_monthly_subs').insert([{
             phone_number: currentUser.phone_number, 
             plan_type: monState.planType, 
             start_date: baseDateStr, 
             end_date: endDateStr,
-            status: 'pending'
+            status: 'active' // 👈 بلافاصله فعال برای تشخیص در تمدید و لغو
         }]);
         if (subError) throw subError;
 
-        // ۳. ساخت اقساط آینده در صورت وجود و اتصال ب ه آیدی فاکتور (جدول pan_installments)[cite: 8]
+        // ۳. ثبت اقساط آینده متصل به فاکتور
         if (monFinance.installments.length > 0 && invData) {
             let instInserts = monFinance.installments.map(inst => ({ 
                 invoice_id: invData.id,
@@ -921,7 +921,7 @@ async function submitMonthly() {
             await supabaseClient.from('pan_installments').insert(instInserts);
         }
 
-        // ۴. کسر از کیف پول یا افزایش ظرفیت کدهای تخفیف
+        // ۴. کسر از کیف پول یا اعمال کدهای تخفیف
         if (monState.payMethod === 'wallet') {
             await supabaseClient.from('users').update({ wallet_balance: Number(currentUser.wallet_balance || 0) - monFinance.upfront }).eq('phone_number', currentUser.phone_number);
         }
@@ -935,17 +935,24 @@ async function submitMonthly() {
             await supabaseClient.from('promos_codes').update({ used_count: currentMonPromoData.used_count + 1 }).eq('id', currentMonPromoData.id);
         }
 
-        // ۵. شلیک بی‌درنگ رسید به گوگل اسکریپت[cite: 6]
+        // ۵. ارسال به بله (با اضافه کردن mode: 'no-cors' برای جلوگیری از مسدود شدن درخواست توسط مرورگر)
         const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
         const payTypeFa = monState.payMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
         const payload = {
             text: `🚨 ثبت‌نام/تمدید ماهانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📦 طرح: ${monState.planType} (${duration} ماهه)\n💰 پرداختی الان: ${monFinance.upfront.toLocaleString()} تومان\n💳 روش: ${payTypeFa}`,
             image_base64: monState.payMethod === 'card' ? monState.receiptBase64 : ""
         };
-        fetch(gasUrl, { method: 'POST', body: JSON.stringify(payload) }).catch(err => console.log(err));
+        
+        // نکته مهم: استفاده از mode: 'no-cors' الزامی است تا مرورگر درخواست را سمت گوگل اسکریپت بفرستد
+        fetch(gasUrl, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        }).catch(err => console.log("خطا در ارسال به بله:", err));
 
         document.getElementById('mainLoader').style.display = 'none';
-        alert('🎉 قرارداد شما با موفقیت در سیستم ثبت شد.'); 
+        alert('🎉 قرارداد شما با موفقیت ثبت و فعال شد.'); 
         window.location.reload(); 
     } catch (e) { 
         console.error(e);
