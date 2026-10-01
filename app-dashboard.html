@@ -528,9 +528,47 @@
                     </div>
                 </div>
                 
-                <div id="installmentsContainer">
-                    <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">در حال دریافت اطلاعات مالی...</div>
-                </div>
+                <!-- مودال پرداخت اقساط -->
+<div id="installmentModal" class="loader" style="display:none; justify-content:center; align-items:center; background: rgba(0,0,0,0.6); padding: 20px;">
+    <div class="container" style="max-width: 420px; padding: 25px; background: var(--surface);">
+        <h3 style="text-align: center; color: var(--accent); margin-bottom: 20px;">پرداخت قسط</h3>
+        
+        <div style="font-size: 18px; text-align: center; font-weight: bold; margin-bottom: 20px;">
+            مبلغ قابل پرداخت: <span id="instPayAmount" style="color: var(--primary);">0</span>
+        </div>
+
+        <!-- دکمه‌های انتخاب روش پرداخت -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="btnInstCard" class="btn btn-primary" style="flex:1;" onclick="selectInstPayMethod('card')">💳 کارت به کارت</button>
+            <button id="btnInstWallet" class="btn btn-outline" style="flex:1;" onclick="selectInstPayMethod('wallet')">💰 کیف پول</button>
+        </div>
+
+        <!-- پیام وضعیت کیف پول -->
+        <div id="instWalletStatusBadge" style="text-align: center; font-size: 12px; margin-bottom: 15px; font-weight: bold;"></div>
+
+        <!-- بخش اطلاعات کارت و آپلود عکس -->
+        <div id="instCardSection">
+            <div class="payment-info" style="padding: 15px; background: var(--bg-color); border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px dashed var(--accent);">
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">لطفاً مبلغ قسط را به کارت زیر واریز کنید:</div>
+                <div class="card-number-text" style="font-size: 22px; font-family: 'Vazirmatn', sans-serif; letter-spacing: 3px; font-weight: 900; color: var(--text-main);">6219-8618-1038-0484</div>
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 15px;">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
+                <button class="btn btn-outline" style="padding: 8px 15px; font-size: 12px; width: auto; margin: 0 auto;" onclick="copyCardInst(this)">📋 کپی شماره کارت</button>
+            </div>
+            
+            <label class="file-upload" id="instUploadBox" style="padding: 20px 10px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">📸</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="instUploadText">آپلود رسید واریز</div>
+                <input type="file" accept="image/*" onchange="handleInstFileSelect(event)">
+            </label>
+        </div>
+
+        <!-- دکمه‌های عملیاتی -->
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button class="btn btn-primary" id="btnSubmitInst" style="flex: 2;" onclick="submitInstallment()" disabled>تایید و پرداخت قسط 🔒</button>
+            <button class="btn btn-outline" style="flex: 1;" onclick="closeInstallmentModal()">انصراف</button>
+        </div>
+    </div>
+</div>
             </div>
             
             <!-- ===============================
