@@ -138,39 +138,52 @@ function goToAuthStep(stepId, title, sub) {
 }
 
 // بررسی وضعیت کاربر از طریق تابع امن SQL
+// بررسی وضعیت کاربر از طریق تابع امن SQL
 async function checkUserPhone() {
     const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
     if (!phone || phone.length < 10) return alert('شماره موبایل نامعتبر است.');
     document.getElementById('mainLoader').style.display = 'flex';
+    
     try {
         const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
         document.getElementById('mainLoader').style.display = 'none';
 
-        if (error || !data || data.length === 0) {
-            // کاربر اصلاً وجود ندارد <- فرم ثبت‌نام
-            goToAuthStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
-        } else {
-            let user = data[0];
-            if (user.status === 'pending') {
-                goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
-            } else if (user.status === 'blocked') {
-                goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
-            } else if (!user.has_password) {
-                // کاربر در سیستم هست اما رمز ندارد <- فرم تنظیم رمز
-                document.getElementById('recovPhoneStore').value = phone; 
-                goToAuthStep('view-set-password', 'ارتقای امنیت حساب', 'لطفاً رمز عبور خود را تنظیم کنید');
-            } else {
-                // کاربر رمز دارد <- فرم لاگین
-                if(user.security_question) {
-                    document.getElementById('recoveryQuestionText').innerText = `سوال: ${user.security_question}`;
-                    document.getElementById('recovPhoneStore').value = phone;
-                }
-                goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
-            }
+        // ۱. اگر خطای شبکه‌ای یا دیتابیسی رخ داد (مثل قطعی فیلترشکن)
+        if (error) {
+            console.error("Supabase Error:", error);
+            return alert('ارتباط با سرور برقرار نشد. لطفاً وضعیت اینترنت یا VPN خود را بررسی کنید.');
         }
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با دیتابیس"); }
-}
 
+        // ۲. اگر سرور جواب داد اما این شماره موبایل در دیتابیس نبود
+        if (!data || data.length === 0) {
+            goToAuthStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
+            return;
+        } 
+        
+        // ۳. اگر کاربر وجود داشت، منطق بررسی وضعیت اعمال شود
+        let user = data[0];
+        if (user.status === 'pending') {
+            goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+        } else if (user.status === 'blocked') {
+            goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
+        } else if (!user.has_password) {
+            // کاربر اکتیو است اما هنوز رمز ندارد
+            document.getElementById('recovPhoneStore').value = phone; 
+            goToAuthStep('view-set-password', 'ارتقای امنیت حساب', 'لطفاً رمز عبور خود را تنظیم کنید');
+        } else {
+            // کاربر اکتیو است و رمز دارد
+            if(user.security_question) {
+                document.getElementById('recoveryQuestionText').innerText = `سوال: ${user.security_question}`;
+                document.getElementById('recovPhoneStore').value = phone;
+            }
+            goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
+        }
+        
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطای اتصال به اینترنت یا سرور"); 
+    }
+}
 // تخصیص رمز برای کاربران قدیمی فاقد رمز
 // تخصیص رمز و ساخت کد معرف برای کاربران قدیمی فاقد رمز
 async function submitSetPassword() {
@@ -264,6 +277,7 @@ async function submitRegistration() {
 }
 
 // لاگین یکپارچه با Auth و بررسی وضعیت تایید
+// لاگین یکپارچه با قابلیت انتقال خودکار کاربران قدیمی به Auth
 async function submitLogin() {
     const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
     const pass = document.getElementById('inpLoginPass').value.trim();
@@ -271,15 +285,35 @@ async function submitLogin() {
 
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        // لاگین مستقیم با متد قدرتمند سوپابیس
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
+        // ۱. تلاش برای ورود عادی به سیستم امنیتی (برای کسانی که درست ثبت‌نام شده‌اند)
+        let { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
             email: phone + '@rahino.ir',
             password: pass
         });
 
-        if (error) { document.getElementById('mainLoader').style.display = 'none'; return alert('رمز عبور اشتباه است.'); }
+        // ۲. اگر ورود عادی ارور داد، چک می‌کنیم شاید کاربر قدیمی است که در دیتابیس رمز دارد اما وارد Auth نشده
+        if (authError) {
+            const { data: isOldUser } = await supabaseClient.rpc('verify_old_password', { p_phone: phone, p_pass: pass });
+            
+            if (isOldUser) {
+                // رمز قدیمی صحیح است! پس کاربر را در همان لحظه بدون اینکه متوجه شود در Auth ثبت‌نام می‌کنیم
+                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
+                    email: phone + '@rahino.ir',
+                    password: pass
+                });
+                
+                if (signUpError) {
+                    document.getElementById('mainLoader').style.display = 'none';
+                    return alert('خطا در همگام‌سازی حساب کاربری.');
+                }
+                // اکانت با موفقیت استانداردسازی شد و لاگین انجام شد
+            } else {
+                document.getElementById('mainLoader').style.display = 'none';
+                return alert('رمز عبور اشتباه است.');
+            }
+        }
 
-        // بررسی اینکه آیا مدیریت هنوز حساب را تایید کرده یا نه
+        // ۳. بررسی وضعیت تایید حساب توسط مدیریت
         const { data: userData } = await supabaseClient.from('users').select('status').eq('phone_number', phone).single();
 
         if (userData && userData.status !== 'active') {
@@ -288,9 +322,13 @@ async function submitLogin() {
             return alert('حساب شما در انتظار تایید است یا مسدود شده است.');
         }
 
+        // ۴. ورود کاملاً موفقیت‌آمیز
         localStorage.setItem('rahino_user_phone', phone);
         window.location.reload(); 
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با دیتابیس"); }
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطا در ارتباط با دیتابیس"); 
+    }
 }
 
 async function submitRecovery() {
