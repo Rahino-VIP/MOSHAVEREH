@@ -1116,13 +1116,21 @@ async function submitBooking() {
         }
 
         // شلیک رسید به سمت بله بدون تاخیر
+        // ۲. ارسال مطمئن رسید به ربات بله
         if (selectedPayMethod === 'card' && base64Image) {
-            const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec"; // لینک گوگل خودت رو اینجا بزار
+            // حتماً لینک گوگل اسکریپت جدیدی که ساختی را اینجا قرار بده
+            const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec"; 
+            
             const payload = {
                 text: `🚨 رزرو جدید روزانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان`,
                 image_base64: base64Image 
             };
-            fetch(gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(err => console.log(err));
+            
+            fetch(gasUrl, { 
+                method: 'POST', 
+                // حذف headers و no-cors برای جلوگیری از بلاک شدن درخواست توسط مرورگر (CORS)
+                body: JSON.stringify(payload) 
+            }).catch(err => console.log("خطای ارسال به بله:", err));
         }
 
         // درج در دیتابیس (فقط ستون‌هایی که در جدول شما وجود دارند)
