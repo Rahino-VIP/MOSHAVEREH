@@ -172,6 +172,7 @@ async function checkUserPhone() {
 }
 
 // تخصیص رمز برای کاربران قدیمی فاقد رمز
+// تخصیص رمز و ساخت کد معرف برای کاربران قدیمی فاقد رمز
 async function submitSetPassword() {
     const phone = document.getElementById('recovPhoneStore').value;
     const pass = document.getElementById('setNewPass').value.trim();
@@ -189,9 +190,18 @@ async function submitSetPassword() {
         });
         if (authError) throw authError;
 
-        // ۲. آپدیت اطلاعات امنیتی در جدول دیتابیس (چون کاربر الان لاگین شده است، دسترسی دارد)
+        // ۲. بررسی اینکه آیا کاربر از قبل کد معرف دارد یا نه
+        const { data: existingUser } = await supabaseClient.from('users').select('referral_code').eq('phone_number', phone).single();
+        let refCode = (existingUser && existingUser.referral_code) ? existingUser.referral_code : generateReferralCode();
+
+        // ۳. آپدیت اطلاعات امنیتی و کد معرف در جدول دیتابیس
         const { error: dbError } = await supabaseClient.from('users')
-            .update({ password: pass, security_question: secQ, security_answer: secA })
+            .update({ 
+                password: pass, 
+                security_question: secQ, 
+                security_answer: secA,
+                referral_code: refCode 
+            })
             .eq('phone_number', phone);
         if (dbError) throw dbError;
 
@@ -199,7 +209,10 @@ async function submitSetPassword() {
         localStorage.setItem('rahino_user_phone', phone);
         alert('رمز عبور با موفقیت ثبت شد.');
         window.location.reload();
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ثبت اطلاعات."); }
+    } catch (e) { 
+        document.getElementById('mainLoader').style.display = 'none'; 
+        alert("خطا در ثبت اطلاعات."); 
+    }
 }
 
 // ثبت‌نام یکپارچه کاربران جدید با Auth
