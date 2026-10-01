@@ -987,7 +987,6 @@ function selectPayMethod(method) {
 }
 
 function updatePricing() {
-    // فقط روزهایی از گذشته را می‌شماریم که جزو همین بازه ۱۴ روزه روی تقویم باشند
     let activeBookedDaysInWindow = globalUserPastReservations.filter(pastDate => 
         window14Dates.some(w => w.date === pastDate)
     ).length; 
@@ -995,20 +994,22 @@ function updatePricing() {
     let newSelectedDays = selectedNewDates.length; 
     let totalD = activeBookedDaysInWindow + newSelectedDays;
     
-    // محاسبه نرخ پلکانی
+    // محاسبه پایه
     let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
     let payableAmount = (newSelectedDays * applicableRate) * 1000; 
     let discountMsg = "";
 
     let isFirstEverDaily = (globalUserPastReservations.length === 0);
     
+    // ۱. هدیه ۵۰ تومانی یا تخفیف پلکانی
     if (isFirstEverDaily && newSelectedDays > 0) {
         payableAmount -= 50000;
         discountMsg += `🎁 ۵۰,۰۰۰ تومان هدیه اولین رزرو سیستم اعمال شد!<br>`;
     } else if (activeBookedDaysInWindow > 0 && newSelectedDays > 0) {
-        discountMsg += `🎉 به دلیل رزروهای شما در این بازه، روزهای جدید با تخفیف (نرخ ${applicableRate} تومانی) محاسبه شد!<br>`;
+        discountMsg += `🎉 روزهای جدید با تخفیف (نرخ ${applicableRate} تومانی) محاسبه شد!<br>`;
     }
 
+    // ۲. هدیه ۲۰ تومانی معرف
     let referralDiscountAmount = 0;
     if (isFirstEverDaily && currentUser.invited_by && newSelectedDays > 0) { 
         referralDiscountAmount = 20000; 
@@ -1016,9 +1017,16 @@ function updatePricing() {
     }
     payableAmount -= referralDiscountAmount;
 
-    if (discountAmount > 0) { 
-        payableAmount -= discountAmount; 
-        discountMsg += `✅ کد تخفیف با موفقیت اعمال شد.<br>`; 
+    // ۳. اعمال دقیق و زنده کد تخفیف روی مبلغ به دست آمده
+    if (currentPromoData && payableAmount > 0) { 
+        let calculatedPromoDiscount = 0;
+        if (currentPromoData.discount_type === 'percent') {
+            calculatedPromoDiscount = payableAmount * (currentPromoData.discount_value / 100);
+        } else {
+            calculatedPromoDiscount = currentPromoData.discount_value;
+        }
+        payableAmount -= calculatedPromoDiscount; 
+        discountMsg += `✅ کد تخفیف اعمال شد.<br>`; 
     }
     
     finalAmountToPay = Math.max(0, payableAmount);
@@ -1033,7 +1041,7 @@ function updatePricing() {
 
     let walletBadge = document.getElementById('walletStatusBadge');
     if (walletBadge) {
-        if (selectedPayMethod === 'wallet' && currentUser.wallet_balance < finalAmountToPay) { 
+        if (selectedPayMethod === 'wallet' && Number(currentUser.wallet_balance || 0) < finalAmountToPay) { 
             walletBadge.style.color = 'var(--danger)'; walletBadge.innerText = 'موجودی ناکافی'; 
         } else { 
             walletBadge.style.color = 'var(--text-muted)'; walletBadge.innerText = `موجودی: ${Number(currentUser.wallet_balance || 0).toLocaleString()}`; 
@@ -1042,49 +1050,64 @@ function updatePricing() {
     validateSubmitButton();
 }
 
+let currentPromoData = null; // نگهداری اطلاعات کد تخفیف برای محاسبه زنده
+
 async function applyDiscount() {
     const code = document.getElementById('discountCode').value.trim().toUpperCase();
-    if (!code) return alert('لطفاً کد تخفیف را وارد کنید.');
+    if (!code) return; // پیام موفقیت یا خطا فقط اگر کدی وارد شده باشد
 
     let newSelectedDays = selectedNewDates.length; 
     if(newSelectedDays === 0) return alert('ابتدا روزهای مورد نظر خود را از تقویم انتخاب کنید.');
 
     document.getElementById('mainLoader').style.display = 'flex';
-    
-    let activeBookedDays = globalUserPastReservations.length; 
-    let totalD = activeBookedDays + newSelectedDays;
-    let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
-    let totalBase = (newSelectedDays * applicableRate) * 1000; 
-    
-    const result = await validateAndApplyDiscount(code, 'daily', totalBase);
-    document.getElementById('mainLoader').style.display = 'none';
+    try {
+        const { data: promo, error } = await supabaseClient.from('promos_codes')
+            .select('*')
+            .eq('code', code)
+            .eq('is_active', true)
+            .single();
 
-    if (result.success) {
-        appliedDiscountCode = code;
-        discountAmount = result.discountAmount; // ست کردن مبلغ تخفیف در گلوبال
-        window.activeDailyPromoId = result.promoId; 
+        document.getElementById('mainLoader').style.display = 'none';
+
+        if (error || !promo) return alert('کد تخفیف نامعتبر است یا منقضی شده.');
+        if (promo.target_service !== 'all' && promo.target_service !== 'daily') return alert('این کد برای خدمات روزانه معتبر نیست.');
+        if (promo.max_uses && promo.used_count >= promo.max_uses) return alert('ظرفیت استفاده از این کد به پایان رسیده است.');
+
+        // ذخیره اطلاعات خام کد تخفیف تا سیستم خودش روی مبلغ نهایی حساب کند
+        currentPromoData = promo; 
         updatePricing(); 
-        alert('✅ کد تخفیف با موفقیت اعمال شد.');
-    } else {
-        alert(result.msg);
+        // الرت روی اعصاب حذف شد! پیام فقط اون پایین نوشته میشه.
+    } catch(e) {
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('خطا در ارتباط با سرور.');
     }
 }
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
-        document.getElementById('uploadText').innerText = `⏳ در حال فشرده‌سازی...`;
+        document.getElementById('uploadText').innerText = `⏳ در حال فشرده‌سازی و بهینه‌سازی...`;
         const reader = new FileReader();
         reader.onload = function(e) { 
             const img = new Image();
             img.onload = function() {
-                const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                if(w > h && w > 1000) { h *= 1000/w; w = 1000; } else if(h > 1000) { w *= 1000/h; h = 1000; }
-                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                document.getElementById('uploadText').innerText = `✅ فایل آماده شد`;
-                document.getElementById('uploadBox').style.borderColor = "var(--success)"; document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
-                validateSubmitButton();
+                const canvas = document.createElement('canvas'); 
+                let w = img.width, h = img.height;
+                const MAX_SIZE = 800; // کاهش سایز برای سرعت وحشتناک بالا
+                
+                if(w > h && w > MAX_SIZE) { h *= MAX_SIZE/w; w = MAX_SIZE; } 
+                else if(h > MAX_SIZE) { w *= MAX_SIZE/h; h = MAX_SIZE; }
+                
+                canvas.width = w; canvas.height = h; 
+                const ctx = canvas.getContext('2d'); 
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                // افت کیفیت روی 0.5 برای سبک شدن استثنایی بدون افت ظاهری
+                base64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                document.getElementById('uploadText').innerText = `✅ فیش پرداختی ضمیمه شد`;
+                document.getElementById('uploadBox').style.borderColor = "var(--success)"; 
+                document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
+                validateSubmitButton(); // باز شدن قطعی دکمه
             };
             img.src = e.target.result;
         };
@@ -1093,9 +1116,17 @@ function handleFileSelect(event) {
 }
 function validateSubmitButton() { 
     const btn = document.getElementById('btnSubmitBooking');
-    let isValid = selectedNewDates.length > 0 && document.getElementById('rulesCheckbox').checked;
-    if (selectedPayMethod === 'wallet') isValid = isValid && (currentUser.wallet_balance >= finalAmountToPay);
-    else isValid = isValid && (base64Image !== "");
+    let rulesCheckbox = document.getElementById('rulesCheckbox');
+    let isRulesChecked = rulesCheckbox ? rulesCheckbox.checked : true;
+    
+    let isValid = (selectedNewDates.length > 0) && isRulesChecked;
+
+    if (selectedPayMethod === 'wallet') {
+        // تبدیل صریح به عدد (دلیل اصلی گیر کردن دکمه کیف پول)
+        isValid = isValid && (Number(currentUser.wallet_balance || 0) >= finalAmountToPay);
+    } else {
+        isValid = isValid && (base64Image !== "");
+    }
     btn.disabled = !isValid; 
 }
 
@@ -1115,32 +1146,13 @@ async function submitBooking() {
             return; 
         }
 
-        // شلیک رسید به سمت بله بدون تاخیر
-        // ۲. ارسال مطمئن رسید به ربات بله
-        if (selectedPayMethod === 'card' && base64Image) {
-            // حتماً لینک گوگل اسکریپت جدیدی که ساختی را اینجا قرار بده
-            const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec"; 
-            
-            const payload = {
-                text: `🚨 رزرو جدید روزانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان`,
-                image_base64: base64Image 
-            };
-            
-            fetch(gasUrl, { 
-                method: 'POST', 
-                // حذف headers و no-cors برای جلوگیری از بلاک شدن درخواست توسط مرورگر (CORS)
-                body: JSON.stringify(payload) 
-            }).catch(err => console.log("خطای ارسال به بله:", err));
-        }
-
-        // درج در دیتابیس (فقط ستون‌هایی که در جدول شما وجود دارند)
         const { error } = await supabaseClient.from('pan_reservations').insert([{
             phone_number: currentUser.phone_number, 
             reserved_dates: JSON.stringify(dbSelectedDates),
             paid_amount: finalAmountToPay, 
-            receipt_base64: selectedPayMethod === 'card' ? base64Image : null
+            receipt_base64: selectedPayMethod === 'card' ? base64Image : null,
+            status: 'pending'
         }]);
-        
         if (error) throw error;
 
         for (let dateStr of selectedNewDates) {
@@ -1155,10 +1167,23 @@ async function submitBooking() {
             await supabaseClient.from('users').update({ wallet_balance: currentUser.wallet_balance - finalAmountToPay }).eq('phone_number', currentUser.phone_number);
         }
 
+        if (currentPromoData) {
+            await supabaseClient.from('promos_codes').update({ used_count: currentPromoData.used_count + 1 }).eq('id', currentPromoData.id);
+        }
+
+        // 🚀 شلیک به سرور گوگل به صورت Fire-and-Forget (بدون متوقف کردن کاربر)
+        const gasUrl = "لینک_Web_App_گوگل_اسکریپت_را_اینجا_بگذارید"; 
+        const payTypeFa = selectedPayMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
+        const payload = {
+            text: `🚨 رزرو جدید روزانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان\n💳 روش: ${payTypeFa}`,
+            image_base64: selectedPayMethod === 'card' ? base64Image : ""
+        };
+        fetch(gasUrl, { method: 'POST', body: JSON.stringify(payload) }).catch(err => console.log(err));
+
         document.getElementById('mainLoader').style.display = 'none';
-        alert('🎉 رزرو شما با موفقیت قطعی شد.'); window.location.reload(); 
+        alert('🎉 رزرو با موفقیت انجام شد.\n⏰ ما از 7 صبح تا 10 شب هستیم.'); 
+        window.location.reload(); 
     } catch (e) { 
-        console.error(e);
         document.getElementById('mainLoader').style.display = 'none'; 
         alert('خطای ارتباط با دیتابیس.'); 
     }
