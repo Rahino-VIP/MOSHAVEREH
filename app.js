@@ -1172,7 +1172,7 @@ async function submitBooking() {
         }
 
         // 🚀 شلیک به سرور گوگل به صورت Fire-and-Forget (بدون متوقف کردن کاربر)
-        const gasUrl = "لینک_Web_App_گوگل_اسکریپت_را_اینجا_بگذارید"; 
+        const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec"; 
         const payTypeFa = selectedPayMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
         const payload = {
             text: `🚨 رزرو جدید روزانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📅 روزهای رزرو: ${selectedNewDates.join(' ، ')}\n💰 پرداختی: ${finalAmountToPay.toLocaleString()} تومان\n💳 روش: ${payTypeFa}`,
