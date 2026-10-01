@@ -124,8 +124,9 @@ window.onload = async function() {
 };
 
 // =====================================
-// 🔐 توابع احراز هویت (بدون بک‌اند)
+// 🔐 توابع احراز هویت (متصل به Supabase Auth)
 // =====================================
+
 function goToAuthStep(stepId, title, sub) {
     const authWrap = document.getElementById('view-auth-wrap');
     const targetStep = document.getElementById(stepId);
@@ -136,21 +137,32 @@ function goToAuthStep(stepId, title, sub) {
     document.getElementById('authHeaderSub').innerText = sub;
 }
 
+// بررسی وضعیت کاربر از طریق تابع امن SQL
 async function checkUserPhone() {
     const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
     if (!phone || phone.length < 10) return alert('شماره موبایل نامعتبر است.');
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const { data, error } = await supabaseClient.from('users').select('status, security_question').eq('phone_number', phone).single();
+        const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
         document.getElementById('mainLoader').style.display = 'none';
-        
-        if (error && error.code === 'PGRST116') goToAuthStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
-        else if (data) {
-            if (data.status === 'pending') goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
-            else if (data.status === 'blocked') goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
-            else {
-                if(data.security_question) {
-                    document.getElementById('recoveryQuestionText').innerText = `سوال: ${data.security_question}`;
+
+        if (error || !data || data.length === 0) {
+            // کاربر اصلاً وجود ندارد <- فرم ثبت‌نام
+            goToAuthStep('view-register', 'تکمیل اطلاعات پرونده', 'جهت صدور دسترسی، فرم زیر را تکمیل نمایید');
+        } else {
+            let user = data[0];
+            if (user.status === 'pending') {
+                goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+            } else if (user.status === 'blocked') {
+                goToAuthStep('view-blocked', 'وضعیت پرونده', 'دسترسی محدود شده است');
+            } else if (!user.has_password) {
+                // کاربر در سیستم هست اما رمز ندارد <- فرم تنظیم رمز
+                document.getElementById('recovPhoneStore').value = phone; 
+                goToAuthStep('view-set-password', 'ارتقای امنیت حساب', 'لطفاً رمز عبور خود را تنظیم کنید');
+            } else {
+                // کاربر رمز دارد <- فرم لاگین
+                if(user.security_question) {
+                    document.getElementById('recoveryQuestionText').innerText = `سوال: ${user.security_question}`;
                     document.getElementById('recovPhoneStore').value = phone;
                 }
                 goToAuthStep('view-login', 'ورود به حساب کاربری', 'خوش آمدید! لطفاً رمز عبور خود را وارد کنید');
@@ -159,45 +171,112 @@ async function checkUserPhone() {
     } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با دیتابیس"); }
 }
 
-async function submitLogin() {
-    const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
-    const pass = document.getElementById('inpLoginPass').value.trim();
-    if (!pass || pass.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+// تخصیص رمز برای کاربران قدیمی فاقد رمز
+async function submitSetPassword() {
+    const phone = document.getElementById('recovPhoneStore').value;
+    const pass = document.getElementById('setNewPass').value.trim();
+    const secQ = document.getElementById('setSecQ').value;
+    const secA = document.getElementById('setSecA').value.trim();
+
+    if(!pass || pass.length < 6 || !secQ || !secA) return alert('لطفا تمام فیلدها را به درستی تکمیل کنید.');
+
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const { data, error } = await supabaseClient.from('users').select('status').eq('phone_number', phone).eq('password', pass).single();
-        if (error || !data) { document.getElementById('mainLoader').style.display = 'none'; return alert('رمز عبور اشتباه است.'); }
-        if (data.status !== 'active') { document.getElementById('mainLoader').style.display = 'none'; return alert('حساب شما در انتظار تایید است.'); }
+        // ۱. ساخت توکن Auth در سوپابیس (ایمیل ساختگی)
+        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+            email: phone + '@rahino.ir',
+            password: pass
+        });
+        if (authError) throw authError;
+
+        // ۲. آپدیت اطلاعات امنیتی در جدول دیتابیس (چون کاربر الان لاگین شده است، دسترسی دارد)
+        const { error: dbError } = await supabaseClient.from('users')
+            .update({ password: pass, security_question: secQ, security_answer: secA })
+            .eq('phone_number', phone);
+        if (dbError) throw dbError;
+
+        document.getElementById('mainLoader').style.display = 'none';
         localStorage.setItem('rahino_user_phone', phone);
-        window.location.reload(); 
-    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با دیتابیس"); }
+        alert('رمز عبور با موفقیت ثبت شد.');
+        window.location.reload();
+    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ثبت اطلاعات."); }
 }
 
+// ثبت‌نام یکپارچه کاربران جدید با Auth
 async function submitRegistration() {
     const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
     let gradeVal = document.getElementById('regGrade').value === "" ? null : document.getElementById('regGrade').value;
     let secQVal = document.getElementById('regSecQ').value === "" ? null : document.getElementById('regSecQ').value;
+    const pass = document.getElementById('regPass').value.trim();
 
     const userData = {
-        phone_number: phone, full_name: document.getElementById('regName').value.trim(),
-        grade: gradeVal, major: document.getElementById('regMajor').value.trim(),
-        school_name: document.getElementById('regSchool').value.trim(), password: document.getElementById('regPass').value.trim(),
-        security_question: secQVal, security_answer: document.getElementById('regSecA').value.trim(),
+        full_name: document.getElementById('regName').value.trim(),
+        grade: gradeVal, 
+        major: document.getElementById('regMajor').value.trim(),
+        school_name: document.getElementById('regSchool').value.trim(), 
+        password: pass,
+        security_question: secQVal, 
+        security_answer: document.getElementById('regSecA').value.trim(),
         invited_by: toEngDigits(document.getElementById('regReferral').value.trim().toUpperCase()) || null,
-        referral_code: generateReferralCode(), status: 'pending', wallet_balance: 0
+        referral_code: generateReferralCode(), 
+        wallet_balance: 0
     };
 
-    if (!userData.full_name || !userData.grade || !userData.major || !userData.school_name || !userData.password || !userData.security_question || !userData.security_answer) {
+    if (!userData.full_name || !userData.grade || !userData.major || !userData.school_name || !pass || !userData.security_question || !userData.security_answer) {
         return alert('تکمیل تمامی فیلدها الزامی است.');
     }
-    if (userData.password.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+    if (pass.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
 
     document.getElementById('mainLoader').style.display = 'flex';
     try {
-        const { error } = await supabaseClient.from('users').insert([userData]);
+        // ۱. ساخت یوزر در سیستم امنیتی سوپابیس
+        const { data, error: authError } = await supabaseClient.auth.signUp({
+            email: phone + '@rahino.ir',
+            password: pass
+        });
+        if (authError) throw authError;
+
+        // ۲. تریگر دیتابیس به طور خودکار ردیف را ساخته. حالا دیتای اضافه را در آن آپدیت می‌کنیم
+        const { error: dbError } = await supabaseClient.from('users')
+            .update(userData)
+            .eq('phone_number', phone);
+        if (dbError) throw dbError;
+
+        // ۳. خارج کردن کاربر از حالت لاگین تا زمانی که مدیریت او را تایید نکرده است
+        await supabaseClient.auth.signOut();
+
         document.getElementById('mainLoader').style.display = 'none';
-        if (!error) goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
-        else alert('خطا در ثبت‌نام: ' + error.message);
+        goToAuthStep('view-pending', 'وضعیت پرونده', 'نیاز به تایید مدیریت');
+    } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ثبت‌نام."); }
+}
+
+// لاگین یکپارچه با Auth و بررسی وضعیت تایید
+async function submitLogin() {
+    const phone = toEngDigits(document.getElementById('inpPhone').value.trim());
+    const pass = document.getElementById('inpLoginPass').value.trim();
+    if (!pass || pass.length < 6) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+
+    document.getElementById('mainLoader').style.display = 'flex';
+    try {
+        // لاگین مستقیم با متد قدرتمند سوپابیس
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: phone + '@rahino.ir',
+            password: pass
+        });
+
+        if (error) { document.getElementById('mainLoader').style.display = 'none'; return alert('رمز عبور اشتباه است.'); }
+
+        // بررسی اینکه آیا مدیریت هنوز حساب را تایید کرده یا نه
+        const { data: userData } = await supabaseClient.from('users').select('status').eq('phone_number', phone).single();
+
+        if (userData && userData.status !== 'active') {
+            await supabaseClient.auth.signOut(); // قفل نگه داشتن کاربر
+            document.getElementById('mainLoader').style.display = 'none';
+            return alert('حساب شما در انتظار تایید است یا مسدود شده است.');
+        }
+
+        localStorage.setItem('rahino_user_phone', phone);
+        window.location.reload(); 
     } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert("خطا در ارتباط با دیتابیس"); }
 }
 
