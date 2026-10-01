@@ -215,5 +215,22 @@ body {
 .srv-title svg { width: 24px !important; height: 24px !important; flex-shrink: 0; }
 .bottom-nav .nav-item svg { width: 24px !important; height: 24px !important; margin-bottom: 2px; }
 
+/* اصلاح رنگ‌بندی تمام لیست‌های کشویی (Select و Option) */
+select.form-input {
+    color: var(--text-main) !important;
+    background-color: rgba(15, 23, 42, 0.6) !important; /* پس‌زمینه شیشه‌ای تیره */
+}
+
+select.form-input option {
+    background-color: #1e293b; /* پس‌زمینه تیره برای گزینه‌های باز شده */
+    color: #ffffff; /* متن کاملاً سفید */
+    padding: 10px;
+}
+
+/* رفع مشکل فوکوس */
+select.form-input:focus {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
