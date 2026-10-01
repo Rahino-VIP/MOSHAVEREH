@@ -1151,7 +1151,6 @@ async function submitBooking() {
             reserved_dates: JSON.stringify(dbSelectedDates),
             paid_amount: finalAmountToPay, 
             receipt_base64: selectedPayMethod === 'card' ? base64Image : null,
-            status: 'pending'
         }]);
         if (error) throw error;
 
