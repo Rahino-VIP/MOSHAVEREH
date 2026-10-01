@@ -694,20 +694,24 @@ function calculateMonthly() {
 
 async function applyMonDiscount() {
     const code = document.getElementById('monDiscountCode').value.trim().toUpperCase();
+    if (!code) return alert('لطفاً کد تخفیف را وارد کنید.');
+    
     document.getElementById('mainLoader').style.display = 'flex';
     
-    // محاسبه مبلغ پایه برای تخفیف درصدی
-    let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
+    // محاسبه مبلغ پایه برای اینکه درصد تخفیف درست حساب شود
+    let duration = parseInt(monState.duration) || 1;
     let totalBase = monState.basePrice * duration;
     
     const result = await validateAndApplyDiscount(code, 'monthly', totalBase);
+    
     document.getElementById('mainLoader').style.display = 'none';
     
     if (result.success) {
         monState.promoCode = code;
-        monState.promoDiscount = result.discountAmount; // مبلغ نهایی تخفیف
-        monState.promoId = result.promoId; // برای اضافه کردن used_count بعد از پرداخت
-        calculateMonthly();
+        monState.promoDiscount = result.discountAmount; 
+        monState.promoId = result.promoId; // برای آپدیت تعداد استفاده بعد از پرداخت نهایی
+        
+        calculateMonthly(); // محاسبه مجدد و به‌روزرسانی فاکتور
         alert('✅ کد تخفیف با موفقیت اعمال شد.');
     } else {
         alert(result.msg);
@@ -843,9 +847,33 @@ function updatePricing() {
 
 async function applyDiscount() {
     const code = document.getElementById('discountCode').value.trim().toUpperCase();
-    if(!code) return;
-    if(code === 'DEMO10') { appliedDiscountCode = code; discountAmount = 10; updatePricing(); alert('کد تخفیف اعمال شد.'); } 
-    else { alert('کد تخفیف یافت نشد.'); }
+    if (!code) return alert('لطفاً کد تخفیف را وارد کنید.');
+
+    document.getElementById('mainLoader').style.display = 'flex';
+    
+    // محاسبه مبلغ پایه روزانه
+    let activeBookedDays = globalUserPastReservations.length; 
+    let newSelectedDays = selectedNewDates.length; 
+    let totalD = activeBookedDays + newSelectedDays;
+    let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
+    let totalBase = (newSelectedDays * applicableRate) * 1000; // تبدیل به تومان
+    
+    const result = await validateAndApplyDiscount(code, 'daily', totalBase);
+    
+    document.getElementById('mainLoader').style.display = 'none';
+
+    if (result.success) {
+        appliedDiscountCode = code;
+        discountAmount = result.discountAmount; // اعمال تخفیف روی متغیر گلوبال روزانه
+        
+        // در صورت نیاز به ذخیره ID برای آپدیت بعد از پرداخت
+        window.activeDailyPromoId = result.promoId; 
+        
+        updatePricing(); // محاسبه مجدد و به‌روزرسانی فاکتور روزانه
+        alert('✅ کد تخفیف با موفقیت اعمال شد.');
+    } else {
+        alert(result.msg);
+    }
 }
 
 function handleFileSelect(event) {
@@ -1032,18 +1060,31 @@ async function validateAndApplyDiscount(code, serviceType, totalBaseAmount) {
     if (!code) return { success: false, msg: 'کد تخفیف وارد نشده است.' };
     
     try {
+        // جستجو در جدول promos_codes
         const { data: promo, error } = await supabaseClient.from('promos_codes')
             .select('*')
             .eq('code', code)
             .eq('is_active', true)
             .single();
 
-        if (error || !promo) return { success: false, msg: 'کد تخفیف نامعتبر است.' };
-        if (promo.target_service !== 'all' && promo.target_service !== serviceType) return { success: false, msg: 'این کد برای این نوع خدمات معتبر نیست.' };
-        if (promo.used_count >= promo.max_uses) return { success: false, msg: 'ظرفیت این کد تخفیف به پایان رسیده است.' };
-        if (promo.valid_until && new Date() > new Date(promo.valid_until)) return { success: false, msg: 'این کد تخفیف منقضی شده است.' };
+        if (error || !promo) return { success: false, msg: 'کد تخفیف نامعتبر است یا وجود ندارد.' };
+        
+        // بررسی نوع سرویس (روزانه، ماهانه یا همه)
+        if (promo.target_service !== 'all' && promo.target_service !== serviceType) {
+            return { success: false, msg: 'این کد تخفیف برای این نوع خدمات معتبر نیست.' };
+        }
+        
+        // بررسی ظرفیت استفاده
+        if (promo.max_uses && promo.used_count >= promo.max_uses) {
+            return { success: false, msg: 'ظرفیت این کد تخفیف به پایان رسیده است.' };
+        }
+        
+        // بررسی تاریخ انقضا
+        if (promo.valid_until && new Date() > new Date(promo.valid_until)) {
+            return { success: false, msg: 'این کد تخفیف منقضی شده است.' };
+        }
 
-        // محاسبه مبلغ تخفیف
+        // محاسبه مبلغ نهایی تخفیف
         let calculatedDiscount = 0;
         if (promo.discount_type === 'percent') {
             calculatedDiscount = totalBaseAmount * (promo.discount_value / 100);
@@ -1053,7 +1094,8 @@ async function validateAndApplyDiscount(code, serviceType, totalBaseAmount) {
 
         return { success: true, discountAmount: calculatedDiscount, promoId: promo.id };
     } catch (e) {
-        return { success: false, msg: 'خطا در بررسی کد تخفیف.' };
+        console.error("Discount Error:", e);
+        return { success: false, msg: 'خطا در ارتباط با دیتابیس کدهای تخفیف.' };
     }
 }
 
