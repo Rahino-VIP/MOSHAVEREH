@@ -930,7 +930,7 @@ async function submitMonthly() {
 }
 
 // ==========================================
-// 📅 رزرو روزانه
+// 📅 رزرو روزانه (موتور جدید با بررسی ظرفیت)
 // ==========================================
 async function initializeBookingEngine() {
     window14Dates = [];
@@ -939,16 +939,32 @@ async function initializeBookingEngine() {
         const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(d);
         window14Dates.push({ date: getShamsiDateSafe(d), dayName: parts.find(p => p.type === 'weekday').value });
     }
+    
+    // دریافت ظرفیت‌های روزانه از دیتابیس
+    let justDates = window14Dates.map(d => d.date.replace(/\//g, '-'));
+    try {
+        const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
+        dailyCapacities = {};
+        if (capData) capData.forEach(d => { dailyCapacities[d.target_date.replace(/-/g, '/')] = d; });
+    } catch(e) { console.error("خطا در دریافت ظرفیت", e); }
+    
     renderCalendar();
 }
 
 function renderCalendar() {
     const grid = document.getElementById('calendarGrid'); grid.innerHTML = ''; selectedNewDates = [];
     window14Dates.forEach(d => {
+        let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; // پیش‌فرض ۴ نفر
+        let available = capInfo.available_capacity;
         let isPastBooked = globalUserPastReservations.includes(d.date);
-        let cardClass = 'cal-card'; let onclickEvent = ''; let statusText = `ظرفیت دارد`;
+        
+        let cardClass = 'cal-card'; let onclickEvent = ''; 
+        let statusText = `${available} نفر ظرفیت`; // 👈 رفع مشکل اول: نمایش دقیق عدد ظرفیت
+
         if (isPastBooked) { cardClass += ' past-booked'; statusText = 'رزرو شما ✅'; } 
+        else if (available <= 0) { cardClass += ' full'; statusText = 'تکمیل ❌'; } 
         else { cardClass += ' available'; onclickEvent = `onclick="toggleDate('${d.date}', this)"`; }
+
         grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${d.date.replace(/-/g, '/').substring(5)}</div><div class="cal-cap">${statusText}</div></div>`;
     });
     updatePricing();
@@ -969,27 +985,57 @@ function selectPayMethod(method) {
 }
 
 function updatePricing() {
-    let activeBookedDays = globalUserPastReservations.length; let newSelectedDays = selectedNewDates.length; let totalD = activeBookedDays + newSelectedDays;
+    let activeBookedDays = globalUserPastReservations.length; 
+    let newSelectedDays = selectedNewDates.length; 
+    let totalD = activeBookedDays + newSelectedDays;
+    
+    // محاسبه نرخ پلکانی
     let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
-    let payableAmount = newSelectedDays * applicableRate; let discountMsg = "";
+    let payableAmount = (newSelectedDays * applicableRate) * 1000; // تبدیل هزار تومان به تومان
+    let discountMsg = "";
 
     let isFirstEverDaily = (globalUserPastReservations.length === 0);
+    
+    // 👈 رفع مشکل سوم و ششم: ۵۰ هزار تومان تخفیف ثابت برای اولین رزرو
+    if (isFirstEverDaily && newSelectedDays > 0) {
+        payableAmount -= 50000;
+        discountMsg += `🎁 ۵۰,۰۰۰ تومان هدیه اولین رزرو سیستم اعمال شد!<br>`;
+    } else if (activeBookedDays > 0 && newSelectedDays > 0) {
+        discountMsg += `🎉 رزروهای جدید با نرخ تخفیف‌دار (${applicableRate} هزار تومانی) محاسبه شد!<br>`;
+    }
+
+    // 👈 تخفیف ۲۰ تومانی کد معرف (علاوه بر ۵۰ تومن بالا)
     let referralDiscountAmount = 0;
     if (isFirstEverDaily && currentUser.invited_by && newSelectedDays > 0) { 
         referralDiscountAmount = 20000; 
-        discountMsg += `🎁 ۲۰ هزار تومان هدیه اولین ورود (معرف) اعمال شد!\n`; 
+        discountMsg += `🎁 ۲۰,۰۰۰ تومان هدیه ورود با کد معرف کسر شد!<br>`; 
     }
+    payableAmount -= referralDiscountAmount;
 
-    if (discountAmount > 0) { payableAmount -= discountAmount; discountMsg += `✅ تخفیف دستی اعمال شد.\n`; }
-    finalAmountToPay = Math.max(0, (payableAmount * 1000) - referralDiscountAmount);
+    // کسر مبلغ کد تخفیف دستی (در صورت وجود)
+    if (discountAmount > 0) { 
+        payableAmount -= discountAmount; 
+        discountMsg += `✅ کد تخفیف با موفقیت اعمال شد.<br>`; 
+    }
+    
+    finalAmountToPay = Math.max(0, payableAmount);
 
-    document.getElementById('newDaysCountTxt').innerText = `${newSelectedDays} روز`; document.getElementById('pastDaysCountTxt').innerText = `${activeBookedDays} روز`;
-    document.getElementById('rateAppliedTxt').innerText = `${applicableRate} هزار تومان`; document.getElementById('finalPriceTxt').innerText = finalAmountToPay.toLocaleString();
-    document.getElementById('discountNotice').innerText = discountMsg;
+    document.getElementById('newDaysCountTxt').innerText = `${newSelectedDays} روز`; 
+    document.getElementById('pastDaysCountTxt').innerText = `${activeBookedDays} روز`;
+    document.getElementById('rateAppliedTxt').innerText = `${applicableRate} هزار تومان`; 
+    document.getElementById('finalPriceTxt').innerText = finalAmountToPay.toLocaleString();
+    
+    let noticeEl = document.getElementById('discountNotice');
+    if(noticeEl) noticeEl.innerHTML = discountMsg;
 
     let walletBadge = document.getElementById('walletStatusBadge');
-    if (selectedPayMethod === 'wallet' && currentUser.wallet_balance < finalAmountToPay) { walletBadge.style.color = 'var(--danger)'; walletBadge.innerText = 'موجودی ناکافی'; } 
-    else { walletBadge.style.color = 'var(--text-muted)'; walletBadge.innerText = `موجودی: ${Number(currentUser.wallet_balance || 0).toLocaleString()}`; }
+    if (walletBadge) {
+        if (selectedPayMethod === 'wallet' && currentUser.wallet_balance < finalAmountToPay) { 
+            walletBadge.style.color = 'var(--danger)'; walletBadge.innerText = 'موجودی ناکافی'; 
+        } else { 
+            walletBadge.style.color = 'var(--text-muted)'; walletBadge.innerText = `موجودی: ${Number(currentUser.wallet_balance || 0).toLocaleString()}`; 
+        }
+    }
     validateSubmitButton();
 }
 
@@ -997,27 +1043,24 @@ async function applyDiscount() {
     const code = document.getElementById('discountCode').value.trim().toUpperCase();
     if (!code) return alert('لطفاً کد تخفیف را وارد کنید.');
 
+    let newSelectedDays = selectedNewDates.length; 
+    if(newSelectedDays === 0) return alert('ابتدا روزهای مورد نظر خود را از تقویم انتخاب کنید.');
+
     document.getElementById('mainLoader').style.display = 'flex';
     
-    // محاسبه مبلغ پایه روزانه
     let activeBookedDays = globalUserPastReservations.length; 
-    let newSelectedDays = selectedNewDates.length; 
     let totalD = activeBookedDays + newSelectedDays;
     let applicableRate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
-    let totalBase = (newSelectedDays * applicableRate) * 1000; // تبدیل به تومان
+    let totalBase = (newSelectedDays * applicableRate) * 1000; 
     
     const result = await validateAndApplyDiscount(code, 'daily', totalBase);
-    
     document.getElementById('mainLoader').style.display = 'none';
 
     if (result.success) {
         appliedDiscountCode = code;
-        discountAmount = result.discountAmount; // اعمال تخفیف روی متغیر گلوبال روزانه
-        
-        // در صورت نیاز به ذخیره ID برای آپدیت بعد از پرداخت
+        discountAmount = result.discountAmount; // ست کردن مبلغ تخفیف در گلوبال
         window.activeDailyPromoId = result.promoId; 
-        
-        updatePricing(); // محاسبه مجدد و به‌روزرسانی فاکتور روزانه
+        updatePricing(); 
         alert('✅ کد تخفیف با موفقیت اعمال شد.');
     } else {
         alert(result.msg);
@@ -1054,14 +1097,34 @@ function validateSubmitButton() {
 }
 
 async function submitBooking() {
-    document.getElementById('mainLoader').style.display = 'flex'; document.getElementById('loaderTxt').innerText = 'در حال ثبت رزرو...';
+    document.getElementById('mainLoader').style.display = 'flex'; 
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ثبت رزرو...';
     try {
+        let dbSelectedDates = selectedNewDates.map(d => d.replace(/\//g, '-'));
+        
+        // چک کردن مجدد ظرفیت قبل از رزرو قطعی
+        const { data: capCheck } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbSelectedDates);
+        let isConflict = false;
+        if(capCheck) capCheck.forEach(c => { if(c.available_capacity <= 0) isConflict = true; });
+        if (isConflict) { 
+            document.getElementById('mainLoader').style.display = 'none'; 
+            alert('⚠️ ظرفیت یکی از روزها همین الان توسط شخص دیگری پر شد!'); 
+            await initializeBookingEngine(); 
+            return; 
+        }
+
         const { error } = await supabaseClient.from('pan_reservations').insert([{
-            phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(selectedNewDates),
+            phone_number: currentUser.phone_number, reserved_dates: JSON.stringify(dbSelectedDates),
             total_amount: finalAmountToPay, pay_method: selectedPayMethod, receipt_base64: selectedPayMethod === 'card' ? base64Image : null,
             status: 'pending'
         }]);
         if (error) throw error;
+
+        // کسر ظرفیت روزهای انتخاب شده از دیتابیس
+        for (let dateStr of selectedNewDates) {
+            let currentAvailable = dailyCapacities[dateStr]?.available_capacity ?? 4; 
+            await supabaseClient.from('pan_daily_capacity').upsert({ target_date: dateStr.replace(/\//g, '-'), available_capacity: currentAvailable - 1 });
+        }
 
         let isFirstEverDaily = (globalUserPastReservations.length === 0);
         if (isFirstEverDaily && currentUser.invited_by) await rewardReferrer(currentUser.invited_by, 50000, `یکی از دوستان شما با کد معرف شما اولین رزرو روزانه خود را ثبت کرد. مبلغ ۵۰,۰۰۰ تومان به کیف پول شما اضافه شد!`);
@@ -1074,7 +1137,6 @@ async function submitBooking() {
         alert('🎉 رزرو شما با موفقیت قطعی شد.'); window.location.reload(); 
     } catch (e) { document.getElementById('mainLoader').style.display = 'none'; alert('خطای ارتباط با دیتابیس.'); }
 }
-
 
 // ==========================================
 // ❌ توابع لغو قرارداد
