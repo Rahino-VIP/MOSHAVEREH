@@ -644,8 +644,15 @@ function openRenewal() {
     monState.txType = 'renew';
     monState.planType = pType;
     monState.basePrice = activePlanData.base_price;
-    monState.startDate = activePansion.end_date; 
-    monState.renewRemainDays = remainDays;
+    
+    // اگر قرارداد تمام شده بود، تمدید از امروز شروع می‌شود، در غیر این صورت از روز پایان قرارداد
+    if (remainDays <= 0) {
+        monState.startDate = getShamsiDateSafe(new Date());
+        monState.renewRemainDays = 0;
+    } else {
+        monState.startDate = activePansion.end_date;
+        monState.renewRemainDays = remainDays;
+    }
 
     let checkoutBox = document.getElementById('bookingCheckoutSection');
     if(checkoutBox) document.getElementById('view-monthly').appendChild(checkoutBox);
@@ -659,7 +666,6 @@ function openRenewal() {
     calculateMonthly();
     setTimeout(() => { if (checkoutBox) checkoutBox.scrollIntoView({ behavior: 'smooth' }); }, 100);
 }
-
 function selectNewPlan(type, price) {
     monState.txType = 'new'; 
     
@@ -753,7 +759,7 @@ function calculateMonthly() {
 
     finalPrice = Math.max(0, finalPrice);
 
-    // 🚀 گرد کردن منصفانه مبلغ نهایی (Math.round) تا به ضرر شما تمام نشود
+    // گرد کردن منصفانه مبلغ نهایی (Math.round) تا به ضرر شما تمام نشود
     let originalFinal = finalPrice;
     finalPrice = Math.round(finalPrice / 50000) * 50000; 
     let roundingDiff = originalFinal - finalPrice; 
@@ -773,17 +779,17 @@ function calculateMonthly() {
     let listHtml = '';
     
     if (monState.payPlan === 'monthly' && totalBase >= 3400000) {
-        // 👇 اینجا فقط تاریخ انتخاب شده را می‌‌گیریم و دیگر هیچ روز اضافه‌ای به آن نمی‌بندیم
         let baseInstDate = monState.startDate || getShamsiDateSafe(new Date()); 
         
-        if (monState.txType === 'renew' && monState.renewRemainDays) {
-            baseInstDate = calcSimpleShamsi(baseInstDate, 0, monState.renewRemainDays);
+        // 🚀 مشکل پرش تاریخ تمدید اینجا حل شد. برای تمدید هیچ روز اضافه‌ای نمی‌بندیم.
+        if (monState.txType !== 'renew' && monState.startDateIndex > 0) {
+            baseInstDate = calcSimpleShamsi(baseInstDate, 0, monState.startDateIndex);
         }
         
-        // تقسیم اقساط به مضرب‌های تمیز 50 هزار تومانی (Math.ceil برای پیش‌پرداخت)
+        // تقسیم اقساط به مضرب‌های تمیز 50 هزار تومانی
         if (duration === 1) {
             let upfrontRounded = Math.ceil((finalPrice * 0.50) / 50000) * 50000; 
-            let remaining = finalPrice - upfrontRounded; // خودکار رند درمی‌آید
+            let remaining = finalPrice - upfrontRounded; 
             monFinance.upfront = upfrontRounded;
             let d1 = calcSimpleShamsi(baseInstDate, 0, 10); 
             monFinance.installments.push({ due_date: d1, amount: remaining, installment_number: 1 });
@@ -792,14 +798,14 @@ function calculateMonthly() {
             let upfrontRounded = Math.ceil((finalPrice * 0.50) / 50000) * 50000; 
             let remaining = finalPrice - upfrontRounded; 
             monFinance.upfront = upfrontRounded;
-            let d1 = calcSimpleShamsi(baseInstDate, 1, 0); // دقیقاً یک ماه بعد
+            let d1 = calcSimpleShamsi(baseInstDate, 1, 0); 
             monFinance.installments.push({ due_date: d1, amount: remaining, installment_number: 1 });
             listHtml = `<li><strong style="color:var(--danger)">پیش‌پرداخت نقد:</strong> ${upfrontRounded.toLocaleString()} تومان</li><li>موعد قسط اول (${remaining.toLocaleString()} تومان): <b>${d1.replace(/-/g, '/')}</b> (یک ماه پس از شروع)</li>`;
         } else if (duration === 6) {
             let upfrontRounded = Math.ceil((finalPrice * 0.25) / 50000) * 50000; 
             monFinance.upfront = upfrontRounded;
             let checkAmt = Math.round((finalPrice * 0.25) / 50000) * 50000; 
-            let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 2); // قسط آخر خودکار رند است
+            let lastCheckAmt = finalPrice - upfrontRounded - (checkAmt * 2); 
             let d1 = calcSimpleShamsi(baseInstDate, 1, 0); 
             let d2 = calcSimpleShamsi(baseInstDate, 2, 0); 
             let d3 = calcSimpleShamsi(baseInstDate, 4, 0); 
@@ -830,6 +836,34 @@ function calculateMonthly() {
     document.getElementById('monLblUpfront').innerText = monFinance.upfront.toLocaleString() + ' تومان';
     let payNowBig = document.getElementById('monLblPayNowBig'); if(payNowBig) payNowBig.innerText = monFinance.upfront.toLocaleString() + ' تومان';
     document.getElementById('monInstList').innerHTML = `<ul style="list-style:none; padding:0; margin:0; line-height: 2;">${listHtml}</ul>`;
+
+    // 🚀 نمایش هوشمند شماره شبا برای مبالغ بالای 15 میلیون تومان
+    let ibanBox = document.getElementById('monIbanBox');
+    if (ibanBox) {
+        if (monFinance.upfront >= 15000000) ibanBox.style.display = 'block';
+        else ibanBox.style.display = 'none';
+    }
+
+    let wBal = Number(currentUser.wallet_balance || 0);
+    let walletBadge = document.getElementById('monWalletStatusBadge');
+    if (walletBadge) {
+        if (monState.payMethod === 'wallet' && wBal < monFinance.upfront) {
+            walletBadge.style.color = 'var(--danger)'; walletBadge.innerText = 'موجودی ناکافی';
+        } else {
+            walletBadge.style.color = 'var(--text-muted)'; 
+            walletBadge.innerText = `موجودی: ${wBal.toLocaleString()} | کسر: ${monFinance.upfront.toLocaleString()}`;
+        }
+    }
+
+    let payCardBox = document.getElementById('monPayCardBox');
+    let uploadBox = document.getElementById('monUploadBox');
+    if (monState.payMethod === 'wallet') {
+        if(payCardBox) payCardBox.style.display = 'none';
+        if(uploadBox) uploadBox.style.display = 'none';
+    } else {
+        if(payCardBox) payCardBox.style.display = 'block';
+        if(uploadBox) uploadBox.style.display = 'flex';
+    }
 
     validateMonSubmit();
 }
@@ -910,11 +944,9 @@ async function submitMonthly() {
     
     let duration = monState.duration === 'konkur' ? monState.konkurMonths : parseInt(monState.duration);
     let baseDateStr = monState.startDate || getShamsiDateSafe(new Date()); 
-    // 🚀 تاریخ انقضا بر اساس موتور شمسی (مثلاً ۱۰ مهر -> ۹ آبان)
     let endDateStr = calcSimpleShamsi(baseDateStr, duration, -1); 
 
     try {
-        // ۱. ساخت فاکتور کلی
         let invDetails = `طرح: ${monState.planType} | مدت: ${duration} ماه | شروع: ${baseDateStr}`;
         let payMethodDB = monState.payMethod === 'wallet' ? 'wallet' : (monState.payPlan === 'cash' ? 'cash' : 'monthly');
         
@@ -931,9 +963,8 @@ async function submitMonthly() {
         }]).select('id').single();
         if (invError) throw invError;
 
-        // ۲. ساخت اشتراک متصل به فاکتور (ارسال invoice_id)
         const { error: subError } = await supabaseClient.from('pan_monthly_subs').insert([{
-            invoice_id: invData.id, // 👈 اتصال کلیدی
+            invoice_id: invData.id, 
             phone_number: currentUser.phone_number, 
             plan_type: monState.planType, 
             start_date: baseDateStr, 
@@ -942,10 +973,9 @@ async function submitMonthly() {
         }]);
         if (subError) throw subError;
 
-        // ۳. ساخت اقساط متصل به فاکتور
         if (monFinance.installments.length > 0 && invData) {
             let instInserts = monFinance.installments.map(inst => ({ 
-                invoice_id: invData.id, // 👈 اتصال کلیدی
+                invoice_id: invData.id, 
                 phone_number: currentUser.phone_number, 
                 amount: inst.amount, 
                 due_date: inst.due_date, 
@@ -955,7 +985,6 @@ async function submitMonthly() {
             await supabaseClient.from('pan_installments').insert(instInserts);
         }
 
-        // سایر عملیات (کسر کیف پول، ظرفیت، و شلیک رسید به بله)
         if (monState.payMethod === 'wallet') {
             await supabaseClient.from('users').update({ wallet_balance: Number(currentUser.wallet_balance || 0) - monFinance.upfront }).eq('phone_number', currentUser.phone_number);
         }
@@ -963,13 +992,22 @@ async function submitMonthly() {
         const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', monState.planType).single();
         if (srv && srv.capacity > 0) await supabaseClient.from('services').update({ capacity: srv.capacity - 1 }).eq('type', monState.planType);
 
+        if (currentMonPromoData) {
+            await supabaseClient.from('promos_codes').update({ used_count: currentMonPromoData.used_count + 1 }).eq('id', currentMonPromoData.id);
+        }
+
+        // 🚀 ارسال بی‌نقص رسید به بله (بدون هدرهای محدودکننده CORS)
         const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
         const payTypeFa = monState.payMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
         const payload = {
             text: `🚨 ثبت‌نام/تمدید ماهانه 🚨\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n📦 طرح: ${monState.planType} (${duration} ماهه)\n💰 پرداختی الان: ${monFinance.upfront.toLocaleString()} تومان\n💳 روش: ${payTypeFa}`,
             image_base64: monState.payMethod === 'card' ? monState.receiptBase64 : ""
         };
-        fetch(gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(err => console.log(err));
+        fetch(gasUrl, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(payload) 
+        }).catch(err => console.log(err));
 
         document.getElementById('mainLoader').style.display = 'none';
         alert('🎉 قرارداد شما با موفقیت ثبت و فعال شد.'); 
