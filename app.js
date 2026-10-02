@@ -436,6 +436,23 @@ async function loadRealDashboardData(phone) {
         globalUserInstallments = installments; 
         let availablePlans = servicesRes.data || [];
 
+        let pansionData = pansionRes.data || [];
+        let pansion = null;
+        
+        if (pansionData.length > 0) {
+            // مرتب‌سازی قراردادها از قدیمی به جدید بر اساس تاریخ شروع
+            let subs = pansionData.sort((a, b) => a.start_date.localeCompare(b.start_date));
+            let firstSub = subs[0]; // قرارداد پایه
+            let lastSub = subs[subs.length - 1]; // آخرین تمدید (دورترین تاریخ انقضا)
+
+            pansion = {
+                ...firstSub,
+                service_type: firstSub.plan_type,
+                end_date: lastSub.end_date, // 🚀 نمایش تاریخ انقضای آخرین تمدید در داشبورد
+                all_subs: subs // نگهداری تمام قراردادهای متصل برای زمان لغو
+            };
+        }
+
         activePansion = pansion;       
         availablePansionPlans = availablePlans;
 
@@ -1295,76 +1312,100 @@ function calcShamsiPassedDays(startDateStr) {
     return todayDays - startDays; 
 }
 
-function openCancellation() {
-    if (!activePansion) return;
+async function openCancellation() {
+    if (!activePansion || !activePansion.all_subs) return;
     
-    let pType = activePansion.plan_type || activePansion.service_type;
-    let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
-    let basePrice = activePlanData.base_price;
-    
-    // ۱. دریافت تعداد روزهای گذشته
-    let rawDiff = calcShamsiPassedDays(activePansion.start_date);
-    
-    let deduction = 0;
-    let deductionText = '';
-    
-    // ۲. منطق هوشمند جریمه لغو
-    if (rawDiff < 0) {
-        deduction = 0;
-        deductionText = `<span style="color: var(--success);">۰ تومان (قرارداد هنوز شروع نشده)</span>`;
-    } else if (rawDiff <= 3) {
-        let daysToCharge = rawDiff === 0 ? 1 : rawDiff; 
-        deduction = daysToCharge * 200000;
-        deductionText = `${deduction.toLocaleString()} تومان (روزی ۲۰۰ هزار تومان برای ${daysToCharge} روز)`;
-    } else {
-        let monthsUsed = Math.ceil(rawDiff / 30);
-        deduction = monthsUsed * basePrice;
-        deductionText = `${deduction.toLocaleString()} تومان (${monthsUsed} ماه کامل بدون تخفیف)`;
-    }
-    
-    // ۳. محاسبه فوق‌دقیق پرداختی‌ها (پیش‌پرداخت + اقساط)
-    let totalPaid = Number(activePansion.paid_upfront || 0); // مبلغ پیش‌پرداخت
-    let paidInstSum = 0; // مجموع اقساط پرداخت شده
-    
-    if (globalUserInstallments && globalUserInstallments.length > 0) {
-        // جمع زدن اقساطی که پرداخت یا تایید شده‌اند
-        paidInstSum = globalUserInstallments
-            .filter(i => i.status === 'paid' || i.status === 'approved')
-            .reduce((sum, i) => sum + Number(i.amount || 0), 0);
-            
-        totalPaid += paidInstSum;
-    }
-    
-    // نمایش در کنسول مرورگر برای اطمینان شما (با زدن F12 قابل مشاهده است)
-    console.log("پیش‌پرداخت:", Number(activePansion.paid_amount || 0));
-    console.log("جمع اقساط واریزی:", paidInstSum);
-    console.log("مجموع کل پولی که کاربر داده:", totalPaid);
-    
-    let refund = totalPaid - deduction;
-    let refundText = refund > 0 ? `${refund.toLocaleString()} تومان` : `0 تومان (بدهی: ${Math.abs(refund).toLocaleString()} تومان)`;
+    document.getElementById('mainLoader').style.display = 'flex';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال محاسبه دقیق حساب‌ها...';
 
-    // ۴. رابط کاربری 
-    let html = `
-        <div style="background: rgba(15, 23, 42, 0.7); padding: 20px; border-radius: 14px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: inset 0 2px 15px rgba(0,0,0,0.3);">
-            <div class="price-row" style="margin-bottom: 12px;"><span>شروع قرارداد:</span><strong style="color:var(--text-main);">${activePansion.start_date.replace(/-/g, '/')}</strong></div>
-            <div class="price-row" style="margin-bottom: 12px;"><span>روزهای گذشته:</span><strong style="color:var(--text-main);">${rawDiff < 0 ? 0 : rawDiff} روز</strong></div>
-            <div class="price-row" style="margin-bottom: 12px;"><span>مبلغ کسر شده:</span><strong style="color:var(--warning);">${deductionText}</strong></div>
+    try {
+        let totalPaid = 0;
+        let totalDeduction = 0;
+        let deductionDetailsHTML = '';
+
+        // حلقه بررسی تک‌تک قراردادهای متصل (جاری و تمدیدهای آینده)
+        for (let sub of activePansion.all_subs) {
+            let pType = sub.plan_type;
+            let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
+            let basePrice = activePlanData.base_price;
+
+            // ۱. استخراج پیش‌پرداخت از جدول فاکتور
+            const { data: inv } = await supabaseClient.from('pan_invoices').select('paid_upfront').eq('id', sub.invoice_id).single();
+            let paidUpfront = inv ? Number(inv.paid_upfront || 0) : 0;
+
+            // ۲. استخراج مجموع اقساط پرداخت شده از جدول اقساط متصل به همین فاکتور
+            const { data: insts } = await supabaseClient.from('pan_installments')
+                .select('amount')
+                .eq('invoice_id', sub.invoice_id)
+                .in('status', ['paid', 'approved']);
             
-            <hr style="border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.2); margin: 15px 0;">
-            
-            <div class="price-row" style="margin-bottom: 12px;"><span>پرداختی شما تاکنون:</span><strong style="color:var(--success);">${totalPaid.toLocaleString()} تومان</strong></div>
-            <div class="price-row" style="margin-top: 15px; font-size: 15px; background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                <span>مبلغ قابل عودت:</span><strong style="color:var(--primary); direction:ltr;">${refundText}</strong>
+            let paidInstSum = 0;
+            if (insts) paidInstSum = insts.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+            let subTotalPaid = paidUpfront + paidInstSum;
+            totalPaid += subTotalPaid;
+
+            // ۳. محاسبه هوشمند جریمه فقط برای همان قرارداد
+            let rawDiff = calcShamsiPassedDays(sub.start_date);
+            let subDeduction = 0;
+            let deductionText = '';
+
+            if (rawDiff < 0) {
+                // قرارداد آینده (تمدید): بدون جریمه
+                subDeduction = 0;
+                deductionText = `<span style="color: var(--success);">شروع نشده (۰ تومان کسری)</span>`;
+            } else if (rawDiff <= 3) {
+                let daysToCharge = rawDiff === 0 ? 1 : rawDiff;
+                subDeduction = daysToCharge * 200000;
+                deductionText = `${subDeduction.toLocaleString()} تومان (استفاده ${daysToCharge} روزه)`;
+            } else {
+                let monthsUsed = Math.ceil(rawDiff / 30);
+                subDeduction = monthsUsed * basePrice;
+                deductionText = `${subDeduction.toLocaleString()} تومان (استفاده ${monthsUsed} ماهه)`;
+            }
+            totalDeduction += subDeduction;
+
+            deductionDetailsHTML += `
+                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px dashed var(--glass-border);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px; font-size: 12px;">
+                        <span style="color: var(--text-muted);">شروع: ${sub.start_date.replace(/-/g,'/')}</span>
+                        <strong style="color: var(--text-main);">گذشته: ${rawDiff < 0 ? 0 : rawDiff} روز</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size: 13px;">
+                        <span>پرداختی: <b style="color:var(--success)">${subTotalPaid.toLocaleString()}</b></span>
+                        <span>کسری: <b style="color:var(--warning)">${subDeduction.toLocaleString()}</b></span>
+                    </div>
+                </div>
+            `;
+        }
+
+        let refund = totalPaid - totalDeduction;
+        let refundText = refund > 0 ? `${refund.toLocaleString()} تومان` : `0 تومان (بدهی: ${Math.abs(refund).toLocaleString()} تومان)`;
+
+        let html = `
+            <div style="margin-bottom: 15px;">
+                ${deductionDetailsHTML}
             </div>
-        </div>
+            <div style="background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 14px; border: 1px solid var(--glass-border);">
+                <div class="price-row" style="margin-bottom: 12px; font-size:13px;"><span>جمع کل واریزی شما:</span><strong style="color:var(--success);">${totalPaid.toLocaleString()} تومان</strong></div>
+                <div class="price-row" style="margin-bottom: 12px; font-size:13px;"><span>جمع کل مبالغ کسر شده:</span><strong style="color:var(--warning);">${totalDeduction.toLocaleString()} تومان</strong></div>
+                <div class="price-row" style="margin-top: 15px; font-size: 14px; background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 12px; border: 1px dashed var(--primary);">
+                    <span>مبلغ نهایی قابل عودت:</span><strong style="color:var(--primary); direction:ltr; font-size: 16px;">${refundText}</strong>
+                </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); text-align:justify; line-height: 1.8; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 15px;">
+                <strong style="color:var(--danger);">⚠️ توجه:</strong> پس از تایید مدیریت، میز کاملاً آزاد شده و مبلغ محاسبه شده به کیف پول شما واریز خواهد شد.
+            </div>
+        `;
         
-        <div style="font-size:11.5px; color:var(--text-main); text-align:justify; line-height: 1.8; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
-            <strong style="color:var(--danger);">⚠️ توجه:</strong> پس از تایید درخواست توسط مدیریت، میز شما آزاد شده و مبلغ محاسبه شده در کیف پول شما شارژ خواهد شد. مبالغ کسر شده بعد از ۳ روز حضور، به صورت ماهانه و بدون احتساب تخفیف لحاظ می‌گردند.
-        </div>
-    `;
-    
-    document.getElementById('cancelModalBody').innerHTML = html;
-    document.getElementById('cancelModal').style.display = 'flex';
+        document.getElementById('cancelModalBody').innerHTML = html;
+        document.getElementById('mainLoader').style.display = 'none';
+        document.getElementById('cancelModal').style.display = 'flex';
+    } catch(e) {
+        console.error(e);
+        document.getElementById('mainLoader').style.display = 'none';
+        alert('خطا در ارتباط با دیتابیس برای محاسبه حساب‌ها.');
+    }
 }
 
 function closeCancelModal() {
@@ -1373,32 +1414,46 @@ function closeCancelModal() {
 
 async function submitCancellation() {
     document.getElementById('mainLoader').style.display = 'flex';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ثبت درخواست لغو...';
+
     try {
-        // وضعیت قرارداد را به لغوشده تغییر می‌دهیم
-        const { error } = await supabaseClient.from('pan_monthly_subs')
-            .update({ status: 'canceled' }) 
-            .eq('id', activePansion.id);
+        // ۱. استخراج تمام آیدی‌های اشتراک‌ها و فاکتورهای متصل
+        let subIds = activePansion.all_subs.map(s => s.id);
+        let invoiceIds = activePansion.all_subs.map(s => s.invoice_id).filter(id => id);
+
+        // ۲. ابطال تمامی اشتراک‌های ماهانه
+        await supabaseClient.from('pan_monthly_subs')
+            .update({ status: 'canceled' })
+            .in('id', subIds);
+
+        // ۳. ابطال فاکتورهای متصل (جهت شفافیت مالی)
+        if (invoiceIds.length > 0) {
+            await supabaseClient.from('pan_invoices')
+                .update({ status: 'canceled' })
+                .in('id', invoiceIds);
+        }
             
-        // ظرفیت طرح را یک واحد افزایش می‌دهیم تا میز آزاد شود
+        // ۴. آزادسازی فقط ۱ میز (صرف نظر از تعداد تمدیدها)
         let pType = activePansion.plan_type || activePansion.service_type;
         const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', pType).single();
         if (srv) {
             await supabaseClient.from('services').update({ capacity: srv.capacity + 1 }).eq('type', pType);
         }
         
-        // ارسال پیام سیستمی به کاربر
+        // ۵. ارسال پیام اطلاع‌رسانی
         await supabaseClient.from('messages').insert([{
             phone_number: currentUser.phone_number, 
             title: '❌ درخواست لغو قرارداد',
-            body: 'درخواست لغو قرارداد شما با موفقیت در سیستم ثبت شد. میز شما آزاد گردید و مبلغ محاسبه شده پس از بررسی مدیریت به کیف پول شما واریز خواهد شد.', 
+            body: 'درخواست لغو قراردادهای شما در سیستم ثبت شد. میز شما آزاد گردید و مبلغ قابل عودت پس از بررسی مدیریت به کیف پول شما واریز خواهد شد.', 
             is_read: false, 
             created_at: new Date().toISOString()
         }]);
 
         document.getElementById('mainLoader').style.display = 'none';
-        alert('درخواست لغو با موفقیت ثبت شد.');
+        alert('درخواست لغو با موفقیت در سیستم ثبت شد.');
         window.location.reload();
     } catch(e) {
+        console.error(e);
         document.getElementById('mainLoader').style.display = 'none';
         alert('خطا در ثبت درخواست لغو.');
     }
