@@ -707,43 +707,45 @@
         </div>
     </div>
     
-    <div class="modal-overlay" id="installmentModal" style="display:none; justify-content:center; align-items:center; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); padding: 20px; z-index: 9999;">
-    <div class="container" style="max-width: 420px; padding: 25px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow);">
-        <h3 style="text-align: center; color: var(--accent); margin-bottom: 20px; font-weight: 900;">پرداخت قسط</h3>
+    <!-- مودال پرداخت اقساط (شیشه‌ای و هماهنگ با تم) -->
+<div class="modal-overlay" id="installmentModal" style="display:none; justify-content:center; align-items:center; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 20px; z-index: 9999;">
+    <div class="glass-panel" style="width: 100%; max-width: 420px; padding: 30px 25px; border-radius: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
         
-        <div style="font-size: 18px; text-align: center; font-weight: bold; margin-bottom: 20px; color: var(--text-main);">
-            مبلغ قابل پرداخت: <span id="instPayAmount" style="color: var(--success);">0</span>
+        <h3 style="text-align: center; color: var(--accent); margin-bottom: 20px; font-weight: 900; letter-spacing: -0.5px;">پرداخت قسط</h3>
+        
+        <div style="font-size: 18px; text-align: center; font-weight: bold; margin-bottom: 25px; color: var(--text-main);">
+            مبلغ قابل پرداخت: <span id="instPayAmount" style="color: var(--success); font-size: 22px;">0</span>
         </div>
 
-        <!-- دکمه‌های انتخاب روش پرداخت (بدون رنگ هاردکد شده) -->
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button id="btnInstCard" class="btn btn-primary" style="flex:1; border-radius: 12px; padding: 12px;" onclick="selectInstPayMethod('card')">💳 کارت به کارت</button>
-            <button id="btnInstWallet" class="btn btn-outline" style="flex:1; border-radius: 12px; padding: 12px;" onclick="selectInstPayMethod('wallet')">💰 کیف پول</button>
+        <!-- دکمه‌های انتخاب روش پرداخت -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+            <button id="btnInstCard" class="btn-action primary" style="flex:1; border-radius: 16px; padding: 14px;" onclick="selectInstPayMethod('card')">💳 کارت به کارت</button>
+            <button id="btnInstWallet" class="btn-action" style="flex:1; border-radius: 16px; padding: 14px;" onclick="selectInstPayMethod('wallet')">💰 کیف پول</button>
         </div>
 
         <!-- پیام وضعیت کیف پول -->
-        <div id="instWalletStatusBadge" style="text-align: center; font-size: 12px; margin-bottom: 15px; font-weight: bold;"></div>
+        <div id="instWalletStatusBadge" style="text-align: center; font-size: 12.5px; margin-bottom: 15px; font-weight: bold; line-height: 1.6;"></div>
 
         <!-- بخش اطلاعات کارت و آپلود عکس -->
         <div id="instCardSection">
-            <div class="payment-info" style="padding: 15px; background: var(--bg-color); border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px dashed var(--accent);">
-                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">لطفاً مبلغ قسط را به کارت زیر واریز کنید:</div>
-                <div class="card-number-text" style="font-size: 22px; font-family: 'Vazirmatn', sans-serif; letter-spacing: 3px; font-weight: 900; color: var(--text-main); margin-bottom: 10px; direction: ltr; display: inline-block;">6219-8618-1038-0484</div>
-                <div style="font-size: 12px; font-weight: bold; margin-bottom: 15px; color: var(--text-main);">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
-                <button class="btn btn-outline" style="padding: 8px 15px; font-size: 12px; width: auto; margin: 0 auto; border-radius: 10px;" onclick="copyCardInst(this)">📋 کپی شماره کارت</button>
+            <div style="background: var(--glass-highlight); padding: 20px 15px; border-radius: 20px; text-align: center; margin-bottom: 20px; border: 1px dashed var(--accent); box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold;">لطفاً مبلغ قسط را به کارت زیر واریز کنید:</div>
+                <div class="card-number-text" style="font-size: 24px; font-family: 'Vazirmatn', sans-serif; letter-spacing: 4px; font-weight: 900; color: var(--text-main); margin-bottom: 12px; direction: ltr; display: inline-block;">6219-8618-1038-0484</div>
+                <div style="font-size: 13px; font-weight: bold; margin-bottom: 18px; color: var(--text-main);">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
+                <button class="btn-action" style="padding: 10px 20px; font-size: 12px; width: auto; margin: 0 auto; border-radius: 14px;" onclick="copyCardInst(this)">📋 کپی شماره کارت</button>
             </div>
             
-            <label class="file-upload" id="instUploadBox" style="padding: 20px 10px; border: 2px dashed var(--border); border-radius: 12px; background: var(--bg-color); text-align: center; cursor: pointer; display: block;">
-                <div style="font-size: 24px; margin-bottom: 8px;">📸</div>
-                <div style="font-size: 12px; color: var(--text-main); font-weight: bold;" id="instUploadText">آپلود رسید واریز</div>
+            <label class="file-upload" id="instUploadBox" style="padding: 25px 10px; border: 2px dashed var(--glass-border); border-radius: 20px; background: var(--glass-highlight); text-align: center; cursor: pointer; display: block; transition: var(--transition);">
+                <div style="font-size: 28px; margin-bottom: 10px;">📸</div>
+                <div style="font-size: 13px; color: var(--text-main); font-weight: bold;" id="instUploadText">آپلود رسید واریز</div>
                 <input type="file" accept="image/*" onchange="handleInstFileSelect(event)" style="display: none;">
             </label>
         </div>
 
         <!-- دکمه‌های عملیاتی -->
-        <div style="display: flex; gap: 10px; margin-top: 25px;">
-            <button class="btn btn-primary" id="btnSubmitInst" style="flex: 2; border-radius: 12px;" onclick="submitInstallment()" disabled>تایید و پرداخت 🔒</button>
-            <button class="btn btn-outline" style="flex: 1; border-radius: 12px;" onclick="closeInstallmentModal()">انصراف</button>
+        <div style="display: flex; gap: 12px; margin-top: 30px;">
+            <button class="btn-submit" id="btnSubmitInst" style="flex: 2; padding: 16px; border-radius: 16px; box-shadow: 0 8px 20px var(--primary-fade);" onclick="submitInstallment()" disabled>تایید و پرداخت 🔒</button>
+            <button class="btn-action" style="flex: 1; padding: 16px; border-radius: 16px;" onclick="closeInstallmentModal()">انصراف</button>
         </div>
     </div>
 </div>
