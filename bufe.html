@@ -538,42 +538,53 @@
         // ==========================================
 
         async function loginSuccess() {
-            localStorage.setItem('buffet_user_phone', activeUser.phone_number);
-            const overlay = document.getElementById('welcomeOverlay');
-            document.getElementById('welcomeName').innerText = `خوش آمدید!`;
-            overlay.style.display = 'flex';
+    localStorage.setItem('buffet_user_phone', activeUser.phone_number);
+    const overlay = document.getElementById('welcomeOverlay');
+    document.getElementById('welcomeName').innerText = `خوش آمدید!`;
+    overlay.style.display = 'flex';
 
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'get_init_data', phone_number: activeUser.phone_number })
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    storeProducts = data.products || [];
-                    userWalletBalance = data.wallet_balance || 0;
-                    activeUser.full_name = data.full_name;
-                    userFavorites = data.favorites || [];
-                    featuredProducts = data.featured_products || [];
-                    document.getElementById('welcomeName').innerText = `سلام ${data.full_name.split(' ')[0]} عزیز!`;
-                    
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.getElementById('view-auth').classList.remove('active');
-                        document.getElementById('bottomNav').style.display = 'flex';
-                        switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-                        renderStore();
-                        updateWalletLabels();
-                    }, 1500);
-                } else { throw new Error(data.error); }
-            } catch (err) {
-                overlay.style.display = 'none';
-                alert('خطا در دریافت اطلاعات بوفه. اینترنت خود را بررسی کنید.');
-                logoutApp();
-            }
+    try {
+        // ۱. دریافت مستقیم اطلاعات کاربر از جدول اصلی
+        const { data: userData } = await supabaseClient.from('users').select('wallet_balance, full_name').eq('phone_number', activeUser.phone_number).single();
+        userWalletBalance = userData ? Number(userData.wallet_balance || 0) : 0;
+        activeUser.full_name = userData ? userData.full_name : activeUser.phone_number;
+        document.getElementById('welcomeName').innerText = `سلام ${activeUser.full_name.split(' ')[0]} عزیز!`;
+
+        // ۲. دریافت مستقیم محصولات بوفه
+        const { data: prods } = await supabaseClient.from('buffet_products').select('*').eq('is_active', true);
+        storeProducts = prods || [];
+
+        // ۳. بررسی سفارشات قبلی برای پیدا کردن علاقه‌مندی‌ها
+        const { data: orders } = await supabaseClient.from('buffet_orders').select('items').eq('phone_number', activeUser.phone_number);
+        let itemFreq = {};
+        if (orders) {
+            orders.forEach(o => {
+                try { JSON.parse(o.items).forEach(i => { itemFreq[i.id] = (itemFreq[i.id] || 0) + i.qty; }) } catch(e){}
+            });
         }
+        userFavorites = Object.keys(itemFreq).sort((a,b) => itemFreq[b] - itemFreq[a]).slice(0, 3);
 
+        // ۴. فیلتر محصولات پیشنهاد ویژه امروز
+        let currentDay = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date()).toLowerCase();
+        let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric" });
+        featuredProducts = storeProducts.filter(p => 
+            p.featured_days && p.featured_days.toLowerCase().includes(currentDay) &&
+            p.featured_start <= currentTime && p.featured_end >= currentTime
+        );
+
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            document.getElementById('view-auth').classList.remove('active');
+            document.getElementById('bottomNav').style.display = 'flex';
+            switchView('view-store', document.querySelectorAll('.nav-item')[0]);
+            renderStore();
+            updateWalletLabels();
+        }, 1000);
+    } catch (err) {
+        overlay.style.display = 'none';
+        alert('خطا در دریافت اطلاعات دیتابیس بوفه.');
+    }
+}
         function updateWalletLabels() {
             document.getElementById('walletLabelBadge').innerText = `موجودی: ${userWalletBalance.toLocaleString()}`;
             const profileBal = document.getElementById('profileWalletBalance');
@@ -749,51 +760,42 @@
         }
 
         async function processCheckout() {
-            const btn = document.getElementById('btnCheckout');
-            const selectedMethod = document.querySelector('input[name="payMethod"]:checked').value;
-            let totalToPay = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const btn = document.getElementById('btnCheckout');
+    const selectedMethod = document.querySelector('input[name="payMethod"]:checked').value;
+    let totalToPay = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    
+    btn.innerText = 'در حال ثبت سفارش... ⏳'; 
+    btn.disabled = true;
+
+    try {
+        if (selectedMethod === 'wallet') {
+            if (totalToPay > (userWalletBalance + maxCredit)) throw new Error("موجودی ناکافی");
+            userWalletBalance -= totalToPay; // کسر آنی از متغیر محلی
             
-            btn.innerText = 'در حال ارتباط با سرور... ⏳';
-            btn.className = 'btn-checkout'; btn.disabled = true;
-
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'checkout',
-                        phone_number: activeUser.phone_number,
-                        cart: cart,
-                        pay_method: selectedMethod,
-                        total_amount: totalToPay
-                    })
-                });
-                const data = await response.json();
-                if(data.success) {
-                    if (data.new_balance !== undefined && data.new_balance !== null) {
-                        userWalletBalance = data.new_balance;
-                    }
-                    if (selectedMethod === 'wallet') {
-                        alert('✅ سفارش شما ثبت شد.\nپس از تایید توسط مراقب سالن، می‌توانید خرید خود را تحویل بگیرید.');
-                    } else {
-                        alert('✅ سفارش نقدی ثبت شد.\nلطفاً مبلغ را به مراقب تحویل داده و پس از تایید سیستم خرید را تحویل بگیرید.');
-                    }
-                    cart = []; updateBadge(); updateWalletLabels();
-                    
-                    const resInit = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_init_data', phone_number: activeUser.phone_number }) });
-                    const initData = await resInit.json();
-                    if(initData.success) {
-                        storeProducts = initData.products;
-                        featuredProducts = initData.featured_products || [];
-                    }
-                    
-                    renderStore(); switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-                } else { throw new Error(data.error); }
-            } catch(e) {
-                alert('خطا در ثبت سفارش. اینترنت خود را چک کنید.');
-                updateCartUI(); 
-            }
+            await supabaseClient.from('users').update({ wallet_balance: userWalletBalance }).eq('phone_number', activeUser.phone_number);
+            await supabaseClient.from('buffet_transactions').insert([{ phone_number: activeUser.phone_number, amount: -totalToPay, tx_type: 'purchase', status: 'approved' }]);
         }
+        
+        let orderStatus = selectedMethod === 'wallet' ? 'paid' : 'pending_cash';
+        await supabaseClient.from('buffet_orders').insert([{ phone_number: activeUser.phone_number, items: JSON.stringify(cart), total_price: totalToPay, payment_method: selectedMethod, status: orderStatus }]);
 
+        // 🚀 شلیک به بله (بدون توقف)
+        let mText = selectedMethod === 'wallet' ? "💳 پرداخت از کیف پول" : "💵 نقدی (منتظر دریافت پول)";
+        let iText = cart.map(i => `▫️ ${i.qty}x ${i.name}`).join("\n");
+        let payload = {
+            text: `🚨 سفارش جدید بوفه 🚨\n👤 خریدار: ${activeUser.full_name}\n💰 فاکتور: ${totalToPay.toLocaleString()} تومان\nوضعیت تسویه: ${mText}\n\n🛒 اقلام سفارش:\n${iText}`
+        };
+        fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e=>console.log(e));
+
+        alert(selectedMethod === 'wallet' ? '✅ سفارش شما ثبت شد.\nپس از تایید توسط مراقب سالن، می‌توانید خرید خود را تحویل بگیرید.' : '✅ سفارش نقدی ثبت شد.\nلطفاً مبلغ را به مراقب تحویل داده و خرید را بردارید.');
+        
+        cart = []; updateBadge(); updateWalletLabels(); renderStore(); 
+        switchView('view-store', document.querySelectorAll('.nav-item')[0]);
+    } catch(e) {
+        alert('خطا در ثبت سفارش: ' + e.message);
+        updateCartUI(); 
+    }
+}
         // ==========================================
         // 💳 پروفایل، شارژ و تاریخچه
         // ==========================================
@@ -878,108 +880,99 @@
         }
 
         async function submitChargeRequest() {
-            const amt = document.getElementById('inpChargeAmount').value;
-            const btn = document.getElementById('btnSubmitCharge');
-            btn.innerText = 'در حال ارسال... ⏳'; btn.disabled = true; btn.className = 'btn-checkout';
+    const amt = Number(document.getElementById('inpChargeAmount').value);
+    const btn = document.getElementById('btnSubmitCharge');
+    btn.innerText = 'در حال ارسال... ⏳'; btn.disabled = true;
 
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'charge_request', phone_number: activeUser.phone_number, amount: amt, method: chargeMethod, receipt_base64: receiptBase64 })
-                });
-                const data = await response.json();
-                if(data.success) {
-                    if (chargeMethod === 'receipt') {
-                        alert('✅ فیش واریزی شما ثبت شد.\nپس از بررسی توسط مدیریت، کیف پول شما شارژ خواهد شد.');
-                    } else {
-                        alert('✅ درخواست شارژ نقدی ثبت شد.\nلطفاً پول نقد را به مراقب سالن تحویل دهید تا کیف پولتان بلافاصله شارژ شود.');
-                    }
-                    document.getElementById('inpChargeAmount').value = ''; receiptBase64 = '';
-                    document.getElementById('uploadText').innerText = `تصویر فیش را آپلود کنید`;
-                    document.getElementById('uploadBox').style.borderColor = "var(--glass-border)";
-                    document.getElementById('uploadBox').style.background = "var(--glass-highlight)";
-                    validateChargeForm();
-                    btn.innerText = 'ثبت درخواست شارژ';
-                } else { throw new Error(data.error); }
-            } catch(e) {
-                alert('خطا در ارسال درخواست. اینترنت را بررسی کنید.');
-                btn.innerText = 'ثبت درخواست شارژ'; validateChargeForm();
-            }
-        }
+    try {
+        let txType = chargeMethod === 'cash' ? 'cash_charge' : 'receipt_charge';
+        
+        // ثبت در دیتابیس سوپابیس
+        await supabaseClient.from('buffet_transactions').insert([{ phone_number: activeUser.phone_number, amount: amt, tx_type: txType, status: 'pending', receipt_base64: receiptBase64 || null }]);
+
+        // 🚀 شلیک به بله (ارسال عکس یا متن)
+        let payload = {
+            text: chargeMethod === 'receipt' ? `⚡ درخواست تایید فیش بوفه ⚡\n👤 کاربر: ${activeUser.full_name}\n💰 مبلغ: ${amt.toLocaleString()} تومان` : `💵 درخواست شارژ نقدی بوفه 💵\n👤 کاربر: ${activeUser.full_name}\n💰 مبلغ: ${amt.toLocaleString()} تومان`,
+            image_base64: chargeMethod === 'receipt' ? receiptBase64 : ""
+        };
+        fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e=>console.log(e));
+
+        alert(chargeMethod === 'receipt' ? '✅ فیش واریزی شما ثبت شد.\nپس از بررسی، کیف پول شما شارژ خواهد شد.' : '✅ درخواست شارژ نقدی ثبت شد.\nلطفاً پول نقد را تحویل دهید.');
+        
+        document.getElementById('inpChargeAmount').value = ''; receiptBase64 = '';
+        document.getElementById('uploadText').innerText = `تصویر فیش را آپلود کنید`;
+        document.getElementById('uploadBox').style.borderColor = "var(--glass-border)";
+        document.getElementById('uploadBox').style.background = "var(--glass-highlight)";
+        validateChargeForm();
+        btn.innerText = 'ثبت درخواست شارژ';
+    } catch(e) {
+        alert('خطا در ارسال درخواست.');
+        btn.innerText = 'ثبت درخواست شارژ'; validateChargeForm();
+    }
+}
 
         async function loadHistory() {
-            switchView('view-history');
-            const container = document.getElementById('historyContainer');
-            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">⏳ در حال دریافت اطلاعات از سرور...</div>';
-            
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'get_history', phone_number: activeUser.phone_number })
-                });
-                const data = await response.json();
-                
-                if(data.success) {
-                    let html = '';
-                    const historyList = data.history || [];
-                    if(historyList.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">شما تاکنون هیچ تراکنشی در بوفه نداشته‌اید.</div>';
-                        return;
-                    }
-                    
-                    historyList.forEach(item => {
-                        let isOrder = item.type === 'order';
-                        let icon = isOrder ? '🛍️' : '⚡';
-                        let title = 'تراکنش نامشخص';
-                        
-                        if (isOrder) { title = 'خرید از بوفه'; } 
-                        else {
-                            if (item.tx_type === 'cash_charge') title = 'شارژ نقدی (حضوری)';
-                            else if (item.tx_type === 'receipt_charge') title = 'واریز کارت به کارت (فیش)';
-                            else if (item.tx_type === 'change_deposit') title = 'مابقی پول خرید نقدی';
-                            else if (item.tx_type === 'manual_cash') title = 'شارژ توسط مدیریت';
-                            else title = 'شارژ کیف پول';
-                        }
-                        
-                        let amountColor = isOrder ? 'var(--danger)' : 'var(--success)';
-                        let sign = isOrder ? '-' : '+';
-                        let shamsiDate = new Date(item.raw_date).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-
-                        let detailsHtml = '';
-                        if (isOrder && item.items) {
-                            let itemsArr = typeof item.items === 'string' ? JSON.parse(item.items) : item.items;
-                            let itemsText = itemsArr.map(i => `${i.qty}x ${i.name}`).join(' ، ');
-                            
-                            let payMethodTxt = item.payment_method === 'wallet' ? '💳 پرداخت از کیف پول' : '💵 پرداخت نقدی';
-                            let payMethodColor = item.payment_method === 'wallet' ? 'var(--primary)' : 'var(--warning)';
-                            
-                            detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; font-weight: bold;">
-                                اقلام: <span style="color: var(--text-main);">${itemsText}</span><br>
-                                <span style="color: ${payMethodColor}; display: inline-block; margin-top: 6px;">${payMethodTxt}</span>
-                            </div>`;
-                        } else if (!isOrder) {
-                            let statusTxt = item.status === 'approved' ? '✅ تایید شده' : (item.status === 'rejected' ? '❌ رد شده' : '⏳ در انتظار تایید');
-                            let statusColor = item.status === 'approved' ? 'var(--success)' : (item.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
-                            detailsHtml = `<div style="font-size: 11px; color: ${statusColor}; margin-top: 8px; font-weight: bold;">وضعیت: ${statusTxt}</div>`;
-                        }
-                        
-                        html += `
-                        <div class="history-card glass-panel">
-                            <div class="history-info">
-                                <div class="history-icon">${icon}</div>
-                                <div>
-                                    <div class="history-title">${title}</div>
-                                    <div class="history-date" style="direction:ltr; text-align:right;">${shamsiDate}</div>
-                                    ${detailsHtml}
-                                </div>
-                            </div>
-                            <div style="font-weight:900; font-size:14px; color:${amountColor}; direction:ltr; white-space: nowrap;">${sign} ${item.amount.toLocaleString()}</div>
-                        </div>`;
-                    });
-                    container.innerHTML = html;
-                } else { throw new Error(data.error); }
-            } catch(e) { container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px; font-weight:bold;">خطا در دریافت تاریخچه</div>`; }
+    switchView('view-history');
+    const container = document.getElementById('historyContainer');
+    container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">⏳ در حال دریافت اطلاعات از سرور...</div>';
+    
+    try {
+        // فراخوانی مستقیم و موازی تراکنش‌ها و سفارشات
+        const [ordersRes, txsRes] = await Promise.all([
+            supabaseClient.from('buffet_orders').select('*').eq('phone_number', activeUser.phone_number).order('created_at', { ascending: false }),
+            supabaseClient.from('buffet_transactions').select('*').eq('phone_number', activeUser.phone_number).order('created_at', { ascending: false })
+        ]);
+        
+        let historyList = [];
+        if(ordersRes.data) ordersRes.data.forEach(o => historyList.push({ type: 'order', amount: o.total_price, raw_date: o.created_at, items: o.items, payment_method: o.payment_method, status: o.status }));
+        if(txsRes.data) txsRes.data.forEach(t => { if(t.tx_type !== 'purchase') historyList.push({ type: 'charge', amount: Math.abs(t.amount), raw_date: t.created_at, status: t.status, tx_type: t.tx_type }); });
+        
+        // مرتب‌سازی بر اساس زمان
+        historyList.sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date));
+        
+        if(historyList.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">شما تاکنون هیچ تراکنشی در بوفه نداشته‌اید.</div>';
+            return;
         }
+        
+        let html = '';
+        historyList.forEach(item => {
+            let isOrder = item.type === 'order';
+            let icon = isOrder ? '🛍️' : '⚡';
+            let title = 'تراکنش نامشخص';
+            
+            if (isOrder) { title = 'خرید از بوفه'; } 
+            else {
+                if (item.tx_type === 'cash_charge') title = 'شارژ نقدی (حضوری)';
+                else if (item.tx_type === 'receipt_charge') title = 'واریز کارت به کارت (فیش)';
+                else if (item.tx_type === 'change_deposit') title = 'مابقی پول خرید نقدی';
+                else if (item.tx_type === 'manual_cash') title = 'شارژ توسط مدیریت';
+                else title = 'شارژ کیف پول';
+            }
+            
+            let amountColor = isOrder ? 'var(--danger)' : 'var(--success)';
+            let sign = isOrder ? '-' : '+';
+            let shamsiDate = new Date(item.raw_date).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+            let detailsHtml = '';
+            if (isOrder && item.items) {
+                let itemsArr = typeof item.items === 'string' ? JSON.parse(item.items) : item.items;
+                let itemsText = itemsArr.map(i => `${i.qty}x ${i.name}`).join(' ، ');
+                let payMethodTxt = item.payment_method === 'wallet' ? '💳 پرداخت از کیف پول' : '💵 پرداخت نقدی';
+                let payMethodColor = item.payment_method === 'wallet' ? 'var(--primary)' : 'var(--warning)';
+                
+                detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; font-weight: bold;">اقلام: <span style="color: var(--text-main);">${itemsText}</span><br><span style="color: ${payMethodColor}; display: inline-block; margin-top: 6px;">${payMethodTxt}</span></div>`;
+            } else if (!isOrder) {
+                let statusTxt = item.status === 'approved' ? '✅ تایید شده' : (item.status === 'rejected' ? '❌ رد شده' : '⏳ در انتظار تایید');
+                let statusColor = item.status === 'approved' ? 'var(--success)' : (item.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
+                detailsHtml = `<div style="font-size: 11px; color: ${statusColor}; margin-top: 8px; font-weight: bold;">وضعیت: ${statusTxt}</div>`;
+            }
+            
+            html += `<div class="history-card glass-panel"><div class="history-info"><div class="history-icon">${icon}</div><div><div class="history-title">${title}</div><div class="history-date" style="direction:ltr; text-align:right;">${shamsiDate}</div>${detailsHtml}</div></div><div style="font-weight:900; font-size:14px; color:${amountColor}; direction:ltr; white-space: nowrap;">${sign} ${item.amount.toLocaleString()}</div></div>`;
+        });
+        container.innerHTML = html;
+    } catch(e) { container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px; font-weight:bold;">خطا در دریافت تاریخچه</div>`; }
+}
     </script>
 </body>
 </html>
