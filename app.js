@@ -429,8 +429,6 @@ async function loadRealDashboardData(phone) {
         dbData.rules = rulesRes.data || [];
         monState.isFirstMonthly = !subsHistRes.data || subsHistRes.data.length === 0;
 
-        let pansion = (pansionRes.data && pansionRes.data.length > 0) ? pansionRes.data[0] : null;
-        if(pansion) pansion.service_type = pansion.plan_type; 
         let consult = (consultRes.data && consultRes.data.length > 0) ? consultRes.data[0] : null;
         let installments = instRes.data || [];
         globalUserInstallments = installments; 
@@ -1294,10 +1292,9 @@ async function submitBooking() {
     }
 }
 // ==========================================
-// ❌ توابع لغو قرارداد
+// ❌ توابع لغو قرارداد (ارسال درخواست)
 // ==========================================
 
-// آپدیت: محاسبه دقیق اختلاف روزها (شامل اعداد منفی برای قراردادهایی که هنوز شروع نشده‌اند)
 function calcShamsiPassedDays(startDateStr) {
     if (!startDateStr) return 0;
     let startParts = startDateStr.replace(/\//g, '-').split('-');
@@ -1308,7 +1305,6 @@ function calcShamsiPassedDays(startDateStr) {
     let startDays = (parseInt(startParts[0]) * 365) + (parseInt(startParts[1]) * 30) + parseInt(startParts[2]);
     let todayDays = (parseInt(todayParts[0]) * 365) + (parseInt(todayParts[1]) * 30) + parseInt(todayParts[2]);
     
-    // عدد خام را برمی‌گردانیم تا بفهمیم به تاریخ شروع رسیده‌ایم یا نه
     return todayDays - startDays; 
 }
 
@@ -1323,35 +1319,26 @@ async function openCancellation() {
         let totalDeduction = 0;
         let deductionDetailsHTML = '';
 
-        // حلقه بررسی تک‌تک قراردادهای متصل (جاری و تمدیدهای آینده)
         for (let sub of activePansion.all_subs) {
             let pType = sub.plan_type;
             let activePlanData = availablePansionPlans.find(p => p.type === pType) || { base_price: 3600000 };
             let basePrice = activePlanData.base_price;
 
-            // ۱. استخراج پیش‌پرداخت از جدول فاکتور
             const { data: inv } = await supabaseClient.from('pan_invoices').select('paid_upfront').eq('id', sub.invoice_id).single();
             let paidUpfront = inv ? Number(inv.paid_upfront || 0) : 0;
 
-            // ۲. استخراج مجموع اقساط پرداخت شده از جدول اقساط متصل به همین فاکتور
-            const { data: insts } = await supabaseClient.from('pan_installments')
-                .select('amount')
-                .eq('invoice_id', sub.invoice_id)
-                .in('status', ['paid', 'approved']);
-            
+            const { data: insts } = await supabaseClient.from('pan_installments').select('amount').eq('invoice_id', sub.invoice_id).in('status', ['paid', 'approved']);
             let paidInstSum = 0;
             if (insts) paidInstSum = insts.reduce((sum, i) => sum + Number(i.amount || 0), 0);
 
             let subTotalPaid = paidUpfront + paidInstSum;
             totalPaid += subTotalPaid;
 
-            // ۳. محاسبه هوشمند جریمه فقط برای همان قرارداد
             let rawDiff = calcShamsiPassedDays(sub.start_date);
             let subDeduction = 0;
             let deductionText = '';
 
             if (rawDiff < 0) {
-                // قرارداد آینده (تمدید): بدون جریمه
                 subDeduction = 0;
                 deductionText = `<span style="color: var(--success);">شروع نشده (۰ تومان کسری)</span>`;
             } else if (rawDiff <= 3) {
@@ -1380,6 +1367,14 @@ async function openCancellation() {
         }
 
         let refund = totalPaid - totalDeduction;
+        
+        // 🚀 ذخیره اطلاعات محاسبه شده در حافظه مرورگر برای ثبت در دیتابیس
+        window.pendingCancellationData = {
+            totalPaid: totalPaid,
+            totalDeduction: totalDeduction,
+            refundAmount: refund > 0 ? refund : 0
+        };
+
         let refundText = refund > 0 ? `${refund.toLocaleString()} تومان` : `0 تومان (بدهی: ${Math.abs(refund).toLocaleString()} تومان)`;
 
         let html = `
@@ -1393,8 +1388,8 @@ async function openCancellation() {
                     <span>مبلغ نهایی قابل عودت:</span><strong style="color:var(--primary); direction:ltr; font-size: 16px;">${refundText}</strong>
                 </div>
             </div>
-            <div style="font-size:11px; color:var(--text-muted); text-align:justify; line-height: 1.8; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 15px;">
-                <strong style="color:var(--danger);">⚠️ توجه:</strong> پس از تایید مدیریت، میز کاملاً آزاد شده و مبلغ محاسبه شده به کیف پول شما واریز خواهد شد.
+            <div style="font-size:11px; color:var(--text-muted); text-align:justify; line-height: 1.8; background: rgba(245, 158, 11, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 15px;">
+                <strong style="color:var(--warning);">⚠️ توجه:</strong> با تایید این بخش، قرارداد شما فوراً لغو نمی‌شود. محاسبات فوق برای مدیریت ارسال شده و پس از بررسی و توافق نهایی، این مبلغ به کیف پول شما واریز و میز شما آزاد می‌گردد.
             </div>
         `;
         
@@ -1414,48 +1409,44 @@ function closeCancelModal() {
 
 async function submitCancellation() {
     document.getElementById('mainLoader').style.display = 'flex';
-    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ثبت درخواست لغو...';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ارسال درخواست...';
 
     try {
-        // ۱. استخراج تمام آیدی‌های اشتراک‌ها و فاکتورهای متصل
-        let subIds = activePansion.all_subs.map(s => s.id);
-        let invoiceIds = activePansion.all_subs.map(s => s.invoice_id).filter(id => id);
+        let cancelData = window.pendingCancellationData;
 
-        // ۲. ابطال تمامی اشتراک‌های ماهانه
-        await supabaseClient.from('pan_monthly_subs')
-            .update({ status: 'canceled' })
-            .in('id', subIds);
-
-        // ۳. ابطال فاکتورهای متصل (جهت شفافیت مالی)
-        if (invoiceIds.length > 0) {
-            await supabaseClient.from('pan_invoices')
-                .update({ status: 'canceled' })
-                .in('id', invoiceIds);
-        }
-            
-        // ۴. آزادسازی فقط ۱ میز (صرف نظر از تعداد تمدیدها)
-        let pType = activePansion.plan_type || activePansion.service_type;
-        const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', pType).single();
-        if (srv) {
-            await supabaseClient.from('services').update({ capacity: srv.capacity + 1 }).eq('type', pType);
-        }
+        // ۱. ثبت درخواست لغو در جدول جدید (قراردادها دست‌نخورده باقی می‌‌مانند)
+        const { error } = await supabaseClient.from('cancellation_requests').insert([{
+            phone_number: currentUser.phone_number,
+            refund_amount: cancelData.refundAmount,
+            total_paid: cancelData.totalPaid,
+            total_deduction: cancelData.totalDeduction,
+            status: 'pending'
+        }]);
+        if (error) throw error;
         
-        // ۵. ارسال پیام اطلاع‌رسانی
+        // ۲. ارسال پیام اطلاع‌رسانی به خود کاربر
         await supabaseClient.from('messages').insert([{
             phone_number: currentUser.phone_number, 
-            title: '❌ درخواست لغو قرارداد',
-            body: 'درخواست لغو قراردادهای شما در سیستم ثبت شد. میز شما آزاد گردید و مبلغ قابل عودت پس از بررسی مدیریت به کیف پول شما واریز خواهد شد.', 
+            title: '⏳ ثبت درخواست لغو قرارداد',
+            body: 'درخواست لغو قرارداد شما در سیستم ثبت شد. وضعیت قرارداد شما همچنان فعال است. پس از بررسی درخواست توسط مدیریت و انجام هماهنگی‌های لازم، مبلغ محاسبه شده به کیف پول شما عودت داده خواهد شد.', 
             is_read: false, 
             created_at: new Date().toISOString()
         }]);
 
+        // ۳. 🚀 شلیک پیام به ربات تلگرام/بله مدیریت
+        const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
+        const payload = {
+            text: `⚠️ درخواست لغو قرارداد ⚠️\n👤 نام: ${currentUser.full_name}\n📱 موبایل: ${currentUser.phone_number}\n💸 مبلغ عودت محاسبه شده: ${cancelData.refundAmount.toLocaleString()} تومان\n\n(در پنل ادمین جهت تایید نهایی موجود است)`
+        };
+        fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e => console.log(e));
+
         document.getElementById('mainLoader').style.display = 'none';
-        alert('درخواست لغو با موفقیت در سیستم ثبت شد.');
+        alert('درخواست لغو با موفقیت برای مدیریت ارسال شد.');
         window.location.reload();
     } catch(e) {
         console.error(e);
         document.getElementById('mainLoader').style.display = 'none';
-        alert('خطا در ثبت درخواست لغو.');
+        alert('خطا در ثبت درخواست.');
     }
 }
 
