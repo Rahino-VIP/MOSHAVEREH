@@ -609,4 +609,3 @@ async function loadHistory() {
         container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px; font-weight:bold;">خطا در دریافت تاریخچه</div>`; 
     }
 }
-</script>
