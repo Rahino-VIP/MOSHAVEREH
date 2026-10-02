@@ -2,174 +2,197 @@
 <html lang="fa" dir="rtl" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>بوفه هوشمند راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ==========================================
+           🎨 متغیرهای رنگی و تم شیشه‌ای (Glassmorphism)
+           ========================================== */
         :root { 
-            --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.15);
-            --accent: #d9858a; --accent-hover: #c4727c; --accent-fade: rgba(217, 133, 138, 0.15);
-            --bg-color: #f1f5f3; --surface: #ffffff; --surface-glass: rgba(255, 255, 255, 0.85);
-            --text-main: #2d3748; --text-muted: #718096; --border: #e2e8f0; 
+            --primary: #5cb89f; --primary-hover: #4a9e86; --primary-fade: rgba(92, 184, 159, 0.2);
+            --accent: #e67381; --accent-hover: #d15b69; --accent-fade: rgba(230, 115, 129, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.5); --glass-border: rgba(255, 255, 255, 0.6); --glass-highlight: rgba(255, 255, 255, 0.8);
+            --text-main: #2d3748; --text-muted: #5a6a82; 
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-soft: 0 15px 40px rgba(0, 0, 0, 0.08); 
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         [data-theme="dark"] {
-            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.15);
-            --accent: #e59ea3; --accent-hover: #f0b2b6; --accent-fade: rgba(229, 158, 163, 0.15);
-            --bg-color: #0a0f0d; --surface: #121a18; --surface-glass: rgba(18, 26, 24, 0.85);
-            --text-main: #f1f5f9; --text-muted: #8b9d99; --border: #263633; 
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            --primary: #6ee7b7; --primary-hover: #34d399; --primary-fade: rgba(110, 231, 183, 0.15);
+            --accent: #fca5a5; --accent-hover: #f87171; --accent-fade: rgba(252, 165, 165, 0.15);
+            --glass-bg: rgba(15, 23, 42, 0.45); --glass-border: rgba(255, 255, 255, 0.08); --glass-highlight: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc; --text-muted: #cbd5e1; 
+            --shadow-soft: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
-        
+
         html { scroll-behavior: smooth; }
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; }
-        body { background: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; margin: 0; }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent;}
+        
+        body { 
+            background: linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%); background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite; color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; margin: 0; 
+        }
+        [data-theme="dark"] body { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #4a2f3d 100%); }
+        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-        .app-container { width: 100%; max-width: 480px; height: 100dvh; position: relative; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-color); }
-        .glow-bg { position: absolute; width: 300px; height: 300px; background: var(--primary-fade); filter: blur(100px); border-radius: 50%; z-index: 0; top: 10%; left: 50%; transform: translateX(-50%); pointer-events: none;}
+        .app-container { width: 100%; max-width: 480px; height: 100dvh; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: var(--shadow-soft); }
 
-        header { padding: 20px; background: var(--surface-glass); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-shrink: 0; }
-        .header-title { font-weight: 900; font-size: 18px; color: var(--text-main); }
+        header { padding: 20px; background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-shrink: 0; }
+        .header-title { font-weight: 900; font-size: 18px; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
         .header-title span { color: var(--primary); }
 
-        .view-section { flex: 1; overflow-y: auto; padding: 20px; display: none; animation: fadeIn 0.3s ease; padding-bottom: 100px; z-index: 1; position: relative;}
+        .view-section { flex: 1; overflow-y: auto; padding: 20px; display: none; animation: fadeIn 0.4s ease; padding-bottom: 100px; z-index: 1; position: relative;}
         .view-section.active { display: block; }
         #view-store { padding: 0; }
         #view-store.active { display: flex; flex-direction: column; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        .auth-container { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: 100%; overflow: hidden; box-shadow: var(--shadow); position: relative; margin-top: 10vh;}
-        .header-box { text-align: center; padding: 35px 25px 20px; border-bottom: 1px solid var(--border); background: linear-gradient(to bottom, var(--primary-fade), transparent); }
+        /* ==========================================
+           🔐 بخش احراز هویت
+           ========================================== */
+        .auth-container { border-radius: 32px; width: 100%; overflow: hidden; position: relative; margin-top: 5vh; text-align: center;}
+        .header-box { padding: 35px 25px 20px; border-bottom: 1px solid var(--glass-border); }
         .header-box h1 { font-size: 22px; color: var(--primary); font-weight: 900; margin-bottom: 8px; }
+        .header-box p { font-size: 13px; color: var(--text-muted); font-weight: bold;}
         .step-section { padding: 30px; display: none; animation: fadeIn 0.4s ease-out; }
         .step-section.active { display: block; }
         
-        .form-input { width: 100%; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); font-weight: bold; margin-bottom: 15px; text-align: center;}
+        .form-input { width: 100%; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 16px; border-radius: 16px; font-size: 15px; outline: none; transition: var(--transition); font-weight: bold; margin-bottom: 15px; text-align: center;}
         .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
         select.form-input { appearance: none; cursor: pointer; }
         
-        .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); color: white; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); box-shadow: 0 10px 20px var(--primary-fade); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); margin-top: 15px;}
+        .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 25px var(--primary-fade); text-shadow: 0 1px 2px rgba(0,0,0,0.2);}
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-outline { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); margin-top: 15px;}
         .text-link { color: var(--accent); font-size: 13px; text-align: center; display: block; margin-top: 20px; cursor: pointer; font-weight: bold; }
-        .alert-box { background: var(--accent-fade); border: 1px solid rgba(217, 133, 138, 0.3); color: var(--accent); padding: 15px; border-radius: 14px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; display: none; }
+        .alert-box { background: var(--accent-fade); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); padding: 15px; border-radius: 16px; font-size: 13px; text-align: center; margin-bottom: 25px; font-weight: bold; display: none; }
 
-        .category-nav { background: var(--bg-color); padding: 10px 20px 15px; overflow-x: auto; white-space: nowrap; display: flex; gap: 10px; scrollbar-width: none; border-bottom: 1px solid var(--border); }
+        /* ==========================================
+           🏪 فروشگاه
+           ========================================== */
+        .category-nav { background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 10px 20px 15px; overflow-x: auto; white-space: nowrap; display: flex; gap: 10px; scrollbar-width: none; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 50;}
         .category-nav::-webkit-scrollbar { display: none; }
-        .cat-link { text-decoration: none; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-block; }
-        .cat-link.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
+        .cat-link { text-decoration: none; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-block; cursor: pointer;}
+        .cat-link.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); box-shadow: 0 4px 10px var(--primary-fade);}
 
         .store-content { flex: 1; overflow-y: auto; padding: 20px 0 120px; z-index: 1; position: relative; scroll-behavior: smooth;}
         
-        .hero-card { width: 100%; border-radius: 24px; overflow: hidden; position: relative; margin-bottom: 25px; box-shadow: var(--shadow); height: 160px; background: linear-gradient(to left, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1551024601-bec78aea704b?w=600&q=80') center/cover; color: white; display: flex; flex-direction: column; justify-content: center; padding: 20px; }
-        .hero-badge { position: absolute; top: 15px; left: 15px; background: var(--danger); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .hero-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .hero-desc { font-size: 12px; opacity: 0.9; margin-bottom: 10px; }
-        
-        .category-section { margin-bottom: 30px; scroll-margin-top: 20px; }
-        .section-header { background: var(--bg-color); padding: 10px 20px 15px; font-size: 16px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .category-section { margin-bottom: 30px; scroll-margin-top: 60px; }
+        .section-header { padding: 10px 20px 15px; font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .section-header::before { content: ''; width: 4px; height: 18px; background: var(--primary); border-radius: 4px; }
 
         .horizontal-list { display: flex; overflow-x: auto; gap: 15px; padding: 0 20px 15px; scrollbar-width: none; }
         .horizontal-list::-webkit-scrollbar { display: none; }
         
-        .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); flex: 0 0 150px; }
-        .product-img { width: 100%; height: 120px; background-color: var(--surface); background-position: center; background-size: contain; background-repeat: no-repeat; border-bottom: 1px solid var(--border); position: relative;}
-        .stock-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: bold; }
+        .product-card { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-soft); flex: 0 0 150px; transition: var(--transition);}
+        .product-card:hover { border-color: var(--primary); transform: translateY(-3px);}
+        .product-img { width: 100%; height: 120px; background-color: var(--glass-highlight); background-position: center; background-size: contain; background-repeat: no-repeat; border-bottom: 1px solid var(--glass-border); position: relative;}
         .product-info { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-        .product-name { font-weight: 900; font-size: 12px; color: var(--text-main); line-height: 1.4; }
-        .product-price { color: var(--accent); font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+        .product-name { font-weight: 900; font-size: 12px; color: var(--text-main); line-height: 1.5; }
+        .product-price { color: var(--primary); font-weight: 900; font-size: 14px; margin-bottom: 5px; }
         
-        .btn-add-init { background: var(--primary-fade); color: var(--primary); border: 1px solid transparent; padding: 8px; border-radius: 12px; font-weight: 900; font-size: 12px; margin-top: auto; cursor: pointer; text-align: center; }
-        .btn-add-init.disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
-        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--primary-fade); padding: 5px; border-radius: 12px; margin-top: auto; border: 1px solid rgba(99, 152, 137, 0.3); }
-        .qty-btn { background: var(--surface); border: none; color: var(--text-main); width: 28px; height: 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;}
+        .btn-add-init { background: var(--primary-fade); color: var(--primary); border: 1px solid transparent; padding: 8px; border-radius: 12px; font-weight: 900; font-size: 12px; margin-top: auto; cursor: pointer; text-align: center; transition: var(--transition);}
+        .btn-add-init:hover { background: var(--primary); color: white;}
+        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--primary-fade); padding: 5px; border-radius: 12px; margin-top: auto; border: 1px solid rgba(92, 184, 159, 0.3); }
+        .qty-btn { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); width: 28px; height: 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center;}
         .qty-btn.del { color: var(--danger); }
-        .qty-display { font-size: 13px; font-weight: 900; width: 20px; text-align: center; color: var(--primary); }
+        .qty-display { font-size: 14px; font-weight: 900; width: 20px; text-align: center; color: var(--text-main); }
 
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed var(--border); }
-        .checkout-box { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 25px 20px; margin-top: 15px; box-shadow: var(--shadow); }
-        .payment-options { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; border-top: 1px dashed var(--border); padding-top: 20px; }
-        .pay-option { border: 1px solid var(--border); padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; background: var(--bg-color); }
+        /* ==========================================
+           🛒 سبد خرید
+           ========================================== */
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed var(--glass-border); }
+        .cart-item-name { font-size: 14px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
+        .cart-item-price { font-size: 12px; color: var(--text-muted); }
+        .checkout-box { padding: 25px 20px; margin-top: 15px; }
+        .payment-options { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; border-top: 1px dashed var(--glass-border); padding-top: 20px; }
+        .pay-option { border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; background: var(--glass-highlight); transition: var(--transition);}
         .pay-option.active { border-color: var(--primary); background: var(--primary-fade); }
         .pay-option input { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
-        .wallet-badge { background: var(--surface); padding: 4px 8px; border-radius: 8px; font-size: 11px; color: var(--text-muted); }
-        .summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .wallet-badge { background: var(--glass-bg); padding: 4px 8px; border-radius: 8px; font-size: 11px; color: var(--text-main); border: 1px solid var(--glass-border);}
+        .summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border); }
         .btn-checkout { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; margin-top: 20px; transition: var(--transition); }
-        .btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #ffffff; box-shadow: 0 10px 20px var(--primary-fade); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-        .btn-checkout.disabled { background: var(--border); color: var(--text-main); opacity: 0.6; cursor: not-allowed; }
+        .btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 10px 25px var(--primary-fade); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .btn-checkout.disabled { background: var(--glass-border); color: var(--text-muted); cursor: not-allowed; }
 
-        .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .history-icon { font-size: 24px; }
-        .history-info { display: flex; align-items: center; gap: 10px; }
-        .history-title { font-size: 13px; font-weight: bold; color: var(--text-main); }
-        .history-date { font-size: 11px; color: var(--text-muted); margin-top: 4px;}
+        /* ==========================================
+           👤 پروفایل و تاریخچه
+           ========================================== */
+        .history-card { padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .history-icon { font-size: 24px; background: var(--glass-highlight); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 14px; border: 1px solid var(--glass-border);}
+        .history-info { display: flex; align-items: center; gap: 12px; }
+        .history-title { font-size: 14px; font-weight: 900; color: var(--text-main); }
+        .history-date { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: bold;}
 
-        .wallet-card { background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 25px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
-        .wallet-card::before { content: '💳'; position: absolute; font-size: 100px; opacity: 0.05; right: -10px; bottom: -20px; }
-        .wallet-balance { font-size: 34px; font-weight: 900; margin: 10px 0; }
+        .wallet-card { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; padding: 30px 25px; border-radius: 28px; text-align: center; margin-bottom: 25px; box-shadow: 0 15px 30px var(--primary-fade); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+        .wallet-card::before { content: '💳'; position: absolute; font-size: 120px; opacity: 0.1; right: -15px; bottom: -25px; }
+        .wallet-balance { font-size: 36px; font-weight: 900; margin: 10px 0; letter-spacing: 1px;}
         .wallet-balance.negative { color: #fecaca; }
 
-        .charge-section { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .charge-section { padding: 25px; margin-bottom: 25px; }
         .quick-amounts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-        .amount-chip { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; flex: 1 1 calc(33% - 10px); text-align: center; }
-        .amount-chip.debt-chip { background: rgba(239, 68, 68, 0.1); border-color: var(--danger); color: var(--danger); flex: 1 1 100%; font-size: 13px; }
+        .amount-chip { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 10px 12px; border-radius: 14px; font-size: 13px; font-weight: bold; cursor: pointer; flex: 1 1 calc(33% - 10px); text-align: center; transition: var(--transition);}
+        .amount-chip:hover { border-color: var(--primary); color: var(--primary);}
+        .amount-chip.debt-chip { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--danger); flex: 1 1 100%; font-size: 14px; }
         
-        .card-info-box { background: var(--accent-fade); border: 1px dashed var(--accent); padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 15px; }
-        .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--border); padding: 25px 20px; text-align: center; border-radius: 16px; cursor: pointer; margin-bottom: 15px; background: var(--bg-color); }
+        .card-info-box { background: var(--accent-fade); border: 1px dashed var(--accent); padding: 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; }
+        .file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 2px dashed var(--glass-border); padding: 25px 20px; text-align: center; border-radius: 20px; cursor: pointer; margin-bottom: 15px; background: var(--glass-highlight); transition: var(--transition);}
+        .file-upload:hover { border-color: var(--primary); background: var(--primary-fade);}
         .file-upload input { display: none; }
 
-        .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; background: var(--surface-glass); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 5px 20px; z-index: 1000; display: none; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-muted); cursor: pointer; transition: var(--transition); position: relative; }
-        .nav-item.active { color: var(--primary); transform: translateY(-3px); }
+        /* ==========================================
+           🌐 نوار پایین و لودر
+           ========================================== */
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 440px; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; z-index: 1000; display: none; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; transition: var(--transition); position: relative; flex: 1; padding: 8px 0; border-radius: 16px;}
+        .nav-item.active { color: var(--primary); background: var(--primary-fade);}
         .nav-icon { font-size: 22px; }
         .nav-text { font-size: 11px; font-weight: bold; }
-        .cart-badge { position: absolute; top: -5px; right: 20%; background: var(--danger); color: white; font-size: 11px; font-weight: bold; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid var(--surface); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .cart-badge { position: absolute; top: 0px; right: 25%; background: var(--danger); color: white; font-size: 11px; font-weight: bold; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);}
         .cart-badge.pop { transform: scale(1.3); }
 
-        .loader { position: fixed; inset: 0; background: var(--surface-glass); backdrop-filter: blur(5px); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { width: 45px; height: 45px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .loader { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .welcome-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .welcome-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
         @media (min-width: 768px) {
-            body { align-items: center; background: #cbd5e1; }
-            [data-theme="dark"] body { background: #0f172a; }
-            .app-container { max-width: 1000px; height: 92dvh; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); margin: auto; }
-            header { border-radius: 24px 24px 0 0; }
-            .bottom-nav { border-radius: 0 0 24px 24px; }
+            .app-container { max-width: 1000px; height: 92dvh; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4); margin: auto; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(25px);}
+            header { border-radius: 32px 32px 0 0; }
             .horizontal-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; overflow-x: visible; }
             .product-card { flex: unset; width: 100%; }
             .category-nav { justify-content: center; }
-            .hero-card { height: 200px; }
         }
+        
+        select.form-input { color: var(--text-main) !important; background-color: rgba(15, 23, 42, 0.6) !important; }
+        select.form-input option { background-color: #1e293b; color: #ffffff; padding: 10px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="glow-bg"></div>
-
         <header>
             <div class="header-title">بوفه <span>راهینو</span></div>
-            <button onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')" style="background:transparent; border:none; font-size:20px; cursor:pointer;">🌗</button>
+            <button class="glass-panel" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')" style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor:pointer; font-size: 18px;">🌗</button>
         </header>
 
         <div class="loader" id="loader"><div class="spinner"></div><div style="color: var(--primary); font-size: 15px; font-weight: bold;" id="loaderText">صبر کنید...</div></div>
         
         <div class="welcome-overlay" id="welcomeOverlay">
-            <div style="font-size: 60px; margin-bottom: 20px;">🍩</div>
-            <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;" id="welcomeName">خوش آمدید!</h1>
-            <p style="color: var(--text-muted); font-size: 14px;">در حال دریافت اطلاعات...</p>
+            <div style="font-size: 60px; margin-bottom: 20px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));">🍩</div>
+            <h1 style="color: var(--text-main); margin-bottom: 10px; font-weight: 900;" id="welcomeName">خوش آمدید!</h1>
+            <p style="color: var(--primary); font-size: 14px; font-weight: bold;">در حال آماده‌سازی بوفه...</p>
         </div>
 
         <div id="view-auth" class="view-section active">
-            <div class="auth-container">
+            <div class="auth-container glass-panel">
                 <div class="header-box">
                     <h1 id="headerTitle">ورود به سیستم</h1>
                     <p id="headerSub">موبایل خود را برای ورود یا ثبت‌نام وارد کنید</p>
@@ -187,23 +210,22 @@
                 </div>
 
                 <div class="step-section" id="step-setup">
-                    <div class="alert-box" style="display: block; background: var(--primary-fade); color: var(--primary);">برای ورود به بوفه، یک رمز عبور و سوال امنیتی تنظیم کن.</div>
-                    <input type="password" id="setupPass" class="form-input" placeholder="رمز عبور دلخواه (حداقل ۴ رقم)">
+                    <div class="alert-box" style="display: block; background: var(--primary-fade); color: var(--primary); border-color: var(--primary);">برای ورود، یک رمز عبور و سوال امنیتی تنظیم کن.</div>
+                    <input type="password" id="setupPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
                     <select id="setupSecQ" class="form-input">
                         <option value="" disabled selected>یک سوال امنیتی انتخاب کنید...</option>
                         <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
                         <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option>
                         <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
-                        <option value="نام انیمیشن یا کارتون محبوب کودکی شما؟">نام انیمیشن یا کارتون محبوب کودکی شما؟</option>
                     </select>
                     <input type="text" id="setupSecA" class="form-input" placeholder="پاسخ سوال امنیتی (به خاطر بسپارید!)">
                     <button class="btn btn-primary" onclick="saveNewPassword()">ذخیره و ورود ✅</button>
                 </div>
 
                 <div class="step-section" id="step-recovery">
-                    <div id="recoveryQuestionText" style="font-weight: bold; margin-bottom: 10px; font-size: 14px; color: var(--primary);">...</div>
+                    <div id="recoveryQuestionText" style="font-weight: bold; margin-bottom: 15px; font-size: 14px; color: var(--primary);">...</div>
                     <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ خود را وارد کنید">
-                    <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۴ رقم)">
+                    <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
                     <button class="btn btn-primary" onclick="processRecovery()">تغییر رمز و ورود 🔄</button>
                     <button class="btn btn-outline" onclick="goToStep('step-login', 'ورود به سیستم', 'رمز عبور خود را وارد کنید')">بازگشت</button>
                 </div>
@@ -221,16 +243,15 @@
                     </div>
                     <input type="text" id="regSchool" class="form-input" placeholder="مدرسه/دانشگاه">
                     
-                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور بوفه (حداقل ۶ رقم)">
+                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
                     <select id="regSecQ" class="form-input">
                         <option value="" disabled selected>سوال امنیتی برای فراموشی رمز</option>
                         <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
                         <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option>
                         <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
-                        <option value="نام انیمیشن یا کارتون محبوب کودکی شما؟">نام انیمیشن یا کارتون محبوب کودکی شما؟</option>
                     </select>
                     <input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی">
-                    <button class="btn btn-primary" onclick="registerUser()">ثبت‌نام و ورود 🎉</button>
+                    <button class="btn btn-primary" onclick="registerUser()">ثبت‌نام و تشکیل پرونده 🎉</button>
                     <button class="btn btn-outline" onclick="goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید')">انصراف</button>
                 </div>
             </div>
@@ -242,88 +263,88 @@
         </div>
 
         <div id="view-cart" class="view-section">
-            <h2 style="font-size: 16px; margin-bottom: 20px; color: var(--primary); font-weight: 900;">سبد خرید شما</h2>
-            <div class="checkout-box" id="checkoutBox" style="display: none;">
+            <h2 style="font-size: 16px; margin-bottom: 20px; color: var(--text-main); font-weight: 900; display: flex; align-items: center; gap: 8px;">🛒 سبد خرید شما</h2>
+            <div class="checkout-box glass-panel" id="checkoutBox" style="display: none;">
                 <div id="cartItemsContainer"></div>
                 <div class="payment-options">
                     <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px;">روش پرداخت را انتخاب کنید:</div>
                     <label class="pay-option active" id="lblWallet">
                         <input type="radio" name="payMethod" value="wallet" checked onchange="updateCartUI()">
-                        <div style="flex:1; display:flex; justify-content:space-between; font-size:13px; font-weight:bold;">
+                        <div style="flex:1; display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color: var(--text-main);">
                             پرداخت از کیف پول 💳 <span class="wallet-badge" id="walletLabelBadge">...</span>
                         </div>
                     </label>
                     <label class="pay-option" id="lblCash">
                         <input type="radio" name="payMethod" value="cash" onchange="updateCartUI()">
-                        <div style="font-size:13px; font-weight:bold;">نقدی (تحویل به سرپرست) 💵</div>
+                        <div style="font-size:13px; font-weight:bold; color: var(--text-main);">نقدی (تحویل به سرپرست) 💵</div>
                     </label>
                 </div>
                 <div class="summary-total">
                     <span style="font-size: 14px; color: var(--text-muted); font-weight: bold;">جمع فاکتور:</span>
-                    <span style="font-size: 20px; color: var(--text-main); font-weight: 900;" id="totalPriceLabel">0 تومان</span>
+                    <span style="font-size: 20px; color: var(--success); font-weight: 900;" id="totalPriceLabel">0 تومان</span>
                 </div>
                 <div id="checkoutStatusMsg" style="font-size: 12px; font-weight: bold; text-align: center; margin-top: 15px; color: var(--danger); display: none;">موجودی و اعتبار کیف پول شما کافی نیست!</div>
                 <button class="btn-checkout" id="btnCheckout" onclick="processCheckout()">تایید نهایی و خرید</button>
             </div>
             <div id="emptyCartMsg" style="text-align: center; color: var(--text-muted); margin-top: 60px; display: none;">
-                <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;">🛒</div><div style="font-size: 14px; font-weight: bold;">سبد خرید شما خالی است!</div>
+                <div style="font-size: 50px; margin-bottom: 15px; opacity: 0.5;">🛒</div><div style="font-size: 15px; font-weight: bold;">سبد خرید شما خالی است!</div>
             </div>
         </div>
 
         <div id="view-profile" class="view-section">
             <div class="wallet-card">
-                <div style="font-size: 13px; opacity: 0.8;">موجودی فعلی کیف پول شما</div>
+                <div style="font-size: 13px; opacity: 0.9; font-weight: bold;">موجودی فعلی کیف پول شما</div>
                 <div class="wallet-balance" id="profileWalletBalance">0</div>
-                <div style="font-size: 11px; opacity: 0.8;" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
+                <div style="font-size: 11px; opacity: 0.8; font-weight: bold;" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
             </div>
 
-            <div class="charge-section">
-                <div style="font-size: 15px; font-weight: bold; margin-bottom: 15px;">⚡ شارژ کیف پول</div>
+            <div class="charge-section glass-panel">
+                <div style="font-size: 15px; font-weight: 900; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">⚡ شارژ کیف پول</div>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button class="btn btn-outline active" id="btnTabReceipt" style="flex:1; border-color:var(--primary); color:var(--primary);" onclick="switchChargeTab('receipt')">کارت به کارت</button>
+                    <button class="btn btn-outline active" id="btnTabReceipt" style="flex:1; border-color:var(--primary); background: var(--primary-fade); color:var(--primary);" onclick="switchChargeTab('receipt')">کارت به کارت</button>
                     <button class="btn btn-outline" id="btnTabCash" style="flex:1;" onclick="switchChargeTab('cash')">پرداخت نقدی</button>
                 </div>
 
                 <div class="quick-amounts" id="quickAmountsContainer"></div>
-                <input type="number" id="inpChargeAmount" class="form-input" placeholder="مبلغ دلخواه (تومان)">
+                <input type="number" id="inpChargeAmount" class="form-input" placeholder="مبلغ دلخواه (تومان)" style="background: var(--bg-color);">
                 
                 <div id="receiptBox">
-                    <div class="card-info-box">
-                        <div style="font-size: 11px; color: var(--text-muted);">مبلغ را به کارت زیر واریز نمایید:</div>
-                        <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 5px 0; font-family: monospace;">6219861810380484</div>
-                        <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">به نام: <span style="color: var(--accent);">ارشاد شفیعی</span></div>
-                        <button onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 12px; font-size: 11px; cursor: pointer; font-weight: bold;">📋 کپی شماره کارت</button>
+                    <div class="card-info-box" style="background: var(--glass-highlight); border-color: var(--primary);">
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">مبلغ را به کارت زیر واریز نمایید:</div>
+                        <div style="font-size: 22px; font-weight: 900; letter-spacing: 3px; margin: 8px 0; font-family: monospace; color: var(--text-main);">6219861810380484</div>
+                        <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 15px;">به نام: <span style="color: var(--primary);">ارشاد شفیعی</span></div>
+                        <button onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')" style="background: var(--glass-bg); border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; padding: 6px 16px; font-size: 12px; cursor: pointer; font-weight: bold; transition: var(--transition);">📋 کپی شماره کارت</button>
                     </div>
                     <label class="file-upload" id="uploadBox">
                         <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
-                        <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;" id="uploadText">تصویر فیش را آپلود کنید</div>
+                        <div style="font-size: 13px; color: var(--text-main); font-weight: bold;" id="uploadText">تصویر فیش را آپلود کنید</div>
                         <input type="file" id="receiptFile" accept="image/*" onchange="handleReceiptSelect(event)">
                     </label>
                 </div>
                 
-                <button class="btn-checkout disabled" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled style="margin-top: 0;">ثبت درخواست شارژ</button>
+                <button class="btn-checkout disabled" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled style="margin-top: 10px;">ثبت درخواست شارژ</button>
             </div>
 
-            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; margin-bottom: 20px;">
-                <div style="padding: 18px 20px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between;" onclick="loadHistory()">
-                    <span>📜 تاریخچه سفارشات و تراکنش‌ها</span><span>></span>
+            <div class="glass-panel" style="overflow: hidden; margin-bottom: 20px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--glass-border); font-size: 14px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; color: var(--text-main);" onclick="loadHistory()">
+                    <span>📜 تاریخچه سفارشات و تراکنش‌ها</span><span style="color: var(--text-muted);">></span>
                 </div>
-                <div style="padding: 18px 20px; font-size: 14px; font-weight: bold; cursor: pointer; color: var(--danger); text-align: center;" onclick="logoutApp()">🚪 خروج از حساب کاربری</div>
+                <div style="padding: 20px; font-size: 14px; font-weight: 900; cursor: pointer; color: var(--danger); text-align: center; background: rgba(239, 68, 68, 0.05);" onclick="logoutApp()">🚪 خروج از حساب کاربری</div>
             </div>
         </div>
 
         <div id="view-history" class="view-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="font-size: 16px; color: var(--primary); font-weight: 900;">📜 تاریخچه تراکنش‌ها</h2>
-                <button onclick="switchView('view-profile', document.querySelectorAll('.nav-item')[2])" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">بازگشت 🔙</button>
+                <h2 style="font-size: 16px; color: var(--text-main); font-weight: 900;">📜 تاریخچه تراکنش‌ها</h2>
+                <button class="glass-panel" onclick="switchView('view-profile', document.querySelectorAll('.nav-item')[2])" style="padding: 8px 12px; border:none; color:var(--text-main); font-weight:bold; cursor:pointer; font-size: 12px;">بازگشت 🔙</button>
             </div>
             <div id="historyContainer">
-                <div style="text-align:center; color:var(--text-muted); margin-top:40px;">⏳ در حال دریافت...</div>
+                <div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">⏳ در حال دریافت...</div>
             </div>
         </div>
 
-        <nav class="bottom-nav" id="bottomNav">
+        <nav class="bottom-nav glass-panel" id="bottomNav">
             <div class="nav-item active" onclick="switchView('view-store', this)"><div class="nav-icon">🏪</div><div class="nav-text">فروشگاه</div></div>
             <div class="nav-item" onclick="switchView('view-cart', this)"><div class="nav-icon">🛒</div><div class="nav-text">سبد خرید</div><div class="cart-badge" id="cartBadge" style="display: none;">0</div></div>
             <div class="nav-item" onclick="switchView('view-profile', this)"><div class="nav-icon">👤</div><div class="nav-text">پروفایل</div></div>
@@ -332,6 +353,7 @@
     </div>
 
     <script>
+        // 🔗 لینک‌های اتصال
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
@@ -348,8 +370,9 @@
         let receiptBase64 = "";
         let userFavorites = []; 
         let chargeMethod = 'receipt';
-        let featuredProduct = [];
+        let featuredProducts = [];
         
+        // 🛠 توابع کمکی
         function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
         function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
@@ -382,157 +405,175 @@
         };
 
         // ==========================================
-// 🔐 توابع احراز هویت یکپارچه با سیستم اصلی
-// ==========================================
+        // 🔐 توابع یکپارچه احراز هویت (متصل به جدول users)
+        // ==========================================
 
-// ==========================================
-// 🔐 توابع اصلاح شده بررسی کاربر و بازیابی رمز
-// ==========================================
-
-async function checkUser() {
-    let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
-    if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
-    showLoader('در حال بررسی هویت...');
-    
-    try {
-        // 🚀 استفاده از تابع امنیتی RPC دقیقاً مشابه سیستم اصلی برای دور زدن محدودیت‌های RLS
-        const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
-        
-        hideLoader();
-        if (error) {
-            console.error(error);
-            return alert('ارتباط با سرور برقرار نشد.');
-        }
-
-        // اگر کاربر در دیتابیس یافت شد
-        if (data && data.length > 0) {
-            let user = data[0];
-            if (user.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
-            if (user.status === 'blocked' || user.status === 'rejected') return alert('❌ دسترسی شما مسدود شده است.');
+        async function checkUser() {
+            let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
+            if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
+            showLoader('در حال بررسی هویت...');
             
-            // ذخیره اطلاعات یافت شده به همراه شماره موبایل
-            activeUser = { ...user, phone_number: phone };
+            try {
+                // 🚀 استفاده از تابع امنیتی داشبورد اصلی
+                const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
+                hideLoader();
+                if (error) return alert('ارتباط با سرور برقرار نشد.');
 
-            // در RPC سیستم اصلی، وضعیت داشتن رمز با has_password مشخص می‌شود
-            if (!user.has_password) {
-                if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = user.full_name.split(' ')[0];
-                goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
-            } else {
-                goToStep('step-login', 'ورود به بوفه', `سلام ${user.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
-            }
-        } else {
-            // اگر دیتایی برنگشت یعنی کاربر واقعاً وجود ندارد
-            goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
+                if (data && data.length > 0) {
+                    let user = data[0];
+                    if (user.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
+                    if (user.status === 'blocked' || user.status === 'rejected') return alert('❌ دسترسی شما مسدود شده است.');
+                    
+                    activeUser = { ...user, phone_number: phone };
+
+                    if (!user.has_password) {
+                        if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = user.full_name.split(' ')[0];
+                        goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
+                    } else {
+                        goToStep('step-login', 'ورود به بوفه', `سلام ${user.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
+                    }
+                } else {
+                    goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
+                }
+            } catch (err) { hideLoader(); alert('خطا در ارتباط با سرور.'); }
         }
-    } catch (err) { 
-        hideLoader(); 
-        alert('خطا در ارتباط با سرور.'); 
-    }
-}
-async function verifyLogin() {
-    let pass = document.getElementById('inpLoginPass').value.trim();
-    if(!pass) return alert('رمز عبور را وارد کنید.');
-    showLoader('اعتبارسنجی یکپارچه...');
-    try {
-        // 👈 اتصال به سیستم Auth سوپابیس مشابه پرتال اصلی
-        let { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: activeUser.phone_number + '@rahino.ir',
-            password: pass
-        });
 
-        if (authError) {
-            // بررسی دیتابیس برای کاربرانی که هنوز وارد سیستم Auth جدید نشده‌اند
-            const { data: dbUser } = await supabaseClient.from('users').select('password').eq('phone_number', activeUser.phone_number).single();
-            if (dbUser && dbUser.password === pass) {
+        async function verifyLogin() {
+            let pass = document.getElementById('inpLoginPass').value.trim();
+            if(!pass) return alert('رمز عبور را وارد کنید.');
+            showLoader('اعتبارسنجی یکپارچه...');
+            try {
+                let { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email: activeUser.phone_number + '@rahino.ir',
+                    password: pass
+                });
+
+                if (authError) {
+                    const { data: dbUser } = await supabaseClient.from('users').select('password').eq('phone_number', activeUser.phone_number).single();
+                    if (dbUser && dbUser.password === pass) {
+                        await supabaseClient.auth.signUp({ email: activeUser.phone_number + '@rahino.ir', password: pass });
+                        hideLoader(); loginSuccess();
+                    } else {
+                        hideLoader(); alert('❌ رمز عبور اشتباه است!');
+                    }
+                } else {
+                    hideLoader(); loginSuccess();
+                }
+            } catch(e) { hideLoader(); alert('خطا در ورود.'); }
+        }
+
+        async function saveNewPassword() {
+            let pass = document.getElementById('setupPass').value.trim();
+            let secQ = document.getElementById('setupSecQ').value;
+            let secA = document.getElementById('setupSecA').value.trim();
+            if(pass.length < 6 || !secQ || !secA) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد و تمام فیلدها پر شوند.');
+            showLoader('در حال ذخیره...');
+            try {
                 await supabaseClient.auth.signUp({ email: activeUser.phone_number + '@rahino.ir', password: pass });
-                hideLoader(); loginSuccess();
-            } else {
-                hideLoader(); alert('❌ رمز عبور اشتباه است!');
+                const { error } = await supabaseClient.from('users').update({ password: pass, security_question: secQ, security_answer: secA }).eq('phone_number', activeUser.phone_number);
+                hideLoader();
+                if(error) throw error;
+                loginSuccess();
+            } catch (err) { hideLoader(); alert('خطا در ذخیره اطلاعات.'); }
+        }
+
+        async function registerUser() {
+            let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
+            let name = document.getElementById('regName').value.trim();
+            let grade = document.getElementById('regGrade').value;
+            let major = document.getElementById('regMajor').value.trim();
+            let school = document.getElementById('regSchool').value.trim();
+            let pass = document.getElementById('regPass').value.trim();
+            let secQ = document.getElementById('regSecQ').value;
+            let secA = document.getElementById('regSecA').value.trim();
+            
+            if(!name || pass.length < 6 || !secQ || !secA) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+            showLoader('تشکیل پرونده یکپارچه...');
+            try {
+                await supabaseClient.auth.signUp({ email: phone + '@rahino.ir', password: pass });
+                const { error } = await supabaseClient.from('users').insert([{
+                    phone_number: phone, full_name: name, grade: grade, major: major, school_name: school, 
+                    password: pass, security_question: secQ, security_answer: secA, status: 'pending', wallet_balance: 0
+                }]);
+                hideLoader();
+                if(error) throw error;
+                alert('✅ ثبت‌نام شما با موفقیت انجام شد.\nپس از تایید مدیریت، می‌توانید به تمامی بخش‌ها از جمله بوفه دسترسی داشته باشید.');
+                goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
+                document.getElementById('inpPhone').value = '';
+            } catch (err) { hideLoader(); alert('خطا در ثبت نام.'); }
+        }
+
+        async function processRecovery() {
+            let ans = document.getElementById('inpRecoveryAns').value.trim();
+            let newPass = document.getElementById('inpRecoveryNewPass').value.trim();
+            if(newPass.length < 6) return alert('رمز عبور جدید باید حداقل ۶ کاراکتر باشد.');
+            showLoader('تغییر رمز...');
+            try {
+                const { data, error: fetchError } = await supabaseClient.from('users').select('security_answer').eq('phone_number', activeUser.phone_number).single();
+                if (fetchError || !data || data.security_answer.trim() !== ans) { hideLoader(); return alert('❌ پاسخ سوال امنیتی اشتباه است!'); }
+                await supabaseClient.from('users').update({ password: newPass }).eq('phone_number', activeUser.phone_number);
+                hideLoader(); alert('✅ رمز عبور با موفقیت تغییر کرد.'); loginSuccess();
+            } catch(e) { hideLoader(); alert('خطا در تغییر رمز.'); }
+        }
+
+        function setupRecoveryView() {
+            document.getElementById('recoveryQuestionText').innerText = activeUser.security_question || 'نام بهترین دوست دوران کودکی شما؟';
+            goToStep('step-recovery', 'بازیابی رمز عبور', 'پاسخ به سوال امنیتی');
+        }
+
+        function logoutApp() {
+            if(confirm('آیا از حساب کاربری خود خارج می‌شوید؟')) {
+                localStorage.removeItem('buffet_user_phone');
+                activeUser = null; cart = [];
+                document.getElementById('bottomNav').style.display = 'none';
+                document.getElementById('inpPhone').value = '';
+                document.getElementById('inpLoginPass').value = '';
+                switchView('view-auth');
+                goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
             }
-        } else {
-            hideLoader(); loginSuccess();
         }
-    } catch(e) { hideLoader(); alert('خطا در ورود.'); }
-}
 
-async function saveNewPassword() {
-    let pass = document.getElementById('setupPass').value.trim();
-    let secQ = document.getElementById('setupSecQ').value;
-    let secA = document.getElementById('setupSecA').value.trim();
-    if(pass.length < 6 || !secQ || !secA) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد و تمام فیلدها پر شوند.');
-    showLoader('در حال ذخیره...');
-    try {
-        await supabaseClient.auth.signUp({ email: activeUser.phone_number + '@rahino.ir', password: pass });
-        
-        const { error } = await supabaseClient.from('users').update({ 
-            password: pass, security_question: secQ, security_answer: secA 
-        }).eq('phone_number', activeUser.phone_number);
-        
-        hideLoader();
-        if(error) throw error;
-        loginSuccess();
-    } catch (err) { hideLoader(); alert('خطا در ذخیره اطلاعات.'); }
-}
+        // ==========================================
+        // 🏪 توابع بوفه و فروشگاه
+        // ==========================================
 
-async function registerUser() {
-    let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
-    let name = document.getElementById('regName').value.trim();
-    let grade = document.getElementById('regGrade').value;
-    let major = document.getElementById('regMajor').value.trim();
-    let school = document.getElementById('regSchool').value.trim();
-    let pass = document.getElementById('regPass').value.trim();
-    let secQ = document.getElementById('regSecQ').value;
-    let secA = document.getElementById('regSecA').value.trim();
-    
-    if(!name || pass.length < 6 || !secQ || !secA) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
-    showLoader('تشکیل پرونده یکپارچه...');
-    try {
-        await supabaseClient.auth.signUp({ email: phone + '@rahino.ir', password: pass });
+        async function loginSuccess() {
+            localStorage.setItem('buffet_user_phone', activeUser.phone_number);
+            const overlay = document.getElementById('welcomeOverlay');
+            document.getElementById('welcomeName').innerText = `خوش آمدید!`;
+            overlay.style.display = 'flex';
 
-        // 👈 اتصال به جدول users و ستون‌های استاندارد (مثل school_name)
-        const { error } = await supabaseClient.from('users').insert([{
-            phone_number: phone, full_name: name, grade: grade, major: major, school_name: school, 
-            password: pass, security_question: secQ, security_answer: secA, status: 'pending', wallet_balance: 0
-        }]);
-        
-        hideLoader();
-        if(error) throw error;
-        
-        alert('✅ ثبت‌نام شما با موفقیت انجام شد.\nپس از تایید مدیریت، می‌توانید به تمامی بخش‌ها از جمله بوفه دسترسی داشته باشید.');
-        goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
-        document.getElementById('inpPhone').value = '';
-    } catch (err) { hideLoader(); alert('خطا در ثبت نام.'); }
-}
-
-async function processRecovery() {
-    let ans = document.getElementById('inpRecoveryAns').value.trim();
-    let newPass = document.getElementById('inpRecoveryNewPass').value.trim();
-    
-    if(newPass.length < 6) return alert('رمز عبور جدید باید حداقل ۶ کاراکتر باشد.');
-    showLoader('تغییر رمز...');
-    
-    try {
-        // 🚀 دریافت مستقیم پاسخ امنیتی از دیتابیس (همانند منطق سیستم اصلی)
-        const { data, error: fetchError } = await supabaseClient.from('users')
-            .select('security_answer')
-            .eq('phone_number', activeUser.phone_number)
-            .single();
-        
-        if (fetchError || !data || data.security_answer.trim() !== ans) {
-            hideLoader(); 
-            return alert('❌ پاسخ سوال امنیتی اشتباه است!');
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'get_init_data', phone_number: activeUser.phone_number })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    storeProducts = data.products || [];
+                    userWalletBalance = data.wallet_balance || 0;
+                    activeUser.full_name = data.full_name;
+                    userFavorites = data.favorites || [];
+                    featuredProducts = data.featured_products || [];
+                    document.getElementById('welcomeName').innerText = `سلام ${data.full_name.split(' ')[0]} عزیز!`;
+                    
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        document.getElementById('view-auth').classList.remove('active');
+                        document.getElementById('bottomNav').style.display = 'flex';
+                        switchView('view-store', document.querySelectorAll('.nav-item')[0]);
+                        renderStore();
+                        updateWalletLabels();
+                    }, 1500);
+                } else { throw new Error(data.error); }
+            } catch (err) {
+                overlay.style.display = 'none';
+                alert('خطا در دریافت اطلاعات بوفه. اینترنت خود را بررسی کنید.');
+                logoutApp();
+            }
         }
-        
-        // آپدیت رمز در دیتابیس
-        await supabaseClient.from('users').update({ password: newPass }).eq('phone_number', activeUser.phone_number);
-        hideLoader(); 
-        alert('✅ رمز عبور با موفقیت تغییر کرد.'); 
-        loginSuccess();
-    } catch(e) { 
-        hideLoader(); 
-        alert('خطا در تغییر رمز.'); 
-    }
-}
+
         function updateWalletLabels() {
             document.getElementById('walletLabelBadge').innerText = `موجودی: ${userWalletBalance.toLocaleString()}`;
             const profileBal = document.getElementById('profileWalletBalance');
@@ -540,7 +581,7 @@ async function processRecovery() {
             if (userWalletBalance < 0) {
                 profileBal.classList.add('negative');
                 document.getElementById('profileWalletStatus').innerText = '⚠️ شما بدهی دارید. لطفاً حساب خود را شارژ کنید.';
-                document.getElementById('profileWalletStatus').style.color = 'var(--warning)';
+                document.getElementById('profileWalletStatus').style.color = '#fecaca';
             } else {
                 profileBal.classList.remove('negative');
                 document.getElementById('profileWalletStatus').innerText = '(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)';
@@ -555,31 +596,27 @@ async function processRecovery() {
             
             const categories = [...new Set(storeProducts.filter(p => p.stock_count > 0).map(p => p.category))];
 
-            let storeHtml = '';
-            let navHtml = '';
+            let storeHtml = ''; let navHtml = '';
 
-            // 🌟 بخش پیشنهاد راهینو (مثل دسته‌بندی عادی)
             if (featuredProducts && featuredProducts.length > 0) {
-                navHtml += `<div class="cat-link active" onclick="scrollToCategory('cat-featured', this)" style="cursor:pointer;">🌟 پیشنهاد ویژه</div>`;
+                navHtml += `<div class="cat-link active" onclick="scrollToCategory('cat-featured', this)">🌟 پیشنهاد ویژه</div>`;
                 storeHtml += `<section id="cat-featured" class="category-section"><div class="section-header">🌟 پیشنهاد راهینو</div><div class="horizontal-list">`;
                 featuredProducts.forEach(p => { storeHtml += generateProductHtml(p); });
                 storeHtml += `</div></section>`;
             }
 
-            // ✨ بخش علاقه‌مندی‌ها
             let favoriteProducts = storeProducts.filter(p => userFavorites.includes(p.id) && p.stock_count > 0);
             if (favoriteProducts.length > 0) {
                 let activeClass = (featuredProducts.length === 0) ? 'active' : '';
-                navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-foryou', this)" style="cursor:pointer;">✨ ویژه شما</div>`;
+                navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-foryou', this)">✨ ویژه شما</div>`;
                 storeHtml += `<section id="cat-foryou" class="category-section"><div class="section-header">✨ علاقه‌مندی‌های شما</div><div class="horizontal-list">`;
                 favoriteProducts.forEach(p => { storeHtml += generateProductHtml(p); });
                 storeHtml += `</div></section>`;
             }
 
-            // 📦 تولید بقیه دسته‌بندی‌ها
             categories.forEach((cat, index) => {
                 let activeClass = (index === 0 && (!featuredProducts || featuredProducts.length === 0) && favoriteProducts.length === 0) ? 'active' : '';
-                navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-${cat}', this)" style="cursor:pointer;">${cat}</div>`;
+                navHtml += `<div class="cat-link ${activeClass}" onclick="scrollToCategory('cat-${cat}', this)">${cat}</div>`;
             });
             navContainer.innerHTML = navHtml;
 
@@ -595,7 +632,6 @@ async function processRecovery() {
             storeContainer.innerHTML = storeHtml;
         }
 
-        // تابع کمکی برای ساخت ظاهر کارت محصولات
         function generateProductHtml(p) {
             const cartItem = cart.find(item => item.id === p.id);
             const qty = cartItem ? cartItem.qty : 0;
@@ -603,21 +639,17 @@ async function processRecovery() {
                 ? `<div class="btn-add-init" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">+ افزودن</div>` 
                 : `<div class="qty-controls"><button class="${qty === 1 ? 'qty-btn del' : 'qty-btn'}" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, -1)">${qty === 1 ? '🗑️' : '−'}</button><span class="qty-display">${qty}</span><button class="qty-btn" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">+</button></div>`;
             let imageDiv = p.image_url ? `url('${p.image_url}')` : 'none';
-            return `<div class="product-card"><div class="product-img" style="background-image: ${imageDiv};"></div><div class="product-info"><div class="product-name">${p.name}</div><div class="product-price">${p.price.toLocaleString()} تومان</div><div style="margin-top:auto;">${actionHtml}</div></div></div>`;
+            return `<div class="product-card glass-panel"><div class="product-img" style="background-image: ${imageDiv};"></div><div class="product-info"><div class="product-name">${p.name}</div><div class="product-price">${p.price.toLocaleString()} تومان</div><div style="margin-top:auto;">${actionHtml}</div></div></div>`;
         }
 
-        // تابع اسکرول نرم با کلیک روی منو
         function scrollToCategory(id, btn) {
             document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
             btn.classList.add('active');
             const section = document.getElementById(id);
             const storeScroll = document.getElementById('storeScroll');
-            if(section && storeScroll) {
-                storeScroll.scrollTo({ top: section.offsetTop - 20, behavior: 'smooth' });
-            }
+            if(section && storeScroll) storeScroll.scrollTo({ top: section.offsetTop - 20, behavior: 'smooth' });
         }
 
-        // تشخیص خودکار اسکرول برای تغییر رنگ تب‌های بالا
         window.addEventListener('DOMContentLoaded', () => {
             const storeScroll = document.getElementById('storeScroll');
             if(storeScroll) {
@@ -625,19 +657,13 @@ async function processRecovery() {
                     const sections = document.querySelectorAll('.category-section');
                     const navLinks = document.querySelectorAll('.cat-link');
                     let current = '';
-
                     sections.forEach(section => {
-                        const sectionTop = section.offsetTop;
-                        if (storeScroll.scrollTop >= (sectionTop - 60)) {
-                            current = section.getAttribute('id');
-                        }
+                        if (storeScroll.scrollTop >= (section.offsetTop - 60)) current = section.getAttribute('id');
                     });
-
                     navLinks.forEach(link => {
                         link.classList.remove('active');
                         if (current && link.getAttribute('onclick') && link.getAttribute('onclick').includes(current)) {
                             link.classList.add('active');
-                            // اسکرول نوار بالا برای اینکه تب همیشه تو دید باشه
                             link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         }
                     });
@@ -646,28 +672,26 @@ async function processRecovery() {
         });
         
         function updateItemQty(id, name, price, change) {
-    if (navigator.vibrate) navigator.vibrate(30);
-    let itemIndex = cart.findIndex(item => item.id === id);
-    
-    let productDb = storeProducts.find(p => p.id === id);
-    if(change > 0 && productDb && itemIndex > -1 && cart[itemIndex].qty >= productDb.stock_count) {
-        alert('موجودی این محصول در بوفه کافی نیست!'); return;
-    }
+            if (navigator.vibrate) navigator.vibrate(30);
+            let itemIndex = cart.findIndex(item => item.id === id);
+            let productDb = storeProducts.find(p => p.id === id);
+            
+            if(change > 0 && productDb && itemIndex > -1 && cart[itemIndex].qty >= productDb.stock_count) {
+                return alert('موجودی این محصول در بوفه کافی نیست!'); 
+            }
 
-    if (itemIndex > -1) {
-        cart[itemIndex].qty += change;
-        if (cart[itemIndex].qty <= 0) cart.splice(itemIndex, 1);
-    } else if (change > 0) { cart.push({ id, name, price, qty: 1 }); }
-    
-    // ذخیره موقعیت اسکرول
-    const storeScroll = document.getElementById('storeScroll');
-    const currentScroll = storeScroll ? storeScroll.scrollTop : 0;
-    
-    updateBadge(); renderStore(); updateCartUI();
-    
-    // برگرداندن موقعیت اسکرول
-    if(storeScroll) storeScroll.scrollTop = currentScroll;
-}
+            if (itemIndex > -1) {
+                cart[itemIndex].qty += change;
+                if (cart[itemIndex].qty <= 0) cart.splice(itemIndex, 1);
+            } else if (change > 0) { cart.push({ id, name, price, qty: 1 }); }
+            
+            const storeScroll = document.getElementById('storeScroll');
+            const currentScroll = storeScroll ? storeScroll.scrollTop : 0;
+            
+            updateBadge(); renderStore(); updateCartUI();
+            
+            if(storeScroll) storeScroll.scrollTop = currentScroll;
+        }
 
         function updateBadge() {
             let totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -705,8 +729,16 @@ async function processRecovery() {
 
             const selectedMethod = document.querySelector('input[name="payMethod"]:checked').value;
             document.getElementById('lblWallet').classList.remove('active'); document.getElementById('lblCash').classList.remove('active');
-            if(selectedMethod === 'wallet') document.getElementById('lblWallet').classList.add('active');
-            else document.getElementById('lblCash').classList.add('active');
+            
+            if(selectedMethod === 'wallet') {
+                document.getElementById('lblWallet').classList.add('active');
+                document.getElementById('lblWallet').style.background = 'var(--primary-fade)';
+                document.getElementById('lblCash').style.background = 'var(--glass-highlight)';
+            } else {
+                document.getElementById('lblCash').classList.add('active');
+                document.getElementById('lblCash').style.background = 'var(--primary-fade)';
+                document.getElementById('lblWallet').style.background = 'var(--glass-highlight)';
+            }
 
             let totalBuyingPower = userWalletBalance + maxCredit; 
             if (selectedMethod === 'wallet' && totalPrice > totalBuyingPower) {
@@ -741,9 +773,9 @@ async function processRecovery() {
                         userWalletBalance = data.new_balance;
                     }
                     if (selectedMethod === 'wallet') {
-                        alert('✅ سفارش شما ثبت شد.\nلطفاً به مراقب سالن اطلاع دهید و پس از تایید، خرید خود را تحویل بگیرید.');
+                        alert('✅ سفارش شما ثبت شد.\nپس از تایید توسط مراقب سالن، می‌توانید خرید خود را تحویل بگیرید.');
                     } else {
-                        alert('✅ سفارش ثبت شد.\nلطفاً مبلغ را نقداً به مراقب سالن تحویل دهید و پس از تایید، خرید خود را بردارید.');
+                        alert('✅ سفارش نقدی ثبت شد.\nلطفاً مبلغ را به مراقب تحویل داده و پس از تایید سیستم خرید را تحویل بگیرید.');
                     }
                     cart = []; updateBadge(); updateWalletLabels();
                     
@@ -757,10 +789,14 @@ async function processRecovery() {
                     renderStore(); switchView('view-store', document.querySelectorAll('.nav-item')[0]);
                 } else { throw new Error(data.error); }
             } catch(e) {
-                alert('خطا در ثبت سفارش: ' + e.message);
+                alert('خطا در ثبت سفارش. اینترنت خود را چک کنید.');
                 updateCartUI(); 
             }
         }
+
+        // ==========================================
+        // 💳 پروفایل، شارژ و تاریخچه
+        // ==========================================
 
         function renderProfileUI() {
             const container = document.getElementById('quickAmountsContainer');
@@ -786,14 +822,14 @@ async function processRecovery() {
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         let w = img.width, h = img.height;
-                        const MAX = 1000;
+                        const MAX = 800;
                         if(w > h && w > MAX) { h *= MAX/w; w = MAX; } else if(h > MAX) { w *= MAX/h; h = MAX; }
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                         receiptBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                        document.getElementById('uploadText').innerText = `✅ فیش آماده ارسال`;
-                        document.getElementById('uploadBox').style.borderColor = "var(--success)";
-                        document.getElementById('uploadBox').style.background = "rgba(16, 185, 129, 0.05)";
+                        document.getElementById('uploadText').innerText = `✅ فیش ضمیمه شد`;
+                        document.getElementById('uploadBox').style.borderColor = "var(--primary)";
+                        document.getElementById('uploadBox').style.background = "var(--primary-fade)";
                         validateChargeForm();
                     };
                     img.src = e.target.result;
@@ -806,11 +842,28 @@ async function processRecovery() {
 
         function switchChargeTab(method) {
             chargeMethod = method;
-            document.getElementById('btnTabReceipt').style.borderColor = method === 'receipt' ? 'var(--primary)' : 'var(--border)';
-            document.getElementById('btnTabReceipt').style.color = method === 'receipt' ? 'var(--primary)' : 'var(--text-main)';
-            document.getElementById('btnTabCash').style.borderColor = method === 'cash' ? 'var(--primary)' : 'var(--border)';
-            document.getElementById('btnTabCash').style.color = method === 'cash' ? 'var(--primary)' : 'var(--text-main)';
-            document.getElementById('receiptBox').style.display = method === 'receipt' ? 'block' : 'none';
+            const btnReceipt = document.getElementById('btnTabReceipt');
+            const btnCash = document.getElementById('btnTabCash');
+            
+            if(method === 'receipt') {
+                btnReceipt.style.borderColor = 'var(--primary)';
+                btnReceipt.style.background = 'var(--primary-fade)';
+                btnReceipt.style.color = 'var(--primary)';
+                
+                btnCash.style.borderColor = 'var(--glass-border)';
+                btnCash.style.background = 'var(--glass-highlight)';
+                btnCash.style.color = 'var(--text-main)';
+                document.getElementById('receiptBox').style.display = 'block';
+            } else {
+                btnCash.style.borderColor = 'var(--primary)';
+                btnCash.style.background = 'var(--primary-fade)';
+                btnCash.style.color = 'var(--primary)';
+                
+                btnReceipt.style.borderColor = 'var(--glass-border)';
+                btnReceipt.style.background = 'var(--glass-highlight)';
+                btnReceipt.style.color = 'var(--text-main)';
+                document.getElementById('receiptBox').style.display = 'none';
+            }
             validateChargeForm();
         }
 
@@ -843,12 +896,13 @@ async function processRecovery() {
                     }
                     document.getElementById('inpChargeAmount').value = ''; receiptBase64 = '';
                     document.getElementById('uploadText').innerText = `تصویر فیش را آپلود کنید`;
-                    document.getElementById('uploadBox').style.borderColor = "var(--border)";
+                    document.getElementById('uploadBox').style.borderColor = "var(--glass-border)";
+                    document.getElementById('uploadBox').style.background = "var(--glass-highlight)";
                     validateChargeForm();
                     btn.innerText = 'ثبت درخواست شارژ';
                 } else { throw new Error(data.error); }
             } catch(e) {
-                alert('خطا در ارسال درخواست: ' + e.message);
+                alert('خطا در ارسال درخواست. اینترنت را بررسی کنید.');
                 btn.innerText = 'ثبت درخواست شارژ'; validateChargeForm();
             }
         }
@@ -856,7 +910,7 @@ async function processRecovery() {
         async function loadHistory() {
             switchView('view-history');
             const container = document.getElementById('historyContainer');
-            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px;">⏳ در حال دریافت اطلاعات از سرور...</div>';
+            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">⏳ در حال دریافت اطلاعات از سرور...</div>';
             
             try {
                 const response = await fetch(GAS_URL, {
@@ -869,7 +923,7 @@ async function processRecovery() {
                     let html = '';
                     const historyList = data.history || [];
                     if(historyList.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px;">شما تاکنون هیچ سابقه‌ای در بوفه ندارید.</div>';
+                        container.innerHTML = '<div style="text-align:center; color:var(--text-muted); margin-top:40px; font-weight: bold;">شما تاکنون هیچ تراکنشی در بوفه نداشته‌اید.</div>';
                         return;
                     }
                     
@@ -877,18 +931,18 @@ async function processRecovery() {
                         let isOrder = item.type === 'order';
                         let icon = isOrder ? '🛍️' : '⚡';
                         let title = 'تراکنش نامشخص';
-if (isOrder) {
-    title = 'خرید از بوفه';
-} else {
-    if (item.tx_type === 'cash_charge') title = 'شارژ نقدی (حضوری)';
-    else if (item.tx_type === 'receipt_charge') title = 'واریز کارت به کارت (فیش)';
-    else if (item.tx_type === 'change_deposit') title = 'مابقی پول خرید نقدی';
-    else if (item.tx_type === 'manual_cash') title = 'شارژ توسط مدیریت';
-    else title = 'شارژ کیف پول';
-}
+                        
+                        if (isOrder) { title = 'خرید از بوفه'; } 
+                        else {
+                            if (item.tx_type === 'cash_charge') title = 'شارژ نقدی (حضوری)';
+                            else if (item.tx_type === 'receipt_charge') title = 'واریز کارت به کارت (فیش)';
+                            else if (item.tx_type === 'change_deposit') title = 'مابقی پول خرید نقدی';
+                            else if (item.tx_type === 'manual_cash') title = 'شارژ توسط مدیریت';
+                            else title = 'شارژ کیف پول';
+                        }
+                        
                         let amountColor = isOrder ? 'var(--danger)' : 'var(--success)';
                         let sign = isOrder ? '-' : '+';
-                        
                         let shamsiDate = new Date(item.raw_date).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
                         let detailsHtml = '';
@@ -899,18 +953,18 @@ if (isOrder) {
                             let payMethodTxt = item.payment_method === 'wallet' ? '💳 پرداخت از کیف پول' : '💵 پرداخت نقدی';
                             let payMethodColor = item.payment_method === 'wallet' ? 'var(--primary)' : 'var(--warning)';
                             
-                            detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.6;">
-                                اقلام: ${itemsText}<br>
-                                <span style="color: ${payMethodColor}; font-weight: bold; display: inline-block; margin-top: 4px;">${payMethodTxt}</span>
+                            detailsHtml = `<div style="font-size: 10.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; font-weight: bold;">
+                                اقلام: <span style="color: var(--text-main);">${itemsText}</span><br>
+                                <span style="color: ${payMethodColor}; display: inline-block; margin-top: 6px;">${payMethodTxt}</span>
                             </div>`;
                         } else if (!isOrder) {
                             let statusTxt = item.status === 'approved' ? '✅ تایید شده' : (item.status === 'rejected' ? '❌ رد شده' : '⏳ در انتظار تایید');
                             let statusColor = item.status === 'approved' ? 'var(--success)' : (item.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
-                            detailsHtml = `<div style="font-size: 11px; color: ${statusColor}; margin-top: 6px; font-weight: bold;">وضعیت: ${statusTxt}</div>`;
+                            detailsHtml = `<div style="font-size: 11px; color: ${statusColor}; margin-top: 8px; font-weight: bold;">وضعیت: ${statusTxt}</div>`;
                         }
                         
                         html += `
-                        <div class="history-card">
+                        <div class="history-card glass-panel">
                             <div class="history-info">
                                 <div class="history-icon">${icon}</div>
                                 <div>
@@ -924,24 +978,7 @@ if (isOrder) {
                     });
                     container.innerHTML = html;
                 } else { throw new Error(data.error); }
-            } catch(e) { container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px;">خطا در دریافت تاریخچه</div>`; }
-        }
-
-        function setupRecoveryView() {
-            document.getElementById('recoveryQuestionText').innerText = activeUser.security_question;
-            goToStep('step-recovery', 'بازیابی رمز عبور', 'پاسخ به سوال امنیتی');
-        }
-
-        function logoutApp() {
-            if(confirm('آیا از حساب کاربری خود خارج می‌شوید؟')) {
-                localStorage.removeItem('buffet_user_phone');
-                activeUser = null; cart = [];
-                document.getElementById('bottomNav').style.display = 'none';
-                document.getElementById('inpPhone').value = '';
-                document.getElementById('inpLoginPass').value = '';
-                switchView('view-auth');
-                goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
-            }
+            } catch(e) { container.innerHTML = `<div style="text-align:center; color:var(--danger); margin-top:40px; font-weight:bold;">خطا در دریافت تاریخچه</div>`; }
         }
     </script>
 </body>
