@@ -385,32 +385,50 @@
 // 🔐 توابع احراز هویت یکپارچه با سیستم اصلی
 // ==========================================
 
+// ==========================================
+// 🔐 توابع اصلاح شده بررسی کاربر و بازیابی رمز
+// ==========================================
+
 async function checkUser() {
     let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
     if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
     showLoader('در حال بررسی هویت...');
+    
     try {
-        // 👈 تغییر از pan_users به جدول اصلی users
-        const { data, error } = await supabaseClient.from('users').select('*').eq('phone_number', phone).maybeSingle();
+        // 🚀 استفاده از تابع امنیتی RPC دقیقاً مشابه سیستم اصلی برای دور زدن محدودیت‌های RLS
+        const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
+        
         hideLoader();
-        if (data) {
-            if (data.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
-            if (data.status === 'blocked' || data.status === 'rejected') return alert('❌ دسترسی شما مسدود شده است.');
+        if (error) {
+            console.error(error);
+            return alert('ارتباط با سرور برقرار نشد.');
+        }
+
+        // اگر کاربر در دیتابیس یافت شد
+        if (data && data.length > 0) {
+            let user = data[0];
+            if (user.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
+            if (user.status === 'blocked' || user.status === 'rejected') return alert('❌ دسترسی شما مسدود شده است.');
             
-            activeUser = data;
-            // 👈 بررسی ستون password سیستم اصلی به جای buffet_password
-            if (!data.password) {
-                if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = data.full_name.split(' ')[0];
+            // ذخیره اطلاعات یافت شده به همراه شماره موبایل
+            activeUser = { ...user, phone_number: phone };
+
+            // در RPC سیستم اصلی، وضعیت داشتن رمز با has_password مشخص می‌شود
+            if (!user.has_password) {
+                if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = user.full_name.split(' ')[0];
                 goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
             } else {
-                goToStep('step-login', 'ورود به بوفه', `سلام ${data.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
+                goToStep('step-login', 'ورود به بوفه', `سلام ${user.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
             }
         } else {
+            // اگر دیتایی برنگشت یعنی کاربر واقعاً وجود ندارد
             goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
         }
-    } catch (err) { hideLoader(); alert('خطا در ارتباط با سرور.'); }
+    } catch (err) { 
+        hideLoader(); 
+        alert('خطا در ارتباط با سرور.'); 
+    }
 }
-
 async function verifyLogin() {
     let pass = document.getElementById('inpLoginPass').value.trim();
     if(!pass) return alert('رمز عبور را وارد کنید.');
@@ -489,53 +507,32 @@ async function registerUser() {
 async function processRecovery() {
     let ans = document.getElementById('inpRecoveryAns').value.trim();
     let newPass = document.getElementById('inpRecoveryNewPass').value.trim();
-    if(ans !== activeUser.security_answer) return alert('❌ پاسخ امنیتی اشتباه است!');
+    
     if(newPass.length < 6) return alert('رمز عبور جدید باید حداقل ۶ کاراکتر باشد.');
     showLoader('تغییر رمز...');
+    
     try {
-        await supabaseClient.from('users').update({ password: newPass }).eq('phone_number', activeUser.phone_number);
-        hideLoader(); alert('✅ رمز عبور با موفقیت تغییر کرد.'); loginSuccess();
-    } catch(e) { hideLoader(); alert('خطا در تغییر رمز.'); }
-}
-
-        async function loginSuccess() {
-            localStorage.setItem('buffet_user_phone', activeUser.phone_number);
-            
-            const overlay = document.getElementById('welcomeOverlay');
-            document.getElementById('welcomeName').innerText = `خوش آمدید!`;
-            overlay.style.display = 'flex';
-
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'get_init_data', phone_number: activeUser.phone_number })
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    storeProducts = data.products || [];
-                    userWalletBalance = data.wallet_balance || 0;
-                    activeUser.full_name = data.full_name;
-                    userFavorites = data.favorites || [];
-                    featuredProducts = data.featured_products || [];
-                    document.getElementById('welcomeName').innerText = `سلام ${data.full_name.split(' ')[0]} عزیز!`;
-                    
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.getElementById('view-auth').classList.remove('active');
-                        document.getElementById('bottomNav').style.display = 'flex';
-                        switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-                        renderStore();
-                        updateWalletLabels();
-                    }, 1500);
-                } else { throw new Error(data.error); }
-            } catch (err) {
-                overlay.style.display = 'none';
-                alert('خطا در دریافت اطلاعات از سرور: ' + err.message);
-                logoutApp();
-            }
+        // 🚀 دریافت مستقیم پاسخ امنیتی از دیتابیس (همانند منطق سیستم اصلی)
+        const { data, error: fetchError } = await supabaseClient.from('users')
+            .select('security_answer')
+            .eq('phone_number', activeUser.phone_number)
+            .single();
+        
+        if (fetchError || !data || data.security_answer.trim() !== ans) {
+            hideLoader(); 
+            return alert('❌ پاسخ سوال امنیتی اشتباه است!');
         }
-
+        
+        // آپدیت رمز در دیتابیس
+        await supabaseClient.from('users').update({ password: newPass }).eq('phone_number', activeUser.phone_number);
+        hideLoader(); 
+        alert('✅ رمز عبور با موفقیت تغییر کرد.'); 
+        loginSuccess();
+    } catch(e) { 
+        hideLoader(); 
+        alert('خطا در تغییر رمز.'); 
+    }
+}
         function updateWalletLabels() {
             document.getElementById('walletLabelBadge').innerText = `موجودی: ${userWalletBalance.toLocaleString()}`;
             const profileBal = document.getElementById('profileWalletBalance');
