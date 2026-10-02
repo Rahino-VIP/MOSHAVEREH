@@ -19,7 +19,6 @@ let userFavorites = [];
 let chargeMethod = 'receipt';
 let featuredProducts = [];
 
-// آیکون‌های SVG برای تولید داینامیک
 const icons = {
     add: `<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
     minus: `<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
@@ -28,9 +27,6 @@ const icons = {
     heart: `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
 };
 
-// ==========================================
-// 🛠 توابع کمکی
-// ==========================================
 function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
 function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
@@ -53,9 +49,6 @@ function switchView(viewId, navElement = null) {
     if(viewId === 'view-profile') renderProfileUI();
 }
 
-// ==========================================
-// 🔐 احراز هویت (متصل به جدول users)
-// ==========================================
 window.onload = () => {
     const savedPhone = localStorage.getItem('buffet_user_phone');
     if (savedPhone) {
@@ -69,14 +62,10 @@ async function checkUser() {
     let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
     if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
     showLoader('در حال بررسی هویت...');
-    
     try {
         const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
         hideLoader();
-        if (error) {
-            console.error("Supabase Error:", error);
-            return alert('خطا در ارتباط با سرور.');
-        }
+        if (error) { console.error(error); return alert('خطا در ارتباط با سرور.'); }
 
         if (data && data.length > 0) {
             let user = data[0];
@@ -87,7 +76,6 @@ async function checkUser() {
             let firstName = user.full_name ? user.full_name.split(' ')[0] : 'کاربر';
 
             if (!user.has_password) {
-                if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = firstName;
                 goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
             } else {
                 goToStep('step-login', 'ورود به بوفه', `سلام ${firstName}، رمز عبورت رو وارد کن`);
@@ -102,12 +90,8 @@ async function verifyLogin() {
     let pass = document.getElementById('inpLoginPass').value.trim();
     if(!pass) return alert('رمز عبور را وارد کنید.');
     showLoader('اعتبارسنجی...');
-    
     try {
-        let { error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: activeUser.phone_number + '@rahino.ir', password: pass
-        });
-
+        let { error: authError } = await supabaseClient.auth.signInWithPassword({ email: activeUser.phone_number + '@rahino.ir', password: pass });
         if (authError) {
             const { data: dbUser } = await supabaseClient.from('users').select('password').eq('phone_number', activeUser.phone_number).single();
             if (dbUser && dbUser.password === pass) {
@@ -116,9 +100,7 @@ async function verifyLogin() {
             } else {
                 hideLoader(); alert('❌ رمز عبور اشتباه است!');
             }
-        } else {
-            hideLoader(); loginSuccess();
-        }
+        } else { hideLoader(); loginSuccess(); }
     } catch(e) { hideLoader(); console.error(e); alert('خطا در ورود به سیستم.'); }
 }
 
@@ -153,10 +135,8 @@ async function registerUser() {
             phone_number: phone, full_name: name, grade: grade, major: major, school_name: school, 
             password: pass, security_question: secQ, security_answer: secA, status: 'pending', wallet_balance: 0
         }]);
-        hideLoader();
-        alert('✅ ثبت‌نام انجام شد. منتظر تایید مدیریت باشید.');
+        hideLoader(); alert('✅ ثبت‌نام انجام شد. منتظر تایید مدیریت باشید.');
         goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
-        document.getElementById('inpPhone').value = '';
     } catch (err) { hideLoader(); console.error(err); alert('خطا در ثبت نام.'); }
 }
 
@@ -183,15 +163,10 @@ function logoutApp() {
         localStorage.removeItem('buffet_user_phone');
         activeUser = null; cart = [];
         document.getElementById('bottomNavWrapper').style.display = 'none';
-        document.getElementById('inpPhone').value = ''; document.getElementById('inpLoginPass').value = '';
-        switchView('view-auth');
-        goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
+        switchView('view-auth'); goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
     }
 }
 
-// ==========================================
-// 🏪 دریافت مستقیم داده‌ها از دیتابیس
-// ==========================================
 async function loginSuccess() {
     localStorage.setItem('buffet_user_phone', activeUser.phone_number);
     const overlay = document.getElementById('welcomeOverlay');
@@ -212,9 +187,7 @@ async function loginSuccess() {
         const { data: orders } = await supabaseClient.from('buffet_orders').select('items').eq('phone_number', activeUser.phone_number);
         let itemFreq = {};
         if (orders) {
-            orders.forEach(o => {
-                try { JSON.parse(o.items).forEach(i => { itemFreq[i.id] = (itemFreq[i.id] || 0) + i.qty; }) } catch(e){}
-            });
+            orders.forEach(o => { try { JSON.parse(o.items).forEach(i => { itemFreq[i.id] = (itemFreq[i.id] || 0) + i.qty; }) } catch(e){} });
         }
         userFavorites = Object.keys(itemFreq).sort((a,b) => itemFreq[b] - itemFreq[a]).slice(0, 3);
 
@@ -231,30 +204,22 @@ async function loginSuccess() {
             document.getElementById('view-auth').classList.remove('active');
             document.getElementById('bottomNavWrapper').style.display = 'flex';
             switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-            renderStore();
-            updateWalletLabels();
-        }, 1000);
+            renderStore(); updateWalletLabels();
+        }, 1500);
     } catch (err) {
-        console.error(err);
-        overlay.style.display = 'none';
-        alert('خطا در دریافت اطلاعات دیتابیس بوفه.');
-        logoutApp();
+        console.error(err); overlay.style.display = 'none';
+        alert('خطا در دریافت اطلاعات دیتابیس بوفه.'); logoutApp();
     }
 }
 
-// ==========================================
-// 🛒 فروشگاه و سبد خرید
-// ==========================================
 function updateWalletLabels() {
-    document.getElementById('walletLabelBadge').innerText = `${userWalletBalance.toLocaleString()}`;
+    document.getElementById('walletLabelBadge').innerText = `${userWalletBalance.toLocaleString()} تومان`;
     const profileBal = document.getElementById('profileWalletBalance');
     profileBal.innerHTML = `${userWalletBalance.toLocaleString()} <span>تومان</span>`;
     if (userWalletBalance < 0) {
         profileBal.classList.add('negative');
-        document.getElementById('profileWalletStatus').innerText = '⚠ شما بدهی دارید. لطفاً حساب خود را شارژ کنید.';
     } else {
         profileBal.classList.remove('negative');
-        document.getElementById('profileWalletStatus').innerText = '(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)';
     }
 }
 
@@ -308,8 +273,7 @@ function generateProductHtml(p) {
         : `<div class="qty-controls"><button class="${qty === 1 ? 'qty-btn del' : 'qty-btn'}" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, -1)">${qty === 1 ? icons.trash : icons.minus}</button><span class="qty-display">${qty}</span><button class="qty-btn" onclick="updateItemQty('${p.id}', '${p.name}', ${p.price}, 1)">${icons.add}</button></div>`;
     
     let imageDiv = p.image_url ? `url('${p.image_url}')` : 'none';
-    
-    return `<div class="product-card"><div class="product-img" style="background-image: ${imageDiv};"></div><div class="product-info"><div class="product-name">${p.name}</div><div class="product-price">${p.price.toLocaleString()} <span style="font-size: 11px; color: var(--text-muted);">تومان</span></div><div style="margin-top:auto;">${actionHtml}</div></div></div>`;
+    return `<div class="product-card"><div class="product-img" style="background-image: ${imageDiv};"></div><div class="product-info"><div class="product-name">${p.name}</div><div class="product-price">${p.price.toLocaleString()} <span>تومان</span></div><div style="margin-top:auto;">${actionHtml}</div></div></div>`;
 }
 
 function scrollToCategory(id, btn) {
@@ -382,10 +346,16 @@ function updateCartUI() {
     let html = ''; let totalPrice = 0;
     cart.forEach(item => {
         totalPrice += (item.price * item.qty);
+        // اصلاح چیدمان آیتم‌های سبد خرید
         html += `<div class="cart-item">
-                    <div><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${item.price.toLocaleString()} تومان</div></div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">${item.price.toLocaleString()} تومان</div>
+                    </div>
                     <div class="qty-controls" style="margin-top:0;">
-                        <button class="${item.qty === 1 ? 'qty-btn del' : 'qty-btn'}" onclick="updateItemQty('${item.id}', '${item.name}', ${item.price}, -1)">${item.qty === 1 ? icons.trash : icons.minus}</button>
+                        <button class="qty-btn ${item.qty === 1 ? 'del' : ''}" onclick="updateItemQty('${item.id}', '${item.name}', ${item.price}, -1)">
+                            ${item.qty === 1 ? icons.trash : icons.minus}
+                        </button>
                         <span class="qty-display">${item.qty}</span>
                         <button class="qty-btn" onclick="updateItemQty('${item.id}', '${item.name}', ${item.price}, 1)">${icons.add}</button>
                     </div>
@@ -406,11 +376,11 @@ function updateCartUI() {
     let totalBuyingPower = userWalletBalance + maxCredit; 
     if (selectedMethod === 'wallet' && totalPrice > totalBuyingPower) {
         btnCheckout.className = 'btn-checkout disabled'; 
-        btnCheckout.innerHTML = 'موجودی ناکافی <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'; 
-        btnCheckout.disabled = true; msgStatus.style.display = 'block';
+        btnCheckout.innerHTML = 'موجودی ناکافی'; 
+        btnCheckout.disabled = true; msgStatus.style.display = 'flex';
     } else {
         btnCheckout.className = 'btn-checkout active'; 
-        btnCheckout.innerHTML = 'تایید نهایی و خرید <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>'; 
+        btnCheckout.innerHTML = 'تایید نهایی و خرید'; 
         btnCheckout.disabled = false; msgStatus.style.display = 'none';
     }
 }
@@ -420,7 +390,7 @@ async function processCheckout() {
     const selectedMethod = document.querySelector('input[name="payMethod"]:checked').value;
     let totalToPay = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     
-    btn.innerHTML = 'در حال ثبت... <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'; btn.disabled = true;
+    btn.innerHTML = 'در حال ثبت...'; btn.disabled = true;
 
     try {
         if (selectedMethod === 'wallet') {
@@ -445,11 +415,10 @@ async function processCheckout() {
         storeProducts = newProds || [];
         
         renderStore(); switchView('view-store', document.querySelectorAll('.nav-item')[0]);
-        btn.innerHTML = 'تایید نهایی و خرید <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        btn.innerHTML = 'تایید نهایی و خرید';
     } catch(e) {
-        console.error(e);
-        alert('خطا در ثبت سفارش.');
-        btn.innerHTML = 'تایید نهایی و خرید <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>'; btn.disabled = false;
+        console.error(e); alert('خطا در ثبت سفارش.');
+        btn.innerHTML = 'تایید نهایی و خرید'; btn.disabled = false;
     }
 }
 
@@ -498,21 +467,22 @@ function handleReceiptSelect(event) {
 
 document.getElementById('inpChargeAmount').addEventListener('input', validateChargeForm);
 
-// جایگزین کردن تابع قبلی در bufe.js
+// 🚀 رفع قطعی مشکل دکمه‌های تب در بخش شارژ کیف پول
 function switchChargeTab(method) {
     chargeMethod = method;
+    const btnReceipt = document.getElementById('btnTabReceipt');
+    const btnCash = document.getElementById('btnTabCash');
+    const receiptBox = document.getElementById('receiptBox');
     
-    // فقط کلاس active را جابجا می‌کنیم تا CSS کار خودش را بکند
     if(method === 'receipt') {
-        document.getElementById('btnTabReceipt').classList.add('active');
-        document.getElementById('btnTabCash').classList.remove('active');
-        document.getElementById('receiptBox').style.display = 'block';
+        btnReceipt.classList.add('active');
+        btnCash.classList.remove('active');
+        receiptBox.style.display = 'block';
     } else {
-        document.getElementById('btnTabCash').classList.add('active');
-        document.getElementById('btnTabReceipt').classList.remove('active');
-        document.getElementById('receiptBox').style.display = 'none';
+        btnCash.classList.add('active');
+        btnReceipt.classList.remove('active');
+        receiptBox.style.display = 'none';
     }
-    
     validateChargeForm();
 }
 
@@ -529,7 +499,7 @@ function validateChargeForm() {
 async function submitChargeRequest() {
     const amt = Number(document.getElementById('inpChargeAmount').value);
     const btn = document.getElementById('btnSubmitCharge');
-    btn.innerHTML = 'در حال ارسال... <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'; btn.disabled = true;
+    btn.innerHTML = 'در حال ارسال...'; btn.disabled = true;
 
     try {
         let txType = chargeMethod === 'cash' ? 'cash_charge' : 'receipt_charge';
@@ -548,11 +518,10 @@ async function submitChargeRequest() {
         document.getElementById('uploadBox').style.borderColor = "var(--glass-border)";
         document.getElementById('uploadBox').style.background = "var(--glass-highlight)";
         validateChargeForm();
-        btn.innerHTML = 'ثبت درخواست <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        btn.innerHTML = 'ثبت درخواست شارژ';
     } catch(e) {
-        console.error(e);
-        alert('خطا در ارسال درخواست.');
-        btn.innerHTML = 'ثبت درخواست <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>'; validateChargeForm();
+        console.error(e); alert('خطا در ارسال درخواست.');
+        btn.innerHTML = 'ثبت درخواست شارژ'; validateChargeForm();
     }
 }
 
@@ -577,7 +546,7 @@ async function loadHistory() {
         historyList.sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date));
         
         if(historyList.length === 0) {
-            container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><div style="font-size: 15px; font-weight: 900; color: var(--text-main);">تاکنون تراکنشی نداشته‌اید</div></div>'; return;
+            container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><div class="empty-text-title">تاکنون تراکنشی نداشته‌اید</div></div>'; return;
         }
         
         let html = '';
@@ -595,7 +564,7 @@ async function loadHistory() {
                 let itemsText = itemsArr.map(i => `${i.qty}x ${i.name}`).join(' ، ');
                 let payMethodTxt = item.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی';
                 let payMethodColor = item.payment_method === 'wallet' ? 'var(--primary)' : 'var(--warning)';
-                detailsHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; font-weight: bold;">اقلام: <span style="color: var(--text-main);">${itemsText}</span><br><span style="color: ${payMethodColor}; display: inline-block; margin-top: 6px;">${payMethodTxt}</span></div>`;
+                detailsHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: bold; line-height: 1.6;">اقلام: <span style="color: var(--text-main);">${itemsText}</span><br><span style="color: ${payMethodColor}; display: inline-block; margin-top: 6px;">${payMethodTxt}</span></div>`;
             } else if (!isOrder) {
                 let statusTxt = item.status === 'approved' ? '✅ تایید شده' : (item.status === 'rejected' ? '❌ رد شده' : '⏳ در انتظار تایید');
                 let statusColor = item.status === 'approved' ? 'var(--success)' : (item.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
