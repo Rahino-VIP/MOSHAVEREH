@@ -212,10 +212,16 @@ async function loginSuccess() {
     }
 }
 
+// 🚀 اصلاح قرارگیری علامت منفی کنار اعداد فارسی در کیف پول
 function updateWalletLabels() {
-    document.getElementById('walletLabelBadge').innerText = `${userWalletBalance.toLocaleString()} تومان`;
+    let sign = userWalletBalance < 0 ? '-' : '';
+    let absVal = Math.abs(userWalletBalance).toLocaleString();
+
+    document.getElementById('walletLabelBadge').innerHTML = `<span style="direction:ltr; display:inline-block;">${sign}${absVal}</span> تومان`;
+    
     const profileBal = document.getElementById('profileWalletBalance');
-    profileBal.innerHTML = `${userWalletBalance.toLocaleString()} <span>تومان</span>`;
+    profileBal.innerHTML = `<span style="direction:ltr; display:inline-block;">${sign}${absVal}</span> <span style="font-size: 16px;">تومان</span>`;
+    
     if (userWalletBalance < 0) {
         profileBal.classList.add('negative');
     } else {
@@ -346,7 +352,6 @@ function updateCartUI() {
     let html = ''; let totalPrice = 0;
     cart.forEach(item => {
         totalPrice += (item.price * item.qty);
-        // اصلاح چیدمان آیتم‌های سبد خرید
         html += `<div class="cart-item">
                     <div class="cart-item-info">
                         <div class="cart-item-name">${item.name}</div>
@@ -377,7 +382,7 @@ function updateCartUI() {
     if (selectedMethod === 'wallet' && totalPrice > totalBuyingPower) {
         btnCheckout.className = 'btn-checkout disabled'; 
         btnCheckout.innerHTML = 'موجودی ناکافی'; 
-        btnCheckout.disabled = true; msgStatus.style.display = 'flex';
+        btnCheckout.disabled = true; msgStatus.style.display = 'block';
     } else {
         btnCheckout.className = 'btn-checkout active'; 
         btnCheckout.innerHTML = 'تایید نهایی و خرید'; 
@@ -467,21 +472,17 @@ function handleReceiptSelect(event) {
 
 document.getElementById('inpChargeAmount').addEventListener('input', validateChargeForm);
 
-// 🚀 رفع قطعی مشکل دکمه‌های تب در بخش شارژ کیف پول
+// 🚀 رفع مشکل دکمه‌های تب در بخش شارژ
 function switchChargeTab(method) {
     chargeMethod = method;
-    const btnReceipt = document.getElementById('btnTabReceipt');
-    const btnCash = document.getElementById('btnTabCash');
-    const receiptBox = document.getElementById('receiptBox');
-    
     if(method === 'receipt') {
-        btnReceipt.classList.add('active');
-        btnCash.classList.remove('active');
-        receiptBox.style.display = 'block';
+        document.getElementById('btnTabReceipt').classList.add('active');
+        document.getElementById('btnTabCash').classList.remove('active');
+        document.getElementById('receiptBox').style.display = 'block';
     } else {
-        btnCash.classList.add('active');
-        btnReceipt.classList.remove('active');
-        receiptBox.style.display = 'none';
+        document.getElementById('btnTabCash').classList.add('active');
+        document.getElementById('btnTabReceipt').classList.remove('active');
+        document.getElementById('receiptBox').style.display = 'none';
     }
     validateChargeForm();
 }
@@ -571,7 +572,7 @@ async function loadHistory() {
                 detailsHtml = `<div style="font-size: 11px; color: ${statusColor}; margin-top: 8px; font-weight: bold;">وضعیت: ${statusTxt}</div>`;
             }
             
-            html += `<div class="history-card glass-panel"><div class="history-info"><div class="history-icon">${icon}</div><div><div class="history-title">${title}</div><div class="history-date" style="direction:ltr; text-align:right;">${shamsiDate}</div>${detailsHtml}</div></div><div class="history-amount" style="color:${amountColor};">${sign} ${item.amount.toLocaleString()}</div></div>`;
+            html += `<div class="history-card glass-panel"><div class="history-info"><div class="history-icon">${icon}</div><div><div class="history-title">${title}</div><div class="history-date" style="direction:ltr; text-align:right;">${shamsiDate}</div>${detailsHtml}</div></div><div class="history-amount" style="color:${amountColor};"><span style="direction:ltr; display:inline-block;">${sign}${item.amount.toLocaleString()}</span></div></div>`;
         });
         container.innerHTML = html;
     } catch(e) { 
