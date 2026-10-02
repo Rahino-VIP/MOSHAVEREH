@@ -1,68 +1,70 @@
 /* ==========================================
-   🎨 متغیرهای رنگی پرمیوم و تم شیشه‌ای پیشرفته
+   🎨 متغیرهای رنگی پرمیوم (تم رزگلد و صورتی ملیح)
    ========================================== */
 :root { 
-    --primary: #10b981; --primary-hover: #059669; --primary-fade: rgba(16, 185, 129, 0.15);
-    --accent: #f43f5e; --accent-hover: #e11d48; --accent-fade: rgba(244, 63, 94, 0.15);
+    --primary: #db2777; /* صورتی تیره ملیح (Rose) */
+    --primary-hover: #be185d; 
+    --primary-fade: rgba(219, 39, 119, 0.12);
+    --accent: #9333ea; /* بنفش ملایم */
+    --accent-hover: #7e22ce; 
+    --accent-fade: rgba(147, 51, 234, 0.12);
     
-    /* Light Mode Colors */
-    --bg-color: #f1f5f9;
-    --glass-bg: rgba(255, 255, 255, 0.7); 
-    --glass-border: rgba(255, 255, 255, 1); 
-    --glass-highlight: rgba(255, 255, 255, 0.9);
-    --text-main: #0f172a; 
+    --glass-bg: rgba(255, 255, 255, 0.65); 
+    --glass-border: rgba(255, 255, 255, 0.9); 
+    --glass-highlight: rgba(255, 255, 255, 0.95);
+    --text-main: #1e293b; 
     --text-muted: #64748b; 
     
     --success: #10b981; --warning: #f59e0b; --danger: #f43f5e;
     
-    --shadow-soft: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); 
-    --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-    --shadow-glow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
-    
-    --transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --shadow-soft: 0 20px 40px -15px rgba(219, 39, 119, 0.08); 
+    --shadow-float: 0 25px 50px -12px rgba(219, 39, 119, 0.15);
+    --shadow-glow: 0 10px 35px -5px rgba(219, 39, 119, 0.25);
+    --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 [data-theme="dark"] {
-    --primary: #34d399; --primary-hover: #10b981; --primary-fade: rgba(52, 211, 153, 0.15);
-    --accent: #fb7185; --accent-hover: #f43f5e; --accent-fade: rgba(251, 113, 133, 0.15);
+    --primary: #f472b6; /* صورتی روشن */
+    --primary-hover: #ec4899; 
+    --primary-fade: rgba(244, 114, 182, 0.15);
+    --accent: #c084fc; 
+    --accent-hover: #a855f7; 
+    --accent-fade: rgba(192, 132, 252, 0.15);
     
-    /* Dark Mode Colors */
-    --bg-color: #09090b;
-    --glass-bg: rgba(24, 24, 27, 0.6); 
+    --glass-bg: rgba(15, 23, 42, 0.55); 
     --glass-border: rgba(255, 255, 255, 0.08); 
-    --glass-highlight: rgba(255, 255, 255, 0.03);
+    --glass-highlight: rgba(255, 255, 255, 0.04);
     --text-main: #f8fafc; 
     --text-muted: #94a3b8; 
     
-    --shadow-soft: 0 10px 25px -5px rgba(0,0,0,0.4);
-    --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-    --shadow-glow: 0 10px 25px -5px rgba(52, 211, 153, 0.25);
+    --shadow-soft: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+    --shadow-float: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 10px 30px -5px rgba(244, 114, 182, 0.2);
 }
 
 html { scroll-behavior: smooth; }
-* { box-sizing: border-box; font-family: 'Vazirmatn', Tahoma, sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent;}
+* { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent;}
 
 body { 
-    background: var(--bg-color);
-    background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.05) 0px, transparent 50%);
-    background-attachment: fixed;
+    background: linear-gradient(135deg, #fdf2f8 0%, #f1f5f9 100%);
     color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; margin: 0; 
 }
+[data-theme="dark"] body { background: linear-gradient(135deg, #09090b 0%, #17171b 100%); }
 
 .app-container { width: 100%; max-width: 480px; height: 100dvh; position: relative; display: flex; flex-direction: column; overflow: hidden; }
 
-/* ابزارهای عمومی */
-.glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: var(--shadow-soft); }
+/* افکت‌های نوری پس‌زمینه (صورتی و بنفش) */
+.glow-1 { position: absolute; width: 350px; height: 350px; background: var(--primary-fade); filter: blur(80px); border-radius: 50%; top: -100px; right: -100px; z-index: 0; pointer-events: none;}
+.glow-2 { position: absolute; width: 300px; height: 300px; background: var(--accent-fade); filter: blur(80px); border-radius: 50%; bottom: 10%; left: -50px; z-index: 0; pointer-events: none;}
+
+.glass-panel { background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 32px; box-shadow: var(--shadow-soft); }
 svg { width: 22px; height: 22px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ==========================================
-   🎩 هدر و لیوت اصلی
-   ========================================== */
-header { padding: 25px 25px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-shrink: 0; }
+header { padding: 25px 25px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-shrink: 0; position: relative;}
 .header-title { font-weight: 900; font-size: 22px; color: var(--text-main); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px;}
 .header-title span { color: var(--primary); }
 
-.icon-btn { width: 44px; height: 44px; border-radius: 16px; background: var(--glass-bg); border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-main); transition: var(--transition); box-shadow: var(--shadow-soft); backdrop-filter: blur(10px);}
+.icon-btn { width: 44px; height: 44px; border-radius: 16px; background: var(--glass-highlight); border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-main); transition: var(--transition); box-shadow: var(--shadow-soft);}
 .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px);}
 
 .view-section { flex: 1; overflow-y: auto; padding: 0 20px 20px; display: none; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); padding-bottom: 120px; z-index: 1; position: relative;}
@@ -71,12 +73,13 @@ header { padding: 25px 25px 15px; display: flex; justify-content: space-between;
 @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ==========================================
-   🔐 بخش احراز هویت
+   🔐 فرم‌ها و دکمه‌ها
    ========================================== */
 .auth-container { width: 100%; margin-top: 2vh; text-align: center; padding: 15px;}
 .auth-box { padding: 40px 25px; display: flex; flex-direction: column; gap: 20px; border-radius: 32px;}
-.auth-icon { width: 75px; height: 75px; background: var(--primary-fade); color: var(--primary); border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px; border: 1px solid var(--glass-border); box-shadow: var(--shadow-glow);}
+.auth-icon { width: 75px; height: 75px; background: var(--primary-fade); color: var(--primary); border-radius: 26px; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px; border: 1px dashed var(--primary); box-shadow: var(--shadow-glow);}
 .auth-icon svg { width: 36px; height: 36px; }
+
 .header-box h1 { font-size: 24px; color: var(--text-main); font-weight: 900; margin-bottom: 8px; letter-spacing: -1px;}
 .header-box p { font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 20px;}
 .step-section { display: none; animation: fadeIn 0.3s ease-out; }
@@ -91,34 +94,33 @@ header { padding: 25px 25px 15px; display: flex; justify-content: space-between;
 select.form-input { appearance: none; cursor: pointer; padding-right: 18px;}
 
 .btn { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
-.btn-primary { background: var(--text-main); color: var(--bg-color); box-shadow: 0 10px 25px rgba(0,0,0,0.15);}
-[data-theme="dark"] .btn-primary { background: var(--primary); color: #000; box-shadow: var(--shadow-glow);}
-.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.3); opacity: 0.95;}
-.btn-outline { background: transparent; border: 1.5px solid var(--glass-border); color: var(--text-main); margin-top: 15px;}
-.btn-outline:hover { background: var(--glass-highlight); }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: var(--shadow-glow); text-shadow: 0 1px 2px rgba(0,0,0,0.2);}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -10px var(--primary); opacity: 0.95;}
+
+/* 🚀 استایل جدید و یکپارچه برای دکمه‌های تب (حل مشکل نقدی) */
+.btn-outline { background: var(--glass-highlight); border: 1.5px solid var(--glass-border); color: var(--text-main); margin-top: 15px;}
+.btn-outline.active { border-color: var(--primary); background: var(--primary-fade); color: var(--primary); }
+
 .text-link { color: var(--primary); font-size: 13px; text-align: center; display: block; margin-top: 24px; cursor: pointer; font-weight: 800; transition: var(--transition);}
 .text-link:hover { color: var(--primary-hover); }
-.alert-box { background: var(--accent-fade); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger); padding: 16px; border-radius: 16px; font-size: 13px; text-align: center; margin-bottom: 24px; font-weight: 800; display: none; align-items: center; justify-content: center; gap: 8px;}
 
 /* ==========================================
-   🏪 فروشگاه و منوها
+   🏪 فروشگاه و کارت محصولات
    ========================================== */
 .category-nav { background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 15px 25px; overflow-x: auto; white-space: nowrap; display: flex; gap: 12px; scrollbar-width: none; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 50;}
 .category-nav::-webkit-scrollbar { display: none; }
-.cat-link { text-decoration: none; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 22px; border-radius: 20px; font-size: 13px; font-weight: 900; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;}
-.cat-link.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); box-shadow: var(--shadow-soft);}
-[data-theme="dark"] .cat-link.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: var(--shadow-glow);}
+.cat-link { text-decoration: none; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 22px; border-radius: 24px; font-size: 13px; font-weight: 900; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;}
+.cat-link.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: var(--shadow-glow);}
 
 .store-content { flex: 1; overflow-y: auto; padding: 25px 0 140px; z-index: 1; position: relative; scroll-behavior: smooth;}
 .category-section { margin-bottom: 40px; scroll-margin-top: 80px; }
-.section-header { padding: 0 25px 15px; font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px;}
+.section-header { padding: 0 25px 15px; font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px;}
 .section-header svg { width: 24px; height: 24px; color: var(--primary); }
 
-.horizontal-list { display: flex; overflow-x: auto; gap: 16px; padding: 5px 25px 20px; scrollbar-width: none; }
+.horizontal-list { display: flex; overflow-x: auto; gap: 18px; padding: 5px 25px 20px; scrollbar-width: none; }
 .horizontal-list::-webkit-scrollbar { display: none; }
 
-/* طراحی پیشرفته کارت محصولات */
-.product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-soft); flex: 0 0 160px; transition: var(--transition); position: relative;}
+.product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-soft); flex: 0 0 160px; transition: var(--transition); backdrop-filter: blur(10px);}
 .product-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow-float);}
 .product-img { width: 100%; height: 135px; background-color: var(--glass-highlight); background-position: center; background-size: cover; border-bottom: 1px solid var(--glass-border); transition: var(--transition);}
 .product-card:hover .product-img { transform: scale(1.05); }
@@ -127,63 +129,36 @@ select.form-input { appearance: none; cursor: pointer; padding-right: 18px;}
 .product-price { color: var(--primary); font-weight: 900; font-size: 16px; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; letter-spacing: 0;}
 .product-price span { font-size: 11px; color: var(--text-muted); font-weight: 800; margin-top: 2px;}
 
-/* دکمه‌های اضافه به سبد خرید */
-.btn-add-init { background: var(--primary-fade); color: var(--primary); border: 1px solid transparent; padding: 10px; border-radius: 16px; font-weight: 900; font-size: 13px; margin-top: auto; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; transition: var(--transition);}
+.btn-add-init { background: var(--primary-fade); color: var(--primary); border: 1px dashed var(--primary); padding: 10px; border-radius: 16px; font-weight: 900; font-size: 12px; margin-top: auto; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; transition: var(--transition);}
 .btn-add-init:hover { background: var(--primary); color: white;}
-.qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--primary-fade); padding: 6px; border-radius: 16px; margin-top: auto; border: 1px solid rgba(16, 185, 129, 0.2); }
-.qty-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); width: 34px; height: 34px; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+.qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--primary-fade); padding: 6px; border-radius: 16px; margin-top: auto; border: 1px dashed var(--primary); }
+.qty-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); width: 32px; height: 32px; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
 .qty-btn:hover { background: var(--primary); color: white; border-color: var(--primary);}
 .qty-btn.del { color: var(--danger); border-color: rgba(244, 63, 94, 0.3);}
 .qty-btn.del:hover { background: var(--danger); color: white;}
 .qty-display { font-size: 16px; font-weight: 900; width: 26px; text-align: center; color: var(--text-main); letter-spacing: 0;}
 
 /* ==========================================
-   🛒 سبد خرید
+   👤 پروفایل و طراحی جدید کیف پول
    ========================================== */
-.page-title { font-size: 22px; font-weight: 900; color: var(--text-main); margin: 15px 0 25px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px;}
-.page-title svg { width: 30px; height: 30px; color: var(--primary); }
-
-.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px dashed var(--glass-border); }
-.cart-item:last-child { border-bottom: none; padding-bottom: 0;}
-.cart-item-name { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
-.cart-item-price { font-size: 14px; font-weight: 900; color: var(--primary); letter-spacing: 0;}
-
-.checkout-box { padding: 30px 25px; margin-top: 15px; border-radius: 32px;}
-.payment-options { display: flex; flex-direction: column; gap: 15px; margin: 25px 0; border-top: 1px dashed var(--glass-border); padding-top: 25px; }
-.pay-option { border: 2px solid var(--glass-border); padding: 18px; border-radius: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; background: var(--glass-highlight); transition: var(--transition);}
-.pay-option svg { width: 26px; height: 26px; color: var(--text-muted); transition: var(--transition);}
-.pay-option.active { border-color: var(--primary); background: var(--primary-fade); }
-.pay-option.active svg { color: var(--primary); }
-.pay-option input { display: none; }
-.pay-option-content { display: flex; flex-direction: column; gap: 6px; flex: 1;}
-.pay-title { font-size: 15px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
-.wallet-badge { background: var(--glass-bg); padding: 6px 12px; border-radius: 12px; font-size: 12px; color: var(--text-main); border: 1px solid var(--glass-border); font-weight: 900; letter-spacing: 0;}
-
-.summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); }
-.btn-checkout { width: 100%; padding: 22px; border-radius: 22px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 25px; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 10px;}
-.btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: var(--shadow-glow); text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-.btn-checkout.disabled { background: var(--glass-border); color: var(--text-muted); cursor: not-allowed; }
-
-.empty-state { text-align: center; color: var(--text-muted); margin-top: 80px; display: flex; flex-direction: column; align-items: center; gap: 15px;}
-.empty-state svg { width: 90px; height: 90px; stroke-width: 1.2; opacity: 0.4; color: var(--text-muted);}
-
-/* ==========================================
-   👤 پروفایل و کیف پول
-   ========================================== */
-.wallet-card { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: white; padding: 35px 30px; border-radius: 36px; text-align: center; margin-bottom: 30px; box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.6); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-[data-theme="dark"] .wallet-card { background: linear-gradient(135deg, #020617, #0f172a); }
-.wallet-card::before { content: ''; position: absolute; right: -50px; top: -50px; width: 150px; height: 150px; background: var(--primary); filter: blur(60px); opacity: 0.4; border-radius: 50%; }
-
-.wallet-chip { width: 48px; height: 38px; background: linear-gradient(135deg, #fbbf24, #d97706); border-radius: 8px; position: absolute; top: 30px; left: 30px; opacity: 0.9; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3);}
-.wallet-chip::after { content: ''; position: absolute; inset: 6px; border: 1px solid rgba(0,0,0,0.3); border-radius: 5px; border-left: none; border-right: none;}
-.wallet-contactless { position: absolute; top: 35px; right: 30px; width: 28px; height: 28px; opacity: 0.7;}
-
-.wallet-title { font-size: 14px; opacity: 0.8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 50px;}
-.wallet-balance { font-size: 44px; font-weight: 900; margin: 10px 0; display: flex; justify-content: center; align-items: baseline; gap: 6px; letter-spacing: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
-.wallet-balance span { font-size: 18px; font-weight: 800; opacity: 0.8;}
-.wallet-balance.negative { color: #fca5a5; }
-
-.wallet-footer { display: flex; justify-content: space-between; align-items: flex-end; opacity: 0.7; font-size: 12px; font-weight: 800;}
+.wallet-card { 
+    background: var(--glass-bg); 
+    border: 1px dashed var(--primary); 
+    padding: 35px 20px; 
+    text-align: center; 
+    border-radius: 36px; 
+    box-shadow: var(--shadow-glow); 
+    margin-bottom: 30px; 
+    position: relative; 
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+.wallet-card::after {
+    content: ''; position: absolute; width: 200px; height: 200px; background: var(--primary-fade); filter: blur(40px); top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1; border-radius: 50%;
+}
+.wallet-balance { font-size: 42px; font-weight: 900; color: var(--primary); margin: 5px 0; display: flex; justify-content: center; align-items: baseline; gap: 6px;}
+.wallet-balance span { font-size: 16px; font-weight: bold; color: var(--text-muted);}
+.wallet-balance.negative { color: var(--danger); }
 
 .charge-section { padding: 30px 25px; margin-bottom: 25px; border-radius: 32px;}
 .charge-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px;}
@@ -201,18 +176,7 @@ select.form-input { appearance: none; cursor: pointer; padding-right: 18px;}
 .file-upload:hover svg { color: var(--primary); transform: scale(1.1);}
 .file-upload input { display: none; }
 
-.menu-list { overflow: hidden; margin-bottom: 25px; border-radius: 28px;}
-.menu-item { padding: 22px 25px; border-bottom: 1px solid var(--glass-border); font-size: 16px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); transition: var(--transition);}
-.menu-item:hover { background: var(--glass-highlight); padding-right: 35px;}
-.menu-item:last-child { border-bottom: none; }
-.menu-item svg { width: 22px; height: 22px; stroke: var(--text-muted);}
-.menu-item.danger { color: var(--danger); background: rgba(244, 63, 94, 0.05);}
-.menu-item.danger:hover { background: rgba(244, 63, 94, 0.1); padding-right: 25px; justify-content: center;}
-.menu-item.danger svg { stroke: var(--danger); }
-
-/* ==========================================
-   📜 تاریخچه
-   ========================================== */
+/* تاریخچه */
 .history-card { padding: 18px 20px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; transition: var(--transition); border-radius: 24px;}
 .history-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: var(--shadow-float);}
 .history-icon { background: var(--glass-bg); width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; border-radius: 20px; border: 1px solid var(--glass-border); color: var(--text-main); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);}
@@ -223,62 +187,65 @@ select.form-input { appearance: none; cursor: pointer; padding-right: 18px;}
 .history-amount { font-weight: 900; font-size: 17px; letter-spacing: 0; text-align: left;}
 
 /* ==========================================
-   🌐 نوار پایین شناور (Floating Island)
+   🌐 نوار پایین شناور (Bottom Nav)
    ========================================== */
 .bottom-nav-wrapper { position: fixed; bottom: 25px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none; padding: 0 20px;}
 .bottom-nav { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 36px; background: var(--glass-bg); backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); border: 1px solid var(--glass-border); box-shadow: var(--shadow-float); pointer-events: auto;}
 
 .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: var(--text-muted); cursor: pointer; transition: var(--transition); position: relative; flex: 1; padding: 12px 0; border-radius: 28px;}
-.nav-item svg { width: 26px; height: 26px; stroke-width: 1.5; transition: var(--transition);}
-.nav-text { font-size: 11px; font-weight: 900; opacity: 0; transform: translateY(8px); transition: var(--transition); position: absolute; bottom: 4px; letter-spacing: -0.5px;}
-
-.nav-item.active { color: var(--text-main); background: var(--glass-highlight); padding-bottom: 18px; padding-top: 6px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);}
-[data-theme="dark"] .nav-item.active { color: var(--primary); }
-.nav-item.active svg { transform: translateY(-8px); stroke-width: 2.5;}
+.nav-item.active { color: var(--primary); background: var(--primary-fade); padding-bottom: 18px; padding-top: 6px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);}
+.nav-icon svg { width: 24px; height: 24px; transition: var(--transition);}
+.nav-item.active .nav-icon svg { transform: scale(1.1); stroke-width: 2.5;}
+.nav-text { font-size: 11px; font-weight: 900; opacity: 0; transform: translateY(8px); transition: var(--transition); position: absolute; bottom: 4px;}
 .nav-item.active .nav-text { opacity: 1; transform: translateY(0); }
 
-.cart-badge { position: absolute; top: 2px; right: 25%; background: var(--danger); color: white; font-size: 11px; font-weight: 900; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.28); box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4); border: 2.5px solid var(--glass-bg); padding-top: 2px; letter-spacing: 0;}
+.cart-badge { position: absolute; top: 2px; right: 25%; background: var(--danger); color: white; font-size: 11px; font-weight: 900; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.28); box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4); border: 2px solid var(--glass-bg); padding-top: 2px; letter-spacing: 0;}
 .cart-badge.pop { transform: scale(1.4); }
 
-/* لودر و اورلی‌ها */
+/* ==========================================
+   🚀 لودر و انیمیشن سبد خرید معلق
+   ========================================== */
 .loader { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; gap: 20px;}
 .spinner { width: 55px; height: 55px; border: 4px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .welcome-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-.welcome-icon { width: 110px; height: 110px; background: var(--primary-fade); color: var(--primary); border-radius: 40px; display: flex; justify-content: center; align-items: center; margin-bottom: 30px; border: 1px solid var(--glass-border); box-shadow: var(--shadow-glow);}
+.welcome-icon { width: 110px; height: 110px; background: var(--primary-fade); color: var(--primary); border-radius: 40px; display: flex; justify-content: center; align-items: center; margin-bottom: 30px; border: 1px dashed var(--primary); box-shadow: var(--shadow-glow); animation: bounceFloat 2.5s ease-in-out infinite;}
 .welcome-icon svg { width: 55px; height: 55px; stroke-width: 1.5; }
 
+/* 🛒 انیمیشن پرش سبد خرید */
+@keyframes bounceFloat { 
+    0%, 100% { transform: translateY(0) scale(1); } 
+    50% { transform: translateY(-18px) scale(1.05); } 
+}
+
 /* ==========================================
-   💻 رسپانسیو و تنظیمات دسکتاپ (حل مشکل پرش به راست)
+   💻 رسپانسیو و تنظیمات دسکتاپ (هماهنگی وسط‌چین)
    ========================================== */
 @media (min-width: 768px) {
-    .app-container { max-width: 1100px; height: 95dvh; border-radius: 40px; box-shadow: 0 35px 70px -15px rgba(0,0,0,0.3); margin: auto; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(40px);}
+    .app-container { max-width: 1100px; height: 95dvh; border-radius: 40px; box-shadow: 0 35px 70px -15px rgba(0,0,0,0.2); margin: auto; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(40px);}
     header { border-radius: 40px 40px 0 0; padding: 30px 40px 20px;}
-    
     .view-section { padding: 0 40px 40px; }
     
-    /* 🚀 اصلاح بزرگ: هماهنگی کامل دسته‌بندی و محصولات در دسکتاپ */
     .category-nav { justify-content: flex-start; padding: 20px 40px; }
     .section-header { padding: 0 40px 20px;}
     
     .horizontal-list { 
         display: flex; 
         flex-wrap: wrap; 
-        justify-content: flex-start; /* پر شدن منظم از راست به چپ */
+        justify-content: flex-start; 
         gap: 25px; 
         overflow-x: visible; 
         padding: 5px 40px 30px;
     }
     
     .product-card { 
-        flex: 0 0 calc(25% - 19px); /* دقیقاً 4 محصول در هر ردیف */
+        flex: 0 0 calc(25% - 19px); 
         max-width: 240px; 
     }
 }
-
 select.form-input { color: var(--text-main) !important; background-color: rgba(15, 23, 42, 0.03) !important; }
 [data-theme="dark"] select.form-input { background-color: rgba(255, 255, 255, 0.05) !important; }
 select.form-input option { background-color: var(--bg-color); color: var(--text-main); padding: 10px; }
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--primary-fade); border-radius: 10px; }
