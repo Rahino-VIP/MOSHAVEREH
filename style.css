@@ -239,6 +239,29 @@ select.form-input option {
 select.form-input:focus {
     background-color: rgba(15, 23, 42, 0.9) !important;
 }
+/* اصلاح رنگ‌بندی و هاور قسمت آپلود عکس برای خوانایی بیشتر */
+.file-upload:hover {
+    border-color: var(--primary) !important;
+    background: var(--primary-fade) !important;
+    color: var(--primary) !important;
+}
+
+.file-upload:hover #instUploadText {
+    color: var(--primary) !important;
+}
+
+/* رفع مشکل دکمه‌های اکشن (انصراف و کیف پول) در مودال */
+.btn-action {
+    background: var(--glass-highlight);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    transition: var(--transition);
+}
+
+.btn-action:hover {
+    background: var(--glass-border);
+    color: var(--text-main);
+}
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
