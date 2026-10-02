@@ -221,7 +221,7 @@
                     </div>
                     <input type="text" id="regSchool" class="form-input" placeholder="مدرسه/دانشگاه">
                     
-                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور بوفه (حداقل ۴ رقم)">
+                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور بوفه (حداقل ۶ رقم)">
                     <select id="regSecQ" class="form-input">
                         <option value="" disabled selected>سوال امنیتی برای فراموشی رمز</option>
                         <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
@@ -353,12 +353,6 @@
         function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader').style.display = 'none'; }
         function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
-        
-        async function hashString(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
 
         function goToStep(stepId, title, sub) {
             document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
@@ -387,96 +381,122 @@
             }
         };
 
-        async function checkUser() {
-            let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
-            if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
-            showLoader('در حال بررسی هویت...');
-            try {
-                const { data, error } = await supabaseClient.from('pan_users').select('*').eq('phone_number', phone).maybeSingle();
-                hideLoader();
-                if (data) {
-                    if (data.status === 'pending') {
-                        return alert('⏳ حساب شما ایجاد شده اما در انتظار تایید مدیریت است.\nلطفاً تا زمان تایید شکیبا باشید.');
-                    }
-                    if (data.status === 'blocked' || data.status === 'rejected') {
-                        return alert('❌ دسترسی شما به سیستم مسدود شده است.');
-                    }
-                    activeUser = data;
-                    if (!data.buffet_password) {
-                        document.getElementById('setupNameLabel').innerText = data.full_name.split(' ')[0];
-                        goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
-                    } else {
-                        goToStep('step-login', 'ورود به بوفه', `سلام ${data.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
-                    }
-                } else {
-                    goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
-                }
-            } catch (err) { hideLoader(); alert('خطا در ارتباط با سرور.'); }
-        }
+        // ==========================================
+// 🔐 توابع احراز هویت یکپارچه با سیستم اصلی
+// ==========================================
 
-        async function saveNewPassword() {
-            let pass = document.getElementById('setupPass').value.trim();
-            let secQ = document.getElementById('setupSecQ').value;
-            let secA = document.getElementById('setupSecA').value.trim();
-            if(pass.length < 4 || !secQ || !secA) return alert('تمام فیلدها الزامی است.');
-            showLoader('در حال ذخیره...');
-            try {
-                let hashedPass = await hashString(pass);
-                const { error } = await supabaseClient.from('pan_users').update({ buffet_password: hashedPass, security_question: secQ, security_answer: secA }).eq('phone_number', activeUser.phone_number);
-                hideLoader();
-                if(error) throw error;
-                loginSuccess();
-            } catch (err) { hideLoader(); alert('خطا در ذخیره اطلاعات.'); }
+async function checkUser() {
+    let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
+    if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
+    showLoader('در حال بررسی هویت...');
+    try {
+        // 👈 تغییر از pan_users به جدول اصلی users
+        const { data, error } = await supabaseClient.from('users').select('*').eq('phone_number', phone).maybeSingle();
+        hideLoader();
+        if (data) {
+            if (data.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
+            if (data.status === 'blocked' || data.status === 'rejected') return alert('❌ دسترسی شما مسدود شده است.');
+            
+            activeUser = data;
+            // 👈 بررسی ستون password سیستم اصلی به جای buffet_password
+            if (!data.password) {
+                if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = data.full_name.split(' ')[0];
+                goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
+            } else {
+                goToStep('step-login', 'ورود به بوفه', `سلام ${data.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
+            }
+        } else {
+            goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
         }
+    } catch (err) { hideLoader(); alert('خطا در ارتباط با سرور.'); }
+}
 
-        async function verifyLogin() {
-            let pass = document.getElementById('inpLoginPass').value.trim();
-            if(!pass) return alert('رمز عبور را وارد کنید.');
-            showLoader('اعتبارسنجی...');
-            try {
-                let hashedInput = await hashString(pass);
-                hideLoader();
-                if (hashedInput === activeUser.buffet_password) { loginSuccess(); } 
-                else { alert('❌ رمز عبور اشتباه است!'); }
-            } catch(e) { hideLoader(); }
-        }
+async function verifyLogin() {
+    let pass = document.getElementById('inpLoginPass').value.trim();
+    if(!pass) return alert('رمز عبور را وارد کنید.');
+    showLoader('اعتبارسنجی یکپارچه...');
+    try {
+        // 👈 اتصال به سیستم Auth سوپابیس مشابه پرتال اصلی
+        let { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+            email: activeUser.phone_number + '@rahino.ir',
+            password: pass
+        });
 
-        async function registerUser() {
-            let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
-            let name = document.getElementById('regName').value.trim();
-            let grade = document.getElementById('regGrade').value;
-            let major = document.getElementById('regMajor').value.trim();
-            let school = document.getElementById('regSchool').value.trim();
-            let pass = document.getElementById('regPass').value.trim();
-            let secQ = document.getElementById('regSecQ').value;
-            let secA = document.getElementById('regSecA').value.trim();
-            if(!name || pass.length < 4 || !secQ || !secA) return alert('تمام فیلدها را پر کنید.');
-            showLoader('تشکیل پرونده...');
-            try {
-                let hashedPass = await hashString(pass);
-                const { error } = await supabaseClient.from('pan_users').insert([{
-                    phone_number: phone, full_name: name, grade: grade, major: major, school: school, buffet_password: hashedPass, security_question: secQ, security_answer: secA, status: 'pending', wallet_balance: 0
-                }]);
-                hideLoader();
-                if(error) throw error;
-                
-                alert('✅ ثبت‌نام اولیه شما با موفقیت انجام شد.\nپس از تایید حساب توسط مدیریت، می‌توانید وارد بوفه شوید.');
-                goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
-                document.getElementById('inpPhone').value = '';
-            } catch (err) { hideLoader(); alert('خطا در ثبت نام.'); }
+        if (authError) {
+            // بررسی دیتابیس برای کاربرانی که هنوز وارد سیستم Auth جدید نشده‌اند
+            const { data: dbUser } = await supabaseClient.from('users').select('password').eq('phone_number', activeUser.phone_number).single();
+            if (dbUser && dbUser.password === pass) {
+                await supabaseClient.auth.signUp({ email: activeUser.phone_number + '@rahino.ir', password: pass });
+                hideLoader(); loginSuccess();
+            } else {
+                hideLoader(); alert('❌ رمز عبور اشتباه است!');
+            }
+        } else {
+            hideLoader(); loginSuccess();
         }
+    } catch(e) { hideLoader(); alert('خطا در ورود.'); }
+}
 
-        async function processRecovery() {
-            let ans = document.getElementById('inpRecoveryAns').value.trim();
-            let newPass = document.getElementById('inpRecoveryNewPass').value.trim();
-            if(ans !== activeUser.security_answer) return alert('❌ پاسخ امنیتی اشتباه است!');
-            showLoader('تغییر رمز...');
-            try {
-                let hashedNew = await hashString(newPass);
-                await supabaseClient.from('pan_users').update({ buffet_password: hashedNew }).eq('phone_number', activeUser.phone_number);
-                hideLoader(); alert('✅ رمز عبور تغییر کرد.'); loginSuccess();
-            } catch(e) { hideLoader(); alert('خطا.'); }
-        }
+async function saveNewPassword() {
+    let pass = document.getElementById('setupPass').value.trim();
+    let secQ = document.getElementById('setupSecQ').value;
+    let secA = document.getElementById('setupSecA').value.trim();
+    if(pass.length < 6 || !secQ || !secA) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد و تمام فیلدها پر شوند.');
+    showLoader('در حال ذخیره...');
+    try {
+        await supabaseClient.auth.signUp({ email: activeUser.phone_number + '@rahino.ir', password: pass });
+        
+        const { error } = await supabaseClient.from('users').update({ 
+            password: pass, security_question: secQ, security_answer: secA 
+        }).eq('phone_number', activeUser.phone_number);
+        
+        hideLoader();
+        if(error) throw error;
+        loginSuccess();
+    } catch (err) { hideLoader(); alert('خطا در ذخیره اطلاعات.'); }
+}
+
+async function registerUser() {
+    let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
+    let name = document.getElementById('regName').value.trim();
+    let grade = document.getElementById('regGrade').value;
+    let major = document.getElementById('regMajor').value.trim();
+    let school = document.getElementById('regSchool').value.trim();
+    let pass = document.getElementById('regPass').value.trim();
+    let secQ = document.getElementById('regSecQ').value;
+    let secA = document.getElementById('regSecA').value.trim();
+    
+    if(!name || pass.length < 6 || !secQ || !secA) return alert('رمز عبور باید حداقل ۶ کاراکتر باشد.');
+    showLoader('تشکیل پرونده یکپارچه...');
+    try {
+        await supabaseClient.auth.signUp({ email: phone + '@rahino.ir', password: pass });
+
+        // 👈 اتصال به جدول users و ستون‌های استاندارد (مثل school_name)
+        const { error } = await supabaseClient.from('users').insert([{
+            phone_number: phone, full_name: name, grade: grade, major: major, school_name: school, 
+            password: pass, security_question: secQ, security_answer: secA, status: 'pending', wallet_balance: 0
+        }]);
+        
+        hideLoader();
+        if(error) throw error;
+        
+        alert('✅ ثبت‌نام شما با موفقیت انجام شد.\nپس از تایید مدیریت، می‌توانید به تمامی بخش‌ها از جمله بوفه دسترسی داشته باشید.');
+        goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید');
+        document.getElementById('inpPhone').value = '';
+    } catch (err) { hideLoader(); alert('خطا در ثبت نام.'); }
+}
+
+async function processRecovery() {
+    let ans = document.getElementById('inpRecoveryAns').value.trim();
+    let newPass = document.getElementById('inpRecoveryNewPass').value.trim();
+    if(ans !== activeUser.security_answer) return alert('❌ پاسخ امنیتی اشتباه است!');
+    if(newPass.length < 6) return alert('رمز عبور جدید باید حداقل ۶ کاراکتر باشد.');
+    showLoader('تغییر رمز...');
+    try {
+        await supabaseClient.from('users').update({ password: newPass }).eq('phone_number', activeUser.phone_number);
+        hideLoader(); alert('✅ رمز عبور با موفقیت تغییر کرد.'); loginSuccess();
+    } catch(e) { hideLoader(); alert('خطا در تغییر رمز.'); }
+}
 
         async function loginSuccess() {
             localStorage.setItem('buffet_user_phone', activeUser.phone_number);
