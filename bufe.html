@@ -166,31 +166,26 @@
 
         <div id="view-profile" class="view-section">
             <div class="page-title"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> پروفایل کاربری</div>
-            <div class="wallet-card">
-                <div class="wallet-chip"></div>
-                <svg class="wallet-contactless" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14c-.3-1.2-.4-2.5-.2-3.8.2-1.3.7-2.5 1.4-3.6"></path><path d="M12.5 16.5c-.7-1.7-.8-3.6-.4-5.4.4-1.8 1.3-3.4 2.6-4.7"></path><path d="M16.5 19c-1-2.2-1.3-4.7-.6-7 .7-2.4 2-4.5 3.8-6.1"></path></svg>
-                
-                <div>
-                    <div class="wallet-title">موجودی کیف پول</div>
-                    <div class="wallet-balance" id="profileWalletBalance">0</div>
-                </div>
-                <div class="wallet-footer">
-                    <div id="profileWalletStatus">سقف اعتبار: ۲۰۰,۰۰۰- تومان</div>
-                    <div style="font-size: 14px;">RAHINO PAY</div>
-                </div>
+            
+            <!-- 🌟 ساختار جدید و شیشه‌ای کیف پول -->
+            <div class="wallet-card glass-panel">
+                <div style="font-size: 14px; font-weight: 900; opacity: 0.8; margin-bottom: 5px; color: var(--text-muted);">موجودی کیف پول شما</div>
+                <div class="wallet-balance" id="profileWalletBalance">0 <span>تومان</span></div>
+                <div style="font-size: 12px; font-weight: bold; margin-top: 15px; color: var(--text-muted);" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
             </div>
 
             <div class="charge-section glass-panel">
                 <div class="charge-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px; stroke:var(--primary);"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                     شارژ کیف پول
                 </div>
                 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="btn-outline active" id="btnTabReceipt" style="flex:1; border-color:var(--primary); background: var(--primary-fade); color:var(--primary); border-radius: 14px; padding: 12px; font-size: 13px; font-weight: 900; border: 1.5px solid var(--primary); cursor: pointer;" onclick="switchChargeTab('receipt')">کارت به کارت</button>
-                    <button class="btn-outline" id="btnTabCash" style="flex:1; border-radius: 14px; padding: 12px; font-size: 13px; font-weight: 900; border: 1.5px solid var(--glass-border); cursor: pointer;" onclick="switchChargeTab('cash')">نقدی (حضوری)</button>
+                    <!-- 🚀 رفع مشکل دکمه‌ها در جاوااسکریپت: اینجا کلاس‌هایشان را با جاوااسکریپت کنترل می‌کنیم -->
+                    <button class="btn-outline active" id="btnTabReceipt" style="flex:1; border-radius: 16px; padding: 14px; font-size: 13px; font-weight: 900; cursor: pointer;" onclick="switchChargeTab('receipt')">کارت به کارت</button>
+                    <button class="btn-outline" id="btnTabCash" style="flex:1; border-radius: 16px; padding: 14px; font-size: 13px; font-weight: 900; cursor: pointer;" onclick="switchChargeTab('cash')">نقدی (حضوری)</button>
                 </div>
-
+                
                 <div class="quick-amounts" id="quickAmountsContainer"></div>
                 <input type="number" id="inpChargeAmount" class="form-input no-icon" placeholder="مبلغ دلخواه (تومان)" style="background: var(--glass-bg);">
                 
