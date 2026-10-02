@@ -1,0 +1,244 @@
+/* ==========================================
+   🎨 متغیرهای رنگی پرمیوم و تم شیشه‌ای پیشرفته
+   ========================================== */
+:root { 
+    --primary: #4ade80; --primary-hover: #22c55e; --primary-fade: rgba(74, 222, 128, 0.15);
+    --accent: #f87171; --accent-hover: #ef4444; --accent-fade: rgba(248, 113, 113, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.7); --glass-border: rgba(255, 255, 255, 0.8); --glass-highlight: rgba(255, 255, 255, 0.9);
+    --text-main: #1e293b; --text-muted: #64748b; 
+    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --shadow-soft: 0 20px 40px -15px rgba(0, 0, 0, 0.05); 
+    --shadow-float: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+[data-theme="dark"] {
+    --primary: #34d399; --primary-hover: #10b981; --primary-fade: rgba(52, 211, 153, 0.15);
+    --accent: #fb7185; --accent-hover: #f43f5e; --accent-fade: rgba(251, 113, 133, 0.15);
+    --glass-bg: rgba(15, 23, 42, 0.5); --glass-border: rgba(255, 255, 255, 0.08); --glass-highlight: rgba(255, 255, 255, 0.03);
+    --text-main: #f8fafc; --text-muted: #94a3b8; 
+    --shadow-soft: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    --shadow-float: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+html { scroll-behavior: smooth; }
+* { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent;}
+
+body { 
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; margin: 0; 
+}
+[data-theme="dark"] body { background: linear-gradient(135deg, #09090b 0%, #171717 100%); }
+
+.app-container { width: 100%; max-width: 480px; height: 100dvh; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+
+/* افکت‌های نوری پس‌زمینه */
+.glow-1 { position: absolute; width: 300px; height: 300px; background: var(--primary-fade); filter: blur(80px); border-radius: 50%; top: -100px; right: -100px; z-index: 0; pointer-events: none;}
+.glow-2 { position: absolute; width: 250px; height: 250px; background: var(--accent-fade); filter: blur(80px); border-radius: 50%; bottom: 10%; left: -50px; z-index: 0; pointer-events: none;}
+
+.glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: var(--shadow-soft); }
+
+header { padding: 20px 24px; background: transparent; display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-shrink: 0; position: relative;}
+.header-title { font-weight: 900; font-size: 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px;}
+.header-title svg { stroke: var(--primary); width: 26px; height: 26px; }
+
+.icon-btn { width: 42px; height: 42px; border-radius: 14px; background: var(--glass-highlight); border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-main); transition: var(--transition); box-shadow: var(--shadow-soft);}
+.icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px);}
+
+.view-section { flex: 1; overflow-y: auto; padding: 0 24px; display: none; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); padding-bottom: 120px; z-index: 1; position: relative;}
+.view-section.active { display: block; }
+#view-store { padding: 0; }
+#view-store.active { display: flex; flex-direction: column; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* ==========================================
+   🔐 بخش احراز هویت
+   ========================================== */
+.auth-container { border-radius: 32px; width: 100%; overflow: hidden; position: relative; margin-top: 2vh; text-align: center; padding: 10px;}
+.header-box { padding: 30px 20px 20px; }
+.header-box svg { width: 48px; height: 48px; stroke: var(--primary); margin-bottom: 15px;}
+.header-box h1 { font-size: 24px; color: var(--text-main); font-weight: 900; margin-bottom: 8px; letter-spacing: -1px;}
+.header-box p { font-size: 13px; color: var(--text-muted); font-weight: 600;}
+
+.step-section { padding: 20px; display: none; animation: fadeIn 0.4s ease-out; }
+.step-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.input-wrapper { position: relative; margin-bottom: 16px; }
+.input-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 20px; height: 20px;}
+.form-input { width: 100%; background: var(--glass-highlight); border: 1.5px solid var(--glass-border); color: var(--text-main); padding: 16px 45px 16px 16px; border-radius: 18px; font-size: 15px; outline: none; transition: var(--transition); font-weight: bold;}
+.form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-fade); }
+.form-input.no-icon { padding-right: 16px; text-align: center;}
+select.form-input { appearance: none; cursor: pointer; padding-right: 16px;}
+
+.btn { width: 100%; padding: 18px; border-radius: 18px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; letter-spacing: 0.5px;}
+.btn svg { width: 20px; height: 20px; stroke-width: 2.5;}
+.btn-primary { background: var(--text-main); color: var(--bg-color); box-shadow: 0 10px 25px rgba(0,0,0,0.1);}
+[data-theme="dark"] .btn-primary { background: var(--primary); color: #000; box-shadow: 0 10px 25px var(--primary-fade);}
+.btn-primary:hover { transform: translateY(-2px); opacity: 0.9;}
+.btn-outline { background: transparent; border: 1.5px solid var(--glass-border); color: var(--text-main); margin-top: 15px;}
+.text-link { color: var(--primary); font-size: 13px; text-align: center; display: block; margin-top: 24px; cursor: pointer; font-weight: bold; transition: var(--transition);}
+.text-link:hover { opacity: 0.7;}
+.alert-box { background: var(--accent-fade); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); padding: 16px; border-radius: 16px; font-size: 13px; text-align: center; margin-bottom: 24px; font-weight: bold; display: none; display: flex; align-items: center; justify-content: center; gap: 8px;}
+
+/* ==========================================
+   🏪 فروشگاه
+   ========================================== */
+.category-nav { padding: 15px 24px; overflow-x: auto; white-space: nowrap; display: flex; gap: 12px; scrollbar-width: none; position: sticky; top: 0; z-index: 50; background: linear-gradient(to bottom, var(--bg-color) 70%, transparent);}
+.category-nav::-webkit-scrollbar { display: none; }
+.cat-link { text-decoration: none; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 20px; border-radius: 14px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; backdrop-filter: blur(10px);}
+.cat-link svg { width: 16px; height: 16px; }
+.cat-link.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); box-shadow: 0 8px 15px rgba(0,0,0,0.1);}
+[data-theme="dark"] .cat-link.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 8px 15px var(--primary-fade);}
+
+.store-content { flex: 1; overflow-y: auto; padding: 10px 0 140px; z-index: 1; position: relative; scroll-behavior: smooth;}
+
+.category-section { margin-bottom: 40px; scroll-margin-top: 80px; }
+.section-header { padding: 0 24px 20px; font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px;}
+.section-header svg { stroke: var(--primary); width: 22px; height: 22px;}
+
+.horizontal-list { display: flex; overflow-x: auto; gap: 16px; padding: 0 24px 20px; scrollbar-width: none; }
+.horizontal-list::-webkit-scrollbar { display: none; }
+
+.product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-soft); flex: 0 0 160px; transition: var(--transition); backdrop-filter: blur(15px);}
+.product-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow-float);}
+.product-img { width: 100%; height: 140px; background-color: var(--glass-highlight); background-position: center; background-size: cover; background-repeat: no-repeat; border-bottom: 1px solid var(--glass-border); position: relative;}
+.product-info { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.product-name { font-weight: 900; font-size: 13px; color: var(--text-main); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+.product-price { color: var(--primary); font-weight: 900; font-size: 15px; margin-bottom: 8px; font-family: monospace; letter-spacing: 0.5px;}
+
+.btn-add-init { background: var(--glass-highlight); color: var(--text-main); border: 1px solid var(--glass-border); padding: 10px; border-radius: 14px; font-weight: 900; font-size: 13px; margin-top: auto; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; transition: var(--transition);}
+.btn-add-init svg { width: 16px; height: 16px; stroke-width: 2.5;}
+.btn-add-init:hover { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main);}
+[data-theme="dark"] .btn-add-init:hover { background: var(--primary); color: #000; border-color: var(--primary);}
+
+.qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--text-main); padding: 6px; border-radius: 14px; margin-top: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+[data-theme="dark"] .qty-controls { background: var(--primary-fade); border: 1px solid var(--primary);}
+.qty-btn { background: transparent; border: none; color: var(--bg-color); width: 32px; height: 32px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition);}
+[data-theme="dark"] .qty-btn { color: var(--primary); }
+.qty-btn:hover { background: rgba(255,255,255,0.2);}
+.qty-btn svg { width: 18px; height: 18px; stroke-width: 2.5;}
+.qty-btn.del svg { stroke: var(--accent); }
+.qty-display { font-size: 15px; font-weight: 900; width: 24px; text-align: center; color: var(--bg-color); }
+[data-theme="dark"] .qty-display { color: var(--text-main); }
+
+/* ==========================================
+   🛒 سبد خرید
+   ========================================== */
+.view-title { font-size: 20px; margin-bottom: 24px; color: var(--text-main); font-weight: 900; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px;}
+.view-title svg { stroke: var(--primary); width: 28px; height: 28px;}
+
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--glass-border); }
+.cart-item:last-child { border-bottom: none; padding-bottom: 0;}
+.cart-item-name { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 6px; }
+.cart-item-price { font-size: 13px; font-weight: bold; color: var(--text-muted); font-family: monospace;}
+
+.checkout-box { padding: 24px; margin-top: 10px; }
+.payment-options { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; border-top: 1px dashed var(--glass-border); padding-top: 24px; }
+.pay-option { border: 1.5px solid var(--glass-border); padding: 16px; border-radius: 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; background: transparent; transition: var(--transition);}
+.pay-option svg { width: 24px; height: 24px; color: var(--text-muted); transition: var(--transition);}
+.pay-option.active { border-color: var(--primary); background: var(--primary-fade); }
+.pay-option.active svg { color: var(--primary); }
+.pay-option input { display: none; } 
+
+.wallet-badge { background: var(--glass-bg); padding: 6px 10px; border-radius: 10px; font-size: 11px; color: var(--text-main); font-weight: 900; border: 1px solid var(--glass-border);}
+
+.summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); }
+.btn-checkout { width: 100%; padding: 20px; border-radius: 18px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 24px; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 10px;}
+.btn-checkout.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+[data-theme="dark"] .btn-checkout.active { background: var(--primary); color: #000; box-shadow: 0 10px 25px var(--primary-fade); }
+.btn-checkout.disabled { background: var(--glass-border); color: var(--text-muted); cursor: not-allowed; }
+
+.empty-state { text-align: center; color: var(--text-muted); margin-top: 80px; display: flex; flex-direction: column; align-items: center; gap: 15px;}
+.empty-state svg { width: 80px; height: 80px; stroke-width: 1; opacity: 0.5; stroke: var(--text-muted);}
+
+/* ==========================================
+   👤 پروفایل و کیف پول
+   ========================================== */
+.wallet-card { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 35px 30px; border-radius: 36px; text-align: center; margin-bottom: 30px; box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.6); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;}
+[data-theme="dark"] .wallet-card { background: linear-gradient(135deg, #020617, #0f172a); border: 1px solid rgba(255,255,255,0.05);}
+.wallet-card::before { content: ''; position: absolute; right: -50px; top: -50px; width: 150px; height: 150px; background: var(--primary); filter: blur(50px); opacity: 0.3; border-radius: 50%; }
+
+.wallet-chip { width: 45px; height: 35px; background: linear-gradient(135deg, #fbbf24, #d97706); border-radius: 8px; position: absolute; top: 30px; left: 30px; opacity: 0.8; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2);}
+.wallet-chip::after { content: ''; position: absolute; inset: 6px; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; border-left: none; border-right: none;}
+
+.wallet-contactless { position: absolute; top: 35px; right: 30px; width: 24px; height: 24px; opacity: 0.6;}
+
+.wallet-title { font-size: 14px; opacity: 0.7; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; margin-top: 40px;}
+.wallet-balance { font-size: 42px; font-weight: 900; margin: 5px 0; font-family: monospace; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.3);}
+.wallet-balance.negative { color: #fca5a5; }
+.wallet-footer { display: flex; justify-content: space-between; align-items: flex-end; opacity: 0.6; font-size: 11px; font-weight: bold;}
+
+.charge-section { padding: 24px; margin-bottom: 24px; }
+.charge-title { font-size: 16px; font-weight: 900; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
+
+.quick-amounts { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.amount-chip { background: transparent; border: 1.5px solid var(--glass-border); color: var(--text-main); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: 900; cursor: pointer; flex: 1 1 calc(33% - 12px); text-align: center; transition: var(--transition); display: flex; justify-content: center; align-items: center;}
+.amount-chip:hover { border-color: var(--primary); background: var(--primary-fade); color: var(--primary);}
+.amount-chip.debt-chip { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--danger); flex: 1 1 100%; font-size: 14px; padding: 16px;}
+
+.card-info-box { background: var(--glass-bg); border: 1px dashed var(--primary); padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+.file-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; border: 1.5px dashed var(--glass-border); padding: 30px 20px; text-align: center; border-radius: 20px; cursor: pointer; margin-bottom: 20px; background: transparent; transition: var(--transition);}
+.file-upload svg { width: 32px; height: 32px; stroke: var(--text-muted); margin-bottom: 12px; transition: var(--transition);}
+.file-upload:hover { border-color: var(--primary); background: var(--primary-fade);}
+.file-upload:hover svg { stroke: var(--primary); }
+.file-upload input { display: none; }
+
+.menu-list { overflow: hidden; margin-bottom: 24px; }
+.menu-item { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); font-size: 15px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); transition: var(--transition);}
+.menu-item:hover { background: var(--glass-highlight); padding-right: 30px;}
+.menu-item svg { width: 20px; height: 20px; stroke: var(--text-muted);}
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger svg { stroke: var(--danger); }
+
+/* ==========================================
+   📜 تاریخچه
+   ========================================== */
+.history-card { padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; transition: var(--transition);}
+.history-card:hover { transform: scale(1.02); border-color: var(--primary);}
+.history-icon { width: 48px; height: 48px; background: var(--glass-bg); display: flex; justify-content: center; align-items: center; border-radius: 16px; border: 1px solid var(--glass-border); color: var(--text-main);}
+.history-icon svg { width: 24px; height: 24px; stroke-width: 1.5;}
+.history-info { display: flex; align-items: center; gap: 16px; }
+.history-title { font-size: 14px; font-weight: 900; color: var(--text-main); margin-bottom: 4px;}
+.history-date { font-size: 11px; color: var(--text-muted); font-weight: bold; font-family: monospace;}
+.history-amount { font-weight: 900; font-size: 16px; font-family: monospace; letter-spacing: -0.5px; text-align: left;}
+
+/* ==========================================
+   🌐 نوار پایین شناور (Floating Bottom Nav)
+   ========================================== */
+.bottom-nav-wrapper { position: fixed; bottom: 24px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none; padding: 0 24px;}
+.bottom-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 32px; background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--glass-border); box-shadow: var(--shadow-float); pointer-events: auto;}
+
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-muted); cursor: pointer; transition: var(--transition); position: relative; flex: 1; padding: 10px 0; border-radius: 24px;}
+.nav-item svg { width: 24px; height: 24px; stroke-width: 1.5; transition: var(--transition);}
+.nav-text { font-size: 10px; font-weight: 900; opacity: 0; transform: translateY(5px); transition: var(--transition); position: absolute; bottom: 2px;}
+
+.nav-item.active { color: var(--text-main); background: var(--glass-highlight); padding-bottom: 16px; padding-top: 4px;}
+[data-theme="dark"] .nav-item.active { color: var(--primary); }
+.nav-item.active svg { transform: translateY(-6px); stroke-width: 2.5;}
+.nav-item.active .nav-text { opacity: 1; transform: translateY(0); }
+
+.cart-badge { position: absolute; top: 2px; right: 25%; background: var(--danger); color: white; font-size: 10px; font-weight: 900; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); font-family: monospace;}
+.cart-badge.pop { transform: scale(1.4); }
+
+/* لودر و اورلی‌ها */
+.loader { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; gap: 20px;}
+.spinner { width: 48px; height: 48px; border: 4px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.welcome-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.welcome-overlay svg { width: 80px; height: 80px; stroke: var(--primary); stroke-width: 1; margin-bottom: 24px; filter: drop-shadow(0 10px 20px var(--primary-fade)); animation: float 3s ease-in-out infinite;}
+@keyframes float { 0% {transform: translateY(0);} 50% {transform: translateY(-10px);} 100% {transform: translateY(0);} }
+
+@media (min-width: 768px) {
+    .app-container { max-width: 1000px; height: 92dvh; border-radius: 40px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.3); margin: auto; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(35px);}
+    header { border-radius: 40px 40px 0 0; }
+    .horizontal-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; overflow-x: visible; }
+    .product-card { flex: unset; width: 100%; }
+    .category-nav { justify-content: center; }
+}
+
+select.form-input { color: var(--text-main) !important; background-color: rgba(15, 23, 42, 0.05) !important; }
+select.form-input option { background-color: var(--glass-bg); color: var(--text-main); padding: 10px; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+svg { width: 22px; height: 22px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
