@@ -498,20 +498,21 @@ function handleReceiptSelect(event) {
 
 document.getElementById('inpChargeAmount').addEventListener('input', validateChargeForm);
 
+// جایگزین کردن تابع قبلی در bufe.js
 function switchChargeTab(method) {
     chargeMethod = method;
-    const btnReceipt = document.getElementById('btnTabReceipt');
-    const btnCash = document.getElementById('btnTabCash');
     
+    // فقط کلاس active را جابجا می‌کنیم تا CSS کار خودش را بکند
     if(method === 'receipt') {
-        btnReceipt.classList.add('active');
-        btnCash.classList.remove('active');
+        document.getElementById('btnTabReceipt').classList.add('active');
+        document.getElementById('btnTabCash').classList.remove('active');
         document.getElementById('receiptBox').style.display = 'block';
     } else {
-        btnCash.classList.add('active');
-        btnReceipt.classList.remove('active');
+        document.getElementById('btnTabCash').classList.add('active');
+        document.getElementById('btnTabReceipt').classList.remove('active');
         document.getElementById('receiptBox').style.display = 'none';
     }
+    
     validateChargeForm();
 }
 
