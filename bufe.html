@@ -11,255 +11,227 @@
 <body>
 
     <div class="app-container">
+        <!-- افکت‌های نوری پس‌زمینه -->
         <div class="glow-1"></div>
         <div class="glow-2"></div>
 
         <header>
             <div class="header-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                 بوفه <span>راهینو</span>
             </div>
             <button class="icon-btn" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </button>
         </header>
 
-        <div class="loader" id="loader"><div class="spinner"></div><div style="color: var(--text-main); font-size: 14px; font-weight: 900; letter-spacing: 1px;" id="loaderText">کمی صبر کنید...</div></div>
+        <div class="loader" id="loader"><div class="spinner"></div><div id="loaderText">کمی صبر کنید...</div></div>
         
         <div class="welcome-overlay" id="welcomeOverlay">
-            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-            <h1 style="color: var(--text-main); margin-bottom: 12px; font-weight: 900; font-size: 28px;" id="welcomeName">خوش آمدید!</h1>
-            <p style="color: var(--text-muted); font-size: 14px; font-weight: bold; letter-spacing: 1px;">در حال آماده‌سازی بوفه...</p>
+            <div class="welcome-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <h1 id="welcomeName">خوش آمدید!</h1>
+            <p>در حال آماده‌سازی بوفه...</p>
         </div>
 
+        <!-- بخش احراز هویت -->
         <div id="view-auth" class="view-section active" style="padding-top: 20px;">
             <div class="auth-container glass-panel">
                 <div class="header-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     <h1 id="headerTitle">ورود به سیستم</h1>
-                    <p id="headerSub">موبایل خود را برای ورود یا ثبت‌نام وارد کنید</p>
+                    <p id="headerSub">موبایل خود را وارد کنید</p>
                 </div>
                 
                 <div class="step-section active" id="step-phone">
-                    <div class="input-wrapper">
-                        <input type="tel" id="inpPhone" class="form-input no-icon" placeholder="09123456789" maxlength="11" style="font-size: 20px; letter-spacing: 4px;" autocomplete="off">
-                    </div>
+                    <input type="tel" id="inpPhone" class="form-input" placeholder="09123456789" maxlength="11" autocomplete="off">
                     <button class="btn btn-primary" onclick="checkUser()">
                         بررسی و ادامه
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </button>
                 </div>
 
                 <div class="step-section" id="step-login">
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                        <input type="password" id="inpLoginPass" class="form-input" placeholder="رمز عبور" style="letter-spacing: 3px;" autocomplete="off">
-                    </div>
+                    <input type="password" id="inpLoginPass" class="form-input" placeholder="رمز عبور" autocomplete="off">
                     <button class="btn btn-primary" onclick="verifyLogin()">
                         ورود به بوفه
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
                     </button>
                     <a class="text-link" onclick="setupRecoveryView()">رمز عبورم را فراموش کرده‌ام!</a>
                 </div>
 
                 <div class="step-section" id="step-setup">
-                    <div class="alert-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        برای ورود، یک رمز و سوال امنیتی تنظیم کن.
-                    </div>
-                    <input type="password" id="setupPass" class="form-input no-icon" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
-                    <select id="setupSecQ" class="form-input no-icon">
+                    <div class="alert-box">یک رمز عبور و سوال امنیتی تنظیم کن.</div>
+                    <input type="password" id="setupPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
+                    <select id="setupSecQ" class="form-input">
                         <option value="" disabled selected>یک سوال امنیتی انتخاب کنید...</option>
                         <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
-                        <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option>
                         <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
                     </select>
-                    <input type="text" id="setupSecA" class="form-input no-icon" placeholder="پاسخ سوال امنیتی (به خاطر بسپارید!)">
+                    <input type="text" id="setupSecA" class="form-input" placeholder="پاسخ سوال امنیتی (به خاطر بسپارید!)">
                     <button class="btn btn-primary" onclick="saveNewPassword()">
                         ذخیره و ورود
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </button>
                 </div>
 
                 <div class="step-section" id="step-recovery">
-                    <div id="recoveryQuestionText" style="font-weight: 900; margin-bottom: 20px; font-size: 15px; color: var(--text-main);">...</div>
-                    <input type="text" id="inpRecoveryAns" class="form-input no-icon" placeholder="پاسخ خود را وارد کنید">
-                    <input type="password" id="inpRecoveryNewPass" class="form-input no-icon" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
+                    <div id="recoveryQuestionText" style="font-weight: 900; margin-bottom: 20px; font-size: 14px; color: var(--text-main);">...</div>
+                    <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ خود را وارد کنید">
+                    <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
                     <button class="btn btn-primary" onclick="processRecovery()">
                         تغییر رمز و ورود
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                     </button>
                     <button class="btn btn-outline" onclick="goToStep('step-login', 'ورود به سیستم', 'رمز عبور خود را وارد کنید')">بازگشت</button>
                 </div>
 
                 <div class="step-section" id="step-register">
-                    <div class="alert-box">شماره شما یافت نشد. لطفاً اطلاعات را تکمیل کنید.</div>
-                    <input type="text" id="regName" class="form-input no-icon" placeholder="نام و نام خانوادگی کامل">
-                    
+                    <div class="alert-box">شماره شما یافت نشد. فرم را تکمیل کنید.</div>
+                    <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی">
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <select id="regGrade" class="form-input no-icon" style="margin-bottom: 0;">
+                        <select id="regGrade" class="form-input" style="margin-bottom: 0;">
                             <option value="" disabled selected>پایه</option>
                             <option value="متوسطه اول">متوسطه اول</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="فارغ التحصیل">فارغ التحصیل</option><option value="دانشجو">دانشجو</option>
                         </select>
-                        <input type="text" id="regMajor" class="form-input no-icon" placeholder="رشته تحصیلی" style="margin-bottom: 0;">
+                        <input type="text" id="regMajor" class="form-input" placeholder="رشته" style="margin-bottom: 0;">
                     </div>
-                    <input type="text" id="regSchool" class="form-input no-icon" placeholder="مدرسه/دانشگاه">
-                    
-                    <input type="password" id="regPass" class="form-input no-icon" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
-                    <select id="regSecQ" class="form-input no-icon">
-                        <option value="" disabled selected>سوال امنیتی برای فراموشی رمز</option>
+                    <input type="text" id="regSchool" class="form-input" placeholder="مدرسه/دانشگاه">
+                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
+                    <select id="regSecQ" class="form-input">
+                        <option value="" disabled selected>سوال امنیتی</option>
                         <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
-                        <option value="نام اولین مدرسه‌ای که رفتید چه بود؟">نام اولین مدرسه‌ای که رفتید چه بود؟</option>
-                        <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
                     </select>
-                    <input type="text" id="regSecA" class="form-input no-icon" placeholder="پاسخ سوال امنیتی">
-                    <button class="btn btn-primary" onclick="registerUser()">
-                        ثبت‌نام و تشکیل پرونده
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                    </button>
+                    <input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی">
+                    <button class="btn btn-primary" onclick="registerUser()">ثبت‌نام و ورود</button>
                     <button class="btn btn-outline" onclick="goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید')">انصراف</button>
                 </div>
             </div>
         </div>
 
+        <!-- فروشگاه -->
         <div id="view-store" class="view-section">
             <div class="category-nav" id="catNav"></div>
             <div class="store-content" id="storeScroll"></div>
         </div>
 
+        <!-- سبد خرید -->
         <div id="view-cart" class="view-section">
-            <div class="page-title"><svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> سبد خرید شما</div>
+            <h2 class="view-title"><svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> سبد خرید شما</h2>
+            
             <div class="checkout-box glass-panel" id="checkoutBox" style="display: none;">
                 <div id="cartItemsContainer"></div>
                 <div class="payment-options">
-                    <div style="font-size: 13px; color: var(--text-main); font-weight: 900; margin-bottom: 10px;">نحوه تسویه:</div>
+                    <div style="font-size: 13px; color: var(--text-main); font-weight: 900; margin-bottom: 12px;">روش پرداخت:</div>
                     <label class="pay-option active" id="lblWallet">
                         <input type="radio" name="payMethod" value="wallet" checked onchange="updateCartUI()">
+                        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                         <div class="pay-option-content">
-                            <div class="pay-title"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> کیف پول راهینو</div>
-                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold; margin-right: 30px;">موجودی: <span id="walletLabelBadge">...</span></div>
+                            <div class="pay-title">کیف پول</div>
+                            <div class="pay-subtitle">موجودی: <span id="walletLabelBadge">...</span></div>
                         </div>
                     </label>
                     <label class="pay-option" id="lblCash">
                         <input type="radio" name="payMethod" value="cash" onchange="updateCartUI()">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
                         <div class="pay-option-content">
-                            <div class="pay-title"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg> پرداخت نقدی (حضوری)</div>
-                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold; margin-right: 30px;">تحویل مبلغ به سرپرست سالن</div>
+                            <div class="pay-title">پرداخت نقدی</div>
+                            <div class="pay-subtitle">تحویل به سرپرست سالن</div>
                         </div>
                     </label>
                 </div>
                 <div class="summary-total">
-                    <span style="font-size: 15px; color: var(--text-muted); font-weight: 900;">جمع فاکتور:</span>
-                    <span style="font-size: 22px; color: var(--success); font-weight: 900; letter-spacing: -0.5px;" id="totalPriceLabel">0 تومان</span>
+                    <span style="font-size: 14px; color: var(--text-muted); font-weight: bold;">جمع فاکتور:</span>
+                    <span style="font-size: 20px; color: var(--primary); font-weight: 900;" id="totalPriceLabel">0 تومان</span>
                 </div>
-                <div id="checkoutStatusMsg" style="font-size: 13px; font-weight: bold; text-align: center; margin-top: 15px; color: var(--danger); display: none;">موجودی و اعتبار کیف پول شما کافی نیست!</div>
-                <button class="btn-checkout" id="btnCheckout" onclick="processCheckout()">تایید نهایی و خرید <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+                <div id="checkoutStatusMsg" class="alert-box" style="margin-top: 20px; margin-bottom: 0;">موجودی کیف پول شما کافی نیست!</div>
+                <button class="btn-checkout" id="btnCheckout" onclick="processCheckout()">تایید نهایی و خرید</button>
             </div>
-            <div id="emptyCartMsg" style="text-align: center; color: var(--text-muted); margin-top: 80px; display: none;">
-                <div class="empty-cart-icon">
-                    <svg viewBox="0 0 24 24" style="width: 40px; height: 40px;"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                </div>
-                <div style="font-size: 16px; font-weight: 900; color: var(--text-main); margin-bottom: 5px;">سبد خرید خالی است</div>
-                <div style="font-size: 13px; font-weight: bold;">محصولات مورد نظرتان را از فروشگاه اضافه کنید</div>
+            
+            <div id="emptyCartMsg" class="empty-state" style="display: none;">
+                <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <div class="empty-text-title">سبد خرید خالی است</div>
+                <div class="empty-text-sub">محصولات مورد نظرتان را از فروشگاه اضافه کنید</div>
             </div>
         </div>
 
+        <!-- پروفایل کاربری -->
         <div id="view-profile" class="view-section">
-            <div class="page-title"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> پروفایل کاربری</div>
+            <h2 class="view-title"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> حساب کاربری</h2>
             
-            <!-- 🌟 ساختار جدید و شیشه‌ای کیف پول -->
+            <!-- باکس کیف پول جدید و شیک -->
             <div class="wallet-card glass-panel">
-                <div style="font-size: 14px; font-weight: 900; opacity: 0.8; margin-bottom: 5px; color: var(--text-muted);">موجودی کیف پول شما</div>
+                <div class="wallet-title">موجودی کیف پول شما</div>
                 <div class="wallet-balance" id="profileWalletBalance">0 <span>تومان</span></div>
-                <div style="font-size: 12px; font-weight: bold; margin-top: 15px; color: var(--text-muted);" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
+                <div class="wallet-limit" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
             </div>
 
             <div class="charge-section glass-panel">
-                <div class="charge-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    شارژ کیف پول
-                </div>
+                <div class="charge-title"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> شارژ کیف پول</div>
                 
-                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <!-- 🚀 رفع مشکل دکمه‌ها در جاوااسکریپت: اینجا کلاس‌هایشان را با جاوااسکریپت کنترل می‌کنیم -->
-                    <button class="btn-outline active" id="btnTabReceipt" style="flex:1; border-radius: 16px; padding: 14px; font-size: 13px; font-weight: 900; cursor: pointer;" onclick="switchChargeTab('receipt')">کارت به کارت</button>
-                    <button class="btn-outline" id="btnTabCash" style="flex:1; border-radius: 16px; padding: 14px; font-size: 13px; font-weight: 900; cursor: pointer;" onclick="switchChargeTab('cash')">نقدی (حضوری)</button>
+                <div class="tab-buttons">
+                    <button class="btn-tab active" id="btnTabReceipt" onclick="switchChargeTab('receipt')">کارت به کارت</button>
+                    <button class="btn-tab" id="btnTabCash" onclick="switchChargeTab('cash')">نقدی (حضوری)</button>
                 </div>
-                
+
                 <div class="quick-amounts" id="quickAmountsContainer"></div>
-                <input type="number" id="inpChargeAmount" class="form-input no-icon" placeholder="مبلغ دلخواه (تومان)" style="background: var(--glass-bg);">
+                <input type="number" id="inpChargeAmount" class="form-input" placeholder="مبلغ دلخواه (تومان)">
                 
                 <div id="receiptBox">
                     <div class="card-info-box">
-                        <div style="font-size: 12px; color: var(--text-muted); font-weight: bold;">مبلغ را به کارت زیر واریز نمایید:</div>
-                        <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; margin: 10px 0; font-family: monospace; color: var(--text-main);">6219861810380484</div>
-                        <div style="font-size: 13px; font-weight: 900; color: var(--text-main); margin-bottom: 20px;">به نام: <span style="color: var(--primary);">ارشاد شفیعی</span></div>
-                        <button onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')" style="background: var(--primary-fade); border: 1px solid var(--primary); color: var(--text-main); border-radius: 12px; padding: 8px 16px; font-size: 12px; cursor: pointer; font-weight: bold; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            کپی شماره کارت
-                        </button>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">مبلغ را به کارت زیر واریز نمایید:</div>
+                        <div style="font-size: 22px; font-weight: 900; letter-spacing: 3px; margin: 8px 0; color: var(--text-main); direction: ltr;">6219861810380484</div>
+                        <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 15px;">به نام: <span style="color: var(--primary);">ارشاد شفیعی</span></div>
+                        <button class="copy-btn" onclick="navigator.clipboard.writeText('6219861810380484'); alert('شماره کارت کپی شد.')">📋 کپی شماره کارت</button>
                     </div>
                     <label class="file-upload" id="uploadBox">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        <div style="font-size: 13px; color: var(--text-main); font-weight: 900;" id="uploadText">تصویر فیش را آپلود کنید</div>
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <div id="uploadText" style="font-weight: 900; font-size: 13px;">تصویر فیش را آپلود کنید</div>
                         <input type="file" id="receiptFile" accept="image/*" onchange="handleReceiptSelect(event)">
                     </label>
                 </div>
                 
-                <button class="btn-checkout disabled" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled style="margin-top: 10px;">
-                    ثبت درخواست شارژ
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
+                <button class="btn-checkout disabled" id="btnSubmitCharge" onclick="submitChargeRequest()" disabled>ثبت درخواست شارژ</button>
             </div>
 
-            <div class="glass-panel menu-list">
+            <div class="menu-list glass-panel">
                 <div class="menu-item" onclick="loadHistory()">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"></polyline><circle cx="12" cy="12" r="10"></circle></svg>
-                        تاریخچه تراکنش‌ها
-                    </div>
-                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    <div><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> تاریخچه تراکنش‌ها</div>
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </div>
-                <div class="menu-item danger" style="border-bottom: none;" onclick="logoutApp()">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        خروج از حساب کاربری
-                    </div>
+                <div class="menu-item danger" onclick="logoutApp()">
+                    <div><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> خروج از حساب کاربری</div>
                 </div>
             </div>
         </div>
 
+        <!-- تاریخچه -->
         <div id="view-history" class="view-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                <h2 class="view-title" style="margin-bottom: 0;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"></polyline><circle cx="12" cy="12" r="10"></circle></svg>
-                    تراکنش‌ها
-                </h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 class="view-title" style="margin: 0;"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> تاریخچه</h2>
                 <button class="icon-btn" onclick="switchView('view-profile', document.querySelectorAll('.nav-item')[2])">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </button>
             </div>
             <div id="historyContainer">
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <div style="font-size: 15px; font-weight: 900; color: var(--text-main);">در حال دریافت...</div>
-                </div>
+                <div class="empty-state">⏳ در حال دریافت...</div>
             </div>
         </div>
 
+        <!-- نوار پایین -->
         <div class="bottom-nav-wrapper" id="bottomNavWrapper">
             <nav class="bottom-nav" id="bottomNav">
                 <div class="nav-item active" onclick="switchView('view-store', this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                     <div class="nav-text">فروشگاه</div>
                 </div>
                 <div class="nav-item" onclick="switchView('view-cart', this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <div class="nav-text">سبد خرید</div>
                     <div class="cart-badge" id="cartBadge" style="display: none;">0</div>
                 </div>
                 <div class="nav-item" onclick="switchView('view-profile', this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     <div class="nav-text">پروفایل</div>
                 </div>
             </nav>
