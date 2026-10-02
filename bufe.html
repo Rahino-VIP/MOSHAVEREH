@@ -412,41 +412,43 @@
         };
 
         async function checkUser() {
-            let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
-            if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
-            showLoader('در حال بررسی هویت...');
-            
-            try {
-                const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
-                hideLoader();
-                if (error) {
-                    console.error("Supabase Error:", error);
-                    return alert('خطا در ارتباط با سرور. لطفا اتصال اینترنت خود را بررسی کنید.');
-                }
-
-                if (data && data.length > 0) {
-                    let user = data[0];
-                    if (user.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
-                    if (user.status === 'blocked' || user.status === 'rejected') return alert('❌ دسترسی مسدود شده است.');
-                    
-                    activeUser = { ...user, phone_number: phone };
-
-                    if (!user.has_password) {
-                        if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = user.full_name.split(' ')[0];
-                        goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
-                    } else {
-                        goToStep('step-login', 'ورود به بوفه', `سلام ${user.full_name.split(' ')[0]}، رمز عبورت رو وارد کن`);
-                    }
-                } else {
-                    goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
-                }
-            } catch (err) { 
-                hideLoader(); 
-                console.error(err);
-                alert('خطا در ارتباط با سرور.'); 
-            }
+    let phone = toEnglishDigits(document.getElementById('inpPhone').value.trim());
+    if(phone.length < 10) return alert('لطفاً شماره موبایل را به درستی وارد کنید.');
+    showLoader('در حال بررسی هویت...');
+    
+    try {
+        const { data, error } = await supabaseClient.rpc('check_user_status', { p_phone: phone });
+        hideLoader();
+        if (error) {
+            console.error(error);
+            return alert('ارتباط با سرور برقرار نشد.');
         }
 
+        if (data && data.length > 0) {
+            let user = data[0];
+            if (user.status === 'pending') return alert('⏳ حساب شما در انتظار تایید مدیریت است.');
+            if (user.status === 'blocked' || user.status === 'rejected') return alert('❌ دسترسی مسدود شده است.');
+            
+            activeUser = { ...user, phone_number: phone };
+
+            // 🚀 لایه محافظ: اگر دیتابیس نام را نداد، کرش نکن و کلمه "کاربر" را بگذار
+            let firstName = user.full_name ? user.full_name.split(' ')[0] : 'کاربر';
+
+            if (!user.has_password) {
+                if(document.getElementById('setupNameLabel')) document.getElementById('setupNameLabel').innerText = firstName;
+                goToStep('step-setup', 'تنظیمات امنیتی', 'حفاظت از کیف پول شما');
+            } else {
+                goToStep('step-login', 'ورود به بوفه', `سلام ${firstName}، رمز عبورت رو وارد کن`);
+            }
+        } else {
+            goToStep('step-register', 'ثبت‌نام در بوفه', 'تشکیل پرونده جدید');
+        }
+    } catch (err) { 
+        hideLoader(); 
+        console.error(err);
+        alert('خطا در ارتباط با سرور.'); 
+    }
+}
         async function verifyLogin() {
             let pass = document.getElementById('inpLoginPass').value.trim();
             if(!pass) return alert('رمز عبور را وارد کنید.');
