@@ -11,7 +11,6 @@
 <body>
 
     <div class="app-container">
-        <!-- افکت‌های نوری پس‌زمینه -->
         <div class="glow-1"></div>
         <div class="glow-2"></div>
 
@@ -29,93 +28,95 @@
         
         <div class="welcome-overlay" id="welcomeOverlay">
             <div class="welcome-icon">
-                <svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <!-- 🌟 استیکر سبد خرید با انیمیشن شناور -->
+                <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             </div>
             <h1 id="welcomeName">خوش آمدید!</h1>
             <p>در حال آماده‌سازی بوفه...</p>
         </div>
 
-        <!-- بخش احراز هویت -->
-        <div id="view-auth" class="view-section active" style="padding-top: 20px;">
-            <div class="auth-container glass-panel">
-                <div class="header-box">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <h1 id="headerTitle">ورود به سیستم</h1>
-                    <p id="headerSub">موبایل خود را وارد کنید</p>
-                </div>
-                
-                <div class="step-section active" id="step-phone">
-                    <input type="tel" id="inpPhone" class="form-input" placeholder="09123456789" maxlength="11" autocomplete="off">
-                    <button class="btn btn-primary" onclick="checkUser()">
-                        بررسی و ادامه
-                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    </button>
-                </div>
-
-                <div class="step-section" id="step-login">
-                    <input type="password" id="inpLoginPass" class="form-input" placeholder="رمز عبور" autocomplete="off">
-                    <button class="btn btn-primary" onclick="verifyLogin()">
-                        ورود به بوفه
-                        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-                    </button>
-                    <a class="text-link" onclick="setupRecoveryView()">رمز عبورم را فراموش کرده‌ام!</a>
-                </div>
-
-                <div class="step-section" id="step-setup">
-                    <div class="alert-box">یک رمز عبور و سوال امنیتی تنظیم کن.</div>
-                    <input type="password" id="setupPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
-                    <select id="setupSecQ" class="form-input">
-                        <option value="" disabled selected>یک سوال امنیتی انتخاب کنید...</option>
-                        <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
-                        <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
-                    </select>
-                    <input type="text" id="setupSecA" class="form-input" placeholder="پاسخ سوال امنیتی (به خاطر بسپارید!)">
-                    <button class="btn btn-primary" onclick="saveNewPassword()">
-                        ذخیره و ورود
-                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </button>
-                </div>
-
-                <div class="step-section" id="step-recovery">
-                    <div id="recoveryQuestionText" style="font-weight: 900; margin-bottom: 20px; font-size: 14px; color: var(--text-main);">...</div>
-                    <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ خود را وارد کنید">
-                    <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
-                    <button class="btn btn-primary" onclick="processRecovery()">
-                        تغییر رمز و ورود
-                    </button>
-                    <button class="btn btn-outline" onclick="goToStep('step-login', 'ورود به سیستم', 'رمز عبور خود را وارد کنید')">بازگشت</button>
-                </div>
-
-                <div class="step-section" id="step-register">
-                    <div class="alert-box">شماره شما یافت نشد. فرم را تکمیل کنید.</div>
-                    <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی">
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <select id="regGrade" class="form-input" style="margin-bottom: 0;">
-                            <option value="" disabled selected>پایه</option>
-                            <option value="متوسطه اول">متوسطه اول</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="فارغ التحصیل">فارغ التحصیل</option><option value="دانشجو">دانشجو</option>
-                        </select>
-                        <input type="text" id="regMajor" class="form-input" placeholder="رشته" style="margin-bottom: 0;">
+        <div id="view-auth" class="view-section active">
+            <div class="auth-container">
+                <div class="auth-box glass-panel">
+                    <div class="auth-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     </div>
-                    <input type="text" id="regSchool" class="form-input" placeholder="مدرسه/دانشگاه">
-                    <input type="password" id="regPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
-                    <select id="regSecQ" class="form-input">
-                        <option value="" disabled selected>سوال امنیتی</option>
-                        <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
-                    </select>
-                    <input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی">
-                    <button class="btn btn-primary" onclick="registerUser()">ثبت‌نام و ورود</button>
-                    <button class="btn btn-outline" onclick="goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید')">انصراف</button>
+                    <div class="header-box">
+                        <h1 id="headerTitle">ورود به سیستم</h1>
+                        <p id="headerSub">موبایل خود را وارد کنید</p>
+                    </div>
+                    
+                    <div class="step-section active" id="step-phone">
+                        <input type="tel" id="inpPhone" class="form-input" placeholder="09123456789" maxlength="11" autocomplete="off">
+                        <button class="btn btn-primary" onclick="checkUser()">
+                            بررسی و ادامه
+                            <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+
+                    <div class="step-section" id="step-login">
+                        <input type="password" id="inpLoginPass" class="form-input" placeholder="رمز عبور" autocomplete="off">
+                        <button class="btn btn-primary" onclick="verifyLogin()">
+                            ورود به بوفه
+                            <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                        </button>
+                        <a class="text-link" onclick="setupRecoveryView()">رمز عبورم را فراموش کرده‌ام!</a>
+                    </div>
+
+                    <div class="step-section" id="step-setup">
+                        <div class="alert-box">یک رمز عبور و سوال امنیتی تنظیم کن.</div>
+                        <input type="password" id="setupPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
+                        <select id="setupSecQ" class="form-input">
+                            <option value="" disabled selected>یک سوال امنیتی انتخاب کنید...</option>
+                            <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
+                            <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
+                        </select>
+                        <input type="text" id="setupSecA" class="form-input" placeholder="پاسخ سوال امنیتی (به خاطر بسپارید!)">
+                        <button class="btn btn-primary" onclick="saveNewPassword()">
+                            ذخیره و ورود
+                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                    </div>
+
+                    <div class="step-section" id="step-recovery">
+                        <div id="recoveryQuestionText" style="font-weight: 900; margin-bottom: 20px; font-size: 14px; color: var(--text-main);">...</div>
+                        <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ خود را وارد کنید">
+                        <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
+                        <button class="btn btn-primary" onclick="processRecovery()">
+                            تغییر رمز و ورود
+                        </button>
+                        <button class="btn btn-outline" onclick="goToStep('step-login', 'ورود به سیستم', 'رمز عبور خود را وارد کنید')">بازگشت</button>
+                    </div>
+
+                    <div class="step-section" id="step-register">
+                        <div class="alert-box">شماره شما یافت نشد. فرم را تکمیل کنید.</div>
+                        <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی">
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <select id="regGrade" class="form-input" style="margin-bottom: 0;">
+                                <option value="" disabled selected>پایه</option>
+                                <option value="متوسطه اول">متوسطه اول</option><option value="دهم">دهم</option><option value="یازدهم">یازدهم</option><option value="دوازدهم">دوازدهم</option><option value="فارغ التحصیل">فارغ التحصیل</option><option value="دانشجو">دانشجو</option>
+                            </select>
+                            <input type="text" id="regMajor" class="form-input" placeholder="رشته" style="margin-bottom: 0;">
+                        </div>
+                        <input type="text" id="regSchool" class="form-input" placeholder="مدرسه/دانشگاه">
+                        <input type="password" id="regPass" class="form-input" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
+                        <select id="regSecQ" class="form-input">
+                            <option value="" disabled selected>سوال امنیتی</option>
+                            <option value="نام بهترین دوست دوران کودکی شما چیست؟">نام بهترین دوست دوران کودکی شما چیست؟</option>
+                        </select>
+                        <input type="text" id="regSecA" class="form-input" placeholder="پاسخ سوال امنیتی">
+                        <button class="btn btn-primary" onclick="registerUser()">ثبت‌نام و ورود</button>
+                        <button class="btn btn-outline" onclick="goToStep('step-phone', 'ورود به سیستم', 'موبایل خود را وارد کنید')">انصراف</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- فروشگاه -->
         <div id="view-store" class="view-section">
             <div class="category-nav" id="catNav"></div>
             <div class="store-content" id="storeScroll"></div>
         </div>
 
-        <!-- سبد خرید -->
         <div id="view-cart" class="view-section">
             <h2 class="view-title"><svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> سبد خرید شما</h2>
             
@@ -128,7 +129,7 @@
                         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                         <div class="pay-option-content">
                             <div class="pay-title">کیف پول</div>
-                            <div class="pay-subtitle">موجودی: <span id="walletLabelBadge">...</span></div>
+                            <div class="pay-subtitle">موجودی: <span id="walletLabelBadge" style="direction: ltr; display: inline-block;">...</span></div>
                         </div>
                     </label>
                     <label class="pay-option" id="lblCash">
@@ -155,14 +156,12 @@
             </div>
         </div>
 
-        <!-- پروفایل کاربری -->
         <div id="view-profile" class="view-section">
             <h2 class="view-title"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> حساب کاربری</h2>
             
-            <!-- باکس کیف پول جدید و شیک -->
             <div class="wallet-card glass-panel">
                 <div class="wallet-title">موجودی کیف پول شما</div>
-                <div class="wallet-balance" id="profileWalletBalance">0 <span>تومان</span></div>
+                <div class="wallet-balance" id="profileWalletBalance"><span style="direction: ltr;">0</span> <span style="font-size: 16px;">تومان</span></div>
                 <div class="wallet-limit" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
             </div>
 
@@ -205,7 +204,6 @@
             </div>
         </div>
 
-        <!-- تاریخچه -->
         <div id="view-history" class="view-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 class="view-title" style="margin: 0;"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> تاریخچه</h2>
@@ -218,7 +216,6 @@
             </div>
         </div>
 
-        <!-- نوار پایین -->
         <div class="bottom-nav-wrapper" id="bottomNavWrapper">
             <nav class="bottom-nav" id="bottomNav">
                 <div class="nav-item active" onclick="switchView('view-store', this)">
