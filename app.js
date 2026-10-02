@@ -1552,22 +1552,20 @@ async function submitInstallment() {
     if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال پرداخت قسط...';
     
     try {
+        // ۱. کسر از کیف پول (در صورت انتخاب این روش)
         if (instPayMethod === 'wallet') {
-            // کسر از کیف پول
             let newBalance = Number(currentUser.wallet_balance || 0) - currentInstallmentAmount;
             const { error: wError } = await supabaseClient.from('users').update({ wallet_balance: newBalance }).eq('phone_number', currentUser.phone_number);
             if(wError) throw wError;
-            
-            // آپدیت وضعیت قسط
-            const { error } = await supabaseClient.from('pan_installments').update({ status: 'paid', receipt_base64: null }).eq('id', currentInstallmentId);
-            if(error) throw error;
-        } else {
-            // آپدیت قسط با عکس رسید
-            const { error } = await supabaseClient.from('pan_installments').update({ receipt_base64: instBase64Image, status: 'paid' }).eq('id', currentInstallmentId);
-            if(error) throw error;
-        }
+        } 
+        
+        // ۲. آپدیت وضعیت قسط به پرداخت شده (بدون ارسال عکس فیش به دیتابیس برای جلوگیری از ارور 400)
+        const { error } = await supabaseClient.from('pan_installments')
+            .update({ status: 'paid' }) 
+            .eq('id', currentInstallmentId);
+        if(error) throw error;
 
-        // 🚀 ارسال آنی به ربات بله
+        // ۳. 🚀 ارسال آنی عکس فیش و اطلاعات به ربات بله
         const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
         const payTypeFa = instPayMethod === 'wallet' ? 'کیف پول' : 'کارت به کارت';
         const payload = {
@@ -1580,6 +1578,7 @@ async function submitInstallment() {
         alert('✅ پرداخت قسط با موفقیت در سیستم ثبت شد.'); 
         window.location.reload(); 
     } catch (e) { 
+        console.error(e);
         document.getElementById('mainLoader').style.display = 'none'; 
         alert('خطا در ارتباط با سرور.'); 
     }
