@@ -55,40 +55,50 @@
 /* ==========================================
    🔒 قفل نهایی و قطعی اسکرول (جلوگیری از فرار صفحه به بغل)
    ========================================== */
+/* ==========================================
+   🔒 قفل سخت‌گیرانه و قطعی اسکرول افقی (ضدگلوله)
+   ========================================== */
 html, body { 
-    position: fixed; /* 🚀 این دستور بدنه سایت را میخکوب می‌کند */
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: hidden !important; /* هیچ چیزی بیرون از کادر نمیره */
+    width: 100%;
+    max-width: 100%; 
+    overflow-x: hidden !important; 
+    
+    /* 🚀 این خط کلید حل مشکل است: فقط اسکرول عمودی مجاز است! */
+    touch-action: pan-y !important; 
+    
+    overscroll-behavior-x: none; 
+    scroll-behavior: smooth;
     margin: 0; padding: 0;
+    position: relative;
     -webkit-text-size-adjust: 100%;
 }
+
 * { 
     box-sizing: border-box !important; 
-    font-family: 'Vazirmatn', sans-serif; 
-    margin: 0; padding: 0; 
-    user-select: none; 
-    -webkit-tap-highlight-color: transparent;
+    max-width: 100%; /* هیچ عنصری حق ندارد از صفحه بیرون بزند */
 }
 
 body { 
     background: var(--bg-color);
     background-image: radial-gradient(at 10% 10%, rgba(212, 126, 142, 0.08) 0px, transparent 50%), radial-gradient(at 90% 90%, rgba(167, 139, 250, 0.08) 0px, transparent 50%);
-    color: var(--text-main); display: flex; justify-content: center; 
+    background-attachment: fixed;
+    color: var(--text-main); 
+    display: flex; 
+    justify-content: center; 
+    height: 100dvh; 
 }
-[data-theme="dark"] body { background: linear-gradient(135deg, #09090b 0%, #17171b 100%); }
 
 .app-container { 
     width: 100%; 
     max-width: 480px; 
-    height: 100%; 
+    height: 100dvh; 
     position: relative; 
     display: flex; 
     flex-direction: column; 
-    overflow: hidden !important; /* 🚀 کانتینر اصلی هم قفل شد */
+    overflow-x: hidden !important; 
     margin: 0 auto;
 }
+
 
 
 /* افکت‌های نوری محدود شده */
