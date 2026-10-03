@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>بوفه هوشمند راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="bufe.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <div class="app-container">
+        <!-- هاله‌های نوری پس‌زمینه -->
         <div class="glow-1"></div>
         <div class="glow-2"></div>
 
@@ -26,16 +27,16 @@
 
         <div class="loader" id="loader"><div class="spinner"></div><div id="loaderText">کمی صبر کنید...</div></div>
         
+        <!-- صفحه خوش‌آمدگویی با سبد متحرک -->
         <div class="welcome-overlay" id="welcomeOverlay">
             <div class="welcome-icon">
-                <!-- 🌟 استیکر سبد خرید با انیمیشن شناور -->
                 <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             </div>
             <h1 id="welcomeName">خوش آمدید!</h1>
             <p>در حال آماده‌سازی بوفه...</p>
         </div>
 
-        <div id="view-auth" class="view-section active">
+        <div id="view-auth" class="view-section active" style="padding-top: 20px;">
             <div class="auth-container">
                 <div class="auth-box glass-panel">
                     <div class="auth-icon">
@@ -72,24 +73,19 @@
                             <option value="رنگ مورد علاقه شما در کودکی چه بود؟">رنگ مورد علاقه شما در کودکی چه بود؟</option>
                         </select>
                         <input type="text" id="setupSecA" class="form-input" placeholder="پاسخ سوال امنیتی (به خاطر بسپارید!)">
-                        <button class="btn btn-primary" onclick="saveNewPassword()">
-                            ذخیره و ورود
-                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        </button>
+                        <button class="btn btn-primary" onclick="saveNewPassword()">ذخیره و ورود</button>
                     </div>
 
                     <div class="step-section" id="step-recovery">
                         <div id="recoveryQuestionText" style="font-weight: 900; margin-bottom: 20px; font-size: 14px; color: var(--text-main);">...</div>
                         <input type="text" id="inpRecoveryAns" class="form-input" placeholder="پاسخ خود را وارد کنید">
                         <input type="password" id="inpRecoveryNewPass" class="form-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)">
-                        <button class="btn btn-primary" onclick="processRecovery()">
-                            تغییر رمز و ورود
-                        </button>
+                        <button class="btn btn-primary" onclick="processRecovery()">تغییر رمز و ورود</button>
                         <button class="btn btn-outline" onclick="goToStep('step-login', 'ورود به سیستم', 'رمز عبور خود را وارد کنید')">بازگشت</button>
                     </div>
 
                     <div class="step-section" id="step-register">
-                        <div class="alert-box">شماره شما یافت نشد. فرم را تکمیل کنید.</div>
+                        <div class="alert-box" style="display: flex;">شماره یافت نشد. فرم را تکمیل کنید.</div>
                         <input type="text" id="regName" class="form-input" placeholder="نام و نام خانوادگی">
                         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                             <select id="regGrade" class="form-input" style="margin-bottom: 0;">
@@ -118,7 +114,7 @@
         </div>
 
         <div id="view-cart" class="view-section">
-            <h2 class="view-title"><svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> سبد خرید شما</h2>
+            <div class="page-title"><svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> سبد خرید شما</div>
             
             <div class="checkout-box glass-panel" id="checkoutBox" style="display: none;">
                 <div id="cartItemsContainer"></div>
@@ -157,11 +153,11 @@
         </div>
 
         <div id="view-profile" class="view-section">
-            <h2 class="view-title"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> حساب کاربری</h2>
+            <div class="page-title"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> حساب کاربری</div>
             
             <div class="wallet-card glass-panel">
                 <div class="wallet-title">موجودی کیف پول شما</div>
-                <div class="wallet-balance" id="profileWalletBalance"><span style="direction: ltr;">0</span> <span style="font-size: 16px;">تومان</span></div>
+                <div class="wallet-balance" id="profileWalletBalance"><span style="direction: ltr; display:inline-block;">0</span> <span style="font-size: 16px;">تومان</span></div>
                 <div class="wallet-limit" id="profileWalletStatus">(سقف اعتبار خرید: ۲۰۰,۰۰۰- تومان)</div>
             </div>
 
@@ -216,6 +212,7 @@
             </div>
         </div>
 
+        <!-- نوار پایین شناور -->
         <div class="bottom-nav-wrapper" id="bottomNavWrapper">
             <nav class="bottom-nav" id="bottomNav">
                 <div class="nav-item active" onclick="switchView('view-store', this)">
