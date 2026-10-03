@@ -52,16 +52,18 @@
 /* ==========================================
    🔒 قفل سخت‌گیرانه اسکرول افقی (حل مشکل پرش صفحه)
    ========================================== */
+/* ==========================================
+   🔒 قفل نهایی و قطعی اسکرول (جلوگیری از فرار صفحه به بغل)
+   ========================================== */
 html, body { 
-    width: 100vw;
-    max-width: 100vw; 
-    overflow-x: hidden !important; 
-    overscroll-behavior-x: none; 
-    scroll-behavior: smooth;
+    position: fixed; /* 🚀 این دستور بدنه سایت را میخکوب می‌کند */
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: hidden !important; /* هیچ چیزی بیرون از کادر نمیره */
     margin: 0; padding: 0;
     -webkit-text-size-adjust: 100%;
 }
-
 * { 
     box-sizing: border-box !important; 
     font-family: 'Vazirmatn', sans-serif; 
@@ -73,21 +75,21 @@ html, body {
 body { 
     background: var(--bg-color);
     background-image: radial-gradient(at 10% 10%, rgba(212, 126, 142, 0.08) 0px, transparent 50%), radial-gradient(at 90% 90%, rgba(167, 139, 250, 0.08) 0px, transparent 50%);
-    background-attachment: fixed;
-    color: var(--text-main); display: flex; justify-content: center; height: 100dvh; 
+    color: var(--text-main); display: flex; justify-content: center; 
 }
 [data-theme="dark"] body { background: linear-gradient(135deg, #09090b 0%, #17171b 100%); }
 
 .app-container { 
     width: 100%; 
     max-width: 480px; 
-    height: 100dvh; 
+    height: 100%; 
     position: relative; 
     display: flex; 
     flex-direction: column; 
-    overflow-x: hidden !important; 
+    overflow: hidden !important; /* 🚀 کانتینر اصلی هم قفل شد */
     margin: 0 auto;
 }
+
 
 /* افکت‌های نوری محدود شده */
 .glow-1 { position: absolute; width: 250px; height: 250px; background: var(--primary-fade); filter: blur(70px); border-radius: 50%; top: -50px; right: -50px; z-index: 0; pointer-events: none; max-width: 100vw;}
