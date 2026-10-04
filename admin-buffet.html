@@ -244,105 +244,8 @@
     </div>
 
     <script>
-        // 🔗 فقط برای ارسال پیام متنی و عکس به ربات بله
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
-        
-        // 🔒 استفاده از کلید معمولی (Anon Key) به جای Service Key به لطف قوانین RLS
-        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let products = [], pendingTxs = [], pendingOrders = [], usersData = [], recentOrders = [], recentTxs = [];
-
-        function showLoader() { document.getElementById('loader').style.display = 'flex'; }
-        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-        function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
-
-        // =======================
-        // 🔐 سیستم لاگین ادمین
-        // =======================
-        window.onload = async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if(session) {
-                verifyAdminRole(session.user.email.split('@')[0]);
-            }
-        };
-
-        async function adminLogin() {
-            let phone = toEnglishDigits(document.getElementById('adminPhone').value.trim());
-            let pass = document.getElementById('adminPass').value.trim();
-            if(!phone || !pass) return alert('شماره و رمز عبور را وارد کنید.');
-
-            showLoader();
-            const { error } = await supabaseClient.auth.signInWithPassword({ email: phone + '@rahino.ir', password: pass });
-            if(error) {
-                hideLoader();
-                return alert('اطلاعات ورود اشتباه است.');
-            }
-            verifyAdminRole(phone);
-        }
-
-        async function verifyAdminRole(phone) {
-            // چک کردن نقش در دیتابیس
-            const { data, error } = await supabaseClient.from('users').select('role, full_name').eq('phone_number', phone).single();
-            
-            if(error || !data || data.role !== 'admin') {
-                await supabaseClient.auth.signOut();
-                hideLoader();
-                alert('❌ دسترسی غیرمجاز! شما مجوز مدیریت پنل را ندارید.');
-                document.getElementById('loginOverlay').style.display = 'flex';
-            } else {
-                document.getElementById('loginOverlay').style.display = 'none';
-                loadAdminData();
-            }
-        }
-
-        async function adminLogout() {
-            if(confirm('آیا از پنل خارج می‌شوید؟')) {
-                await supabaseClient.auth.signOut();
-                window.location.reload();
-            }
-        }
-
-        // =======================
-        // 🔄 بارگذاری داده‌ها (مستقیم از سوپابیس)
-        // =======================
-        async function loadAdminData() {
-            showLoader();
-            try {
-                const [prodsRes, pendingTxsRes, pendingOrdersRes, usersRes, recentOrdersRes, recentTxsRes] = await Promise.all([
-                    supabaseClient.from('buffet_products').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('buffet_transactions').select('*').eq('status', 'pending'),
-                    supabaseClient.from('buffet_orders').select('*').eq('status', 'pending_cash'),
-                    supabaseClient.from('users').select('phone_number, full_name, wallet_balance').eq('status', 'approved'),
-                    supabaseClient.from('buffet_orders').select('*').order('created_at', { ascending: false }).limit(100),
-                    supabaseClient.from('buffet_transactions').select('*').order('created_at', { ascending: false }).limit(200)
-                ]);
-
-                hideLoader();
-                products = prodsRes.data || [];
-                pendingTxs = pendingTxsRes.data || [];
-                pendingOrders = pendingOrdersRes.data || [];
-                usersData = usersRes.data || [];
-                recentOrders = recentOrdersRes.data || [];
-                recentTxs = recentTxsRes.data || [];
-
-                renderInventory(); 
-                renderCashViews(); 
-                renderApprovals(); 
-                renderFinanceUsers();
-                generateDailyReport();
-            } catch(e) { 
-                console.error(e);
-                hideLoader(); 
-                alert('خطا در دریافت اطلاعات دیتابیس.'); 
-            }
-        }
-
-        // =======================
-        // بقیه توابع دقیقاً مثل قبل، فقط با `supabaseClient`
-        // =======================
 
         function getUserName(phone) {
             let u = usersData.find(x => x.phone_number === phone);
@@ -363,11 +266,32 @@
                 document.getElementById('sidebarOverlay').classList.remove('active');
             }
         }
+        
+        function showLoader() { document.getElementById('loader').style.display = 'flex'; }
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
+
+        window.onload = async () => {
+            showLoader();
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_admin_data' }) });
+                const data = await response.json();
+                hideLoader();
+                if(data.success) {
+                    products = data.products || [];
+                    pendingTxs = data.pending_txs || [];
+                    pendingOrders = data.pending_orders || [];
+                    usersData = data.users || [];
+                    recentOrders = data.recent_orders || [];
+                    recentTxs = data.recent_txs || [];
+                    renderInventory(); renderCashViews(); renderApprovals(); renderFinanceUsers();
+                } else alert('خطا: ' + data.error);
+            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
+        };
 
         function renderInventory() {
             const tbody = document.getElementById('inventoryTableBody');
@@ -396,31 +320,19 @@
                 let pPrice = document.getElementById(`price_${id}`).value;
                 let pStock = document.getElementById(`stock_${id}`).value;
                 let pActive = document.getElementById(`active_${id}`).value === 'true';
-
-                await supabaseClient.from('buffet_products')
-                    .update({ price: Number(pPrice), stock_count: Number(pStock), is_active: pActive })
-                    .eq('id', id);
-
-                hideLoader(); 
-                alert('✅ ذخیره شد');
-            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: pPrice, stock: pStock, is_active: pActive }) });
+                hideLoader(); alert('✅ ذخیره شد');
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         async function submitNewProduct() {
-            const name = document.getElementById('addName').value, 
-                  cat = document.getElementById('addCat').value, 
-                  price = document.getElementById('addPrice').value, 
-                  stock = document.getElementById('addStock').value, 
-                  img = document.getElementById('addImg').value;
-                  
+            const name = document.getElementById('addName').value, cat = document.getElementById('addCat').value, price = document.getElementById('addPrice').value, stock = document.getElementById('addStock').value, img = document.getElementById('addImg').value;
             if(!name || !price || !stock || !cat) return alert('اطلاعات ناقص است.');
             showLoader();
             try {
-                await supabaseClient.from('buffet_products').insert([{ 
-                    name: name, category: cat, price: Number(price), stock_count: Number(stock), image_url: img || null, is_active: true 
-                }]);
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در ثبت محصول'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function renderCashViews() {
@@ -432,40 +344,25 @@
 
             let html = '';
             pendingOrders.forEach(o => {
-                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">سفارش بوفه (نقدی)</td><td>${o.total_price.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
                 <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">تایید پرداخت ✅</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">دریافت شد ✅</button></td></tr>`;
             });
             cashCharges.forEach(t => {
-                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ نقدی کیف پول</td><td>${t.amount.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
                 <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">تایید دریافت ✅</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
             });
-            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ مورد نقدی در انتظار نیست.</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ موردی نیست.</td></tr>';
         }
 
         async function processCashOrder(oId, phone, oTotal) {
-            let rAmt = Number(document.getElementById(`recv_o_${oId}`).value);
+            let rAmt = document.getElementById(`recv_o_${oId}`).value;
             showLoader();
             try {
-                await supabaseClient.from('buffet_orders').update({ status: 'paid' }).eq('id', oId);
-                
-                let diff = rAmt - oTotal;
-                let u = usersData.find(x => x.phone_number === phone);
-                let uName = u ? u.full_name : phone;
-
-                if (diff > 0) {
-                    let currentBal = u ? u.wallet_balance : 0;
-                    await supabaseClient.from('users').update({ wallet_balance: currentBal + diff }).eq('phone_number', phone);
-                    await supabaseClient.from('buffet_transactions').insert([{ phone_number: phone, amount: diff, tx_type: 'change_deposit', status: 'approved' }]);
-                }
-
-                let msg = `✅ تسویه فاکتور نقدی\n👤 کاربر: ${uName}\n🧾 فاکتور: ${oTotal.toLocaleString()} تومان\n💵 دریافتی: ${rAmt.toLocaleString()} تومان`;
-                if (diff > 0) msg += `\n💳 واریز مابقی به کیف پول: ${diff.toLocaleString()} تومان`;
-                fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ text: msg }) }).catch(e=>{});
-
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در پردازش'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function renderApprovals() {
@@ -478,35 +375,21 @@
             receiptCharges.forEach(tx => {
                 html += `<tr><td>${getUserName(tx.phone_number)}</td><td>${tx.amount.toLocaleString()}</td>
                 <td><input type="number" id="recv_t_${tx.id}" class="form-input" value="${tx.amount}" style="width:120px;"></td>
-                <td dir="ltr">${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
+                <td>${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
                 <td><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom: 5px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button><br>
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom:5px; width:100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button><br>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width:100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
             });
             tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">فیشی وجود ندارد.</td></tr>';
         }
 
         async function processCharge(txId, phone, inputId, status) {
-            let amt = Number(document.getElementById(inputId).value);
+            let amt = document.getElementById(inputId).value;
             showLoader();
             try {
-                await supabaseClient.from('buffet_transactions')
-                    .update({ status: status, amount: amt, receipt_base64: null })
-                    .eq('id', txId);
-
-                let u = usersData.find(x => x.phone_number === phone);
-                let uName = u ? u.full_name : phone;
-
-                if (status === 'approved') {
-                    let currentBal = u ? u.wallet_balance : 0;
-                    await supabaseClient.from('users').update({ wallet_balance: currentBal + amt }).eq('phone_number', phone);
-                    fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ text: `✅ تایید فیش کیف پول\n👤 کاربر: ${uName}\n💰 شارژ: ${amt.toLocaleString()} تومان` }) }).catch(e=>{});
-                } else {
-                    fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ text: `❌ رد درخواست شارژ\n👤 کاربر: ${uName}` }) }).catch(e=>{});
-                }
-
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در پردازش'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function renderFinanceUsers() {
@@ -514,16 +397,11 @@
         }
 
         async function submitManualCharge() {
-            const phone = document.getElementById('financeUserSelect').value, amount = Number(document.getElementById('financeAmount').value);
+            const phone = document.getElementById('financeUserSelect').value, amount = document.getElementById('financeAmount').value;
             if(!phone || !amount) return;
             showLoader();
             try {
-                let u = usersData.find(x => x.phone_number === phone);
-                let currentBal = u ? u.wallet_balance : 0;
-                
-                await supabaseClient.from('users').update({ wallet_balance: currentBal + amount }).eq('phone_number', phone);
-                await supabaseClient.from('buffet_transactions').insert([{ phone_number: phone, amount: amount, tx_type: 'manual_cash', status: 'approved' }]);
-
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
                 window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
@@ -551,9 +429,9 @@
             
             showLoader();
             try {
-                await supabaseClient.from('buffet_products').update({ featured_days: selectedDays, featured_start: fStart, featured_end: fEnd, featured_text: fText }).eq('id', pid);
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: selectedDays, start: fStart, end: fEnd, text: fText }) });
                 hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         async function clearFeatured() {
@@ -561,14 +439,13 @@
             if(!pid) return;
             showLoader();
             try {
-                await supabaseClient.from('buffet_products').update({ featured_days: null, featured_start: null, featured_end: null, featured_text: null }).eq('id', pid);
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: '', start: '', end: '', text: '' }) });
                 hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function generateDailyReport() {
             let todayStr = new Date().toLocaleDateString('fa-IR');
-            
             let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
             let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved' && t.tx_type !== 'purchase');
 
@@ -594,14 +471,14 @@
             let tbodyTxs = document.getElementById('todayTxsBody');
             tbodyTxs.innerHTML = todaysTxs.map(t => {
                 let typeTxt = '';
-                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی';
-                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 کارت به کارت';
-                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد';
-                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ دستی مدیریت';
+                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی (حضوری)';
+                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 واریز کارت به کارت';
+                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد خرید';
+                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ شارژ دستی مدیریت';
                 else typeTxt = 'سایر';
                 let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
                 return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
-            }).join('') || '<tr><td colspan="4" style="text-align:center;">تراکنشی یافت نشد.</td></tr>';
+            }).join('') || '<tr><td colspan="4" style="text-align:center;">شارژی انجام نشده است.</td></tr>';
         }
     </script>
 </body>
