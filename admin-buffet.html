@@ -47,8 +47,8 @@
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .checkbox-group label { background: var(--bg-color); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 12px; }
 
-        /* 🔐 استایل صفحه ورود ادمین */
-        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: flex; justify-content: center; align-items: center; }
+        /* 🔐 حل مشکل صفحه ورود */
+        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: none; justify-content: center; align-items: center; }
         .login-box { background: var(--surface); padding: 40px; border-radius: 24px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
 
         .menu-toggle { display: none; background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; margin-left: 15px; }
@@ -68,7 +68,6 @@
 
     <div class="loader" id="loader">⏳ در حال ارتباط...</div>
 
-    <!-- 🔐 صفحه لاگین ادمین -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">مدیریت راهینو</h1>
@@ -130,7 +129,7 @@
                 <div class="card" style="margin-top: 20px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
                     <h2 style="font-size: 16px; margin-left: 20px;">شارژ مستقیم کیف پول کاربر</h2>
                     <select id="financeUserSelect" class="form-input" style="width: 250px;"></select>
-                    <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 150px;">
+                    <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 150px;" step="1000">
                     <button class="btn btn-primary" onclick="submitManualCharge()">ثبت شارژ</button>
                 </div>
             </div>
@@ -157,7 +156,7 @@
                         <label><input type="checkbox" class="day-chk" value="saturday"> شنبه</label>
                         <label><input type="checkbox" class="day-chk" value="sunday"> یکشنبه</label>
                         <label><input type="checkbox" class="day-chk" value="monday"> دوشنبه</label>
-                        <label><input type="checkbox" class="day-chk" value="tuesday"> سه‌‌شنبه</label>
+                        <label><input type="checkbox" class="day-chk" value="tuesday"> سه‌شنبه</label>
                         <label><input type="checkbox" class="day-chk" value="wednesday"> چهارشنبه</label>
                         <label><input type="checkbox" class="day-chk" value="thursday"> پنجشنبه</label>
                         <label><input type="checkbox" class="day-chk" value="friday"> جمعه</label>
@@ -232,7 +231,7 @@
             <input type="text" id="addCat" class="form-input" placeholder="انتخاب یا تایپ دسته‌بندی..." list="cat-options">
             <datalist id="cat-options"></datalist>
             <div style="display: flex; gap: 10px;">
-                <input type="number" id="addPrice" class="form-input" placeholder="قیمت (تومان)">
+                <input type="number" id="addPrice" class="form-input" placeholder="قیمت (تومان)" step="1000">
                 <input type="number" id="addStock" class="form-input" placeholder="موجودی اولیه">
             </div>
             <input type="text" id="addImg" class="form-input" placeholder="لینک عکس (اختیاری)">
@@ -244,7 +243,7 @@
     </div>
 
     <script>
-        // لینک GAS برای ارسال نوتیفیکیشن
+        // لینک GAS برای ارتباط امن با دیتابیس و ربات بله
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
         
         // 🔒 استفاده از کلید معمولی (Anon Key)
@@ -263,9 +262,13 @@
         // 🔐 سیستم لاگین ادمین
         // =======================
         window.onload = async () => {
+            showLoader();
             const { data: { session } } = await supabaseClient.auth.getSession();
             if(session) {
                 verifyAdminRole(session.user.email.split('@')[0]);
+            } else {
+                hideLoader();
+                document.getElementById('loginOverlay').style.display = 'flex';
             }
         };
 
@@ -284,9 +287,7 @@
         }
 
         async function verifyAdminRole(phone) {
-            // چک کردن نقش در دیتابیس
-            const { data, error } = await supabaseClient.from('users').select('role, full_name').eq('phone_number', phone).single();
-            
+            const { data, error } = await supabaseClient.from('users').select('role').eq('phone_number', phone).single();
             if(error || !data || data.role !== 'admin') {
                 await supabaseClient.auth.signOut();
                 hideLoader();
@@ -306,38 +307,23 @@
         }
 
         // =======================
-        // 🔄 بارگذاری داده‌ها (مستقیم از سوپابیس)
+        // 🔄 بارگذاری داده‌ها
         // =======================
         async function loadAdminData() {
-            showLoader();
             try {
-                const [prodsRes, pendingTxsRes, pendingOrdersRes, usersRes, recentOrdersRes, recentTxsRes] = await Promise.all([
-                    supabaseClient.from('buffet_products').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('buffet_transactions').select('*').eq('status', 'pending'),
-                    supabaseClient.from('buffet_orders').select('*').eq('status', 'pending_cash'),
-                    supabaseClient.from('users').select('phone_number, full_name, wallet_balance').eq('status', 'approved'),
-                    supabaseClient.from('buffet_orders').select('*').order('created_at', { ascending: false }).limit(100),
-                    supabaseClient.from('buffet_transactions').select('*').order('created_at', { ascending: false }).limit(200)
-                ]);
-
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_admin_data' }) });
+                const data = await response.json();
                 hideLoader();
-                products = prodsRes.data || [];
-                pendingTxs = pendingTxsRes.data || [];
-                pendingOrders = pendingOrdersRes.data || [];
-                usersData = usersRes.data || [];
-                recentOrders = recentOrdersRes.data || [];
-                recentTxs = recentTxsRes.data || [];
-
-                renderInventory(); 
-                renderCashViews(); 
-                renderApprovals(); 
-                renderFinanceUsers();
-                generateDailyReport();
-            } catch(e) { 
-                console.error(e);
-                hideLoader(); 
-                alert('خطا در دریافت اطلاعات دیتابیس.'); 
-            }
+                if(data.success) {
+                    products = data.products || [];
+                    pendingTxs = data.pending_txs || [];
+                    pendingOrders = data.pending_orders || [];
+                    usersData = data.users || [];
+                    recentOrders = data.recent_orders || [];
+                    recentTxs = data.recent_txs || [];
+                    renderInventory(); renderCashViews(); renderApprovals(); renderFinanceUsers();
+                } else alert('خطا: ' + data.error);
+            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
         }
 
         function getUserName(phone) {
@@ -374,7 +360,7 @@
             tbody.innerHTML = products.map(p => `<tr>
                 <td style="font-weight:bold;">${p.name}</td>
                 <td style="color:var(--text-muted);">${p.category}</td>
-                <td dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px;"></td>
+                <td dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px;" step="1000"></td>
                 <td dir="ltr"><input type="number" id="stock_${p.id}" class="form-input" value="${p.stock_count}" style="width:100px;"></td>
                 <td>
                     <select id="active_${p.id}" class="form-input" style="width: 100px; padding: 5px;">
@@ -392,33 +378,19 @@
                 let pPrice = document.getElementById(`price_${id}`).value;
                 let pStock = document.getElementById(`stock_${id}`).value;
                 let pActive = document.getElementById(`active_${id}`).value === 'true';
-
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'update_product', id: id, price: pPrice, stock: pStock, is_active: pActive }) 
-                });
-
-                hideLoader(); 
-                alert('✅ ذخیره شد');
-            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: pPrice, stock: pStock, is_active: pActive }) });
+                hideLoader(); alert('✅ ذخیره شد');
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         async function submitNewProduct() {
-            const name = document.getElementById('addName').value, 
-                  cat = document.getElementById('addCat').value, 
-                  price = document.getElementById('addPrice').value, 
-                  stock = document.getElementById('addStock').value, 
-                  img = document.getElementById('addImg').value;
-                  
+            const name = document.getElementById('addName').value, cat = document.getElementById('addCat').value, price = document.getElementById('addPrice').value, stock = document.getElementById('addStock').value, img = document.getElementById('addImg').value;
             if(!name || !price || !stock || !cat) return alert('اطلاعات ناقص است.');
             showLoader();
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) 
-                });
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در ثبت محصول'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function renderCashViews() {
@@ -430,28 +402,25 @@
 
             let html = '';
             pendingOrders.forEach(o => {
-                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">سفارش بوفه (پرداخت نقدی)</td><td>${o.total_price.toLocaleString()}</td>
-                <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">تایید پرداخت ✅</button></td></tr>`;
+                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
+                <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;" step="1000"></td>
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">دریافت شد ✅</button></td></tr>`;
             });
             cashCharges.forEach(t => {
-                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ نقدی کیف پول</td><td>${t.amount.toLocaleString()}</td>
-                <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">تایید دریافت ✅</button></td></tr>`;
+                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
+                <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;" step="1000"></td>
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
             });
-            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ مورد نقدی در انتظار نیست.</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ موردی نیست.</td></tr>';
         }
 
         async function processCashOrder(oId, phone, oTotal) {
-            let rAmt = Number(document.getElementById(`recv_o_${oId}`).value);
+            let rAmt = document.getElementById(`recv_o_${oId}`).value;
             showLoader();
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) 
-                });
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در پردازش'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function renderApprovals() {
@@ -463,23 +432,20 @@
             let html = '';
             receiptCharges.forEach(tx => {
                 html += `<tr><td>${getUserName(tx.phone_number)}</td><td>${tx.amount.toLocaleString()}</td>
-                <td><input type="number" id="recv_t_${tx.id}" class="form-input" value="${tx.amount}" style="width:120px;"></td>
+                <td><input type="number" id="recv_t_${tx.id}" class="form-input" value="${tx.amount}" style="width:120px;" step="1000"></td>
                 <td dir="ltr">${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
                 <td><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom: 5px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button><br>
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom:5px; width:100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button><br>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width:100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
             });
             tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">فیشی وجود ندارد.</td></tr>';
         }
 
         async function processCharge(txId, phone, inputId, status) {
-            let amt = Number(document.getElementById(inputId).value);
+            let amt = document.getElementById(inputId).value;
             showLoader();
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) 
-                });
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
                 window.location.reload();
             } catch(e) { hideLoader(); alert('خطا در پردازش شارژ'); }
         }
@@ -489,14 +455,11 @@
         }
 
         async function submitManualCharge() {
-            const phone = document.getElementById('financeUserSelect').value, amount = Number(document.getElementById('financeAmount').value);
+            const phone = document.getElementById('financeUserSelect').value, amount = document.getElementById('financeAmount').value;
             if(!phone || !amount) return;
             showLoader();
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) 
-                });
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
                 window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
@@ -524,12 +487,9 @@
             
             showLoader();
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'set_featured', id: pid, days: selectedDays, start: fStart, end: fEnd, text: fText }) 
-                });
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: selectedDays, start: fStart, end: fEnd, text: fText }) });
                 hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا در ذخیره پیشنهاد'); }
+            } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         async function clearFeatured() {
@@ -537,17 +497,13 @@
             if(!pid) return;
             showLoader();
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'set_featured', id: pid, days: '', start: '', end: '', text: '' }) 
-                });
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: '', start: '', end: '', text: '' }) });
                 hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
         function generateDailyReport() {
             let todayStr = new Date().toLocaleDateString('fa-IR');
-            
             let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
             let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved' && t.tx_type !== 'purchase');
 
@@ -580,7 +536,7 @@
                 else typeTxt = 'سایر';
                 let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
                 return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
-            }).join('') || '<tr><td colspan="4" style="text-align:center;">تراکنشی یافت نشد.</td></tr>';
+            }).join('') || '<tr><td colspan="4" style="text-align:center;">شارژی انجام نشده است.</td></tr>';
         }
     </script>
 </body>
