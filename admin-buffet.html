@@ -2,65 +2,95 @@
 <html lang="fa" dir="rtl" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>پنل مدیریت بوفه راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #d67a8e; --primary-hover: #c4687b; --primary-fade: rgba(214, 122, 142, 0.15); --bg-color: #0f172a; --surface: #1e293b; --surface-glass: rgba(30, 41, 59, 0.8); --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --transition: all 0.3s ease; }
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent;}
+        body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100dvh; overflow: hidden; font-size: 14px; }
+        
         .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
         .brand { padding: 25px 20px; font-size: 20px; font-weight: 900; color: var(--primary); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-        .nav-menu { padding: 20px 10px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .nav-menu { padding: 20px 10px; flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;}
         .nav-item { padding: 14px 15px; border-radius: 12px; cursor: pointer; color: var(--text-muted); font-weight: bold; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
         .nav-item.active { background: var(--primary-fade); color: var(--primary); }
         .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0a0f0d; }
-        .topbar { height: 70px; background: var(--surface-glass); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; font-size: 18px; font-weight: bold; }
+        .topbar { height: 70px; background: var(--surface-glass); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; font-size: 18px; font-weight: bold; flex-shrink: 0;}
         .content-area { flex: 1; overflow-y: auto; padding: 30px; }
         .view-section { display: none; animation: fadeIn 0.3s ease; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
         table { width: 100%; border-collapse: collapse; text-align: right; }
         th, td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         th { color: var(--text-muted); font-size: 13px; }
-        .btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; transition: var(--transition); color: white; }
+        
+        .btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; transition: var(--transition); color: white; display: inline-flex; align-items: center; justify-content: center; gap: 8px;}
         .btn-primary { background: var(--primary); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; text-align: right; font-family: 'Vazirmatn'; }
+        .btn:active { transform: scale(0.95); }
+        
+        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; text-align: right; font-family: 'Vazirmatn'; font-weight: bold; transition: var(--transition);}
         .form-input:focus { border-color: var(--primary); }
-        .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; flex-direction: column; gap: 15px;}
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; }
-        .modal { background: var(--surface); width: 400px; border-radius: 20px; padding: 25px; border: 1px solid var(--border); }
+        
+        .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; flex-direction: column; gap: 15px;}
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px;}
+        .modal { background: var(--surface); width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; border: 1px solid var(--border); }
         .modal input, .modal select { width: 100%; margin-bottom: 15px; }
-        .receipt-img { max-height: 80px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
-        .receipt-img:hover { transform: scale(1.1); }
+        
+        .receipt-img { max-height: 80px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; border: 1px solid var(--border);}
+        
         .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
         .kpi-card { background: linear-gradient(135deg, var(--surface), #2a3b4f); border: 1px solid var(--border); border-radius: 16px; padding: 25px; text-align: center; }
         .kpi-val { font-size: 28px; font-weight: 900; color: var(--primary); margin: 10px 0; }
+        
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .checkbox-group label { background: var(--bg-color); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 12px; }
 
-        /* 🔐 استایل صفحه ورود ادمین */
-        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: none; justify-content: center; align-items: center; }
-        .login-box { background: var(--surface); padding: 40px; border-radius: 24px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: none; justify-content: center; align-items: center; padding: 20px;}
+        .login-box { background: var(--surface); padding: 40px 20px; border-radius: 24px; box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
 
         .menu-toggle { display: none; background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; margin-left: 15px; }
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; backdrop-filter: blur(3px); }
         
+        /* ==========================================
+           📱 طراحی فوق‌العاده واکنش‌گرا (موبایل)
+           ========================================== */
         @media (max-width: 768px) {
             .sidebar { position: fixed; top: 0; right: 0; bottom: 0; transform: translateX(100%); z-index: 1000; transition: 0.3s; }
             .sidebar.open { transform: translateX(0); }
             .menu-toggle { display: block; }
-            .kpi-grid { grid-template-columns: 1fr; } 
+            .topbar { padding: 0 15px; }
+            .content-area { padding: 15px; }
+            .kpi-grid { grid-template-columns: 1fr; gap: 15px;} 
             .card-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            table { font-size: 12px; }
+            .card-header .btn { width: 100%; }
+            
+            /* 🚀 تبدیل جدول به کارت‌های اپلیکیشنی در موبایل */
+            table, thead, tbody, th, td, tr { display: block; width: 100%; }
+            thead { display: none; } /* مخفی کردن هدر جدول در موبایل */
+            
+            tr { margin-bottom: 15px; border: 1px solid var(--border); border-radius: 16px; background: rgba(0,0,0,0.2); overflow: hidden; }
+            td { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--border); text-align: left; gap: 10px; font-size: 13px;}
+            td:last-child { border-bottom: none; background: rgba(255,255,255,0.02); }
+            
+            /* تزریق اسم ستون‌ها از طریق ویژگی data-label */
+            td::before { content: attr(data-label); font-weight: bold; color: var(--primary); font-size: 11px; margin-left: 10px; text-align: right; flex-shrink: 0; opacity: 0.8;}
+            
+            /* سایزبندی ورودی‌ها در موبایل */
+            td input.form-input, td select.form-input { width: 130px !important; text-align: center; }
+            .btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -68,7 +98,7 @@
 
     <div class="loader" id="loader">
         <div style="font-size: 30px;">⏳</div>
-        <div>در حال ارتباط با سرور...</div>
+        <div>در حال اعمال تغییرات...</div>
     </div>
 
     <!-- 🔐 صفحه لاگین ادمین -->
@@ -76,7 +106,7 @@
         <div class="login-box">
             <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">مدیریت راهینو</h1>
             <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px;">فقط پرسنل مجاز حق ورود دارند</p>
-            <input type="tel" id="adminPhone" class="form-input" placeholder="شماره موبایل" style="margin-bottom: 15px; text-align: center; font-size: 18px; letter-spacing: 2px;">
+            <input type="tel" id="adminPhone" class="form-input" placeholder="شماره موبایل" style="margin-bottom: 15px; text-align: center; font-size: 18px; letter-spacing: 2px;" autocomplete="off">
             <input type="password" id="adminPass" class="form-input" placeholder="رمز عبور" style="margin-bottom: 15px; text-align: center; font-size: 18px; letter-spacing: 2px;">
             <button class="btn btn-primary" style="width: 100%; margin-top: 10px; font-size: 16px; padding: 15px;" onclick="adminLogin()">ورود به پنل</button>
         </div>
@@ -85,7 +115,7 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <aside class="sidebar">
-        <div class="brand">⚙️ مدیریت راهینو</div>
+        <div class="brand">⚙️ مدیریت بوفه</div>
         <nav class="nav-menu">
             <div class="nav-item active" onclick="switchView('view-inventory', this, 'انبار و محصولات')">📦 انبار و محصولات</div>
             <div class="nav-item" onclick="switchView('view-finance', this, 'صندوق و دریافت نقدی')">💵 صندوق (نقدی) <span class="badge" id="cashBadge" style="display:none;">0</span></div>
@@ -101,7 +131,7 @@
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
                 <span id="topbarTitle">📦 انبار و محصولات</span>
             </div>
-            <button class="btn btn-danger" style="padding: 8px 15px; font-size: 12px;" onclick="adminLogout()">خروج</button>
+            <button class="btn btn-danger" style="padding: 8px 15px; font-size: 12px;" onclick="adminLogout()">خروج 🚪</button>
         </header>
         <div class="content-area">
             
@@ -111,7 +141,7 @@
                         <h2 style="font-size: 16px;">لیست محصولات</h2>
                         <button class="btn btn-primary" onclick="document.getElementById('modalAddProduct').style.display='flex'">+ محصول جدید</button>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div style="overflow-x: auto; scrollbar-width: none;">
                         <table>
                             <thead><tr><th>نام محصول</th><th>دسته‌بندی</th><th>قیمت (تومان)</th><th>موجودی</th><th>وضعیت</th><th>عملیات</th></tr></thead>
                             <tbody id="inventoryTableBody"></tbody>
@@ -122,8 +152,8 @@
 
             <div id="view-finance" class="view-section">
                 <div class="card">
-                    <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری در انتظار تایید</h2></div>
-                    <div style="overflow-x: auto;">
+                    <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری در انتظار</h2></div>
+                    <div style="overflow-x: auto; scrollbar-width: none;">
                         <table>
                             <thead><tr><th>کاربر</th><th>نوع درخواست</th><th>مبلغ پایه</th><th>مبلغ دریافتی (تومان)</th><th>عملیات</th></tr></thead>
                             <tbody id="cashTableBody"></tbody>
@@ -131,9 +161,9 @@
                     </div>
                 </div>
                 <div class="card" style="margin-top: 20px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <h2 style="font-size: 16px; margin-left: 20px;">شارژ مستقیم کیف پول کاربر</h2>
-                    <select id="financeUserSelect" class="form-input" style="width: 250px;"></select>
-                    <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 150px;" step="1000">
+                    <h2 style="font-size: 16px; margin-left: 20px; width: 100%;">شارژ مستقیم کیف پول کاربر</h2>
+                    <select id="financeUserSelect" class="form-input" style="flex: 1; min-width: 200px;"></select>
+                    <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 140px;" step="1000">
                     <button class="btn btn-primary" onclick="submitManualCharge()">ثبت شارژ</button>
                 </div>
             </div>
@@ -141,7 +171,7 @@
             <div id="view-approvals" class="view-section">
                 <div class="card">
                     <div class="card-header"><h2 style="font-size: 16px;">فیش‌های واریزی در انتظار تایید</h2></div>
-                    <div style="overflow-x: auto;">
+                    <div style="overflow-x: auto; scrollbar-width: none;">
                         <table>
                             <thead><tr><th>کاربر</th><th>مبلغ فیش (اعلامی)</th><th>مبلغ تایید شده (تومان)</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
                             <tbody id="approvalsTableBody"></tbody>
@@ -153,7 +183,7 @@
             <div id="view-featured" class="view-section">
                 <div class="card" style="max-width: 600px; margin: auto;">
                     <h2 style="font-size: 16px; margin-bottom: 20px;">برنامه‌ریزی پیشنهاد ویژه</h2>
-                    <select id="featProduct" class="form-input"></select>
+                    <select id="featProduct" class="form-input" style="width: 100%;"></select>
                     
                     <div style="margin: 20px 0 10px; color: var(--text-muted); font-size: 12px;">روزهای نمایش:</div>
                     <div class="checkbox-group">
@@ -169,16 +199,16 @@
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                         <div style="flex:1;">
                             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">از ساعت:</div>
-                            <input type="time" id="featStart" class="form-input" style="text-align: center;">
+                            <input type="time" id="featStart" class="form-input" style="text-align: center; width: 100%;">
                         </div>
                         <div style="flex:1;">
                             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">تا ساعت:</div>
-                            <input type="time" id="featEnd" class="form-input" style="text-align: center;">
+                            <input type="time" id="featEnd" class="form-input" style="text-align: center; width: 100%;">
                         </div>
                     </div>
 
                     <div style="margin-bottom: 5px; color: var(--text-muted); font-size: 12px;">متن بنر (کوتاه و جذاب):</div>
-                    <input type="text" id="featText" class="form-input" placeholder="مثلاً: بمب انرژی برای شروع مطالعه!" style="margin-bottom: 20px;">
+                    <input type="text" id="featText" class="form-input" placeholder="مثلاً: بمب انرژی برای شروع مطالعه!" style="margin-bottom: 20px; width: 100%;">
 
                     <button class="btn btn-success" style="width: 100%;" onclick="submitFeatured()">ذخیره برنامه‌ریزی 🚀</button>
                     <button class="btn btn-danger" style="width: 100%; margin-top:10px;" onclick="clearFeatured()">حذف پیشنهاد این محصول 🗑️</button>
@@ -206,7 +236,7 @@
 
                 <div class="card">
                     <div class="card-header"><h2 style="font-size: 16px;">ریز سفارشات امروز (موفق)</h2></div>
-                    <div style="overflow-x: auto;">
+                    <div style="overflow-x: auto; scrollbar-width: none;">
                         <table>
                             <thead><tr><th>کاربر</th><th>اقلام</th><th>مبلغ</th><th>روش پرداخت</th><th>ساعت</th></tr></thead>
                             <tbody id="todayOrdersBody"></tbody>
@@ -216,7 +246,7 @@
 
                 <div class="card" style="margin-top: 20px;">
                     <div class="card-header"><h2 style="font-size: 16px;">ریز شارژها و ورودی‌های کیف پول امروز</h2></div>
-                    <div style="overflow-x: auto;">
+                    <div style="overflow-x: auto; scrollbar-width: none;">
                         <table>
                             <thead><tr><th>کاربر</th><th>نوع تراکنش</th><th>مبلغ (تومان)</th><th>ساعت</th></tr></thead>
                             <tbody id="todayTxsBody"></tbody>
@@ -247,7 +277,6 @@
     </div>
 
     <script>
-        // لینک GAS برای ارتباط امن (تایید تراکنش‌ها و ربات بله)
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
         
         // 🔒 استفاده از کلید معمولی (Anon Key)
@@ -297,19 +326,19 @@
                 document.getElementById('loginOverlay').style.display = 'flex';
             } else {
                 document.getElementById('loginOverlay').style.display = 'none';
-                loadAdminData();
+                loadAdminData(); // 🚀 فراخوانی مستقیم بدون رفرش
             }
         }
 
         async function adminLogout() {
             if(confirm('آیا از پنل خارج می‌شوید؟')) {
                 await supabaseClient.auth.signOut();
-                window.location.reload();
+                window.location.reload(); // تنها جایی که رفرش مجازه
             }
         }
 
         // =======================
-        // 🚀 بارگذاری سریع داده‌ها مستقیم از سوپابیس
+        // 🚀 بارگذاری سریع داده‌ها (SPA بدون رفرش)
         // =======================
         async function loadAdminData() {
             showLoader();
@@ -318,13 +347,21 @@
                     supabaseClient.from('buffet_products').select('*').order('created_at', { ascending: false }),
                     supabaseClient.from('buffet_transactions').select('*').eq('status', 'pending'),
                     supabaseClient.from('buffet_orders').select('*').eq('status', 'pending_cash'),
-                    supabaseClient.from('users').select('phone_number, full_name, wallet_balance'), // واکشی تمام کاربران برای نمایش اسم
+                    supabaseClient.from('users').select('phone_number, full_name, wallet_balance'), 
                     supabaseClient.from('buffet_orders').select('*').order('created_at', { ascending: false }).limit(100),
                     supabaseClient.from('buffet_transactions').select('*').order('created_at', { ascending: false }).limit(200)
                 ]);
 
                 hideLoader();
+                
                 products = prodsRes.data || [];
+                // 🚀 مرتب‌سازی انبار: اول صفرها میرن پایین، بعد بر اساس دسته بندی
+                products.sort((a, b) => {
+                    if (a.stock_count === 0 && b.stock_count !== 0) return 1;
+                    if (a.stock_count !== 0 && b.stock_count === 0) return -1;
+                    return a.category.localeCompare(b.category, 'fa');
+                });
+
                 pendingTxs = pendingTxsRes.data || [];
                 pendingOrders = pendingOrdersRes.data || [];
                 usersData = usersRes.data || [];
@@ -343,12 +380,12 @@
             }
         }
 
-        // 🌟 تابع نمایش نام + موبایل با استایل زیبا
+        // 🌟 نمایش نام + موبایل با استایل زیبا
         function getUserName(phone) {
             let pStr = String(phone);
             let u = usersData.find(x => String(x.phone_number) === pStr);
             if (u && u.full_name) {
-                return `<div style="font-weight:900; font-size:13px; color:var(--primary);">${u.full_name}</div><div style="font-size:11px; color:var(--text-muted);">${pStr}</div>`;
+                return `<div style="font-weight:900; font-size:13px; color:var(--primary); line-height: 1.4;">${u.full_name}</div><div style="font-size:11px; color:var(--text-muted);">${pStr}</div>`;
             }
             return `<div style="font-weight:bold; font-size:13px; color:var(--text-main);">${pStr}</div>`;
         }
@@ -374,7 +411,7 @@
         }
 
         // =======================
-        // 📦 انبار و محصولات (ارتباط سریع و مستقیم)
+        // 📦 انبار و محصولات
         // =======================
         function renderInventory() {
             const tbody = document.getElementById('inventoryTableBody');
@@ -383,17 +420,17 @@
             dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
             
             tbody.innerHTML = products.map(p => `<tr>
-                <td style="font-weight:bold;">${p.name}</td>
-                <td style="color:var(--text-muted);">${p.category}</td>
-                <td dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px;" step="1000"></td>
-                <td dir="ltr"><input type="number" id="stock_${p.id}" class="form-input" value="${p.stock_count}" style="width:100px;"></td>
-                <td>
+                <td data-label="نام محصول" style="font-weight:bold;">${p.name}</td>
+                <td data-label="دسته‌بندی" style="color:var(--text-muted);">${p.category}</td>
+                <td data-label="قیمت (تومان)" dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px;" step="1000"></td>
+                <td data-label="موجودی" dir="ltr"><input type="number" id="stock_${p.id}" class="form-input" value="${p.stock_count}" style="width:100px;"></td>
+                <td data-label="وضعیت">
                     <select id="active_${p.id}" class="form-input" style="width: 100px; padding: 5px;">
                         <option value="true" ${p.is_active ? 'selected' : ''}>فعال</option>
                         <option value="false" ${!p.is_active ? 'selected' : ''}>غیرفعال</option>
                     </select>
                 </td>
-                <td><button class="btn btn-outline" style="padding: 6px 12px; font-size:12px;" onclick="updateProduct('${p.id}')">ذخیره</button></td>
+                <td data-label="عملیات"><button class="btn btn-outline" style="padding: 6px 12px; font-size:12px;" onclick="updateProduct('${p.id}')">ذخیره</button></td>
             </tr>`).join('');
         }
 
@@ -408,7 +445,8 @@
                     .update({ price: Number(pPrice), stock_count: Number(pStock), is_active: pActive })
                     .eq('id', id);
 
-                hideLoader(); alert('✅ تغییرات ذخیره شد');
+                // 🚀 آپدیت در پس‌زمینه بدون رفرش کل صفحه
+                loadAdminData();
             } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
         }
 
@@ -425,12 +463,13 @@
                 await supabaseClient.from('buffet_products').insert([{ 
                     name: name, category: cat, price: Number(price), stock_count: Number(stock), image_url: img || null, is_active: true 
                 }]);
-                window.location.reload();
+                document.getElementById('modalAddProduct').style.display='none';
+                loadAdminData(); // 🚀 بدون رفرش
             } catch(e) { hideLoader(); alert('خطا در ثبت محصول'); }
         }
 
         // =======================
-        // 🌟 پیشنهاد راهینو (ارتباط سریع و مستقیم)
+        // 🌟 پیشنهاد راهینو 
         // =======================
         function populateFeatured() {
             const select = document.getElementById('featProduct');
@@ -458,7 +497,7 @@
                 await supabaseClient.from('buffet_products')
                     .update({ featured_days: selectedDays, featured_start: fStart, featured_end: fEnd, featured_text: fText })
                     .eq('id', pid);
-                hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
+                loadAdminData(); // 🚀 بدون رفرش
             } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
         }
 
@@ -470,12 +509,12 @@
                 await supabaseClient.from('buffet_products')
                     .update({ featured_days: null, featured_start: null, featured_end: null, featured_text: null })
                     .eq('id', pid);
-                hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
+                loadAdminData(); // 🚀 بدون رفرش
             } catch(e) { hideLoader(); alert('خطا در حذف'); }
         }
 
         // =======================
-        // 💵 تاییدات مالی (ارسال به سرور گوگل برای امنیت و ربات بله)
+        // 💵 تاییدات مالی
         // =======================
         function renderCashViews() {
             const tbody = document.getElementById('cashTableBody');
@@ -486,14 +525,22 @@
 
             let html = '';
             pendingOrders.forEach(o => {
-                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
-                <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;" step="1000"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">دریافت شد ✅</button></td></tr>`;
+                html += `<tr>
+                    <td data-label="کاربر">${getUserName(o.phone_number)}</td>
+                    <td data-label="نوع درخواست" style="color:var(--warning);">خرید از بوفه</td>
+                    <td data-label="مبلغ پایه">${o.total_price.toLocaleString()}</td>
+                    <td data-label="دریافتی (تومان)"><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;" step="1000"></td>
+                    <td data-label="عملیات"><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">تایید پرداخت ✅</button></td>
+                </tr>`;
             });
             cashCharges.forEach(t => {
-                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
-                <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;" step="1000"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
+                html += `<tr>
+                    <td data-label="کاربر">${getUserName(t.phone_number)}</td>
+                    <td data-label="نوع درخواست" style="color:var(--primary);">شارژ نقدی کیف پول</td>
+                    <td data-label="مبلغ پایه">${t.amount.toLocaleString()}</td>
+                    <td data-label="دریافتی (تومان)"><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;" step="1000"></td>
+                    <td data-label="عملیات"><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">تایید دریافت ✅</button></td>
+                </tr>`;
             });
             tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ مورد نقدی در انتظار نیست.</td></tr>';
         }
@@ -503,7 +550,7 @@
             showLoader();
             try {
                 await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
-                window.location.reload();
+                loadAdminData(); // 🚀 آپدیت در پس‌زمینه
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
@@ -515,12 +562,17 @@
 
             let html = '';
             receiptCharges.forEach(tx => {
-                html += `<tr><td>${getUserName(tx.phone_number)}</td><td>${tx.amount.toLocaleString()}</td>
-                <td><input type="number" id="recv_t_${tx.id}" class="form-input" value="${tx.amount}" style="width:120px;" step="1000"></td>
-                <td dir="ltr">${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
-                <td><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom:5px; width:100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button><br>
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width:100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
+                html += `<tr>
+                    <td data-label="کاربر">${getUserName(tx.phone_number)}</td>
+                    <td data-label="مبلغ اعلامی">${tx.amount.toLocaleString()}</td>
+                    <td data-label="مبلغ تایید شده"><input type="number" id="recv_t_${tx.id}" class="form-input" value="${tx.amount}" style="width:120px;" step="1000"></td>
+                    <td data-label="تاریخ" dir="ltr">${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
+                    <td data-label="تصویر فیش"><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
+                    <td data-label="عملیات">
+                        <button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom: 5px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button>
+                        <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button>
+                    </td>
+                </tr>`;
             });
             tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">فیشی وجود ندارد.</td></tr>';
         }
@@ -530,7 +582,7 @@
             showLoader();
             try {
                 await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
-                window.location.reload();
+                loadAdminData(); // 🚀 آپدیت در پس‌زمینه
             } catch(e) { hideLoader(); alert('خطا در پردازش شارژ'); }
         }
 
@@ -544,12 +596,17 @@
             showLoader();
             try {
                 await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
-                window.location.reload();
+                document.getElementById('financeAmount').value = '';
+                loadAdminData(); // 🚀 آپدیت در پس‌زمینه
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
+        // =======================
+        // 📊 بخش گزارش روزانه
+        // =======================
         function generateDailyReport() {
             let todayStr = new Date().toLocaleDateString('fa-IR');
+            
             let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
             let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved' && t.tx_type !== 'purchase');
 
@@ -569,19 +626,30 @@
                 let itemsTxt = '';
                 try { itemsTxt = JSON.parse(o.items).map(i => i.qty + 'x ' + i.name).join(' ، '); } catch(e){}
                 let time = new Date(o.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-                return `<tr><td>${getUserName(o.phone_number)}</td><td>${itemsTxt}</td><td style="font-weight:bold;">${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td dir="ltr">${time}</td></tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center;">سفارشی یافت نشد.</td></tr>';
+                return `<tr>
+                    <td data-label="کاربر">${getUserName(o.phone_number)}</td>
+                    <td data-label="اقلام">${itemsTxt}</td>
+                    <td data-label="مبلغ" style="font-weight:bold;">${o.total_price.toLocaleString()}</td>
+                    <td data-label="روش پرداخت">${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td>
+                    <td data-label="ساعت" dir="ltr">${time}</td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center;">سفارشی ثبت نشده.</td></tr>';
 
             let tbodyTxs = document.getElementById('todayTxsBody');
             tbodyTxs.innerHTML = todaysTxs.map(t => {
                 let typeTxt = '';
-                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی (حضوری)';
-                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 واریز کارت به کارت';
-                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد خرید';
-                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ شارژ دستی مدیریت';
+                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی';
+                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 کارت به کارت';
+                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد';
+                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ دستی مدیریت';
                 else typeTxt = 'سایر';
                 let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-                return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
+                return `<tr>
+                    <td data-label="کاربر">${getUserName(t.phone_number)}</td>
+                    <td data-label="نوع تراکنش">${typeTxt}</td>
+                    <td data-label="مبلغ (تومان)" style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td>
+                    <td data-label="ساعت" dir="ltr">${time}</td>
+                </tr>`;
             }).join('') || '<tr><td colspan="4" style="text-align:center;">شارژی انجام نشده است.</td></tr>';
         }
     </script>
