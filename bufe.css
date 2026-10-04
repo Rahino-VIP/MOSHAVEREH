@@ -12,19 +12,18 @@
     
     /* تم روشن */
     --bg-color: #fdfafb; 
-    --glass-bg: rgba(255, 255, 255, 0.7); 
+    --glass-bg: rgba(255, 255, 255, 0.75); 
     --glass-border: rgba(255, 255, 255, 0.9); 
-    --glass-highlight: rgba(255, 255, 255, 0.95);
+    --glass-highlight: rgba(255, 255, 255, 1);
     --text-main: #334155; 
     --text-muted: #94a3b8; 
     
     --success: #10b981; --warning: #f59e0b; --danger: #f43f5e;
     
-    --shadow-soft: 0 10px 25px -5px rgba(212, 126, 142, 0.1); 
-    --shadow-float: 0 20px 40px -10px rgba(212, 126, 142, 0.2);
-    --shadow-glow: 0 10px 25px -5px rgba(212, 126, 142, 0.3);
+    --shadow-soft: 0 10px 30px rgba(212, 126, 142, 0.08); 
+    --shadow-glow: 0 10px 25px rgba(212, 126, 142, 0.25);
     
-    --transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] {
@@ -37,56 +36,41 @@
     --accent-fade: rgba(196, 181, 253, 0.15);
     
     /* تم تاریک ملایم */
-    --bg-color: #151316; 
-    --glass-bg: rgba(30, 27, 34, 0.6); 
+    --bg-color: #121013; 
+    --glass-bg: rgba(30, 27, 34, 0.7); 
     --glass-border: rgba(255, 255, 255, 0.05); 
-    --glass-highlight: rgba(255, 255, 255, 0.03);
+    --glass-highlight: rgba(255, 255, 255, 0.1);
     --text-main: #f1f5f9; 
     --text-muted: #64748b; 
     
-    --shadow-soft: 0 10px 25px -5px rgba(0,0,0,0.3);
-    --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 10px 30px -5px rgba(226, 149, 166, 0.15);
+    --shadow-soft: 0 10px 25px rgba(0,0,0,0.4);
+    --shadow-glow: 0 10px 30px rgba(226, 149, 166, 0.15);
 }
 
 /* ==========================================
-   🔒 قفل سخت‌گیرانه اسکرول افقی (حل مشکل پرش صفحه)
+   🔒 ساختار پلمپ‌شده اصلی (دقیقاً مثل کد سالم شما)
    ========================================== */
-/* ==========================================
-   🔒 قفل نهایی و قطعی اسکرول (جلوگیری از فرار صفحه به بغل)
-   ========================================== */
-/* ==========================================
-   🔒 قفل سخت‌گیرانه و قطعی اسکرول افقی (ضدگلوله)
-   ========================================== */
-html, body { 
-    width: 100%;
-    max-width: 100%; 
-    overflow-x: hidden !important; 
-    
-    /* 🚀 این خط کلید حل مشکل است: فقط اسکرول عمودی مجاز است! */
-    touch-action: pan-y !important; 
-    
-    overscroll-behavior-x: none; 
-    scroll-behavior: smooth;
-    margin: 0; padding: 0;
-    position: relative;
-    -webkit-text-size-adjust: 100%;
-}
+html { scroll-behavior: smooth; }
 
 * { 
-    box-sizing: border-box !important; 
-    max-width: 100%; /* هیچ عنصری حق ندارد از صفحه بیرون بزند */
+    box-sizing: border-box; 
+    font-family: 'Vazirmatn', sans-serif; 
+    margin: 0; padding: 0; 
+    user-select: none; 
+    -webkit-tap-highlight-color: transparent;
 }
 
 body { 
     background: var(--bg-color);
     background-image: radial-gradient(at 10% 10%, rgba(212, 126, 142, 0.08) 0px, transparent 50%), radial-gradient(at 90% 90%, rgba(167, 139, 250, 0.08) 0px, transparent 50%);
-    background-attachment: fixed;
     color: var(--text-main); 
     display: flex; 
     justify-content: center; 
     height: 100dvh; 
+    overflow: hidden; /* 🚀 جادوی جلوگیری از به هم ریختگی صفحه */
+    margin: 0; 
 }
+[data-theme="dark"] body { background: linear-gradient(135deg, #09090b 0%, #17171b 100%); }
 
 .app-container { 
     width: 100%; 
@@ -95,21 +79,18 @@ body {
     position: relative; 
     display: flex; 
     flex-direction: column; 
-    overflow-x: hidden !important; 
-    margin: 0 auto;
+    overflow: hidden; /* 🚀 پلمپ نهایی کادر در موبایل */
 }
 
+/* افکت‌های نوری (محدود شده به داخل کانتینر) */
+.glow-1 { position: absolute; width: 250px; height: 250px; background: var(--primary-fade); filter: blur(60px); border-radius: 50%; top: -50px; right: -50px; z-index: 0; pointer-events: none; }
+.glow-2 { position: absolute; width: 250px; height: 250px; background: var(--accent-fade); filter: blur(60px); border-radius: 50%; bottom: 10%; left: -50px; z-index: 0; pointer-events: none; }
 
-
-/* افکت‌های نوری محدود شده */
-.glow-1 { position: absolute; width: 250px; height: 250px; background: var(--primary-fade); filter: blur(70px); border-radius: 50%; top: -50px; right: -50px; z-index: 0; pointer-events: none; max-width: 100vw;}
-.glow-2 { position: absolute; width: 250px; height: 250px; background: var(--accent-fade); filter: blur(70px); border-radius: 50%; bottom: 10%; left: -50px; z-index: 0; pointer-events: none; max-width: 100vw;}
-
-.glass-panel { background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: var(--shadow-soft); }
+.glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: var(--shadow-soft); }
 svg { width: 22px; height: 22px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ==========================================
-   🎩 هدر
+   🎩 هدر و صفحات
    ========================================== */
 header { padding: 25px 20px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 100; flex-shrink: 0; position: relative;}
 .header-title { font-weight: 900; font-size: 20px; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
@@ -119,10 +100,17 @@ header { padding: 25px 20px 15px; display: flex; justify-content: space-between;
 .icon-btn { width: 44px; height: 44px; border-radius: 14px; background: var(--glass-bg); border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-main); transition: var(--transition); box-shadow: var(--shadow-soft);}
 .icon-btn:hover { color: var(--primary); border-color: var(--primary); }
 
-/* 🚀 اصلاح فاصله پایین برای رد شدن از روی نوار شناور */
-.view-section { flex: 1; overflow-y: auto; overflow-x: hidden !important; display: none; animation: fadeIn 0.4s ease; padding: 20px 20px 140px 20px !important; z-index: 1; position: relative; }
+.view-section { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 0 20px 130px 20px; /* 🚀 فضای خالی پایین برای رد شدن از زیر نوار شناور */
+    display: none; 
+    animation: fadeIn 0.3s ease; 
+    z-index: 1; 
+    position: relative; 
+}
 .view-section.active { display: block; }
-#view-store.active { display: flex; flex-direction: column; padding: 0 !important;}
+#view-store.active { display: flex; flex-direction: column; padding-left: 0; padding-right: 0;}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ==========================================
@@ -153,50 +141,17 @@ select.form-input { appearance: none; cursor: pointer; }
 /* ==========================================
    🏪 فروشگاه
    ========================================== */
-/* 🚀 نوار دسته‌بندی با قفل اسکرول */
-.category-nav { 
-    background: var(--glass-bg); 
-    backdrop-filter: blur(20px); 
-    -webkit-backdrop-filter: blur(20px); 
-    padding: 15px 20px; 
-    overflow-x: auto; 
-    white-space: nowrap; 
-    display: flex; 
-    gap: 10px; 
-    border-bottom: 1px solid var(--glass-border); 
-    position: sticky; 
-    top: 0; 
-    z-index: 50; 
-    scrollbar-width: none;
-    
-    /* 🔒 سه خط جادویی برای جلوگیری از کشیده شدن کل صفحه */
-    width: 100%;
-    overscroll-behavior-x: contain; 
-    -webkit-overflow-scrolling: touch;
-}
-
+.category-nav { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 15px 20px; overflow-x: auto; white-space: nowrap; display: flex; gap: 10px; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 50; scrollbar-width: none;}
 .category-nav::-webkit-scrollbar { display: none; }
 .cat-link { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;}
-.cat-link svg { width: 16px; height: 16px; }
-.cat-link.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); box-shadow: var(--shadow-soft);}
-[data-theme="dark"] .cat-link.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: var(--shadow-glow);}
+.cat-link.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
 
-.store-content { flex: 1; overflow-y: auto; overflow-x: hidden !important; padding: 20px 0 140px 0; z-index: 1; position: relative;}
+.store-content { flex: 1; overflow-y: auto; padding: 25px 0 140px 0; z-index: 1; position: relative;}
 .category-section { margin-bottom: 40px; scroll-margin-top: 80px; }
-.section-header { padding: 10px 20px 15px; font-size: 17px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
+.section-header { padding: 0 20px 15px; font-size: 17px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
 .section-header svg { color: var(--primary); }
 
-.horizontal-list { 
-    display: flex; 
-    overflow-x: auto; 
-    gap: 15px; 
-    padding: 5px 20px 20px; 
-    scrollbar-width: none; 
-    width: 100%;
-    overscroll-behavior-x: contain; /* 🚀 این دستور نمیذاره اسکرولِ محصولات، کل صفحه رو با خودش بکشه */
-    -webkit-overflow-scrolling: touch; 
-}
-
+.horizontal-list { display: flex; overflow-x: auto; gap: 15px; padding: 5px 20px 20px; scrollbar-width: none; }
 .horizontal-list::-webkit-scrollbar { display: none; }
 
 .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-soft); flex: 0 0 155px; transition: var(--transition);}
@@ -237,11 +192,11 @@ select.form-input { appearance: none; cursor: pointer; }
 .pay-option.active { border-color: var(--primary); background: var(--primary-fade); }
 .pay-option.active svg { color: var(--primary); }
 
-.wallet-badge { background: var(--glass-bg); padding: 4px 8px; border-radius: 8px; font-size: 11px; color: var(--text-main); border: 1px solid var(--glass-border); font-weight: bold;}
+.wallet-badge { background: var(--glass-bg); padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; border: 1px solid var(--glass-border); margin-right: 5px;}
 
-.summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border); }
-.btn-checkout { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; margin-top: 20px; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 8px; color: white;}
-.btn-checkout.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); box-shadow: 0 10px 20px var(--primary-fade); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); }
+.btn-checkout { width: 100%; padding: 20px; border-radius: 20px; border: none; font-weight: 900; font-size: 15px; cursor: pointer; margin-top: 20px; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 8px; color: white;}
+.btn-checkout.active { background: var(--primary); box-shadow: var(--shadow-glow); }
 .btn-checkout.disabled { background: var(--glass-border); color: var(--text-muted); cursor: not-allowed; }
 
 .empty-state { text-align: center; margin-top: 80px; display: flex; flex-direction: column; align-items: center; gap: 10px;}
@@ -280,22 +235,22 @@ select.form-input { appearance: none; cursor: pointer; }
 .file-upload:hover svg { color: var(--primary); transform: scale(1.1);}
 .file-upload input { display: none; }
 
-.menu-list { overflow: hidden; margin-bottom: 20px; border-radius: 20px;}
-.menu-item { padding: 18px 20px; border-bottom: 1px solid var(--glass-border); font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: var(--transition);}
+.menu-list { overflow: hidden; margin-bottom: 20px; border-radius: 28px;}
+.menu-item { padding: 20px; border-bottom: 1px solid var(--glass-border); font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: var(--transition);}
 .menu-item:last-child { border-bottom: none; }
-.menu-item.danger { color: var(--danger); }
+.menu-item.danger { color: var(--danger); background: rgba(244, 63, 94, 0.05);}
 
 /* تاریخچه */
-.history-card { padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px;}
+.history-card { padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 20px;}
 .history-icon { background: var(--glass-bg); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 16px; border: 1px solid var(--glass-border);}
 .history-title { font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 4px;}
 .history-date { font-size: 11px; color: var(--text-muted); }
 
 /* ==========================================
-   🌐 نوار پایین شناور
+   🌐 نوار پایین شناور 
    ========================================== */
 .bottom-nav-wrapper { position: fixed; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none; padding: 0 20px;}
-.bottom-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 32px; background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--glass-border); box-shadow: var(--shadow-float); pointer-events: auto;}
+.bottom-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 32px; background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--glass-border); box-shadow: var(--shadow-soft); pointer-events: auto;}
 
 .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-muted); cursor: pointer; transition: var(--transition); position: relative; flex: 1; padding: 10px 0; border-radius: 24px;}
 .nav-item.active { color: var(--text-main); background: var(--glass-highlight); padding-bottom: 16px; padding-top: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);}
@@ -304,11 +259,11 @@ select.form-input { appearance: none; cursor: pointer; }
 .nav-text { font-size: 10px; font-weight: 900; opacity: 0; transform: translateY(5px); position: absolute; bottom: 4px; transition: var(--transition);}
 .nav-item.active .nav-text { opacity: 1; transform: translateY(0); }
 
-.cart-badge { position: absolute; top: 0px; right: 25%; background: var(--danger); color: white; font-size: 10px; font-weight: 900; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.28); box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4); border: 2px solid var(--glass-bg);}
+.cart-badge { position: absolute; top: 0px; right: 25%; background: var(--danger); color: white; font-size: 10px; font-weight: 900; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.28); border: 2px solid var(--glass-bg);}
 .cart-badge.pop { transform: scale(1.4); }
 
 /* ==========================================
-   🚀 لودر و انیمیشن سلام (استیکر سبد خرید)
+   🚀 لودر و انیمیشن سلام
    ========================================== */
 .loader { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; gap: 15px;}
 .spinner { width: 45px; height: 45px; border: 4px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
@@ -316,7 +271,6 @@ select.form-input { appearance: none; cursor: pointer; }
 
 .welcome-overlay { position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
-/* 🌟 انیمیشن بالا و پایین رفتن نرم استیکر */
 @keyframes bounceFloat { 
     0%, 100% { transform: translateY(0); } 
     50% { transform: translateY(-18px); } 
@@ -330,27 +284,16 @@ select.form-input { appearance: none; cursor: pointer; }
 .welcome-icon svg { width: 45px; height: 45px; stroke-width: 1.5; }
 
 /* ==========================================
-   💻 تنظیمات دسکتاپ (وسط‌چین کردن ریشه‌ای)
+   💻 رسپانسیو و تنظیمات دسکتاپ
    ========================================== */
 @media (min-width: 768px) {
-    .app-container { max-width: 1000px; height: 95dvh; border-radius: 40px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.2); margin: auto; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(40px);}
+    body { align-items: center; }
+    .app-container { max-width: 1000px; height: 95dvh; border-radius: 40px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.2); border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(40px);}
     header { border-radius: 40px 40px 0 0; padding: 30px 40px 20px;}
     .view-section { padding: 0 40px 140px 40px !important; }
-    
-    /* 🚀 وسط‌چین کردن منوی دسته‌بندی‌ها */
     .category-nav { justify-content: center; padding: 20px 40px; }
     .section-header { padding: 0 40px 20px;}
-    
-    /* 🚀 وسط‌چین کردن محصولات برای جلوگیری از چسبیدن به راست */
-    .horizontal-list { 
-        display: flex; 
-        flex-wrap: wrap; 
-        justify-content: center; 
-        gap: 20px; 
-        overflow-x: visible; 
-        padding: 5px 40px 30px;
-    }
-    
+    .horizontal-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; overflow-x: visible; padding: 5px 40px 30px;}
     .product-card { flex: 0 0 calc(25% - 15px); max-width: 220px; }
 }
 
