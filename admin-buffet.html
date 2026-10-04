@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.15); --bg-color: #0f172a; --surface: #1e293b; --surface-glass: rgba(30, 41, 59, 0.8); --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --transition: all 0.3s ease; }
+        :root { --primary: #d67a8e; --primary-hover: #c4687b; --primary-fade: rgba(214, 122, 142, 0.15); --bg-color: #0f172a; --surface: #1e293b; --surface-glass: rgba(30, 41, 59, 0.8); --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --transition: all 0.3s ease; }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
         .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
@@ -35,7 +35,7 @@
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; text-align: right; font-family: 'Vazirmatn'; }
         .form-input:focus { border-color: var(--primary); }
-        .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; }
+        .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; flex-direction: column; gap: 15px;}
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; }
         .modal { background: var(--surface); width: 400px; border-radius: 20px; padding: 25px; border: 1px solid var(--border); }
         .modal input, .modal select { width: 100%; margin-bottom: 15px; }
@@ -47,7 +47,7 @@
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .checkbox-group label { background: var(--bg-color); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 12px; }
 
-        /* 🔐 حل مشکل صفحه ورود */
+        /* 🔐 استایل صفحه ورود ادمین */
         .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: none; justify-content: center; align-items: center; }
         .login-box { background: var(--surface); padding: 40px; border-radius: 24px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
 
@@ -66,8 +66,12 @@
 </head>
 <body>
 
-    <div class="loader" id="loader">⏳ در حال ارتباط...</div>
+    <div class="loader" id="loader">
+        <div style="font-size: 30px;">⏳</div>
+        <div>در حال ارتباط با سرور...</div>
+    </div>
 
+    <!-- 🔐 صفحه لاگین ادمین -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">مدیریت راهینو</h1>
@@ -121,7 +125,7 @@
                     <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری در انتظار تایید</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead><tr><th>موبایل</th><th>نوع درخواست</th><th>مبلغ پایه</th><th>مبلغ دریافتی شما (تومان)</th><th>عملیات</th></tr></thead>
+                            <thead><tr><th>کاربر</th><th>نوع درخواست</th><th>مبلغ پایه</th><th>مبلغ دریافتی (تومان)</th><th>عملیات</th></tr></thead>
                             <tbody id="cashTableBody"></tbody>
                         </table>
                     </div>
@@ -139,7 +143,7 @@
                     <div class="card-header"><h2 style="font-size: 16px;">فیش‌های واریزی در انتظار تایید</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead><tr><th>موبایل</th><th>مبلغ فیش (اعلامی کاربر)</th><th>مبلغ تایید شده (تومان)</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
+                            <thead><tr><th>کاربر</th><th>مبلغ فیش (اعلامی)</th><th>مبلغ تایید شده (تومان)</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
                             <tbody id="approvalsTableBody"></tbody>
                         </table>
                     </div>
@@ -204,7 +208,7 @@
                     <div class="card-header"><h2 style="font-size: 16px;">ریز سفارشات امروز (موفق)</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead><tr><th>موبایل</th><th>اقلام</th><th>مبلغ</th><th>روش پرداخت</th><th>ساعت</th></tr></thead>
+                            <thead><tr><th>کاربر</th><th>اقلام</th><th>مبلغ</th><th>روش پرداخت</th><th>ساعت</th></tr></thead>
                             <tbody id="todayOrdersBody"></tbody>
                         </table>
                     </div>
@@ -243,7 +247,7 @@
     </div>
 
     <script>
-        // لینک GAS برای ارتباط امن با دیتابیس و ربات بله
+        // لینک GAS برای ارتباط امن (تایید تراکنش‌ها و ربات بله)
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
         
         // 🔒 استفاده از کلید معمولی (Anon Key)
@@ -262,12 +266,10 @@
         // 🔐 سیستم لاگین ادمین
         // =======================
         window.onload = async () => {
-            showLoader();
             const { data: { session } } = await supabaseClient.auth.getSession();
             if(session) {
                 verifyAdminRole(session.user.email.split('@')[0]);
             } else {
-                hideLoader();
                 document.getElementById('loginOverlay').style.display = 'flex';
             }
         };
@@ -307,28 +309,48 @@
         }
 
         // =======================
-        // 🔄 بارگذاری داده‌ها
+        // 🚀 بارگذاری سریع داده‌ها مستقیم از سوپابیس
         // =======================
         async function loadAdminData() {
+            showLoader();
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_admin_data' }) });
-                const data = await response.json();
+                const [prodsRes, pendingTxsRes, pendingOrdersRes, usersRes, recentOrdersRes, recentTxsRes] = await Promise.all([
+                    supabaseClient.from('buffet_products').select('*').order('created_at', { ascending: false }),
+                    supabaseClient.from('buffet_transactions').select('*').eq('status', 'pending'),
+                    supabaseClient.from('buffet_orders').select('*').eq('status', 'pending_cash'),
+                    supabaseClient.from('users').select('phone_number, full_name, wallet_balance'), // واکشی تمام کاربران برای نمایش اسم
+                    supabaseClient.from('buffet_orders').select('*').order('created_at', { ascending: false }).limit(100),
+                    supabaseClient.from('buffet_transactions').select('*').order('created_at', { ascending: false }).limit(200)
+                ]);
+
                 hideLoader();
-                if(data.success) {
-                    products = data.products || [];
-                    pendingTxs = data.pending_txs || [];
-                    pendingOrders = data.pending_orders || [];
-                    usersData = data.users || [];
-                    recentOrders = data.recent_orders || [];
-                    recentTxs = data.recent_txs || [];
-                    renderInventory(); renderCashViews(); renderApprovals(); renderFinanceUsers();
-                } else alert('خطا: ' + data.error);
-            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
+                products = prodsRes.data || [];
+                pendingTxs = pendingTxsRes.data || [];
+                pendingOrders = pendingOrdersRes.data || [];
+                usersData = usersRes.data || [];
+                recentOrders = recentOrdersRes.data || [];
+                recentTxs = recentTxsRes.data || [];
+
+                renderInventory(); 
+                renderCashViews(); 
+                renderApprovals(); 
+                renderFinanceUsers();
+                generateDailyReport();
+            } catch(e) { 
+                console.error(e);
+                hideLoader(); 
+                alert('خطا در دریافت اطلاعات دیتابیس.'); 
+            }
         }
 
+        // 🌟 تابع نمایش نام + موبایل با استایل زیبا
         function getUserName(phone) {
-            let u = usersData.find(x => x.phone_number === phone);
-            return u ? `<div style="font-weight:bold;">${u.full_name}</div><div style="font-size:11px; color:var(--text-muted);">${phone}</div>` : phone;
+            let pStr = String(phone);
+            let u = usersData.find(x => String(x.phone_number) === pStr);
+            if (u && u.full_name) {
+                return `<div style="font-weight:900; font-size:13px; color:var(--primary);">${u.full_name}</div><div style="font-size:11px; color:var(--text-muted);">${pStr}</div>`;
+            }
+            return `<div style="font-weight:bold; font-size:13px; color:var(--text-main);">${pStr}</div>`;
         }
 
         function switchView(viewId, navElement, title) {
@@ -351,6 +373,9 @@
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
 
+        // =======================
+        // 📦 انبار و محصولات (ارتباط سریع و مستقیم)
+        // =======================
         function renderInventory() {
             const tbody = document.getElementById('inventoryTableBody');
             const dl = document.getElementById('cat-options');
@@ -378,21 +403,80 @@
                 let pPrice = document.getElementById(`price_${id}`).value;
                 let pStock = document.getElementById(`stock_${id}`).value;
                 let pActive = document.getElementById(`active_${id}`).value === 'true';
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: pPrice, stock: pStock, is_active: pActive }) });
-                hideLoader(); alert('✅ ذخیره شد');
-            } catch(e) { hideLoader(); alert('خطا'); }
+
+                await supabaseClient.from('buffet_products')
+                    .update({ price: Number(pPrice), stock_count: Number(pStock), is_active: pActive })
+                    .eq('id', id);
+
+                hideLoader(); alert('✅ تغییرات ذخیره شد');
+            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
         }
 
         async function submitNewProduct() {
-            const name = document.getElementById('addName').value, cat = document.getElementById('addCat').value, price = document.getElementById('addPrice').value, stock = document.getElementById('addStock').value, img = document.getElementById('addImg').value;
+            const name = document.getElementById('addName').value, 
+                  cat = document.getElementById('addCat').value, 
+                  price = document.getElementById('addPrice').value, 
+                  stock = document.getElementById('addStock').value, 
+                  img = document.getElementById('addImg').value;
+                  
             if(!name || !price || !stock || !cat) return alert('اطلاعات ناقص است.');
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
+                await supabaseClient.from('buffet_products').insert([{ 
+                    name: name, category: cat, price: Number(price), stock_count: Number(stock), image_url: img || null, is_active: true 
+                }]);
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
+            } catch(e) { hideLoader(); alert('خطا در ثبت محصول'); }
         }
 
+        // =======================
+        // 🌟 پیشنهاد راهینو (ارتباط سریع و مستقیم)
+        // =======================
+        function populateFeatured() {
+            const select = document.getElementById('featProduct');
+            select.innerHTML = '<option value="" disabled selected>انتخاب محصول برای پیشنهاد...</option>' + products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            
+            select.onchange = () => {
+                let p = products.find(x => x.id == select.value);
+                document.querySelectorAll('.day-chk').forEach(chk => { chk.checked = p.featured_days && p.featured_days.includes(chk.value); });
+                document.getElementById('featStart').value = p.featured_start || '';
+                document.getElementById('featEnd').value = p.featured_end || '';
+                document.getElementById('featText').value = p.featured_text || '';
+            };
+        }
+
+        async function submitFeatured() {
+            let pid = document.getElementById('featProduct').value;
+            if(!pid) return alert('یک محصول انتخاب کنید.');
+            let selectedDays = Array.from(document.querySelectorAll('.day-chk:checked')).map(el => el.value).join(',');
+            let fStart = document.getElementById('featStart').value;
+            let fEnd = document.getElementById('featEnd').value;
+            let fText = document.getElementById('featText').value;
+            
+            showLoader();
+            try {
+                await supabaseClient.from('buffet_products')
+                    .update({ featured_days: selectedDays, featured_start: fStart, featured_end: fEnd, featured_text: fText })
+                    .eq('id', pid);
+                hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
+            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
+        }
+
+        async function clearFeatured() {
+            let pid = document.getElementById('featProduct').value;
+            if(!pid) return;
+            showLoader();
+            try {
+                await supabaseClient.from('buffet_products')
+                    .update({ featured_days: null, featured_start: null, featured_end: null, featured_text: null })
+                    .eq('id', pid);
+                hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
+            } catch(e) { hideLoader(); alert('خطا در حذف'); }
+        }
+
+        // =======================
+        // 💵 تاییدات مالی (ارسال به سرور گوگل برای امنیت و ربات بله)
+        // =======================
         function renderCashViews() {
             const tbody = document.getElementById('cashTableBody');
             let cashCharges = pendingTxs.filter(t => t.tx_type === 'cash_charge');
@@ -411,7 +495,7 @@
                 <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;" step="1000"></td>
                 <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
             });
-            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ موردی نیست.</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ مورد نقدی در انتظار نیست.</td></tr>';
         }
 
         async function processCashOrder(oId, phone, oTotal) {
@@ -464,44 +548,6 @@
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
-        function populateFeatured() {
-            const select = document.getElementById('featProduct');
-            select.innerHTML = '<option value="" disabled selected>انتخاب محصول برای پیشنهاد...</option>' + products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-            
-            select.onchange = () => {
-                let p = products.find(x => x.id == select.value);
-                document.querySelectorAll('.day-chk').forEach(chk => { chk.checked = p.featured_days && p.featured_days.includes(chk.value); });
-                document.getElementById('featStart').value = p.featured_start || '';
-                document.getElementById('featEnd').value = p.featured_end || '';
-                document.getElementById('featText').value = p.featured_text || '';
-            };
-        }
-
-        async function submitFeatured() {
-            let pid = document.getElementById('featProduct').value;
-            if(!pid) return alert('یک محصول انتخاب کنید.');
-            let selectedDays = Array.from(document.querySelectorAll('.day-chk:checked')).map(el => el.value).join(',');
-            let fStart = document.getElementById('featStart').value;
-            let fEnd = document.getElementById('featEnd').value;
-            let fText = document.getElementById('featText').value;
-            
-            showLoader();
-            try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: selectedDays, start: fStart, end: fEnd, text: fText }) });
-                hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
-        }
-
-        async function clearFeatured() {
-            let pid = document.getElementById('featProduct').value;
-            if(!pid) return;
-            showLoader();
-            try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: '', start: '', end: '', text: '' }) });
-                hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
-        }
-
         function generateDailyReport() {
             let todayStr = new Date().toLocaleDateString('fa-IR');
             let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
@@ -523,7 +569,7 @@
                 let itemsTxt = '';
                 try { itemsTxt = JSON.parse(o.items).map(i => i.qty + 'x ' + i.name).join(' ، '); } catch(e){}
                 let time = new Date(o.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-                return `<tr><td>${getUserName(o.phone_number)}</td><td>${itemsTxt}</td><td>${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td dir="ltr">${time}</td></tr>`;
+                return `<tr><td>${getUserName(o.phone_number)}</td><td>${itemsTxt}</td><td style="font-weight:bold;">${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td dir="ltr">${time}</td></tr>`;
             }).join('') || '<tr><td colspan="5" style="text-align:center;">سفارشی یافت نشد.</td></tr>';
 
             let tbodyTxs = document.getElementById('todayTxsBody');
