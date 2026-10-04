@@ -302,3 +302,28 @@ select.form-input { color: var(--text-main) !important; background-color: rgba(1
 select.form-input option { background-color: var(--bg-color); color: var(--text-main); padding: 10px; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--primary-fade); border-radius: 10px; }
+
+/* ==========================================
+   🔒 قفل قطعی و ضدگلوله برای جلوگیری از کشیده شدن صفحه در گوشی
+   ========================================== */
+html, body { 
+    position: fixed !important; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important; 
+    overscroll-behavior: none !important; 
+}
+
+.app-container {
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+/* 🚀 این دستور اجازه نمی‌دهد اسکرولِ محصولات، کل صفحه را با خودش بکشد */
+.category-nav, .horizontal-list {
+    overscroll-behavior-x: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
