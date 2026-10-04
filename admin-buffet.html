@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پنل مدیریت بوفه راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #639889; --primary-hover: #4d7a6e; --primary-fade: rgba(99, 152, 137, 0.15); --bg-color: #0f172a; --surface: #1e293b; --surface-glass: rgba(30, 41, 59, 0.8); --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --transition: all 0.3s ease; }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
@@ -17,7 +18,7 @@
         .nav-item.active { background: var(--primary-fade); color: var(--primary); }
         .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0a0f0d; }
-        .topbar { height: 70px; background: var(--surface-glass); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 30px; font-size: 18px; font-weight: bold; }
+        .topbar { height: 70px; background: var(--surface-glass); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; font-size: 18px; font-weight: bold; }
         .content-area { flex: 1; overflow-y: auto; padding: 30px; }
         .view-section { display: none; animation: fadeIn 0.3s ease; }
         .view-section.active { display: block; }
@@ -32,7 +33,7 @@
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; font-family: 'Vazirmatn'; text-align: right; }
+        .form-input { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; outline: none; text-align: right; }
         .form-input:focus { border-color: var(--primary); }
         .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; color: var(--primary); font-weight: bold; font-size: 18px; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; }
@@ -45,33 +46,38 @@
         .kpi-val { font-size: 28px; font-weight: 900; color: var(--primary); margin: 10px 0; }
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .checkbox-group label { background: var(--bg-color); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 12px; }
-        .checkbox-group input { margin-left: 5px; cursor: pointer; }
 
-        /* 📱 تنظیمات ریسپانسیو برای موبایل */
+        /* 🔐 استایل صفحه ورود ادمین */
+        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--surface); padding: 40px; border-radius: 24px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+
         .menu-toggle { display: none; background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; margin-left: 15px; }
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; backdrop-filter: blur(3px); }
-        .sidebar-overlay.active { display: block; animation: fadeIn 0.3s; }
         
         @media (max-width: 768px) {
-            .sidebar { position: fixed; top: 0; right: 0; bottom: 0; transform: translateX(100%); z-index: 1000; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+            .sidebar { position: fixed; top: 0; right: 0; bottom: 0; transform: translateX(100%); z-index: 1000; transition: 0.3s; }
             .sidebar.open { transform: translateX(0); }
             .menu-toggle { display: block; }
-            .topbar { padding: 0 15px; }
-            .content-area { padding: 15px; }
-            .kpi-grid { grid-template-columns: 1fr; gap: 10px; } /* کارت‌های گزارش زیر هم بیفتن */
+            .kpi-grid { grid-template-columns: 1fr; } 
             .card-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .card-header .btn { width: 100%; }
             table { font-size: 12px; }
-            th, td { padding: 10px 5px; }
-            .form-input { width: 100%; } /* ورودی‌ها تمام‌عرض بشن */
-            .card[style*="display:flex"] { flex-direction: column; align-items: stretch !important; }
-            .card select, .card input, .card button { width: 100% !important; margin: 5px 0 !important; }
         }
     </style>
 </head>
 <body>
 
     <div class="loader" id="loader">⏳ در حال ارتباط...</div>
+
+    <!-- 🔐 صفحه لاگین ادمین -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">مدیریت راهینو</h1>
+            <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px;">فقط پرسنل مجاز حق ورود دارند</p>
+            <input type="tel" id="adminPhone" class="form-input" placeholder="شماره موبایل" style="margin-bottom: 15px; text-align: center; font-size: 18px; letter-spacing: 2px;">
+            <input type="password" id="adminPass" class="form-input" placeholder="رمز عبور" style="margin-bottom: 15px; text-align: center; font-size: 18px; letter-spacing: 2px;">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px; font-size: 16px; padding: 15px;" onclick="adminLogin()">ورود به پنل</button>
+        </div>
+    </div>
 
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
@@ -88,8 +94,11 @@
 
     <main class="main-content">
         <header class="topbar">
-            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-            <span id="topbarTitle">📦 انبار و محصولات</span>
+            <div style="display: flex; align-items: center;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <span id="topbarTitle">📦 انبار و محصولات</span>
+            </div>
+            <button class="btn btn-danger" style="padding: 8px 15px; font-size: 12px;" onclick="adminLogout()">خروج</button>
         </header>
         <div class="content-area">
             
@@ -101,7 +110,7 @@
                     </div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead><tr><th>نام محصول</th><th>دسته‌بندی</th><th>قیمت (تومان)</th><th>موجودی</th><th>عملیات</th></tr></thead>
+                            <thead><tr><th>نام محصول</th><th>دسته‌بندی</th><th>قیمت (تومان)</th><th>موجودی</th><th>وضعیت</th><th>عملیات</th></tr></thead>
                             <tbody id="inventoryTableBody"></tbody>
                         </table>
                     </div>
@@ -110,7 +119,7 @@
 
             <div id="view-finance" class="view-section">
                 <div class="card">
-                    <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری</h2></div>
+                    <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری در انتظار تایید</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
                             <thead><tr><th>موبایل</th><th>نوع درخواست</th><th>مبلغ پایه</th><th>مبلغ دریافتی شما (تومان)</th><th>عملیات</th></tr></thead>
@@ -119,7 +128,7 @@
                     </div>
                 </div>
                 <div class="card" style="margin-top: 20px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <h2 style="font-size: 16px; margin-left: 20px;">شارژ مستقیم کیف پول</h2>
+                    <h2 style="font-size: 16px; margin-left: 20px;">شارژ مستقیم کیف پول کاربر</h2>
                     <select id="financeUserSelect" class="form-input" style="width: 250px;"></select>
                     <input type="number" id="financeAmount" class="form-input" placeholder="مبلغ (تومان)" style="width: 150px;">
                     <button class="btn btn-primary" onclick="submitManualCharge()">ثبت شارژ</button>
@@ -128,10 +137,10 @@
 
             <div id="view-approvals" class="view-section">
                 <div class="card">
-                    <div class="card-header"><h2 style="font-size: 16px;">فیش‌های واریزی در انتظار</h2></div>
+                    <div class="card-header"><h2 style="font-size: 16px;">فیش‌های واریزی در انتظار تایید</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
-                            <thead><tr><th>موبایل</th><th>مبلغ فیش</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
+                            <thead><tr><th>موبایل</th><th>مبلغ فیش (اعلامی کاربر)</th><th>مبلغ تایید شده (تومان)</th><th>تاریخ</th><th>تصویر فیش</th><th>تایید نهایی</th></tr></thead>
                             <tbody id="approvalsTableBody"></tbody>
                         </table>
                     </div>
@@ -193,7 +202,7 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-header"><h2 style="font-size: 16px;">ریز سفارشات امروز</h2></div>
+                    <div class="card-header"><h2 style="font-size: 16px;">ریز سفارشات امروز (موفق)</h2></div>
                     <div style="overflow-x: auto;">
                         <table>
                             <thead><tr><th>موبایل</th><th>اقلام</th><th>مبلغ</th><th>روش پرداخت</th><th>ساعت</th></tr></thead>
@@ -235,8 +244,105 @@
     </div>
 
     <script>
+        // 🔗 فقط برای ارسال پیام متنی و عکس به ربات بله
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyUkf-Z8j1QEn9IUS6MC9ph2Bq1ScRO-esG2nPufYFurJlNGlHXzXaYATEllk4VpnhdeA/exec';
+        
+        // 🔒 استفاده از کلید معمولی (Anon Key) به جای Service Key به لطف قوانین RLS
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let products = [], pendingTxs = [], pendingOrders = [], usersData = [], recentOrders = [], recentTxs = [];
+
+        function showLoader() { document.getElementById('loader').style.display = 'flex'; }
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+        function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
+
+        // =======================
+        // 🔐 سیستم لاگین ادمین
+        // =======================
+        window.onload = async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if(session) {
+                verifyAdminRole(session.user.email.split('@')[0]);
+            }
+        };
+
+        async function adminLogin() {
+            let phone = toEnglishDigits(document.getElementById('adminPhone').value.trim());
+            let pass = document.getElementById('adminPass').value.trim();
+            if(!phone || !pass) return alert('شماره و رمز عبور را وارد کنید.');
+
+            showLoader();
+            const { error } = await supabaseClient.auth.signInWithPassword({ email: phone + '@rahino.ir', password: pass });
+            if(error) {
+                hideLoader();
+                return alert('اطلاعات ورود اشتباه است.');
+            }
+            verifyAdminRole(phone);
+        }
+
+        async function verifyAdminRole(phone) {
+            // چک کردن نقش در دیتابیس
+            const { data, error } = await supabaseClient.from('users').select('role, full_name').eq('phone_number', phone).single();
+            
+            if(error || !data || data.role !== 'admin') {
+                await supabaseClient.auth.signOut();
+                hideLoader();
+                alert('❌ دسترسی غیرمجاز! شما مجوز مدیریت پنل را ندارید.');
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
+                loadAdminData();
+            }
+        }
+
+        async function adminLogout() {
+            if(confirm('آیا از پنل خارج می‌شوید؟')) {
+                await supabaseClient.auth.signOut();
+                window.location.reload();
+            }
+        }
+
+        // =======================
+        // 🔄 بارگذاری داده‌ها (مستقیم از سوپابیس)
+        // =======================
+        async function loadAdminData() {
+            showLoader();
+            try {
+                const [prodsRes, pendingTxsRes, pendingOrdersRes, usersRes, recentOrdersRes, recentTxsRes] = await Promise.all([
+                    supabaseClient.from('buffet_products').select('*').order('created_at', { ascending: false }),
+                    supabaseClient.from('buffet_transactions').select('*').eq('status', 'pending'),
+                    supabaseClient.from('buffet_orders').select('*').eq('status', 'pending_cash'),
+                    supabaseClient.from('users').select('phone_number, full_name, wallet_balance').eq('status', 'approved'),
+                    supabaseClient.from('buffet_orders').select('*').order('created_at', { ascending: false }).limit(100),
+                    supabaseClient.from('buffet_transactions').select('*').order('created_at', { ascending: false }).limit(200)
+                ]);
+
+                hideLoader();
+                products = prodsRes.data || [];
+                pendingTxs = pendingTxsRes.data || [];
+                pendingOrders = pendingOrdersRes.data || [];
+                usersData = usersRes.data || [];
+                recentOrders = recentOrdersRes.data || [];
+                recentTxs = recentTxsRes.data || [];
+
+                renderInventory(); 
+                renderCashViews(); 
+                renderApprovals(); 
+                renderFinanceUsers();
+                generateDailyReport();
+            } catch(e) { 
+                console.error(e);
+                hideLoader(); 
+                alert('خطا در دریافت اطلاعات دیتابیس.'); 
+            }
+        }
+
+        // =======================
+        // بقیه توابع دقیقاً مثل قبل، فقط با `supabaseClient`
+        // =======================
 
         function getUserName(phone) {
             let u = usersData.find(x => x.phone_number === phone);
@@ -252,38 +358,16 @@
             if(viewId === 'view-featured') populateFeatured();
             if(viewId === 'view-reports') generateDailyReport();
             
-            // بستن اتوماتیک سایدبار در موبایل
             if(window.innerWidth <= 768) {
                 document.querySelector('.sidebar').classList.remove('open');
                 document.getElementById('sidebarOverlay').classList.remove('active');
             }
         }
-        
-        function showLoader() { document.getElementById('loader').style.display = 'flex'; }
-        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
 
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
-
-        window.onload = async () => {
-            showLoader();
-            try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_admin_data' }) });
-                const data = await response.json();
-                hideLoader();
-                if(data.success) {
-                    products = data.products || [];
-                    pendingTxs = data.pending_txs || [];
-                    pendingOrders = data.pending_orders || [];
-                    usersData = data.users || [];
-                    recentOrders = data.recent_orders || [];
-                    recentTxs = data.recent_txs || [];
-                    renderInventory(); renderCashViews(); renderApprovals(); renderFinanceUsers();
-                } else alert('خطا: ' + data.error);
-            } catch(e) { hideLoader(); alert('خطا در ارتباط'); }
-        };
 
         function renderInventory() {
             const tbody = document.getElementById('inventoryTableBody');
@@ -296,6 +380,12 @@
                 <td style="color:var(--text-muted);">${p.category}</td>
                 <td dir="ltr"><input type="number" id="price_${p.id}" class="form-input" value="${p.price}" style="width:100px;"></td>
                 <td dir="ltr"><input type="number" id="stock_${p.id}" class="form-input" value="${p.stock_count}" style="width:100px;"></td>
+                <td>
+                    <select id="active_${p.id}" class="form-input" style="width: 100px; padding: 5px;">
+                        <option value="true" ${p.is_active ? 'selected' : ''}>فعال</option>
+                        <option value="false" ${!p.is_active ? 'selected' : ''}>غیرفعال</option>
+                    </select>
+                </td>
                 <td><button class="btn btn-outline" style="padding: 6px 12px; font-size:12px;" onclick="updateProduct('${p.id}')">ذخیره</button></td>
             </tr>`).join('');
         }
@@ -303,19 +393,34 @@
         async function updateProduct(id) {
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_product', id: id, price: document.getElementById(`price_${id}`).value, stock: document.getElementById(`stock_${id}`).value }) });
-                hideLoader(); alert('✅ ذخیره شد');
-            } catch(e) { hideLoader(); alert('خطا'); }
+                let pPrice = document.getElementById(`price_${id}`).value;
+                let pStock = document.getElementById(`stock_${id}`).value;
+                let pActive = document.getElementById(`active_${id}`).value === 'true';
+
+                await supabaseClient.from('buffet_products')
+                    .update({ price: Number(pPrice), stock_count: Number(pStock), is_active: pActive })
+                    .eq('id', id);
+
+                hideLoader(); 
+                alert('✅ ذخیره شد');
+            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
         }
 
         async function submitNewProduct() {
-            const name = document.getElementById('addName').value, cat = document.getElementById('addCat').value, price = document.getElementById('addPrice').value, stock = document.getElementById('addStock').value, img = document.getElementById('addImg').value;
+            const name = document.getElementById('addName').value, 
+                  cat = document.getElementById('addCat').value, 
+                  price = document.getElementById('addPrice').value, 
+                  stock = document.getElementById('addStock').value, 
+                  img = document.getElementById('addImg').value;
+                  
             if(!name || !price || !stock || !cat) return alert('اطلاعات ناقص است.');
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'add_product', name: name, category: cat, price: price, stock: stock, image: img }) });
+                await supabaseClient.from('buffet_products').insert([{ 
+                    name: name, category: cat, price: Number(price), stock_count: Number(stock), image_url: img || null, is_active: true 
+                }]);
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
+            } catch(e) { hideLoader(); alert('خطا در ثبت محصول'); }
         }
 
         function renderCashViews() {
@@ -327,25 +432,40 @@
 
             let html = '';
             pendingOrders.forEach(o => {
-                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">خرید از بوفه</td><td>${o.total_price.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(o.phone_number)}</td><td style="color:var(--warning);">سفارش بوفه (نقدی)</td><td>${o.total_price.toLocaleString()}</td>
                 <td><input type="number" id="recv_o_${o.id}" class="form-input" value="${o.total_price}" style="width:120px;"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">دریافت شد ✅</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCashOrder('${o.id}', '${o.phone_number}', ${o.total_price})">تایید پرداخت ✅</button></td></tr>`;
             });
             cashCharges.forEach(t => {
-                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ کیف پول</td><td>${t.amount.toLocaleString()}</td>
+                html += `<tr><td>${getUserName(t.phone_number)}</td><td style="color:var(--primary);">شارژ نقدی کیف پول</td><td>${t.amount.toLocaleString()}</td>
                 <td><input type="number" id="recv_t_${t.id}" class="form-input" value="${t.amount}" style="width:120px;"></td>
-                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">دریافت شد ✅</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${t.id}', '${t.phone_number}', 'recv_t_${t.id}', 'approved')">تایید دریافت ✅</button></td></tr>`;
             });
-            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ موردی نیست.</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">هیچ مورد نقدی در انتظار نیست.</td></tr>';
         }
 
         async function processCashOrder(oId, phone, oTotal) {
-            let rAmt = document.getElementById(`recv_o_${oId}`).value;
+            let rAmt = Number(document.getElementById(`recv_o_${oId}`).value);
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_cash_order', order_id: oId, phone_number: phone, received_amount: rAmt, order_total: oTotal }) });
+                await supabaseClient.from('buffet_orders').update({ status: 'paid' }).eq('id', oId);
+                
+                let diff = rAmt - oTotal;
+                let u = usersData.find(x => x.phone_number === phone);
+                let uName = u ? u.full_name : phone;
+
+                if (diff > 0) {
+                    let currentBal = u ? u.wallet_balance : 0;
+                    await supabaseClient.from('users').update({ wallet_balance: currentBal + diff }).eq('phone_number', phone);
+                    await supabaseClient.from('buffet_transactions').insert([{ phone_number: phone, amount: diff, tx_type: 'change_deposit', status: 'approved' }]);
+                }
+
+                let msg = `✅ تسویه فاکتور نقدی\n👤 کاربر: ${uName}\n🧾 فاکتور: ${oTotal.toLocaleString()} تومان\n💵 دریافتی: ${rAmt.toLocaleString()} تومان`;
+                if (diff > 0) msg += `\n💳 واریز مابقی به کیف پول: ${diff.toLocaleString()} تومان`;
+                fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ text: msg }) }).catch(e=>{});
+
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
+            } catch(e) { hideLoader(); alert('خطا در پردازش'); }
         }
 
         function renderApprovals() {
@@ -357,21 +477,36 @@
             let html = '';
             receiptCharges.forEach(tx => {
                 html += `<tr><td>${getUserName(tx.phone_number)}</td><td>${tx.amount.toLocaleString()}</td>
-                <td>${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
+                <td><input type="number" id="recv_t_${tx.id}" class="form-input" value="${tx.amount}" style="width:120px;"></td>
+                <td dir="ltr">${new Date(tx.created_at).toLocaleDateString('fa-IR')}</td>
                 <td><img src="data:image/jpeg;base64,${tx.receipt_base64}" class="receipt-img" onclick="window.open(this.src)"></td>
-                <td><input type="hidden" id="recv_t_${tx.id}" value="${tx.amount}"><button class="btn btn-success" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button>
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
+                <td><button class="btn btn-success" style="padding: 6px 12px; font-size:12px; margin-bottom: 5px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'approved')">تایید</button><br>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size:12px; width: 100%;" onclick="processCharge('${tx.id}', '${tx.phone_number}', 'recv_t_${tx.id}', 'rejected')">رد</button></td></tr>`;
             });
-            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">فیشی وجود ندارد.</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;">فیشی وجود ندارد.</td></tr>';
         }
 
         async function processCharge(txId, phone, inputId, status) {
-            let amt = document.getElementById(inputId).value;
+            let amt = Number(document.getElementById(inputId).value);
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'process_charge', tx_id: txId, phone_number: phone, received_amount: amt, status: status }) });
+                await supabaseClient.from('buffet_transactions')
+                    .update({ status: status, amount: amt, receipt_base64: null })
+                    .eq('id', txId);
+
+                let u = usersData.find(x => x.phone_number === phone);
+                let uName = u ? u.full_name : phone;
+
+                if (status === 'approved') {
+                    let currentBal = u ? u.wallet_balance : 0;
+                    await supabaseClient.from('users').update({ wallet_balance: currentBal + amt }).eq('phone_number', phone);
+                    fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ text: `✅ تایید فیش کیف پول\n👤 کاربر: ${uName}\n💰 شارژ: ${amt.toLocaleString()} تومان` }) }).catch(e=>{});
+                } else {
+                    fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ text: `❌ رد درخواست شارژ\n👤 کاربر: ${uName}` }) }).catch(e=>{});
+                }
+
                 window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
+            } catch(e) { hideLoader(); alert('خطا در پردازش'); }
         }
 
         function renderFinanceUsers() {
@@ -379,18 +514,20 @@
         }
 
         async function submitManualCharge() {
-            const phone = document.getElementById('financeUserSelect').value, amount = document.getElementById('financeAmount').value;
+            const phone = document.getElementById('financeUserSelect').value, amount = Number(document.getElementById('financeAmount').value);
             if(!phone || !amount) return;
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'manual_wallet_update', target_phone: phone, amount: amount }) });
+                let u = usersData.find(x => x.phone_number === phone);
+                let currentBal = u ? u.wallet_balance : 0;
+                
+                await supabaseClient.from('users').update({ wallet_balance: currentBal + amount }).eq('phone_number', phone);
+                await supabaseClient.from('buffet_transactions').insert([{ phone_number: phone, amount: amount, tx_type: 'manual_cash', status: 'approved' }]);
+
                 window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
-        // =======================
-        // بخش پیشنهاد راهینو 
-        // =======================
         function populateFeatured() {
             const select = document.getElementById('featProduct');
             select.innerHTML = '<option value="" disabled selected>انتخاب محصول برای پیشنهاد...</option>' + products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
@@ -414,9 +551,9 @@
             
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: selectedDays, start: fStart, end: fEnd, text: fText }) });
+                await supabaseClient.from('buffet_products').update({ featured_days: selectedDays, featured_start: fStart, featured_end: fEnd, featured_text: fText }).eq('id', pid);
                 hideLoader(); alert('✅ برنامه ذخیره شد.'); window.location.reload();
-            } catch(e) { hideLoader(); alert('خطا'); }
+            } catch(e) { hideLoader(); alert('خطا در ذخیره'); }
         }
 
         async function clearFeatured() {
@@ -424,20 +561,15 @@
             if(!pid) return;
             showLoader();
             try {
-                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'set_featured', id: pid, days: '', start: '', end: '', text: '' }) });
+                await supabaseClient.from('buffet_products').update({ featured_days: null, featured_start: null, featured_end: null, featured_text: null }).eq('id', pid);
                 hideLoader(); alert('🗑️ پیشنهاد حذف شد.'); window.location.reload();
             } catch(e) { hideLoader(); alert('خطا'); }
         }
 
-        // =======================
-        // بخش گزارش روزانه
-        // =======================
         function generateDailyReport() {
             let todayStr = new Date().toLocaleDateString('fa-IR');
             
             let todaysOrders = recentOrders.filter(o => new Date(o.created_at).toLocaleDateString('fa-IR') === todayStr && o.status === 'paid');
-            
-            // 🌟 تغییر در این خط: شرط t.tx_type !== 'purchase' اضافه شد تا خریدهای کیف پول در جدول شارژها نیاید
             let todaysTxs = recentTxs.filter(t => new Date(t.created_at).toLocaleDateString('fa-IR') === todayStr && t.status === 'approved' && t.tx_type !== 'purchase');
 
             let totalSales = todaysOrders.reduce((sum, o) => sum + o.total_price, 0);
@@ -451,27 +583,25 @@
             document.getElementById('repWalletSales').innerText = walletSales.toLocaleString();
             document.getElementById('repCashBox').innerText = cashInBox.toLocaleString();
 
-            // ساخت جدول سفارشات
             let tbodyOrders = document.getElementById('todayOrdersBody');
             tbodyOrders.innerHTML = todaysOrders.map(o => {
                 let itemsTxt = '';
                 try { itemsTxt = JSON.parse(o.items).map(i => i.qty + 'x ' + i.name).join(' ، '); } catch(e){}
                 let time = new Date(o.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
                 return `<tr><td>${getUserName(o.phone_number)}</td><td>${itemsTxt}</td><td>${o.total_price.toLocaleString()}</td><td>${o.payment_method === 'wallet' ? '💳 کیف پول' : '💵 نقدی'}</td><td dir="ltr">${time}</td></tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center;">هنوز سفارشی ثبت نشده است.</td></tr>';
+            }).join('') || '<tr><td colspan="5" style="text-align:center;">سفارشی یافت نشد.</td></tr>';
 
-            // ساخت جدول شارژها
             let tbodyTxs = document.getElementById('todayTxsBody');
             tbodyTxs.innerHTML = todaysTxs.map(t => {
                 let typeTxt = '';
-                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی (حضوری)';
-                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 واریز کارت به کارت';
-                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد خرید';
-                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ شارژ دستی مدیریت';
+                if(t.tx_type === 'cash_charge') typeTxt = '💵 شارژ نقدی';
+                else if(t.tx_type === 'receipt_charge') typeTxt = '💳 کارت به کارت';
+                else if(t.tx_type === 'change_deposit') typeTxt = '🪙 مابقی پول خرد';
+                else if(t.tx_type === 'manual_cash') typeTxt = '⚙️ دستی مدیریت';
                 else typeTxt = 'سایر';
                 let time = new Date(t.created_at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
                 return `<tr><td>${getUserName(t.phone_number)}</td><td>${typeTxt}</td><td style="color:var(--success); font-weight:bold;">+${t.amount.toLocaleString()}</td><td dir="ltr">${time}</td></tr>`;
-            }).join('') || '<tr><td colspan="4" style="text-align:center;">امروز شارژی انجام نشده است.</td></tr>';
+            }).join('') || '<tr><td colspan="4" style="text-align:center;">تراکنشی یافت نشد.</td></tr>';
         }
     </script>
 </body>
