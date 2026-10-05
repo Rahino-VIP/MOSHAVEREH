@@ -227,24 +227,27 @@
             <div id="tab-promos" class="tab-content">
                 <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">مدیریت کدهای تخفیف</h3>
                 <div class="card" style="flex-direction: row; flex-wrap: wrap; gap: 10px; background: rgba(99, 152, 137, 0.1);">
-                    <input type="text" id="newPromoCode" class="cap-input" placeholder="عبارت کد (مثلا RAHINO40)" style="flex:1; margin:0;">
-                    <input type="number" id="newPromoVal" class="cap-input" placeholder="مبلغ (تومان)" style="flex:1; margin:0;">
-                    <select id="newPromoType" class="cap-input" style="flex:1; margin:0;">
+                    <input type="text" id="newPromoCode" class="cap-input" placeholder="عبارت کد (مثلا RAHINO40)" style="flex:1; margin:0; min-width:120px;">
+                    <input type="number" id="newPromoVal" class="cap-input" placeholder="مبلغ (تومان)" style="flex:1; margin:0; min-width:100px;">
+                    <select id="newPromoType" class="cap-input" style="flex:1; margin:0; min-width:120px;">
                         <option value="amount">مبلغ ثابت (تومان)</option>
                         <option value="percent">درصدی (%)</option>
                     </select>
-                    <select id="newPromoTarget" class="cap-input" style="flex:1; margin:0;">
+                    <select id="newPromoTarget" class="cap-input" style="flex:1; margin:0; min-width:120px;">
                         <option value="all">همه سرویس‌ها</option>
                         <option value="daily">فقط روزانه</option>
                         <option value="monthly">فقط ماهانه</option>
                     </select>
-                    <input type="number" id="newPromoCap" class="cap-input" placeholder="ظرفیت استفاده" value="50" style="flex:1; margin:0;">
-                    <button class="btn btn-blue" onclick="createPromo()">➕ ساخت کد جدید</button>
+                    <input type="number" id="newPromoCap" class="cap-input" placeholder="ظرفیت" value="50" style="width:80px; margin:0;">
+                    <!-- فیلد جدید تاریخ انقضا -->
+                    <input type="date" id="newPromoValidUntil" class="cap-input" title="تاریخ انقضا (میلادی - اختیاری)" style="flex:1; margin:0; min-width:120px;">
+                    
+                    <button class="btn btn-blue" onclick="createPromo()" style="white-space: nowrap;">➕ ساخت کد</button>
                 </div>
                 <div class="table-responsive" style="margin-top: 20px;">
                     <table class="data-table">
-                        <thead><tr><th>کد تخفیف</th><th>نوع و مقدار</th><th>سرویس هدف</th><th>استفاده / ظرفیت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
-                        <tbody id="promosAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                        <thead><tr><th>کد تخفیف</th><th>نوع و مقدار</th><th>سرویس هدف</th><th>استفاده / ظرفیت</th><th>انقضا</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                        <tbody id="promosAdminList"><tr><td colspan="7" style="text-align:center;">در حال دریافت...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -583,21 +586,24 @@
         // مدیریت کدهای تخفیف
         // =======================
         async function loadPromos() {
-            // تغییر created_at به valid_from برای جلوگیری از ارور ۴۰۰
             const { data } = await supabaseClient.from('promos_codes').select('*').order('valid_from', {ascending: false});
             const list = document.getElementById('promosAdminList');
-            if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">کد تخفیفی تعریف نشده است.</td></tr>';
+            if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="7" style="text-align:center;">کد تخفیفی تعریف نشده است.</td></tr>';
             
             list.innerHTML = data.map(p => {
                 let valText = p.discount_type === 'percent' ? `${p.discount_value} درصد` : `${Number(p.discount_value).toLocaleString()} تومان`;
                 let targetText = p.target_service === 'all' ? 'همه' : (p.target_service === 'daily' ? 'روزانه' : 'ماهانه');
                 let statusBadge = p.is_active ? '<span class="badge badge-approved">فعال</span>' : '<span class="badge badge-blocked">غیرفعال</span>';
                 
+                // تبدیل تاریخ انقضا به شمسی
+                let expireText = p.valid_until ? getShamsiDate(new Date(p.valid_until)) : '<span style="color:var(--text-muted)">بدون انقضا</span>';
+                
                 return `<tr>
                     <td style="font-weight:bold; font-size:14px; letter-spacing:1px;">${p.code}</td>
                     <td>${valText}</td>
                     <td>${targetText}</td>
                     <td style="direction:ltr; text-align:right;">${p.used_count} / ${p.max_uses || '∞'}</td>
+                    <td>${expireText}</td>
                     <td>${statusBadge}</td>
                     <td><button class="action-btn ${p.is_active ? 'btn-block-sm' : 'btn-approve-sm'}" onclick="togglePromo('${p.id}', ${p.is_active})">${p.is_active ? 'غیرفعال کن' : 'فعال کن'}</button></td>
                 </tr>`;
@@ -615,22 +621,40 @@
             const type = document.getElementById('newPromoType').value;
             const target = document.getElementById('newPromoTarget').value;
             const cap = document.getElementById('newPromoCap').value;
+            const validUntil = document.getElementById('newPromoValidUntil').value;
 
             if(!code || !val) return alert('کد و مبلغ/درصد الزامی است.');
+            
+            // نمایش حالت لودینگ روی دکمه
+            const btn = document.querySelector('#tab-promos .btn-blue');
+            btn.innerHTML = '⏳ در حال ساخت...';
 
-            await supabaseClient.from('promos_codes').insert([{
+            const payload = {
                 code: code,
                 discount_type: type,
                 discount_value: parseInt(val),
                 target_service: target,
                 max_uses: cap ? parseInt(cap) : null,
                 used_count: 0,
-                is_active: true
-            }]);
+                is_active: true,
+                valid_from: new Date().toISOString(), // این خط مشکل ارور 400 را حل می‌کند
+                valid_until: validUntil ? new Date(validUntil).toISOString() : null // اضافه شدن تاریخ انقضا
+            };
+
+            const { error } = await supabaseClient.from('promos_codes').insert([payload]);
+            
+            btn.innerHTML = '➕ ساخت کد';
+
+            if(error) {
+                console.error(error);
+                return alert('خطا در ارتباط با دیتابیس: ' + error.message);
+            }
             
             alert('✅ کد تخفیف با موفقیت ساخته شد.');
+            // ریست کردن فرم
             document.getElementById('newPromoCode').value = '';
             document.getElementById('newPromoVal').value = '';
+            document.getElementById('newPromoValidUntil').value = '';
             loadPromos();
         }
     </script>
