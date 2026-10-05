@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت پیشرفته رزرو پانسیون | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { 
+            --bg-dark: #070b09; 
+            --surface-dark: #121a18; 
+            --surface-light: #1b2624; 
+            --border-color: #263633;
+            --primary: #639889; 
+            --primary-fade: rgba(99, 152, 137, 0.15);
+            --primary-glow: rgba(99, 152, 137, 0.4);
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 260px; background: rgba(18, 26, 24, 0.95); backdrop-filter: blur(10px); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .brand { text-align: center; font-size: 22px; font-weight: 900; margin-bottom: 30px; letter-spacing: -0.5px; }
+        .brand span { color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); }
+        .nav-item { padding: 15px 25px; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; text-decoration: none; border-right: 3px solid transparent; transition: all 0.3s; }
+        .nav-item:hover, .nav-item.active { background: linear-gradient(90deg, var(--primary-fade) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
+        
+        /* Mobile Header */
+        .mobile-header { display: none; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--surface-dark); border-bottom: 1px solid var(--border-color); z-index: 900; }
+        .menu-toggle { background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 999; opacity: 0; transition: opacity 0.3s; }
+        .overlay.active { display: block; opacity: 1; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #070b09 100%); }
+        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .top-nav::-webkit-scrollbar { display: none; }
+        .tab-btn { padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-muted); border: 1px solid transparent; background: var(--surface-light); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { background: #22302e; color: var(--text-main); }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+        
+        /* Container & Cards */
+        .tab-container { flex: 1; padding: 30px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) var(--surface-dark); }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); border-color: #314541; }
+        .c-info div { margin-bottom: 6px; font-size: 13px; color: var(--text-muted); }
+        .c-info strong { color: var(--text-main); font-size: 16px; margin-bottom: 8px; display: inline-block; }
+        
+        /* Buttons */
+        .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; color: white; display: inline-flex; align-items: center; gap: 5px; }
+        .btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+        .btn:active { transform: scale(0.98); }
+        .btn-green { background: var(--success); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); } 
+        .btn-red { background: var(--danger); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); } 
+        .btn-blue { background: var(--primary); box-shadow: 0 4px 10px var(--primary-glow); }
+        
+        /* Capacity Grid */
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; text-align: center; transition: 0.3s; }
+        .cap-card:hover { border-color: var(--primary); background: var(--surface-dark); }
+        .cap-date { font-size: 15px; font-weight: 900; margin-bottom: 12px; color: var(--primary); }
+        .cap-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 16px; transition: border 0.3s; }
+        .cap-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
+
+        /* Data Table for Users */
+        .table-responsive { width: 100%; overflow-x: auto; background: var(--surface-dark); border-radius: 14px; border: 1px solid var(--border-color); }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: right; }
+        .data-table th, .data-table td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        .data-table th { background: rgba(27, 38, 36, 0.8); color: var(--primary); font-weight: bold; position: sticky; top: 0; }
+        .data-table tr { transition: background 0.2s; }
+        .data-table tr:hover { background: var(--surface-light); }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        /* Badges */
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badge-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-blocked { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-duplicate { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px dashed var(--danger); margin-right: 8px; font-size: 10px; }
+        .action-btn { padding: 6px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; border: none; color: white; font-weight: bold; transition: 0.2s; }
+        .action-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+        .btn-block-sm { background: var(--danger); }
+        .btn-approve-sm { background: var(--success); }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .mobile-header { display: flex; }
+            .sidebar { position: fixed; right: -260px; height: 100%; box-shadow: -5px 0 25px rgba(0,0,0,0.5); }
+            .sidebar.active { transform: translateX(-260px); }
+            .top-nav { padding: 15px; }
+            .tab-btn { padding: 10px 15px; font-size: 13px; }
+            .tab-container { padding: 15px; }
+            .card { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .card > div:last-child { width: 100%; display: flex; gap: 10px; }
+            .card .btn { flex: 1; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Overlay -->
+    <div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="brand">راهینو <span>پانسیون</span></div>
+        <a href="dashboard.html" class="nav-item"><span>🌅</span> بازگشت به داشبورد</a>
+        <a href="#" class="nav-item active"><span>📍</span> سیستم رزرو روزانه</a>
+    </div>
+
+    <div class="main-content">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <div class="brand" style="margin:0; font-size:18px;">راهینو <span>پانسیون</span></div>
+            <div style="width: 24px;"></div> <!-- Spacer for flex alignment -->
+        </div>
+
+        <!-- نوار منوی بالا -->
+        <div class="top-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-users', this)">📝 در انتظار تایید</button>
+            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
+            <button class="tab-btn" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
+            <button class="tab-btn" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
+            <button class="tab-btn" onclick="switchTab('tab-monthly', this)">💎 ماهانه و اقساط</button>
+            <button class="tab-btn" onclick="switchTab('tab-promos', this)">🎁 کدهای تخفیف</button>
+            <button class="tab-btn" onclick="switchTab('tab-withdraws', this)">💳 درخواست‌های مالی</button>
+        </div>
+
+        <div class="tab-container">
+            <!-- تب کاربران در انتظار -->
+            <div id="tab-users" class="tab-content active">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">کاربران در انتظار تایید عضویت</h3>
+                <div id="pendingUsersList"><div style="color:var(--text-muted); text-align:center; padding: 20px;">در حال دریافت اطلاعات...</div></div>
+            </div>
+
+            <!-- تب مدیریت ظرفیت -->
+            <div id="tab-capacity" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h3 style="color: var(--primary); font-size: 18px;">ظرفیتِ باقی‌مانده‌ی ۱۴ روز آینده</h3>
+                    <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات</button>
+                </div>
+                <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted); text-align:center; grid-column: 1/-1;">در حال دریافت اطلاعات...</div></div>
+            </div>
+            
+            <!-- تب تاریخچه رزروها -->
+            <div id="tab-receipts" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">آخرین رزروهای ثبت شده</h3>
+                <div id="reservationsList"><div style="color:var(--text-muted); text-align:center; padding: 20px;">در حال دریافت اطلاعات...</div></div>
+            </div>
+
+            <!-- تب تمام کاربران -->
+            <div id="tab-all-users" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">لیست و مشخصات کامل کاربران ثبت‌نامی</h3>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <input type="text" id="searchInput" placeholder="جستجوی نام یا موبایل..." class="cap-input" style="width: auto; flex: 1; margin: 0; text-align: right;" onkeyup="renderAllUsers()">
+                    <select id="gradeFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
+                        <option value="">همه پایه‌ها</option>
+                        <option value="دوازدهم">دوازدهم</option>
+                        <option value="یازدهم">یازدهم</option>
+                        <option value="دهم">دهم</option>
+                        <option value="دانشجو">دانشجو</option>
+                        <option value="پشت کنکوری">پشت کنکوری</option>
+                    </select>
+                    <select id="statusFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="approved">تایید شده</option>
+                        <option value="pending">در انتظار</option>
+                        <option value="blocked">مسدود</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>نام و نام خانوادگی</th>
+                                <th>شماره موبایل</th>
+                                <th>پایه تحصیلی</th>
+                                <th>رشته</th>
+                                <th>مدرسه / دانشگاه</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ ثبت‌نام</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allUsersList">
+                            <tr><td colspan="8" style="text-align:center; color:var(--text-muted);">در حال دریافت اطلاعات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- تب ماهانه و اقساط -->
+            <div id="tab-monthly" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">مانیتورینگ قراردادها و اقساط ماهانه</h3>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom: 20px;">این لیست بر اساس نزدیک‌ترین تاریخ انقضا و سررسید مرتب شده است. اقساطی که سررسید آن‌ها نزدیک یا گذشته باشد، با رنگ هشدار نمایش داده می‌شوند.</div>
+                
+                <h4 style="margin-top:20px; margin-bottom: 10px; color: var(--warning);">⏳ اقساط در پیش‌رو یا گذشته</h4>
+                <div class="table-responsive" style="margin-bottom: 30px;">
+                    <table class="data-table">
+                        <thead><tr><th>کاربر</th><th>شماره قسط</th><th>تاریخ سررسید</th><th>مبلغ (تومان)</th><th>وضعیت قسط</th></tr></thead>
+                        <tbody id="installmentsAdminList"><tr><td colspan="5" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+
+                <h4 style="margin-bottom: 10px; color: var(--success);">📅 قراردادهای فعال پانسیون</h4>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead><tr><th>کاربر</th><th>طرح</th><th>تاریخ شروع</th><th>تاریخ پایان</th><th>وضعیت</th></tr></thead>
+                        <tbody id="subsAdminList"><tr><td colspan="5" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- تب کدهای تخفیف -->
+            <div id="tab-promos" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">مدیریت کدهای تخفیف</h3>
+                <div class="card" style="flex-direction: row; flex-wrap: wrap; gap: 10px; background: rgba(99, 152, 137, 0.1);">
+                    <input type="text" id="newPromoCode" class="cap-input" placeholder="عبارت کد (مثلا RAHINO40)" style="flex:1; margin:0;">
+                    <input type="number" id="newPromoVal" class="cap-input" placeholder="مبلغ (تومان)" style="flex:1; margin:0;">
+                    <select id="newPromoType" class="cap-input" style="flex:1; margin:0;">
+                        <option value="amount">مبلغ ثابت (تومان)</option>
+                        <option value="percent">درصدی (%)</option>
+                    </select>
+                    <select id="newPromoTarget" class="cap-input" style="flex:1; margin:0;">
+                        <option value="all">همه سرویس‌ها</option>
+                        <option value="daily">فقط روزانه</option>
+                        <option value="monthly">فقط ماهانه</option>
+                    </select>
+                    <input type="number" id="newPromoCap" class="cap-input" placeholder="ظرفیت استفاده" value="50" style="flex:1; margin:0;">
+                    <button class="btn btn-blue" onclick="createPromo()">➕ ساخت کد جدید</button>
+                </div>
+                <div class="table-responsive" style="margin-top: 20px;">
+                    <table class="data-table">
+                        <thead><tr><th>کد تخفیف</th><th>نوع و مقدار</th><th>سرویس هدف</th><th>استفاده / ظرفیت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                        <tbody id="promosAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- تب امور مالی (برداشت‌ها) -->
+            <div id="tab-withdraws" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">درخواست‌های برداشت از کیف پول</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead><tr><th>کاربر</th><th>مبلغ (تومان)</th><th>نام صاحب حساب</th><th>شماره کارت / شبا</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                        <tbody id="withdrawsAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        });
+        
+        let capacitiesData = {};
+        let usersDict = {}; // دیکشنری برای نگهداری موبایل -> نام
+        let allUsersData = [];
+
+        window.onload = async () => { 
+            // ابتدا تمام کاربران را دریافت می‌کنیم تا اسامی آنها در همه تب‌ها قابل نمایش باشد
+            await fetchAllUsers();
+            
+            // سپس بقیه توابع اجرا می‌شوند
+            loadPendingUsers(); 
+            loadCapacities(); 
+            loadReservations(); 
+            loadWithdraws();
+            loadPromos();
+            loadMonthlyData();
+        };
+
+        // =======================
+        // مدیریت کاربران (اصلاح شده برای جدول users)
+        // =======================
+        async function fetchAllUsers() {
+            const { data } = await supabaseClient.from('users').select('*').order('created_at', {ascending: false});
+            if(data) {
+                allUsersData = data;
+                data.forEach(u => {
+                    usersDict[u.phone_number] = u.full_name || 'کاربر بدون نام';
+                });
+                renderAllUsers(); 
+            }
+        }
+
+        function renderAllUsers() {
+            const list = document.getElementById('allUsersList');
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const gradeFilter = document.getElementById('gradeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const nameCounts = {};
+            allUsersData.forEach(u => { nameCounts[u.full_name] = (nameCounts[u.full_name] || 0) + 1; });
+
+            const filteredUsers = allUsersData.filter(u => {
+                const matchSearch = (u.full_name && u.full_name.includes(searchTerm)) || u.phone_number.includes(searchTerm);
+                const matchGrade = gradeFilter === "" || u.grade === gradeFilter;
+                const matchStatus = statusFilter === "" || u.status === statusFilter;
+                return matchSearch && matchGrade && matchStatus;
+            });
+
+            if(filteredUsers.length === 0) { 
+                list.innerHTML = '<tr><td colspan="8" style="text-align:center;">کاربری با این مشخصات یافت نشد.</td></tr>'; 
+                return; 
+            }
+
+            list.innerHTML = filteredUsers.map(u => {
+                let dateStr = '-';
+                if(u.created_at) {
+                    const dateObj = new Date(u.created_at);
+                    dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(dateObj);
+                }
+
+                const isDuplicate = u.full_name && nameCounts[u.full_name] > 1;
+                const duplicateBadge = isDuplicate ? '<span class="badge badge-duplicate">⚠️ نام تکراری</span>' : '';
+
+                const actionBtn = u.status !== 'blocked' 
+                    ? `<button class="action-btn btn-block-sm" onclick="updateUserStatus('${u.phone_number}', 'blocked')">🚫 مسدود</button>`
+                    : `<button class="action-btn btn-approve-sm" onclick="updateUserStatus('${u.phone_number}', 'approved')">✅ فعال‌سازی</button>`;
+
+                return `
+                <tr>
+                    <td style="font-weight:bold; color:var(--text-main);">
+                        ${u.full_name || 'ثبت نشده'} ${duplicateBadge}
+                    </td>
+                    <td style="font-family:monospace; font-size:14px;">${u.phone_number}</td>
+                    <td>${u.grade || '-'}</td>
+                    <td>${u.major || '-'}</td>
+                    <td>${u.school_name || '-'}</td>
+                    <td>${getStatusBadge(u.status)}</td>
+                    <td style="direction:ltr; text-align:right;">${dateStr}</td>
+                    <td>${actionBtn}</td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadPendingUsers() {
+            // جایگزینی pan_users با users
+            const { data } = await supabaseClient.from('users').select('*').eq('status', 'pending');
+            const list = document.getElementById('pendingUsersList');
+            if(!data || data.length === 0) { list.innerHTML = '<div style="background:var(--surface-light); padding:20px; border-radius:10px; text-align:center; color:var(--success);">✨ هیچ درخواست بررسی نشده‌ای وجود ندارد.</div>'; return; }
+            
+            list.innerHTML = data.map(u => `
+                <div class="card">
+                    <div class="c-info">
+                        <strong>${u.full_name || 'بدون نام'}</strong>
+                        <div>📱 ${u.phone_number} | 🎓 ${u.grade || '-'} ${u.major || '-'}</div>
+                        <div>🏫 محل تحصیل: ${u.school_name || '-'}</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">✔️ تایید</button>
+                        <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">❌ مسدود</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateUserStatus(phone, status) {
+            await supabaseClient.from('users').update({ status: status }).eq('phone_number', phone);
+            // رفرش کردن تب‌ها بعد از تغییر وضعیت
+            await fetchAllUsers();
+            loadPendingUsers();
+        }
+
+        // =======================
+        // مدیریت تب‌ها و توابع عمومی
+        // =======================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'approved': return '<span class="badge badge-approved">تایید شده</span>';
+                case 'active': return '<span class="badge badge-approved">فعال</span>';
+                case 'pending': return '<span class="badge badge-pending">در انتظار بررسی</span>';
+                case 'blocked': return '<span class="badge badge-blocked">مسدود شده</span>';
+                default: return `<span class="badge badge-pending">${status}</span>`;
+            }
+        }
+
+        function getShamsiDate(dateObj) {
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}/${m}/${d}`;
+        }
+
+        // =======================
+        // ظرفیت و تاریخچه روزانه
+        // =======================
+        async function loadCapacities() {
+            let dates14 = [];
+            for(let i=0; i<14; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                dates14.push(getShamsiDate(d));
+            }
+
+            let dbDates = dates14.map(d => d.replace(/\//g, '-'));
+            const { data } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbDates);
+            
+            data?.forEach(d => { capacitiesData[d.target_date.replace(/-/g, '/')] = d; });
+
+            document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
+                let available = capacitiesData[date]?.available_capacity ?? 4; 
+                return `
+                    <div class="cap-card">
+                        <div class="cap-date">${date}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">ظرفیتِ باقی‌مانده:</div>
+                        <input type="number" id="cap_${date}" class="cap-input" value="${available}" min="0">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function saveCapacities() {
+            let updates = [];
+            for(let i=0; i<14; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                let dateStr = getShamsiDate(d);
+                let inputVal = document.getElementById(`cap_${dateStr}`).value;
+                updates.push({
+                    target_date: dateStr.replace(/\//g, '-'),
+                    available_capacity: parseInt(inputVal)
+                });
+            }
+            const btn = document.querySelector('.btn-blue');
+            btn.innerHTML = '⏳ در حال ذخیره...';
+            const { error } = await supabaseClient.from('pan_daily_capacity').upsert(updates);
+            btn.innerHTML = '💾 ذخیره تغییرات';
+            if(error) alert('خطا در ذخیره:\n' + error.message); 
+            else alert('✅ ظرفیت‌ها با موفقیت ذخیره شدند.');
+            loadCapacities();
+        }
+
+        async function loadReservations() {
+            // حذف جوین با pan_users و استفاده از usersDict
+            const { data } = await supabaseClient.from('pan_reservations').select('*').order('created_at', {ascending: false}).limit(50);
+            const list = document.getElementById('reservationsList');
+            if(!data || data.length === 0) { list.innerHTML = '<div style="background:var(--surface-light); padding:20px; border-radius:10px; text-align:center; color:var(--text-muted);">هنوز رزروی ثبت نشده است.</div>'; return; }
+
+            list.innerHTML = data.map(r => {
+                let datesObj = typeof r.reserved_dates === 'string' ? JSON.parse(r.reserved_dates) : r.reserved_dates;
+                let datesStr = Array.isArray(datesObj) ? datesObj.map(d => d.replace(/-/g, '/')).join(' ، ') : '-';
+                let userName = usersDict[r.phone_number] || 'ناشناس';
+
+                return `
+                <div class="card">
+                    <div class="c-info">
+                        <strong>${userName} <span style="font-size:13px; color:var(--text-muted); font-family:monospace;">(${r.phone_number})</span></strong>
+                        <div style="margin-top:8px; font-size: 14px;">📅 روزهای رزرو: <span style="color:var(--primary); font-weight:bold;">${datesStr}</span></div>
+                        <div style="font-size: 14px;">💰 پرداختی: <span style="color:var(--text-main);">${(r.paid_amount || 0).toLocaleString()} تومان</span></div>
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <span style="color:var(--success); font-size:13px; font-weight:bold;">✅ فیش در بله</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // =======================
+        // امور مالی (برداشت‌ها)
+        // =======================
+        async function loadWithdraws() {
+            const { data } = await supabaseClient.from('withdraw_requests').select('*').order('created_at', {ascending: false});
+            const list = document.getElementById('withdrawsAdminList');
+            if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">درخواستی وجود ندارد.</td></tr>';
+            
+            list.innerHTML = data.map(w => {
+                let userName = usersDict[w.student_nid] || 'ناشناس';
+                let statusBadge = w.status === 'pending' ? '<span class="badge badge-pending">در انتظار</span>' : (w.status === 'approved' ? '<span class="badge badge-approved">واریز شده</span>' : '<span class="badge badge-blocked">رد شده / برگشت</span>');
+                let actionBtn = w.status === 'pending' ? `
+                    <button class="action-btn btn-approve-sm" onclick="approveWithdraw('${w.id}')">✅ تایید واریز</button>
+                    <button class="action-btn btn-block-sm" onclick="rejectWithdraw('${w.id}', '${w.student_nid}', ${w.amount})">❌ رد و برگشت پول</button>
+                ` : '---';
+
+                return `<tr>
+                    <td style="text-align: right;">
+                        <div style="font-weight:bold; color:var(--text-main);">${userName}</div>
+                        <div style="font-family:monospace; color:var(--text-muted); font-size:12px;">${w.student_nid}</div>
+                    </td>
+                    <td style="font-weight:bold; color:var(--text-main);">${Number(w.amount).toLocaleString()}</td>
+                    <td>${w.account_holder}</td>
+                    <td style="font-family:monospace; direction:ltr;">${w.card_number}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function approveWithdraw(id) {
+            if(!confirm('آیا وجه به حساب شخص واریز شده است؟')) return;
+            await supabaseClient.from('withdraw_requests').update({ status: 'approved' }).eq('id', id);
+            loadWithdraws();
+        }
+
+        async function rejectWithdraw(id, phone, amount) {
+            if(!confirm('آیا از رد درخواست مطمئنید؟ مبلغ به کیف پول کاربر برمی‌گردد.')) return;
+            const { data: user } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
+            const newBal = Number(user?.wallet_balance || 0) + amount;
+            await supabaseClient.from('users').update({ wallet_balance: newBal }).eq('phone_number', phone);
+            await supabaseClient.from('withdraw_requests').update({ status: 'rejected' }).eq('id', id);
+            loadWithdraws();
+        }
+
+        // =======================
+        // مانیتورینگ اقساط و ماهانه
+        // =======================
+        async function loadMonthlyData() {
+            const { data: subs } = await supabaseClient.from('pan_monthly_subs').select('*').eq('status', 'active').order('end_date', {ascending: true});
+            const { data: insts } = await supabaseClient.from('pan_installments').select('*').neq('status', 'paid').order('due_date', {ascending: true});
+            
+            let today = getShamsiDate(new Date()).replace(/\//g, '-');
+
+            if(subs) {
+                document.getElementById('subsAdminList').innerHTML = subs.map(s => {
+                    let isExpiring = s.end_date <= today; 
+                    let color = isExpiring ? 'color:var(--danger); font-weight:bold;' : '';
+                    let userName = usersDict[s.phone_number] || 'ناشناس';
+
+                    return `<tr style="${color}">
+                        <td style="text-align: right;">
+                            <div style="font-weight:bold; color:var(--text-main);">${userName}</div>
+                            <div style="font-family:monospace; color:var(--text-muted); font-size:12px;">${s.phone_number}</div>
+                        </td>
+                        <td>${s.plan_type}</td>
+                        <td>${s.start_date.replace(/-/g, '/')}</td>
+                        <td>${s.end_date.replace(/-/g, '/')} ${isExpiring ? '⚠️' : ''}</td>
+                        <td>فعال</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            if(insts) {
+                document.getElementById('installmentsAdminList').innerHTML = insts.map(i => {
+                    let isPastDue = i.due_date <= today;
+                    let bg = isPastDue ? 'background: rgba(239, 68, 68, 0.1);' : '';
+                    let userName = usersDict[i.phone_number] || 'ناشناس';
+
+                    return `<tr style="${bg}">
+                        <td style="text-align: right;">
+                            <div style="font-weight:bold; color:var(--text-main);">${userName}</div>
+                            <div style="font-family:monospace; color:var(--text-muted); font-size:12px;">${i.phone_number}</div>
+                        </td>
+                        <td>قسط ${i.installment_number}</td>
+                        <td style="direction:ltr; text-align:right;">${i.due_date.replace(/-/g, '/')} ${isPastDue ? '⚠️' : ''}</td>
+                        <td style="font-weight:bold;">${Number(i.amount).toLocaleString()}</td>
+                        <td><span class="badge badge-pending">${i.status}</span></td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // =======================
+        // مدیریت کدهای تخفیف
+        // =======================
+        async function loadPromos() {
+            const { data } = await supabaseClient.from('promos_codes').select('*').order('created_at', {ascending: false});
+            const list = document.getElementById('promosAdminList');
+            if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">کد تخفیفی تعریف نشده است.</td></tr>';
+            
+            list.innerHTML = data.map(p => {
+                let valText = p.discount_type === 'percent' ? `${p.discount_value} درصد` : `${Number(p.discount_value).toLocaleString()} تومان`;
+                let targetText = p.target_service === 'all' ? 'همه' : (p.target_service === 'daily' ? 'روزانه' : 'ماهانه');
+                let statusBadge = p.is_active ? '<span class="badge badge-approved">فعال</span>' : '<span class="badge badge-blocked">غیرفعال</span>';
+                
+                return `<tr>
+                    <td style="font-weight:bold; font-size:14px; letter-spacing:1px;">${p.code}</td>
+                    <td>${valText}</td>
+                    <td>${targetText}</td>
+                    <td style="direction:ltr; text-align:right;">${p.used_count} / ${p.max_uses || '∞'}</td>
+                    <td>${statusBadge}</td>
+                    <td><button class="action-btn ${p.is_active ? 'btn-block-sm' : 'btn-approve-sm'}" onclick="togglePromo('${p.id}', ${p.is_active})">${p.is_active ? 'غیرفعال کن' : 'فعال کن'}</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function togglePromo(id, currentStatus) {
+            await supabaseClient.from('promos_codes').update({ is_active: !currentStatus }).eq('id', id);
+            loadPromos();
+        }
+
+        async function createPromo() {
+            const code = document.getElementById('newPromoCode').value.trim().toUpperCase();
+            const val = document.getElementById('newPromoVal').value;
+            const type = document.getElementById('newPromoType').value;
+            const target = document.getElementById('newPromoTarget').value;
+            const cap = document.getElementById('newPromoCap').value;
+
+            if(!code || !val) return alert('کد و مبلغ/درصد الزامی است.');
+
+            await supabaseClient.from('promos_codes').insert([{
+                code: code,
+                discount_type: type,
+                discount_value: parseInt(val),
+                target_service: target,
+                max_uses: cap ? parseInt(cap) : null,
+                used_count: 0,
+                is_active: true
+            }]);
+            
+            alert('✅ کد تخفیف با موفقیت ساخته شد.');
+            document.getElementById('newPromoCode').value = '';
+            document.getElementById('newPromoVal').value = '';
+            loadPromos();
+        }
+    </script>
+</body>
+</html>
