@@ -130,6 +130,9 @@
             <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
             <button class="tab-btn" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
             <button class="tab-btn" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
+            <button class="tab-btn" onclick="switchTab('tab-monthly', this)">💎 ماهانه و اقساط</button>
+            <button class="tab-btn" onclick="switchTab('tab-promos', this)">🎁 کدهای تخفیف</button>
+            <button class="tab-btn" onclick="switchTab('tab-withdraws', this)">💳 درخواست‌های مالی</button>
         </div>
 
         <div class="tab-container">
@@ -194,6 +197,61 @@
 </div>
         </div>
     </div>
+            <div id="tab-monthly" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">مانیتورینگ قراردادها و اقساط ماهانه</h3>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom: 20px;">این لیست بر اساس نزدیک‌ترین تاریخ انقضا و سررسید مرتب شده است. اقساطی که سررسید آن‌ها نزدیک یا گذشته باشد، با رنگ هشدار نمایش داده می‌شوند.</div>
+                
+                <h4 style="margin-top:20px; margin-bottom: 10px; color: var(--warning);">⏳ اقساط در پیش‌رو یا گذشته</h4>
+                <div class="table-responsive" style="margin-bottom: 30px;">
+                    <table class="data-table">
+                        <thead><tr><th>موبایل</th><th>شماره قسط</th><th>تاریخ سررسید</th><th>مبلغ (تومان)</th><th>وضعیت قسط</th></tr></thead>
+                        <tbody id="installmentsAdminList"><tr><td colspan="5" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+
+                <h4 style="margin-bottom: 10px; color: var(--success);">📅 قراردادهای فعال پانسیون</h4>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead><tr><th>موبایل</th><th>طرح</th><th>تاریخ شروع</th><th>تاریخ پایان</th><th>وضعیت</th></tr></thead>
+                        <tbody id="subsAdminList"><tr><td colspan="5" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-promos" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">مدیریت کدهای تخفیف</h3>
+                <div class="card" style="flex-direction: row; flex-wrap: wrap; gap: 10px; background: rgba(99, 152, 137, 0.1);">
+                    <input type="text" id="newPromoCode" class="cap-input" placeholder="عبارت کد (مثلا RAHINO40)" style="flex:1; margin:0;">
+                    <input type="number" id="newPromoVal" class="cap-input" placeholder="مبلغ (تومان)" style="flex:1; margin:0;">
+                    <select id="newPromoType" class="cap-input" style="flex:1; margin:0;">
+                        <option value="amount">مبلغ ثابت (تومان)</option>
+                        <option value="percent">درصدی (%)</option>
+                    </select>
+                    <select id="newPromoTarget" class="cap-input" style="flex:1; margin:0;">
+                        <option value="all">همه سرویس‌ها</option>
+                        <option value="daily">فقط روزانه</option>
+                        <option value="monthly">فقط ماهانه</option>
+                    </select>
+                    <input type="number" id="newPromoCap" class="cap-input" placeholder="ظرفیت استفاده" value="50" style="flex:1; margin:0;">
+                    <button class="btn btn-blue" onclick="createPromo()">➕ ساخت کد جدید</button>
+                </div>
+                <div class="table-responsive" style="margin-top: 20px;">
+                    <table class="data-table">
+                        <thead><tr><th>کد تخفیف</th><th>نوع و مقدار</th><th>سرویس هدف</th><th>استفاده / ظرفیت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                        <tbody id="promosAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-withdraws" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">درخواست‌های برداشت از کیف پول</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead><tr><th>موبایل کاربر</th><th>مبلغ (تومان)</th><th>نام صاحب حساب</th><th>شماره کارت / شبا</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                        <tbody id="withdrawsAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
 
     <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
@@ -207,6 +265,9 @@
             loadPendingUsers(); 
             loadCapacities(); 
             loadReservations(); 
+            loadWithdraws();
+            loadPromos();
+            loadMonthlyData();
             loadAllUsers(); // فراخوانی تب جدید
         };
 
@@ -407,6 +468,151 @@ function renderAllUsers() {
                 </div>
                 `;
             }).join('');
+        }
+
+        // =======================
+        // مدیریت امور مالی (برداشت‌ها)
+        // =======================
+        async function loadWithdraws() {
+            const { data } = await supabaseClient.from('withdraw_requests').select('*').order('created_at', {ascending: false});
+            const list = document.getElementById('withdrawsAdminList');
+            if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">درخواستی وجود ندارد.</td></tr>';
+            
+            list.innerHTML = data.map(w => {
+                let statusBadge = w.status === 'pending' ? '<span class="badge badge-pending">در انتظار</span>' : (w.status === 'approved' ? '<span class="badge badge-approved">واریز شده</span>' : '<span class="badge badge-blocked">رد شده / برگشت</span>');
+                let actionBtn = w.status === 'pending' ? `
+                    <button class="action-btn btn-approve-sm" onclick="approveWithdraw('${w.id}')">✅ تایید واریز</button>
+                    <button class="action-btn btn-block-sm" onclick="rejectWithdraw('${w.id}', '${w.student_nid}', ${w.amount})">❌ رد و برگشت پول</button>
+                ` : '---';
+
+                return `<tr>
+                    <td style="font-family:monospace; font-size:14px;">${w.student_nid}</td>
+                    <td style="font-weight:bold; color:var(--text-main);">${Number(w.amount).toLocaleString()}</td>
+                    <td>${w.account_holder}</td>
+                    <td style="font-family:monospace; direction:ltr;">${w.card_number}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function approveWithdraw(id) {
+            if(!confirm('آیا وجه به حساب شخص واریز شده است؟')) return;
+            await supabaseClient.from('withdraw_requests').update({ status: 'approved' }).eq('id', id);
+            loadWithdraws();
+        }
+
+        async function rejectWithdraw(id, phone, amount) {
+            if(!confirm('آیا از رد درخواست مطمئنید؟ مبلغ به کیف پول کاربر برمی‌گردد.')) return;
+            // برگرداندن پول به کاربر
+            const { data: user } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
+            const newBal = Number(user?.wallet_balance || 0) + amount;
+            await supabaseClient.from('users').update({ wallet_balance: newBal }).eq('phone_number', phone);
+            // تغییر وضعیت درخواست
+            await supabaseClient.from('withdraw_requests').update({ status: 'rejected' }).eq('id', id);
+            loadWithdraws();
+        }
+
+        // =======================
+        // مانیتورینگ اقساط و ماهانه
+        // =======================
+        function getTodayShamsi() {
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}/${m}/${d}`;
+        }
+
+        async function loadMonthlyData() {
+            // دریافت قراردادهای فعال
+            const { data: subs } = await supabaseClient.from('pan_monthly_subs').select('*').eq('status', 'active').order('end_date', {ascending: true});
+            // دریافت اقساط (به جز پرداخت شده‌ها)
+            const { data: insts } = await supabaseClient.from('pan_installments').select('*').neq('status', 'paid').order('due_date', {ascending: true});
+            
+            let today = getTodayShamsi().replace(/\//g, '-');
+
+            if(subs) {
+                document.getElementById('subsAdminList').innerHTML = subs.map(s => {
+                    let isExpiring = s.end_date <= today; // آیا منقضی شده یا امروزه
+                    let color = isExpiring ? 'color:var(--danger); font-weight:bold;' : '';
+                    return `<tr style="${color}">
+                        <td style="font-family:monospace; font-size:14px;">${s.phone_number}</td>
+                        <td>${s.plan_type}</td>
+                        <td>${s.start_date.replace(/-/g, '/')}</td>
+                        <td>${s.end_date.replace(/-/g, '/')} ${isExpiring ? '⚠️' : ''}</td>
+                        <td>فعال</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            if(insts) {
+                document.getElementById('installmentsAdminList').innerHTML = insts.map(i => {
+                    let isPastDue = i.due_date <= today;
+                    let bg = isPastDue ? 'background: rgba(239, 68, 68, 0.1);' : '';
+                    return `<tr style="${bg}">
+                        <td style="font-family:monospace; font-size:14px; font-weight:bold;">${i.phone_number}</td>
+                        <td>قسط ${i.installment_number}</td>
+                        <td style="direction:ltr; text-align:right;">${i.due_date.replace(/-/g, '/')} ${isPastDue ? '⚠️' : ''}</td>
+                        <td style="font-weight:bold;">${Number(i.amount).toLocaleString()}</td>
+                        <td><span class="badge badge-pending">${i.status}</span></td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // =======================
+        // مدیریت کدهای تخفیف
+        // =======================
+        async function loadPromos() {
+            const { data } = await supabaseClient.from('promos_codes').select('*').order('created_at', {ascending: false});
+            const list = document.getElementById('promosAdminList');
+            if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">کد تخفیفی تعریف نشده است.</td></tr>';
+            
+            list.innerHTML = data.map(p => {
+                let valText = p.discount_type === 'percent' ? `${p.discount_value} درصد` : `${Number(p.discount_value).toLocaleString()} تومان`;
+                let targetText = p.target_service === 'all' ? 'همه' : (p.target_service === 'daily' ? 'روزانه' : 'ماهانه');
+                let statusBadge = p.is_active ? '<span class="badge badge-approved">فعال</span>' : '<span class="badge badge-blocked">غیرفعال</span>';
+                
+                return `<tr>
+                    <td style="font-weight:bold; font-size:14px; letter-spacing:1px;">${p.code}</td>
+                    <td>${valText}</td>
+                    <td>${targetText}</td>
+                    <td style="direction:ltr; text-align:right;">${p.used_count} / ${p.max_uses || '∞'}</td>
+                    <td>${statusBadge}</td>
+                    <td><button class="action-btn ${p.is_active ? 'btn-block-sm' : 'btn-approve-sm'}" onclick="togglePromo('${p.id}', ${p.is_active})">${p.is_active ? 'غیرفعال کن' : 'فعال کن'}</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function togglePromo(id, currentStatus) {
+            await supabaseClient.from('promos_codes').update({ is_active: !currentStatus }).eq('id', id);
+            loadPromos();
+        }
+
+        async function createPromo() {
+            const code = document.getElementById('newPromoCode').value.trim().toUpperCase();
+            const val = document.getElementById('newPromoVal').value;
+            const type = document.getElementById('newPromoType').value;
+            const target = document.getElementById('newPromoTarget').value;
+            const cap = document.getElementById('newPromoCap').value;
+
+            if(!code || !val) return alert('کد و مبلغ/درصد الزامی است.');
+
+            await supabaseClient.from('promos_codes').insert([{
+                code: code,
+                discount_type: type,
+                discount_value: parseInt(val),
+                target_service: target,
+                max_uses: cap ? parseInt(cap) : null,
+                used_count: 0,
+                is_active: true
+            }]);
+            
+            alert('✅ کد تخفیف با موفقیت ساخته شد.');
+            // خالی کردن فرم
+            document.getElementById('newPromoCode').value = '';
+            document.getElementById('newPromoVal').value = '';
+            loadPromos();
         }
     </script>
 </body>
