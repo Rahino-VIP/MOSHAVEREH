@@ -1502,46 +1502,47 @@ async function submitWithdraw() {
     const card = document.getElementById('withdrawCard').value.trim(); 
     const accHolder = document.getElementById('withdrawName').value.trim();
     const amount = parseInt(document.getElementById('withdrawAmount').value);
-
-    // گرفتن شماره موبایل کاربر از سشن فعال (بدون نیاز به فرم)
+    
+    // دریافت شماره موبایل به صورت خودکار از سشن کاربر
     const userPhone = currentUser.phone_number; 
 
-    // اعتبارسنجی خالی نبودن فیلدها
     if(!card || card.length !== 16 || !accHolder || !amount) {
         return alert('اطلاعات نامعتبر است. لطفاً شماره کارت، نام و مبلغ را به درستی وارد کنید.');
     }
-
-    // اعتبارسنجی موجودی و حداقل برداشت
     if(amount > currentUser.wallet_balance || amount < 50000) {
         return alert('مبلغ درخواستی نامعتبر است (موجودی ناکافی یا کمتر از ۵۰ هزار تومان).');
     }
 
     document.getElementById('mainLoader').style.display = 'flex';
-    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ثبت درخواست...';
+    if(document.getElementById('loaderTxt')) document.getElementById('loaderTxt').innerText = 'در حال ثبت درخواست و کسر از کیف پول...';
 
     try {
-        // درج درخواست در جدول با استفاده از شماره موبایل به عنوان شناسه
-        const { error } = await supabaseClient.from('withdraw_requests').insert([{
-            student_nid: userPhone, // شماره موبایل مستقیماً از اطلاعات کاربر خوانده می‌شود
+        // ۱. ثبت درخواست در دیتابیس
+        const { error: insertError } = await supabaseClient.from('withdraw_requests').insert([{
+            student_nid: userPhone, 
             amount: amount,
             card_number: card,
             account_holder: accHolder,
             shaba_number: '', 
             status: 'pending' 
         }]);
+        if (insertError) throw insertError;
 
-        if (error) throw error;
+        // ۲. کسر آنی از کیف پول در دیتابیس
+        const newBalance = Number(currentUser.wallet_balance) - amount;
+        const { error: updateError } = await supabaseClient.from('users')
+            .update({ wallet_balance: newBalance })
+            .eq('phone_number', userPhone);
+        if (updateError) throw updateError;
 
-        alert('✅ درخواست برداشت با موفقیت ثبت شد و پس از بررسی واریز خواهد شد.'); 
+        alert('✅ درخواست برداشت ثبت و مبلغ از کیف پول شما کسر شد.'); 
         document.getElementById('mainLoader').style.display = 'none'; 
-        
-        // بستن مودال و رفرش اطلاعات یا صفحه
         closeWithdrawModal();
         window.location.reload(); 
     } catch (e) {
         console.error(e);
         document.getElementById('mainLoader').style.display = 'none'; 
-        alert('خطا در ثبت درخواست برداشت. لطفاً دوباره تلاش کنید.');
+        alert('خطا در ثبت درخواست. لطفاً دوباره تلاش کنید.');
     }
 }
 
