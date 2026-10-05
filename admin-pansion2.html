@@ -583,7 +583,8 @@
         // مدیریت کدهای تخفیف
         // =======================
         async function loadPromos() {
-            const { data } = await supabaseClient.from('promos_codes').select('*').order('created_at', {ascending: false});
+            // تغییر created_at به valid_from برای جلوگیری از ارور ۴۰۰
+            const { data } = await supabaseClient.from('promos_codes').select('*').order('valid_from', {ascending: false});
             const list = document.getElementById('promosAdminList');
             if(!data || data.length === 0) return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">کد تخفیفی تعریف نشده است.</td></tr>';
             
