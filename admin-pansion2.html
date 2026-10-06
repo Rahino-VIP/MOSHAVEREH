@@ -337,7 +337,7 @@
 
                 const actionBtn = u.status !== 'blocked' 
                     ? `<button class="action-btn btn-block-sm" onclick="updateUserStatus('${u.phone_number}', 'blocked')">🚫 مسدود</button>`
-                    : `<button class="action-btn btn-approve-sm" onclick="updateUserStatus('${u.phone_number}', 'approved')">✅ فعال‌سازی</button>`;
+                    : `<button class="action-btn btn-approve-sm" onclick="updateUserStatus('${u.phone_number}', 'active')">✅ فعال‌سازی</button>`;
 
                 return `
                 <tr>
@@ -370,7 +370,7 @@
                         <div>🏫 محل تحصیل: ${u.school_name || '-'}</div>
                     </div>
                     <div>
-                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'approved')">✔️ تایید</button>
+                        <button class="btn btn-green" onclick="updateUserStatus('${u.phone_number}', 'active')">✔️ تایید</button>
                         <button class="btn btn-red" onclick="updateUserStatus('${u.phone_number}', 'blocked')">❌ مسدود</button>
                     </div>
                 </div>
