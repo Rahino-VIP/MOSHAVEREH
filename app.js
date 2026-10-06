@@ -1041,16 +1041,25 @@ async function initializeBookingEngine() {
     for(let i=0; i<14; i++) {
         let d = new Date(); d.setDate(d.getDate() + i);
         const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(d);
-        window14Dates.push({ date: getShamsiDateSafe(d), dayName: parts.find(p => p.type === 'weekday').value });
+        // استفاده از فرمت استاندارد با خط تیره (مثل دیتابیس) در کل برنامه
+        let formattedDate = getShamsiDateSafe(d).replace(/\//g, '-'); 
+        window14Dates.push({ 
+            date: formattedDate, 
+            dayName: parts.find(p => p.type === 'weekday').value 
+        });
     }
     
-    let justDates = window14Dates.map(d => d.date.replace(/\//g, '-'));
+    let justDates = window14Dates.map(d => d.date);
+    
     try {
+        // جستجو در دیتابیس مستقیماً با فرمت دارای خط تیره
         const { data: capData, error } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
         if (error) console.error("Capacity Fetch Error:", error);
+        
         dailyCapacities = {};
         if (capData) {
-            capData.forEach(d => { dailyCapacities[d.target_date.replace(/-/g, '/')] = d; });
+            // ذخیره در دیکشنری دقیقاً با همان فرمت دیتابیس (بدون تبدیل اضافه)
+            capData.forEach(d => { dailyCapacities[d.target_date] = d; });
         }
     } catch(e) { console.error("خطا در دریافت ظرفیت", e); }
     
@@ -1060,39 +1069,43 @@ async function initializeBookingEngine() {
 function renderCalendar() {
     const grid = document.getElementById('calendarGrid'); grid.innerHTML = ''; selectedNewDates = [];
     window14Dates.forEach(d => {
-        let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; // پیش‌فرض ۴ نفر
+        // حالا کلید دقیقاً با کلید دیکشنری یکی است
+        let capInfo = dailyCapacities[d.date] || { available_capacity: 4 }; 
         let available = capInfo.available_capacity;
-        let isPastBooked = globalUserPastReservations.includes(d.date);
+        
+        // چک کردن تاریخچه کاربر با تبدیل یکپارچه به خط تیره
+        let isPastBooked = globalUserPastReservations.some(past => past.replace(/\//g, '-') === d.date);
         
         let cardClass = 'cal-card'; let onclickEvent = ''; 
-        let statusText = `${available} نفر ظرفیت`; // 👈 رفع مشکل اول: نمایش دقیق عدد ظرفیت
+        let statusText = `${available} نفر ظرفیت`;
 
         if (isPastBooked) { cardClass += ' past-booked'; statusText = 'رزرو شما ✅'; } 
         else if (available <= 0) { cardClass += ' full'; statusText = 'تکمیل ❌'; } 
         else { cardClass += ' available'; onclickEvent = `onclick="toggleDate('${d.date}', this)"`; }
 
-        grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${d.date.replace(/-/g, '/').substring(5)}</div><div class="cal-cap">${statusText}</div></div>`;
+        // فقط برای نمایش به کاربر، خط تیره‌ها را به اسلش تبدیل می‌کنیم
+        let displayDateStr = d.date.replace(/-/g, '/').substring(5);
+        
+        grid.innerHTML += `<div class="${cardClass}" ${onclickEvent}><div class="cal-day">${d.dayName}</div><div class="cal-date">${displayDateStr}</div><div class="cal-cap">${statusText}</div></div>`;
     });
     updatePricing();
 }
 
 function toggleDate(dateStr, element) {
-    if(element.classList.contains('selected')) { element.classList.remove('selected'); selectedNewDates = selectedNewDates.filter(d => d !== dateStr); } 
-    else { element.classList.add('selected'); selectedNewDates.push(dateStr); }
+    if(element.classList.contains('selected')) { 
+        element.classList.remove('selected'); 
+        selectedNewDates = selectedNewDates.filter(d => d !== dateStr); 
+    } else { 
+        element.classList.add('selected'); 
+        selectedNewDates.push(dateStr); 
+    }
     updatePricing(); 
 }
 
-function selectPayMethod(method) {
-    selectedPayMethod = method;
-    document.getElementById('lblCard').classList.remove('active'); document.getElementById('lblWallet').classList.remove('active');
-    if (method === 'card') { document.getElementById('lblCard').classList.add('active'); document.getElementById('paymentInfoBox').style.display = 'block'; } 
-    else { document.getElementById('lblWallet').classList.add('active'); document.getElementById('paymentInfoBox').style.display = 'none'; }
-    updatePricing();
-}
-
 function updatePricing() {
+    // مقایسه با تاریخچه‌های رزرو شده با در نظر گرفتن خط تیره
     let activeBookedDaysInWindow = globalUserPastReservations.filter(pastDate => 
-        window14Dates.some(w => w.date === pastDate)
+        window14Dates.some(w => w.date === pastDate.replace(/\//g, '-'))
     ).length; 
 
     let newSelectedDays = selectedNewDates.length; 
@@ -1153,6 +1166,16 @@ function updatePricing() {
     }
     validateSubmitButton();
 }
+
+function selectPayMethod(method) {
+    selectedPayMethod = method;
+    document.getElementById('lblCard').classList.remove('active'); document.getElementById('lblWallet').classList.remove('active');
+    if (method === 'card') { document.getElementById('lblCard').classList.add('active'); document.getElementById('paymentInfoBox').style.display = 'block'; } 
+    else { document.getElementById('lblWallet').classList.add('active'); document.getElementById('paymentInfoBox').style.display = 'none'; }
+    updatePricing();
+}
+
+
 
 let currentPromoData = null; // نگهداری اطلاعات کد تخفیف برای محاسبه زنده
 
