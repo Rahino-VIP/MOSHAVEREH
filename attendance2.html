@@ -79,20 +79,34 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 992px) {
-            .top-navbar { flex-direction: column; gap: 15px; padding: 20px; text-align: center; }
-            .time-box { align-items: center; }
-            .main-content { padding: 20px; }
+            /* کوچک کردن هدر */
+            .top-navbar { flex-direction: row; padding: 15px 20px; }
+            .nav-brand { font-size: 13px; }
+            .live-clock { font-size: 18px; }
+            .live-date { font-size: 10px; }
+
+            .main-content { padding: 15px; }
+            .toolbar { flex-direction: column; margin-bottom: 15px; gap: 10px; }
+            .btn-report { padding: 12px; justify-content: center; }
             
-            .toolbar { flex-direction: column; }
-            .btn-report { padding: 15px; justify-content: center; }
+            /* کنار هم قرار دادن باکس‌های آماری */
+            .stats-row { flex-direction: row; gap: 8px; margin-bottom: 15px; }
+            .stat-box { flex: 1; padding: 10px 5px; flex-direction: column; justify-content: center; gap: 5px; border-radius: 12px; text-align: center; }
+            .stat-title { font-size: 10px; }
+            .stat-value { font-size: 20px; }
             
-            .stats-row { flex-direction: column; }
+            /* فشرده‌سازی ردیف هر دانش‌آموز */
+            .list-row { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 12px 15px; gap: 5px; }
+            .col-info { flex: 1; border-bottom: none; padding-bottom: 0; }
+            .col-actions { flex: 0 0 auto; flex-direction: row; gap: 6px; }
+            .col-status { flex: 1 1 100%; flex-direction: row; margin-top: 5px; }
             
-            .list-row { flex-direction: column; align-items: stretch; gap: 15px; padding: 20px; }
-            .col-info { border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; }
-            .col-status { align-items: flex-start; }
-            .col-actions { flex-direction: column; }
-            .btn-action { justify-content: center; }
+            .student-name { font-size: 14px; margin-bottom: 3px; }
+            .student-meta { gap: 5px; }
+            
+            /* فقط آیکون کردن دکمه‌ها */
+            .btn-action { padding: 8px 14px; font-size: 18px; border-radius: 10px; }
+            .hide-mobile { display: none !important; }
         }
     </style>
 </head>
@@ -337,16 +351,16 @@
                         <div class="col-info">
                             <div class="student-name">${st.name}</div>
                             <div class="student-meta">
-                                <span>📱 ${st.nid}</span>
+                                <span class="hide-mobile">📱 ${st.nid}</span>
                                 <span class="badge ${badgeClass}">${st.planLabel}</span>
                                 <span style="color: var(--text-muted); font-size:11px;">${st.remainingHtml}</span>
                             </div>
                         </div>
-                        <div class="col-status">${timeInfo}</div>
                         <div class="col-actions">
-                            <button class="btn-action btn-entry" ${btnEntryState} onclick="actionEntry('${st.nid}', this)">📥 ثبت ورود</button>
-                            <button class="btn-action btn-exit" ${btnExitState} onclick="actionExit('${st.nid}', this)">📤 ثبت خروج</button>
+                            <button class="btn-action btn-entry" ${btnEntryState} onclick="actionEntry('${st.nid}', this)">📥 <span class="hide-mobile">ثبت ورود</span></button>
+                            <button class="btn-action btn-exit" ${btnExitState} onclick="actionExit('${st.nid}', this)">📤 <span class="hide-mobile">ثبت خروج</span></button>
                         </div>
+                        <div class="col-status">${timeInfo}</div>
                     </div>
                 `;
             });
@@ -367,7 +381,6 @@
         async function actionEntry(nid, btn) {
             btn.innerHTML = '⏳...'; btn.disabled = true;
             try {
-                // ارسال شماره موبایل به تابع ثبت ورود در دیتابیس
                 const { data, error } = await supabaseClient.rpc('register_entry', { p_nid: nid });
                 if (error) throw error;
                 
@@ -377,22 +390,21 @@
                 await fetchAttendanceData(); 
             } catch (err) {
                 alert("خطا در ثبت ورود.");
-                btn.innerHTML = '📥 ورود'; btn.disabled = false;
+                btn.innerHTML = '📥 <span class="hide-mobile">ثبت ورود</span>'; btn.disabled = false;
             }
         }
 
         async function actionExit(nid, btn) {
             btn.innerHTML = '⏳...'; btn.disabled = true;
             try {
-                // ارسال شماره موبایل به تابع ثبت خروج در دیتابیس
                 const { data, error } = await supabaseClient.rpc('register_exit', { p_nid: nid });
                 if (error) throw error;
                 await fetchAttendanceData(); 
             } catch (err) {
                 alert("خطا در ثبت خروج.");
-                btn.innerHTML = '📤 خروج'; btn.disabled = false;
+                btn.innerHTML = '📤 <span class="hide-mobile">ثبت خروج</span>'; btn.disabled = false;
             }
-        } 
+        }
     </script>
 </body>
 </html>
