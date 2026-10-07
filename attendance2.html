@@ -184,7 +184,7 @@
                 const { data: dailyReservations, error: dailyErr } = await supabaseClient
                     .from('pan_reservations')
                     .select('phone_number, reserved_dates')
-                    .contains('reserved_dates', [todayShamsi]);
+                    .contains('reserved_dates', JSON.stringify([todayShamsi]));
 
                 if (dailyErr) throw dailyErr;
 
