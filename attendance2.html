@@ -1,3 +1,141 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کنترل تردد پانسیون | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --primary: #77bba9; 
+            --primary-hover: #8fd0bf; 
+            --primary-fade: rgba(119, 187, 169, 0.1);
+            --accent: #e59ea3; 
+            --bg-color: #121918; 
+            --surface: #1b2624; 
+            --surface-light: #253330;
+            --border-color: #2d3d3a;
+            --text-main: #f1f5f9; 
+            --text-muted: #94a3b8;
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b;
+            --shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: var(--shadow); }
+        .nav-brand { font-size: 20px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .nav-brand span { color: var(--primary); }
+        
+        .time-box { display: flex; flex-direction: column; align-items: flex-end; }
+        .live-clock { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--accent); letter-spacing: 2px; direction: ltr; line-height: 1; }
+        .live-date { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-top: 5px; }
+
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+        
+        .toolbar { display: flex; gap: 15px; margin-bottom: 25px; }
+        .search-bar { flex: 1; background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 25px; border-radius: 16px; font-size: 15px; font-weight: bold; outline: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
+
+        .btn-report { background: var(--surface); color: var(--primary); border: 1px solid var(--primary); padding: 0 25px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; text-decoration: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-report:hover { background: var(--primary); color: var(--bg-color); }
+
+        .stats-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .stat-box { flex: 1; background: var(--surface); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+        .stat-title { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+        .stat-value { font-size: 28px; font-weight: 900; color: var(--primary); }
+
+        .list-container { background: var(--surface); border: 1px solid var(--border-color); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+        .list-row { display: flex; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .list-row:last-child { border-bottom: none; }
+        .list-row:hover { background: var(--surface-light); }
+
+        .col-info { flex: 2; display: flex; flex-direction: column; gap: 5px; }
+        .student-name { font-size: 16px; font-weight: 900; color: var(--text-main); }
+        .student-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; align-items: center; }
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+        .badge-plan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .col-status { flex: 1.5; font-size: 13px; font-family: monospace; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; }
+        .time-row { display: flex; gap: 5px; }
+        .time-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--bg-color); border: 1px solid var(--border-color); font-weight: bold; font-size: 11px; }
+
+        .col-actions { flex: 1.5; display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-action { padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; border: none; transition: 0.2s; color: white; display: flex; align-items: center; gap: 8px; }
+        .btn-entry { background: var(--success); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
+        .btn-entry:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
+        .btn-exit { background: var(--danger); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2); }
+        .btn-exit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
+        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; filter: grayscale(1); }
+
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
+        .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            .top-navbar { flex-direction: column; gap: 15px; padding: 20px; text-align: center; }
+            .time-box { align-items: center; }
+            .main-content { padding: 20px; }
+            
+            .toolbar { flex-direction: column; }
+            .btn-report { padding: 15px; justify-content: center; }
+            
+            .stats-row { flex-direction: column; }
+            
+            .list-row { flex-direction: column; align-items: stretch; gap: 15px; padding: 20px; }
+            .col-info { border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; }
+            .col-status { align-items: flex-start; }
+            .col-actions { flex-direction: column; }
+            .btn-action { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary);">در حال دریافت لیست ترددها...</h3>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-brand">🪪 قطب‌نمای <span>راهینو</span> | پنل مانیتورینگ پانسیون</div>
+        <div class="time-box">
+            <div class="live-clock" id="liveClock">00:00:00</div>
+            <div class="live-date" id="liveDate"></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-title">کل اعضای پانسیون</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">حاضرین در سالن</div>
+                <div class="stat-value" style="color: var(--success);" id="statPresent">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">ثبت تردد امروز</div>
+                <div class="stat-value" style="color: var(--accent);" id="statActive">0</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 جستجوی نام یا کدملی دانش‌آموز..." onkeyup="filterList()">
+            <a href="attendance-report.html" class="btn-report">🗂️ گزارشات و بایگانی</a>
+        </div>
+
+        <div class="list-container" id="studentsList"></div>
+    </div>
+
+    <script>
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
         
@@ -247,4 +385,8 @@
                 alert("خطا در ثبت خروج.");
                 btn.innerHTML = '📤 خروج'; btn.disabled = false;
             }
-        }
+        } 
+    </script>
+</body>
+</html>
+        
