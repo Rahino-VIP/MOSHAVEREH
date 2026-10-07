@@ -128,12 +128,13 @@
         <!-- نوار منوی بالا -->
         <div class="top-nav">
             <button class="tab-btn active" onclick="switchTab('tab-users', this)">📝 در انتظار تایید</button>
-            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
             <button class="tab-btn" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
             <button class="tab-btn" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
             <button class="tab-btn" onclick="switchTab('tab-monthly', this)">💎 ماهانه و اقساط</button>
+            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
             <button class="tab-btn" onclick="switchTab('tab-promos', this)">🎁 کدهای تخفیف</button>
             <button class="tab-btn" onclick="switchTab('tab-withdraws', this)">💳 درخواست‌های مالی</button>
+            <button class="tab-btn" onclick="switchTab('tab-cancellations', this)">❌ لغو قراردادها</button>
         </div>
 
         <div class="tab-container">
@@ -263,6 +264,28 @@
                 </div>
             </div>
 
+            <!-- تب درخواست‌های لغو قرارداد -->
+            <div id="tab-cancellations" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: var(--danger); font-size: 18px;">مدیریت درخواست‌های لغو قرارداد</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>کاربر</th>
+                                <th>کل واریزی (تومان)</th>
+                                <th>کسورات (تومان)</th>
+                                <th>مبلغ قابل عودت (تومان)</th>
+                                <th>وضعیت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cancellationsAdminList">
+                            <tr><td colspan="6" style="text-align:center;">در حال دریافت اطلاعات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -288,6 +311,7 @@
             loadWithdraws();
             loadPromos();
             loadMonthlyData();
+            loadCancellations();
         };
 
         // =======================
@@ -656,6 +680,135 @@
             document.getElementById('newPromoVal').value = '';
             document.getElementById('newPromoValidUntil').value = '';
             loadPromos();
+        }
+
+        // =======================
+        // مدیریت درخواست‌های لغو قرارداد
+        // =======================
+        async function loadCancellations() {
+            const { data } = await supabaseClient
+                .from('cancellation_requests')
+                .select('*')
+                .order('created_at', {ascending: false});
+                
+            const list = document.getElementById('cancellationsAdminList');
+            
+            if(!data || data.length === 0) {
+                return list.innerHTML = '<tr><td colspan="6" style="text-align:center;">هیچ درخواست لغوی وجود ندارد.</td></tr>';
+            }
+            
+            list.innerHTML = data.map(req => {
+                let userName = usersDict[req.phone_number] || 'ناشناس';
+                let statusBadge = '';
+                let actionBtn = '';
+
+                if (req.status === 'pending') {
+                    statusBadge = '<span class="badge badge-pending">در انتظار بررسی</span>';
+                    actionBtn = `
+                        <button class="action-btn btn-approve-sm" onclick="approveCancellation('${req.id}', '${req.phone_number}', ${req.refund_amount})">✅ تایید لغو و شارژ کیف پول</button>
+                        <button class="action-btn btn-block-sm" onclick="rejectCancellation('${req.id}', '${req.phone_number}')" style="margin-right: 5px;">❌ رد درخواست</button>
+                    `;
+                } else if (req.status === 'approved') {
+                    statusBadge = '<span class="badge badge-approved">لغو شده و شارژ کیف پول</span>';
+                    actionBtn = '---';
+                } else if (req.status === 'rejected') {
+                    statusBadge = '<span class="badge badge-blocked">رد شده</span>';
+                    actionBtn = '---';
+                }
+
+                return `<tr>
+                    <td style="text-align: right;">
+                        <div style="font-weight:bold; color:var(--text-main);">${userName}</div>
+                        <div style="font-family:monospace; color:var(--text-muted); font-size:12px;">${req.phone_number}</div>
+                    </td>
+                    <td>${Number(req.total_paid).toLocaleString()}</td>
+                    <td style="color:var(--warning);">${Number(req.total_deduction).toLocaleString()}</td>
+                    <td style="font-weight:bold; color:var(--success); font-size:15px;">${Number(req.refund_amount).toLocaleString()}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function approveCancellation(id, phone, refundAmount) {
+            if(!confirm(`آیا از تایید این درخواست و شارژ مبلغ ${Number(refundAmount).toLocaleString()} تومان به کیف پول کاربر مطمئن هستید؟\n\nقراردادهای ماهانه فعال و اقساط پرداخت نشده این کاربر نیز لغو خواهند شد.`)) return;
+
+            // نمایش حالت لودینگ کلی
+            document.body.style.cursor = 'wait';
+
+            try {
+                // ۱. شارژ کیف پول کاربر
+                if (refundAmount > 0) {
+                    const { data: user } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
+                    const newBalance = Number(user?.wallet_balance || 0) + Number(refundAmount);
+                    await supabaseClient.from('users').update({ wallet_balance: newBalance }).eq('phone_number', phone);
+                }
+
+                // ۲. تغییر وضعیت قرارداد ماهانه کاربر به لغو شده
+                await supabaseClient.from('pan_monthly_subs')
+                    .update({ status: 'canceled' })
+                    .eq('phone_number', phone)
+                    .eq('status', 'active');
+
+                // ۳. لغو اقساط پرداخت نشده کاربر
+                await supabaseClient.from('pan_installments')
+                    .update({ status: 'canceled' })
+                    .eq('phone_number', phone)
+                    .eq('status', 'pending_upload');
+
+                // ۴. ثبت پیام برای کاربر
+                await supabaseClient.from('messages').insert([{
+                    phone_number: phone, 
+                    title: '✅ تایید درخواست لغو قرارداد',
+                    body: `دانش‌آموز عزیز، درخواست لغو قرارداد پانسیون شما توسط مدیریت تایید شد و مبلغ ${Number(refundAmount).toLocaleString()} تومان به کیف پول شما واریز گردید.`, 
+                    is_read: false, 
+                    created_at: new Date().toISOString()
+                }]);
+
+                // ۵. تغییر وضعیت درخواست لغو به تایید شده
+                await supabaseClient.from('cancellation_requests').update({ status: 'approved' }).eq('id', id);
+
+                alert('✅ درخواست لغو با موفقیت تایید، قرارداد و اقساط لغو و کیف پول کاربر شارژ شد.');
+                
+                // به‌روزرسانی تب‌های مرتبط در پنل ادمین
+                loadCancellations();
+                loadMonthlyData(); // برای به‌روزرسانی لیست اقساط و قراردادها
+                
+            } catch (error) {
+                console.error("خطا در فرآیند تایید لغو:", error);
+                alert("خطا در تایید درخواست. لطفاً دوباره تلاش کنید.");
+            } finally {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        async function rejectCancellation(id, phone) {
+            if(!confirm('آیا از رد کردن این درخواست لغو مطمئن هستید؟')) return;
+
+            document.body.style.cursor = 'wait';
+
+            try {
+                // ۱. تغییر وضعیت درخواست لغو به رد شده
+                await supabaseClient.from('cancellation_requests').update({ status: 'rejected' }).eq('id', id);
+
+                // ۲. ثبت پیام برای کاربر
+                await supabaseClient.from('messages').insert([{
+                    phone_number: phone, 
+                    title: '❌ رد درخواست لغو قرارداد',
+                    body: 'دانش‌آموز عزیز، متأسفانه درخواست لغو قرارداد شما توسط مدیریت تایید نشد. جهت بررسی و هماهنگی بیشتر با پشتیبانی تماس بگیرید.', 
+                    is_read: false, 
+                    created_at: new Date().toISOString()
+                }]);
+
+                alert('درخواست لغو رد شد و پیام اطلاع‌رسانی برای کاربر ارسال گردید.');
+                loadCancellations();
+
+            } catch (error) {
+                console.error("خطا در رد درخواست لغو:", error);
+                alert("خطا در رد درخواست. لطفاً دوباره تلاش کنید.");
+            } finally {
+                document.body.style.cursor = 'default';
+            }
         }
     </script>
 </body>
