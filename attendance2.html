@@ -175,20 +175,33 @@
                     .from('pan_monthly_subs')
                     .select('phone_number, plan_type, end_date')
                     .eq('status', 'active')
-                    .gte('end_date', todayShamsi); // فقط آنهایی که منقضی نشده‌اند
+                    .gte('end_date', todayShamsi);
                 
                 if (subErr) throw subErr;
 
-                // ۲. دریافت رزروهای روزانه برای امروز
-                // با استفاده از like بررسی میکنیم آیا تاریخ امروز در آرایه JSON رزرو شده‌ها وجود دارد یا خیر
-                const { data: dailyReservations, error: dailyErr } = await supabaseClient
+                // ۲. دریافت همه رزروهای روزانه و فیلتر کردن آنها در جاوااسکریپت (روش امن‌تر)
+                const { data: allDailyRes, error: dailyErr } = await supabaseClient
                     .from('pan_reservations')
-                    .select('phone_number, reserved_dates')
-                    .contains('reserved_dates', JSON.stringify([todayShamsi]));
+                    .select('phone_number, reserved_dates');
 
                 if (dailyErr) throw dailyErr;
 
-                // استخراج شماره موبایل‌های هر دو گروه بدون تکرار (چون ممکن است کسی هم ماهانه باشد هم روزانه رزرو کرده باشد که بعید است اما برای ایمنی)
+                // فیلتر کردن رزروهایی که تاریخ امروز را دارند
+                const dailyReservations = allDailyRes.filter(res => {
+                    if (!res.reserved_dates) return false;
+                    
+                    // اگر دیتابیس آن را به صورت رشته برگردانده باشد
+                    if (typeof res.reserved_dates === 'string') {
+                        return res.reserved_dates.includes(todayShamsi);
+                    } 
+                    // اگر دیتابیس آن را به صورت آرایه/آبجکت برگردانده باشد
+                    else if (Array.isArray(res.reserved_dates)) {
+                        return res.reserved_dates.includes(todayShamsi);
+                    }
+                    return false;
+                });
+
+                // استخراج شماره موبایل‌های هر دو گروه بدون تکرار
                 let activePhones = new Set();
                 monthlySubs?.forEach(sub => activePhones.add(sub.phone_number));
                 dailyReservations?.forEach(res => activePhones.add(res.phone_number));
@@ -215,7 +228,7 @@
                 const { data: logs, error: logErr } = await supabaseClient
                     .from('attendance_logs')
                     .select('*')
-                    .eq('log_date', todayMiladi) // فرض بر این است که تاریخ این جدول میلادی است
+                    .eq('log_date', todayMiladi)
                     .order('entry_time', { ascending: true });
                 
                 if (logErr) throw logErr;
@@ -225,7 +238,7 @@
                     let user = usersInfo.find(u => u.phone_number === phone) || {};
                     let monthlyData = monthlySubs.find(m => m.phone_number === phone);
                     let dailyData = dailyReservations.find(d => d.phone_number === phone);
-                    let studentLogs = logs.filter(l => l.student_nid === phone); // اینجا student_nid حالا همان موبایل است
+                    let studentLogs = logs.filter(l => l.student_nid === phone);
                     
                     let plan = '';
                     let planLabel = '';
@@ -235,11 +248,6 @@
                     if (monthlyData) {
                         plan = monthlyData.plan_type;
                         planLabel = 'ماهانه';
-                        
-                        // محاسبه روزهای باقیمانده قرارداد به صورت ساده
-                        let todayNum = parseInt(todayShamsi.replace(/-/g, ''));
-                        let endNum = parseInt(monthlyData.end_date.replace(/-/g, ''));
-                        let diff = endNum - todayNum; // این یک تخمین ساده است (دقیق تقویمی نیست اما برای نمایش کافی است)
                         remainDaysText = `انقضا: ${monthlyData.end_date.replace(/-/g, '/')}`;
                         
                     } else if (dailyData) {
@@ -249,7 +257,7 @@
                     }
 
                     return {
-                        nid: phone, // کدملی جای خود را به موبایل داده است
+                        nid: phone,
                         name: user.full_name || 'کاربر راهینو',
                         planType: plan,
                         planLabel: planLabel,
@@ -280,7 +288,6 @@
                 alert("خطا در دریافت اطلاعات. لطفا اینترنت را بررسی کنید.");
             }
         }
-
         function renderList(list) {
             const container = document.getElementById('studentsList');
             container.innerHTML = '';
