@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>کنترل تردد پانسیون | راهینو</title>
+    <title>کنترل و گزارش تردد پانسیون | راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -28,6 +28,12 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
+        /* لاگین استایل */
+        .form-input { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 15px; border-radius: 12px; outline: none; text-align: right; font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s; }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
+        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: none; justify-content: center; align-items: center; padding: 20px;}
+        .login-box { background: var(--surface); padding: 40px 20px; border-radius: 24px; box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
+
         .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: var(--shadow); }
         .nav-brand { font-size: 20px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
         .nav-brand span { color: var(--primary); }
@@ -38,6 +44,11 @@
 
         .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
         
+        /* مدیریت نمایش بخش‌ها */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         .toolbar { display: flex; gap: 15px; margin-bottom: 25px; }
         .search-bar { flex: 1; background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 25px; border-radius: 16px; font-size: 15px; font-weight: bold; outline: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
@@ -67,46 +78,55 @@
         .time-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--bg-color); border: 1px solid var(--border-color); font-weight: bold; font-size: 11px; }
 
         .col-actions { flex: 1.5; display: flex; gap: 10px; justify-content: flex-end; }
-        .btn-action { padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; border: none; transition: 0.2s; color: white; display: flex; align-items: center; gap: 8px; }
+        .btn-action { padding: 12px 25px; border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer; border: none; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-entry { background: var(--success); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
         .btn-entry:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
         .btn-exit { background: var(--danger); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2); }
         .btn-exit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
         .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; filter: grayscale(1); }
 
+        /* استایل‌های مربوط به بخش گزارش */
+        .page-title { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 30px; text-align: center; }
+        .day-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 15px; box-shadow: var(--shadow); overflow: hidden; transition: 0.3s; }
+        .day-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; background: rgba(0,0,0,0.1); }
+        .day-header:hover { background: var(--primary-fade); }
+        .date-title { font-size: 16px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .date-title .icon { background: var(--primary); color: #000; padding: 5px 10px; border-radius: 10px; font-size: 14px; }
+        .day-stats { font-size: 13px; color: var(--text-muted); font-weight: bold; display: flex; gap: 15px; }
+        .day-body { display: none; padding: 0; border-top: 1px solid var(--border-color); }
+        .day-card.active .day-body { display: block; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 500px; }
+        th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: bold; }
+        td { color: var(--text-main); font-weight: bold; }
+        tr:last-child td { border-bottom: none; }
+
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 992px) {
-            /* کوچک کردن هدر */
             .top-navbar { flex-direction: row; padding: 15px 20px; }
             .nav-brand { font-size: 13px; }
             .live-clock { font-size: 18px; }
             .live-date { font-size: 10px; }
-
             .main-content { padding: 15px; }
             .toolbar { flex-direction: column; margin-bottom: 15px; gap: 10px; }
             .btn-report { padding: 12px; justify-content: center; }
-            
-            /* کنار هم قرار دادن باکس‌های آماری */
             .stats-row { flex-direction: row; gap: 8px; margin-bottom: 15px; }
             .stat-box { flex: 1; padding: 10px 5px; flex-direction: column; justify-content: center; gap: 5px; border-radius: 12px; text-align: center; }
             .stat-title { font-size: 10px; }
             .stat-value { font-size: 20px; }
-            
-            /* فشرده‌سازی ردیف هر دانش‌آموز */
             .list-row { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 12px 15px; gap: 5px; }
             .col-info { flex: 1; border-bottom: none; padding-bottom: 0; }
             .col-actions { flex: 0 0 auto; flex-direction: row; gap: 6px; }
             .col-status { flex: 1 1 100%; flex-direction: row; margin-top: 5px; }
-            
             .student-name { font-size: 14px; margin-bottom: 3px; }
             .student-meta { gap: 5px; }
-            
-            /* فقط آیکون کردن دکمه‌ها */
             .btn-action { padding: 8px 14px; font-size: 18px; border-radius: 10px; }
             .hide-mobile { display: none !important; }
+            .day-header { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
     </style>
 </head>
@@ -114,48 +134,79 @@
 
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner"></div>
-        <h3 style="color: var(--primary);">در حال دریافت لیست ترددها...</h3>
+        <h3 id="loaderText" style="color: var(--primary);">لطفا چند لحظه صبر کنید...</h3>
+    </div>
+
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">مدیریت تردد راهینو</h1>
+            <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px;">فقط پرسنل مجاز حق ورود دارند</p>
+            <input type="tel" id="adminPhone" class="form-input" placeholder="شماره موبایل" style="margin-bottom: 15px; width:100%; text-align: center; font-size: 18px; letter-spacing: 2px;" autocomplete="off">
+            <input type="password" id="adminPass" class="form-input" placeholder="رمز عبور" style="margin-bottom: 15px; width:100%; text-align: center; font-size: 18px; letter-spacing: 2px;">
+            <button class="btn-action" style="width: 100%; background: var(--primary); color: #000;" onclick="adminLogin()">ورود به پنل</button>
+        </div>
     </div>
 
     <div class="top-navbar">
-        <div class="nav-brand">🪪 قطب‌نمای <span>راهینو</span> | پنل مانیتورینگ پانسیون</div>
-        <div class="time-box">
-            <div class="live-clock" id="liveClock">00:00:00</div>
-            <div class="live-date" id="liveDate"></div>
+        <div class="nav-brand">🪪 قطب‌نمای <span>راهینو</span> | پنل تردد</div>
+        <div style="display:flex; align-items:center; gap: 20px;">
+            <div class="time-box hide-mobile">
+                <div class="live-clock" id="liveClock">00:00:00</div>
+                <div class="live-date" id="liveDate"></div>
+            </div>
+            <button onclick="adminLogout()" class="btn-action btn-exit" style="padding: 8px 15px; font-size: 12px; height: fit-content; display: none;" id="btnLogout">خروج 🚪</button>
         </div>
     </div>
 
     <div class="main-content">
-        <div class="stats-row">
-            <div class="stat-box">
-                <div class="stat-title">کل اعضای پانسیون</div>
-                <div class="stat-value" id="statTotal">0</div>
+        
+        <!-- =======================
+             بخش مانیتورینگ زنده
+             ======================= -->
+        <div id="view-live" class="view-section active">
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-title">کل اعضای پانسیون</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-title">حاضرین در سالن</div>
+                    <div class="stat-value" style="color: var(--success);" id="statPresent">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-title">ثبت تردد امروز</div>
+                    <div class="stat-value" style="color: var(--accent);" id="statActive">0</div>
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="stat-title">حاضرین در سالن</div>
-                <div class="stat-value" style="color: var(--success);" id="statPresent">0</div>
+
+            <div class="toolbar" style="align-items: center;">
+                <input type="text" id="searchInput" class="search-bar" placeholder="🔍 جستجوی نام یا موبایل دانش‌آموز..." onkeyup="filterList()">
+                <button class="btn-report" onclick="switchView('view-report')">🗂️ گزارشات و بایگانی</button>
             </div>
-            <div class="stat-box">
-                <div class="stat-title">ثبت تردد امروز</div>
-                <div class="stat-value" style="color: var(--accent);" id="statActive">0</div>
-            </div>
+
+            <div class="list-container" id="studentsList"></div>
         </div>
 
-        <div class="toolbar">
-            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 جستجوی نام یا کدملی دانش‌آموز..." onkeyup="filterList()">
-            <a href="attendance-report.html" class="btn-report">🗂️ گزارشات و بایگانی</a>
+        <!-- =======================
+             بخش گزارشات و بایگانی
+             ======================= -->
+        <div id="view-report" class="view-section">
+            <div class="toolbar" style="justify-content: flex-end;">
+                <button class="btn-report" onclick="switchView('view-live')">🔙 بازگشت به پنل زنده</button>
+            </div>
+            <h1 class="page-title">گزارش روزانه پانسیون</h1>
+            <div id="reportContainer"></div>
         </div>
 
-        <div class="list-container" id="studentsList"></div>
     </div>
 
     <script>
+        // 🔒 استفاده از کلید معمولی (Anon Key) به جای Service Key برای امنیت بیشتر
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
-        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYxNjA2MiwiZXhwIjoyMDk3MTkyMDYyfQ.0tYN4CRA_D8jwColQ-qwcLqPXQUxwRlqC_9EcgcbZDI'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-        });
+        // به دلیل نیاز به لاگین ماندن ادمین، persistSession روی تنظیمات پیش‌فرض باقی می‌ماند
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allData = [];
 
@@ -168,86 +219,143 @@
         const f = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' });
         document.getElementById('liveDate').innerText = f.format(new Date());
 
+        function showLoader(text = "لطفا چند لحظه صبر کنید...") {
+            document.getElementById('loaderText').innerText = text;
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('mainLoader').style.opacity = '1';
+        }
+
+        function hideLoader() {
+            document.getElementById('mainLoader').style.opacity = '0';
+            setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+        }
+
+        function toEnglishDigits(str) { 
+            return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
+        }
+
+        // =======================
+        // 🔐 سیستم لاگین ادمین
+        // =======================
+        window.onload = async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if(session) {
+                verifyAdminRole(session.user.email.split('@')[0]);
+            } else {
+                hideLoader();
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        };
+
+        async function adminLogin() {
+            let phone = toEnglishDigits(document.getElementById('adminPhone').value.trim());
+            let pass = document.getElementById('adminPass').value.trim();
+            if(!phone || !pass) return alert('شماره و رمز عبور را وارد کنید.');
+
+            showLoader("در حال ورود به سیستم...");
+            const { error } = await supabaseClient.auth.signInWithPassword({ email: phone + '@rahino.ir', password: pass });
+            if(error) {
+                hideLoader();
+                return alert('اطلاعات ورود اشتباه است.');
+            }
+            verifyAdminRole(phone);
+        }
+
+        async function verifyAdminRole(phone) {
+            const { data, error } = await supabaseClient.from('users').select('role').eq('phone_number', phone).single();
+            if(error || !data || data.role !== 'admin') {
+                await supabaseClient.auth.signOut();
+                hideLoader();
+                alert('❌ دسترسی غیرمجاز! شما مجوز مدیریت پنل را ندارید.');
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('btnLogout').style.display = 'inline-flex';
+                // بعد از ورود موفق مستقیما بخش زنده را بارگیری می‌کنیم
+                fetchAttendanceData();
+            }
+        }
+
+        async function adminLogout() {
+            if(confirm('آیا از پنل خارج می‌شوید؟')) {
+                await supabaseClient.auth.signOut();
+                window.location.reload(); 
+            }
+        }
+
+        // =======================
+        // جابجایی بین پنل‌ها
+        // =======================
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            if (viewId === 'view-live') {
+                fetchAttendanceData();
+            } else if (viewId === 'view-report') {
+                fetchReports();
+            }
+        }
+
         function getTodayShamsi() {
             const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Tehran' }).formatToParts(new Date());
             let y, m, d;
             for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
-            return `${y}-${m}-${d}`; // بازگرداندن با فرمت خط تیره برای تطبیق با دیتابیس
+            return `${y}-${m}-${d}`; 
         }
 
-        window.onload = async function() {
-            await fetchAttendanceData();
-        };
-
+        // =======================
+        // بخش مانیتورینگ زنده
+        // =======================
         async function fetchAttendanceData() {
+            showLoader("در حال دریافت لیست ترددها...");
             try {
                 let todayShamsi = getTodayShamsi();
                 let todayMiladi = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tehran' });
 
-                // ۱. دریافت کاربران ماهانه فعال که هنوز قراردادشان تمام نشده
                 const { data: monthlySubs, error: subErr } = await supabaseClient
                     .from('pan_monthly_subs')
                     .select('phone_number, plan_type, end_date')
                     .eq('status', 'active')
                     .gte('end_date', todayShamsi);
-                
                 if (subErr) throw subErr;
 
-                // ۲. دریافت همه رزروهای روزانه و فیلتر کردن آنها در جاوااسکریپت (روش امن‌تر)
                 const { data: allDailyRes, error: dailyErr } = await supabaseClient
                     .from('pan_reservations')
                     .select('phone_number, reserved_dates');
-
                 if (dailyErr) throw dailyErr;
 
-                // فیلتر کردن رزروهایی که تاریخ امروز را دارند
                 const dailyReservations = allDailyRes.filter(res => {
                     if (!res.reserved_dates) return false;
-                    
-                    // اگر دیتابیس آن را به صورت رشته برگردانده باشد
-                    if (typeof res.reserved_dates === 'string') {
-                        return res.reserved_dates.includes(todayShamsi);
-                    } 
-                    // اگر دیتابیس آن را به صورت آرایه/آبجکت برگردانده باشد
-                    else if (Array.isArray(res.reserved_dates)) {
-                        return res.reserved_dates.includes(todayShamsi);
-                    }
+                    if (typeof res.reserved_dates === 'string') return res.reserved_dates.includes(todayShamsi);
+                    else if (Array.isArray(res.reserved_dates)) return res.reserved_dates.includes(todayShamsi);
                     return false;
                 });
 
-                // استخراج شماره موبایل‌های هر دو گروه بدون تکرار
                 let activePhones = new Set();
                 monthlySubs?.forEach(sub => activePhones.add(sub.phone_number));
                 dailyReservations?.forEach(res => activePhones.add(res.phone_number));
-
                 let phonesArray = Array.from(activePhones);
 
-                // اگر کسی برای امروز ثبت‌نامی نداشت، متوقف شو
                 if (phonesArray.length === 0) {
                     renderList([]);
-                    document.getElementById('mainLoader').style.opacity = '0';
-                    setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+                    hideLoader();
                     return;
                 }
 
-                // ۳. دریافت مشخصات این افراد از جدول users
                 const { data: usersInfo, error: usersErr } = await supabaseClient
                     .from('users')
                     .select('phone_number, full_name')
                     .in('phone_number', phonesArray);
-                
                 if (usersErr) throw usersErr;
 
-                // ۴. دریافت لاگ‌های ورود و خروج فقط برای امروز
                 const { data: logs, error: logErr } = await supabaseClient
                     .from('attendance_logs')
                     .select('*')
                     .eq('log_date', todayMiladi)
                     .order('entry_time', { ascending: true });
-                
                 if (logErr) throw logErr;
 
-                // ۵. ترکیب و یکپارچه‌سازی داده‌ها
                 allData = phonesArray.map(phone => {
                     let user = usersInfo.find(u => u.phone_number === phone) || {};
                     let monthlyData = monthlySubs.find(m => m.phone_number === phone);
@@ -258,12 +366,10 @@
                     let planLabel = '';
                     let remainDaysText = '';
 
-                    // اولویت با ماهانه است
                     if (monthlyData) {
                         plan = monthlyData.plan_type;
                         planLabel = 'ماهانه';
                         remainDaysText = `انقضا: ${monthlyData.end_date.replace(/-/g, '/')}`;
-                        
                     } else if (dailyData) {
                         plan = 'daily';
                         planLabel = 'روزانه';
@@ -280,7 +386,6 @@
                     };
                 });
 
-                // مرتب‌سازی لیست بر اساس حضور در سالن
                 allData.sort((a, b) => {
                     let aIsPresent = a.logs.some(l => l.entry_time && !l.exit_time);
                     let bIsPresent = b.logs.some(l => l.entry_time && !l.exit_time);
@@ -293,15 +398,14 @@
                 });
 
                 renderList(allData);
-
-                document.getElementById('mainLoader').style.opacity = '0';
-                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
-
+                hideLoader();
             } catch (err) {
                 console.error(err);
-                alert("خطا در دریافت اطلاعات. لطفا اینترنت را بررسی کنید.");
+                alert("خطا در دریافت اطلاعات. لطفا اتصال اینترنت را بررسی کنید.");
+                hideLoader();
             }
         }
+
         function renderList(list) {
             const container = document.getElementById('studentsList');
             container.innerHTML = '';
@@ -377,13 +481,11 @@
             renderList(filtered);
         }
 
-        // توابع ثبت ورود و خروج
         async function actionEntry(nid, btn) {
             btn.innerHTML = '⏳...'; btn.disabled = true;
             try {
                 const { data, error } = await supabaseClient.rpc('register_entry', { p_nid: nid });
                 if (error) throw error;
-                
                 if (data && typeof data === 'string' && data.includes('⚠️')) {
                     alert(data); 
                 }
@@ -405,7 +507,127 @@
                 btn.innerHTML = '📤 <span class="hide-mobile">ثبت خروج</span>'; btn.disabled = false;
             }
         }
+
+        // =======================
+        // بخش گزارشات بایگانی شده
+        // =======================
+        async function fetchReports() {
+            showLoader("در حال استخراج بایگانی تردد...");
+            try {
+                const { data: logs, error: logErr } = await supabaseClient
+                    .from('attendance_logs')
+                    .select('student_nid, log_date, entry_time, exit_time')
+                    .order('log_date', { ascending: false })
+                    .order('entry_time', { ascending: true })
+                    .limit(2000);
+                if (logErr) throw logErr;
+
+                let uniquePhones = [...new Set(logs.map(log => log.student_nid))];
+                let usersInfo = [];
+                if (uniquePhones.length > 0) {
+                    const { data: users, error: usersErr } = await supabaseClient
+                        .from('users')
+                        .select('phone_number, full_name')
+                        .in('phone_number', uniquePhones);
+                    if (usersErr) throw usersErr;
+                    usersInfo = users || [];
+                }
+
+                const groupedData = {};
+                logs.forEach(log => {
+                    const date = log.log_date;
+                    if (!groupedData[date]) groupedData[date] = {};
+                    const phone = log.student_nid;
+                    if (!groupedData[date][phone]) {
+                        let user = usersInfo.find(u => u.phone_number === phone);
+                        groupedData[date][phone] = {
+                            name: user && user.full_name ? user.full_name : 'ناشناس',
+                            nid: phone,
+                            records: []
+                        };
+                    }
+                    groupedData[date][phone].records.push({ entry: log.entry_time, exit: log.exit_time });
+                });
+
+                renderReports(groupedData);
+                hideLoader();
+            } catch (err) {
+                console.error(err);
+                alert("خطا در استخراج بایگانی");
+                hideLoader();
+            }
+        }
+
+        function renderReports(groupedData) {
+            const container = document.getElementById('reportContainer');
+            let html = '';
+
+            const dateKeys = Object.keys(groupedData).sort((a,b) => new Date(b) - new Date(a));
+
+            if (dateKeys.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 50px;">هیچ دیتایی در بایگانی یافت نشد.</div>';
+                return;
+            }
+
+            dateKeys.forEach((dateStr, index) => {
+                const dateObj = new Date(dateStr);
+                const shamsi = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' }).format(dateObj);
+                
+                const studentsDict = groupedData[dateStr];
+                const studentKeys = Object.keys(studentsDict);
+                const totalStudents = studentKeys.length;
+                let totalEntries = 0;
+
+                let tableRows = '';
+                studentKeys.forEach(nid => {
+                    const st = studentsDict[nid];
+                    let timesHtml = st.records.map(rec => {
+                        totalEntries++;
+                        let inTime = rec.entry ? new Date(rec.entry).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : '-';
+                        let outTime = rec.exit ? new Date(rec.exit).toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone:'Asia/Tehran'}) : '-';
+                        return `<div class="time-tag"><span class="text-success">📥 ${inTime}</span> | <span class="text-danger">📤 ${outTime}</span></div>`;
+                    }).join('');
+
+                    tableRows += `
+                        <tr>
+                            <td>${st.name}</td>
+                            <td style="font-family:monospace; color:var(--text-muted); direction:ltr; text-align:right;">${st.nid}</td>
+                            <td>${timesHtml}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                    <div class="day-card" id="card_${index}">
+                        <div class="day-header" onclick="document.getElementById('card_${index}').classList.toggle('active')">
+                            <div class="date-title"><span class="icon">📅</span> ${shamsi}</div>
+                            <div class="day-stats">
+                                <span>👥 افراد حاضر: ${totalStudents} نفر</span>
+                                <span>🔄 کل ترددها: ${totalEntries} بار</span>
+                            </div>
+                        </div>
+                        <div class="day-body">
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>نام دانش‌آموز</th>
+                                            <th>شماره موبایل</th>
+                                            <th>ساعات ورود و خروج</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
     </script>
 </body>
 </html>
-        
