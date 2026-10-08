@@ -541,17 +541,25 @@ function renderMessages(messages) {
 
 async function rewardReferrer(referralCode, rewardAmount, messageBody) {
     try {
-        const { error } = await supabaseClient.rpc('reward_referrer', {
+        // فراخوانی مستقیم تابعی که در سرور ساختیم
+        const { data, error } = await supabaseClient.rpc('reward_referrer', {
             p_referral_code: referralCode,
             p_reward_amount: rewardAmount,
             p_message_body: messageBody
         });
-        if (error) throw error;
+        
+        if (error) {
+            console.error("RPC Error:", error);
+            // اگر خطایی رخ دهد، در کنسول مرورگر ثبت می‌شود
+        } else if (data === false) {
+            console.warn("کد معرف در دیتابیس یافت نشد.");
+        } else {
+            console.log("کیف پول معرف با موفقیت شارژ شد.");
+        }
     } catch(e) { 
         console.error("Error rewarding referrer", e); 
     }
 }
-
 // ==========================================
 // 🗓 رزرو ماهانه
 // ==========================================
@@ -1034,24 +1042,27 @@ async function submitMonthly() {
 
         document.getElementById('mainLoader').style.display = 'none';
         
-        // ساخت مودال اختصاصی با لینک‌های قابل کپی
+        // ساخت مودال اختصاصی با لینک‌های قابل کپی و لیبل‌های واضح
         const successModalHtml = `
         <div class="modal-overlay" id="successChannelModal" style="display: flex; align-items: center; justify-content: center; z-index: 10000; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);">
-            <div class="glass-panel" style="width: 90%; max-width: 400px; padding: 30px; border-radius: 28px; text-align: center; border: 1px solid var(--success);">
+            <div class="glass-panel" style="width: 90%; max-width: 400px; padding: 25px 20px; border-radius: 28px; text-align: center; border: 1px solid var(--success);">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
                 <h3 style="color: var(--success); margin-bottom: 10px; font-weight: 900;">ثبت‌نام با موفقیت انجام شد!</h3>
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold; text-align: justify;">
-                    قرارداد شما فعال شد. لطفاً لینک‌های زیر را کپی کرده و در پیام‌رسان مربوطه جای‌گذاری (Paste) کنید تا عضو کانال شوید:
+                    قرارداد شما فعال شد. لطفاً لینک‌های زیر را کپی کرده و در پیام‌رسان مربوطه جای‌گذاری (Paste) کنید تا عضو کانال خانواده راهینو شوید:
                 </p>
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+                
+                <div style="display: flex; flex-direction: column; margin-bottom: 25px;">
                     
                     <!-- باکس لینک تلگرام -->
-                    <div style="background: rgba(42, 171, 238, 0.1); border: 1px dashed #2AABEE; padding: 12px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="text-align: right; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: #2AABEE;">✈️ کانال تلگرام راهینو:</div>
+                    <div style="background: rgba(42, 171, 238, 0.1); border: 1px dashed #2AABEE; padding: 12px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px;">
                         <span style="font-size: 12px; font-weight: bold; color: #2AABEE; direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">https://t.me/+d8Ijxk_im8M3ZmQ0</span>
                         <button onclick="copyToClipboard('https://t.me/+d8Ijxk_im8M3ZmQ0')" style="background: #2AABEE; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; flex-shrink: 0;">کپی لینک</button>
                     </div>
                     
                     <!-- باکس لینک بله -->
+                    <div style="text-align: right; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: #10b981;">💬 کانال بله راهینو:</div>
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed #10b981; padding: 12px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                         <span style="font-size: 12px; font-weight: bold; color: #10b981; direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">https://ble.ir/join/CghLcw3J4k</span>
                         <button onclick="copyToClipboard('https://web.bale.ai/ble.ir/join/CghLcw3J4k')" style="background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; flex-shrink: 0;">کپی لینک</button>
