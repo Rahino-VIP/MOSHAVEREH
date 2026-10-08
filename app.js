@@ -541,23 +541,23 @@ function renderMessages(messages) {
 
 async function rewardReferrer(referralCode, rewardAmount, messageBody) {
     try {
-        // فراخوانی مستقیم تابعی که در سرور ساختیم
-        const { data, error } = await supabaseClient.rpc('reward_referrer', {
-            p_referral_code: referralCode,
-            p_reward_amount: rewardAmount,
-            p_message_body: messageBody
-        });
+        const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
+        const payload = {
+            action: 'reward_referrer',
+            referralCode: referralCode,
+            amount: rewardAmount,
+            messageBody: messageBody
+        };
         
-        if (error) {
-            console.error("RPC Error:", error);
-            // اگر خطایی رخ دهد، در کنسول مرورگر ثبت می‌شود
-        } else if (data === false) {
-            console.warn("کد معرف در دیتابیس یافت نشد.");
-        } else {
-            console.log("کیف پول معرف با موفقیت شارژ شد.");
-        }
+        // ارسال بی‌صدا به گوگل اسکریپت بدون متوقف کردن کاربر
+        fetch(gasUrl, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(payload) 
+        }).catch(err => console.log(err));
+        
     } catch(e) { 
-        console.error("Error rewarding referrer", e); 
+        console.error("Error sending reward request to GAS", e); 
     }
 }
 // ==========================================
