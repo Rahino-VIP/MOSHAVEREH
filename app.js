@@ -541,15 +541,15 @@ function renderMessages(messages) {
 
 async function rewardReferrer(referralCode, rewardAmount, messageBody) {
     try {
-        const { data: referrer } = await supabaseClient.from('users').select('phone_number, wallet_balance').eq('referral_code', referralCode).single();
-        if (referrer) {
-            await supabaseClient.from('users').update({ wallet_balance: Number(referrer.wallet_balance || 0) + rewardAmount }).eq('phone_number', referrer.phone_number);
-            await supabaseClient.from('messages').insert([{
-                phone_number: referrer.phone_number, title: '🎉 پاداش معرفی دوستان!',
-                body: messageBody, is_read: false, created_at: new Date().toISOString()
-            }]);
-        }
-    } catch(e) { console.error("Error rewarding referrer", e); }
+        const { error } = await supabaseClient.rpc('reward_referrer', {
+            p_referral_code: referralCode,
+            p_reward_amount: rewardAmount,
+            p_message_body: messageBody
+        });
+        if (error) throw error;
+    } catch(e) { 
+        console.error("Error rewarding referrer", e); 
+    }
 }
 
 // ==========================================
@@ -1034,26 +1034,30 @@ async function submitMonthly() {
 
         document.getElementById('mainLoader').style.display = 'none';
         
-        // ساخت مودال اختصاصی کانال‌های راهینو
+        // ساخت مودال اختصاصی با لینک‌های قابل کپی
         const successModalHtml = `
         <div class="modal-overlay" id="successChannelModal" style="display: flex; align-items: center; justify-content: center; z-index: 10000; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);">
             <div class="glass-panel" style="width: 90%; max-width: 400px; padding: 30px; border-radius: 28px; text-align: center; border: 1px solid var(--success);">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
                 <h3 style="color: var(--success); margin-bottom: 10px; font-weight: 900;">ثبت‌نام با موفقیت انجام شد!</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.8; font-weight: bold;">
-                    قرارداد شما فعال شد. برای اطلاع از اخبار پانسیون حتماً در کانال‌های خانواده راهینو عضو شوید:
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; font-weight: bold; text-align: justify;">
+                    قرارداد شما فعال شد. لطفاً لینک‌های زیر را کپی کرده و در پیام‌رسان مربوطه جای‌گذاری (Paste) کنید تا عضو کانال شوید:
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
-                    <a href="https://t.me/+d8Ijxk_im8M3ZmQ0" target="_blank" class="btn-submit" style="background: #2AABEE; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-                        عضویت در کانال تلگرام
-                    </a>
-                    <a href="https://web.bale.ai/ble.ir/join/CghLcw3J4k" target="_blank" class="btn-submit" style="background: #10b981; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                        عضویت در کانال بله
-                    </a>
+                    
+                    <!-- باکس لینک تلگرام -->
+                    <div style="background: rgba(42, 171, 238, 0.1); border: 1px dashed #2AABEE; padding: 12px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <span style="font-size: 12px; font-weight: bold; color: #2AABEE; direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">https://t.me/+d8Ijxk_im8M3ZmQ0</span>
+                        <button onclick="copyToClipboard('https://t.me/+d8Ijxk_im8M3ZmQ0')" style="background: #2AABEE; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; flex-shrink: 0;">کپی لینک</button>
+                    </div>
+                    
+                    <!-- باکس لینک بله -->
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed #10b981; padding: 12px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <span style="font-size: 12px; font-weight: bold; color: #10b981; direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">https://ble.ir/join/CghLcw3J4k</span>
+                        <button onclick="copyToClipboard('https://web.bale.ai/ble.ir/join/CghLcw3J4k')" style="background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; flex-shrink: 0;">کپی لینک</button>
+                    </div>
+
                 </div>
-                <!-- صفحه با زدن دکمه بستن رفرش می‌شود -->
                 <button class="btn-action" style="width: 100%; border-radius: 16px; background: transparent;" onclick="window.location.reload()">بستن و ورود به داشبورد</button>
             </div>
         </div>`;
