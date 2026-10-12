@@ -117,9 +117,9 @@
     <aside class="sidebar">
         <div class="brand">⚙️ مدیریت بوفه</div>
         <nav class="nav-menu">
-            <div class="nav-item" onclick="switchView('view-finance', this, 'صندوق و دریافت نقدی')">💵 صندوق (نقدی) <span class="badge" id="cashBadge" style="display:none;">0</span></div>
+            <div class="nav-item active" onclick="switchView('view-finance', this, 'صندوق و دریافت نقدی')">💵 صندوق (نقدی) <span class="badge" id="cashBadge" style="display:none;">0</span></div>
             <div class="nav-item" onclick="switchView('view-approvals', this, 'تایید فیش بانکی')">💳 تایید فیش‌ها <span class="badge" id="pendingBadge" style="display:none;">0</span></div>
-            <div class="nav-item active" onclick="switchView('view-inventory', this, 'انبار و محصولات')">📦 انبار و محصولات</div>
+            <div class="nav-item" onclick="switchView('view-inventory', this, 'انبار و محصولات')">📦 انبار و محصولات</div>
             <div class="nav-item" onclick="switchView('view-featured', this, 'زمان‌بندی پیشنهاد راهینو')">🌟 پیشنهاد راهینو</div>
             <div class="nav-item" onclick="switchView('view-reports', this, 'گزارش روزانه بوفه')">📊 گزارش روزانه</div>
         </nav>
@@ -129,13 +129,13 @@
         <header class="topbar">
             <div style="display: flex; align-items: center;">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <span id="topbarTitle">📦 انبار و محصولات</span>
+                <span id="topbarTitle">💵 صندوق و دریافت نقدی</span>
             </div>
             <button class="btn btn-danger" style="padding: 8px 15px; font-size: 12px;" onclick="adminLogout()">خروج 🚪</button>
         </header>
         <div class="content-area">
             
-            <div id="view-inventory" class="view-section active">
+            <div id="view-inventory" class="view-section">
                 <div class="card">
                     <div class="card-header">
                         <h2 style="font-size: 16px;">لیست محصولات</h2>
@@ -150,7 +150,7 @@
                 </div>
             </div>
 
-            <div id="view-finance" class="view-section">
+            <div id="view-finance" class="view-section active">
                 <div class="card">
                     <div class="card-header"><h2 style="font-size: 16px;">سفارشات نقدی و شارژ حضوری در انتظار</h2></div>
                     <div style="overflow-x: auto; scrollbar-width: none;">
