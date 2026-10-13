@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>داشبورد جامع هوش تجاری | راهینو</title>
+    <title>داشبورد هوش تجاری و تصمیم‌گیری | راهینو</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -48,13 +48,13 @@
         .section-title::before { content: ''; display: inline-block; width: 6px; height: 20px; background: var(--primary); border-radius: 4px; }
 
         /* KPI Cards Grid */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .kpi-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform 0.2s; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform 0.2s; }
         .kpi-card:hover { transform: translateY(-5px); border-color: rgba(119, 187, 169, 0.5); }
         .kpi-icon { position: absolute; left: 20px; top: 20px; font-size: 32px; opacity: 0.15; }
         .kpi-title { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px; }
-        .kpi-value { font-size: 30px; font-weight: 900; color: var(--text-main); display: flex; align-items: baseline; gap: 5px; }
-        .kpi-unit { font-size: 13px; font-weight: normal; color: var(--text-muted); }
+        .kpi-value { font-size: 28px; font-weight: 900; color: var(--text-main); display: flex; align-items: baseline; gap: 5px; }
+        .kpi-unit { font-size: 12px; font-weight: normal; color: var(--text-muted); }
         
         .progress-bg { background: var(--surface-light); height: 6px; border-radius: 10px; margin-top: 15px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
@@ -62,9 +62,8 @@
 
         /* Charts Grid */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .charts-grid-small { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .chart-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
-        .chart-container { flex: 1; position: relative; min-height: 250px; width: 100%; }
+        .chart-container { flex: 1; position: relative; min-height: 280px; width: 100%; margin-top: 10px; }
 
         /* Tables */
         .table-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
@@ -94,24 +93,23 @@
         .tab-btn.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
 
         @media (max-width: 992px) {
-            .charts-grid, .charts-grid-small { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
             .top-navbar { flex-direction: column; gap: 15px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- لودر اصلی -->
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner"></div>
         <h3 style="color: var(--primary);" id="loaderText">لطفا چند لحظه صبر کنید...</h3>
     </div>
 
-    <!-- فرم لاگین ادمین -->
+    <!-- فرم لاگین امنیتی -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">هوش تجاری راهینو</h1>
-            <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px;">ورود پرسنل مدیریت</p>
+            <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px;">ورود پرسنل مدیریت با دسترسی کامل</p>
             <input type="tel" id="adminPhone" class="form-input" placeholder="شماره موبایل" autocomplete="off">
             <input type="password" id="adminPass" class="form-input" placeholder="رمز عبور">
             <button class="btn-main" onclick="adminLogin()">ورود به داشبورد</button>
@@ -125,7 +123,7 @@
             <div class="live-clock" id="liveClock">00:00:00</div>
             <div class="file-upload-wrapper">
                 <button class="btn-upload" id="uploadBtn">
-                    📥 <span>بارگذاری فایل اکسل «ازنو»</span>
+                    📥 <span>وارد کردن خروجی اکسل ازنو</span>
                 </button>
                 <input type="file" id="eznoFileInput" accept=".xlsx, .xls" onchange="handleExcelUpload(event)" />
             </div>
@@ -136,14 +134,12 @@
     <div class="app-container" id="appContainer" style="display: none;">
         
         <!-- KPI METRICS -->
-        <div class="section-title">شاخص‌های عملیاتی و مالی (امروز)</div>
-        <!-- KPI Cards Grid -->
+        <div class="section-title">شاخص‌های عملکردی و مالی</div>
         <div class="kpi-grid">
             
-            <!-- اشغال سالن -->
             <div class="kpi-card">
                 <div class="kpi-icon">🪑</div>
-                <div class="kpi-title">تراکم ظرفیت (اشغال میزها)</div>
+                <div class="kpi-title">تراکم ظرفیت سالن (هم‌اکنون)</div>
                 <div class="kpi-value"><span id="kpiOccupancy">0</span> <span class="kpi-unit">از 26</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="occupancyBar" style="width: 0%; background: var(--primary);"></div></div>
                 <div class="progress-labels">
@@ -152,22 +148,9 @@
                 </div>
             </div>
 
-            <!-- رزروهای روزانه (کارت جا افتاده) -->
-            <div class="kpi-card">
-                <div class="kpi-icon">📅</div>
-                <div class="kpi-title">مهمانان روزانه (امروز)</div>
-                <div class="kpi-value" style="color: var(--info);"><span id="kpiDailyBookings">0</span> <span class="kpi-unit">نفر</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="dailyBar" style="width: 0%; background: var(--info);"></div></div>
-                <div class="progress-labels">
-                    <span id="kpiDailySite">رزرو سایت: 0</span>
-                    <span id="kpiDailyEzno">ازنو: 0</span>
-                </div>
-            </div>
-
-            <!-- درآمد ناخالص -->
             <div class="kpi-card">
                 <div class="kpi-icon">💳</div>
-                <div class="kpi-title">درآمد کل سیستم (ناخالص)</div>
+                <div class="kpi-title">کل درآمد محقق شده سیستم</div>
                 <div class="kpi-value" style="color: var(--success);"><span id="kpiTotalRevenue">0</span> <span class="kpi-unit">تومان</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="revenueBar" style="width: 0%; background: var(--success);"></div></div>
                 <div class="progress-labels">
@@ -176,18 +159,16 @@
                 </div>
             </div>
 
-            <!-- میانگین حضور -->
             <div class="kpi-card">
                 <div class="kpi-icon">⏳</div>
-                <div class="kpi-title">میانگین حضور دانش‌آموزان</div>
+                <div class="kpi-title">میانگین ماندگاری در سالن</div>
                 <div class="kpi-value" style="color: var(--purple);"><span id="kpiAvgDuration">0</span> <span class="kpi-unit">ساعت در روز</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="durationBar" style="width: 0%; background: var(--purple);"></div></div>
                 <div class="progress-labels">
-                    <span id="kpiTotalLogs" style="color: var(--text-muted);">بر اساس 0 رکورد اخیر</span>
+                    <span id="kpiTotalLogs" style="color: var(--text-muted);">بر اساس 0 رکورد</span>
                 </div>
             </div>
 
-            <!-- اقساط و مطالبات -->
             <div class="kpi-card">
                 <div class="kpi-icon">📉</div>
                 <div class="kpi-title">مطالبات و انصراف‌ها</div>
@@ -202,56 +183,58 @@
         </div>
 
         <!-- CHARTS -->
-        <div class="section-title">تحلیل ترافیک و رفتار مشتریان</div>
+        <div class="section-title">تصمیم‌ساز: تحلیل الگوها (Trends)</div>
         <div class="charts-grid">
+            
             <div class="chart-box">
-                <div class="kpi-title">ساعات اوج ترافیک حضور (Peak Hours) - 7 روز گذشته</div>
+                <div class="kpi-title" style="color: var(--info);">الگوی حضور مهمانان روزانه در ایام هفته (تصمیم‌گیری برای تخفیف)</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom: 10px;">نشان‌دهنده تعداد دفعات مراجعه افراد غیرِماهانه به تفکیک روز</div>
+                <div class="chart-container">
+                    <canvas id="weekdayChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="kpi-title" style="color: var(--accent);">میانگین تراکم افراد به تفکیک ساعات روز (مدیریت پیک ترافیک)</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom: 10px;">محاسبه شده بر اساس زمان ورود و خروج ۳۰ روز گذشته</div>
                 <div class="chart-container">
                     <canvas id="trafficChart"></canvas>
                 </div>
             </div>
-            <div class="chart-box">
-                <div class="kpi-title">پراکندگی رزرو در روزهای هفته</div>
-                <div class="chart-container">
-                    <canvas id="weeklyChart"></canvas>
-                </div>
-            </div>
-        </div>
 
-        <div class="charts-grid-small">
             <div class="chart-box">
                 <div class="kpi-title">ترکیب میزهای اشغال شده</div>
                 <div class="chart-container">
                     <canvas id="capacityMixChart"></canvas>
                 </div>
             </div>
+
             <div class="chart-box">
-                <div class="kpi-title">سهم پلتفرم‌ها از درآمد</div>
+                <div class="kpi-title">سهم پلتفرم‌ها از درآمد کل</div>
                 <div class="chart-container">
                     <canvas id="revenueSourceChart"></canvas>
                 </div>
             </div>
+
         </div>
 
-        <!-- TABLES -->
-        <div class="section-title">گزارشات و ابزارهای مارکتینگ</div>
+        <!-- TABLES / CRM -->
+        <div class="section-title">مدیریت ارتباط با مشتری (CRM)</div>
         <div style="display: flex; gap: 10px; margin-bottom: -15px;">
-            <button class="tab-btn active" onclick="switchTable('crm')">🎯 لیست هدف‌گذاری پیامک (CRM)</button>
+            <button class="tab-btn active" onclick="switchTable('crm')">🎯 لیست هدف‌گذاری بازاریابی</button>
             <button class="tab-btn" onclick="switchTable('ezno')">📥 جدول رزروهای ازنو</button>
         </div>
 
-        <!-- CRM Table -->
         <div class="table-box" id="tbl-crm">
-            <div class="kpi-title" style="color: var(--primary);">سیستم هوشمند پیشنهاد هدف‌گذاری پیامکی (بر اساس رفتار کاربر)</div>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
                             <th>نام کاربر</th>
                             <th>موبایل</th>
-                            <th>تعداد روزانه</th>
+                            <th>تعداد کل روزهای رزرو</th>
                             <th>وضعیت فعلی</th>
-                            <th>پیشنهاد اکشن مارکتینگ (پیامک)</th>
+                            <th>پیشنهاد استراتژی مارکتینگ</th>
                         </tr>
                     </thead>
                     <tbody id="crmTableBody"></tbody>
@@ -259,9 +242,7 @@
             </div>
         </div>
 
-        <!-- Ezno Table -->
         <div class="table-box" id="tbl-ezno" style="display: none;">
-            <div class="kpi-title" style="color: var(--info);">آخرین رزروهای ایمپورت شده از فایل ازنو (مبالغ تبدیل شده به تومان)</div>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -269,12 +250,13 @@
                             <th>نام کاربر</th>
                             <th>موبایل</th>
                             <th>تاریخ شمسی</th>
+                            <th>تعداد روز</th>
                             <th>سهم راهینو (تومان)</th>
                             <th>وضعیت</th>
                         </tr>
                     </thead>
                     <tbody id="eznoTableBody">
-                        <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">فایل اکسل را بارگذاری کنید.</td></tr>
+                        <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">برای مشاهده، فایل ازنو را بارگذاری کنید.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -283,26 +265,26 @@
     </div>
 
     <script>
-        // 🔒 Supabase Config
+        // ==========================================
+        // CONFIG & STATE
+        // ==========================================
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Global State
         let db = { users: [], subs: [], reservations: [], invoices: [], installments: [], cancellations: [], logs: [] };
         let eznoData = []; 
         let charts = {};
-
         const CAPACITY = { total: 26, cip: 4, vip: 22 };
 
-        // Utilities
-        function toEnglishDigits(str) { 
-            return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
-        }
-
-        setInterval(() => {
-            document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Tehran' });
-        }, 1000);
+        // ==========================================
+        // UTILS
+        // ==========================================
+        function toEnglishDigits(str) { return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
+        function showLoader(text) { document.getElementById('loaderText').innerText = text; document.getElementById('mainLoader').style.display = 'flex'; document.getElementById('mainLoader').style.opacity = '1'; }
+        function hideLoader() { document.getElementById('mainLoader').style.opacity = '0'; setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300); }
+        
+        setInterval(() => { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Tehran' }); }, 1000);
 
         function getTodayShamsi() {
             const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Tehran' }).formatToParts(new Date());
@@ -311,19 +293,8 @@
             return `${y}-${m}-${d}`;
         }
 
-        function showLoader(text) {
-            document.getElementById('loaderText').innerText = text;
-            document.getElementById('mainLoader').style.display = 'flex';
-            document.getElementById('mainLoader').style.opacity = '1';
-        }
-
-        function hideLoader() {
-            document.getElementById('mainLoader').style.opacity = '0';
-            setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
-        }
-
         // ==========================================
-        // 1. Auth & Login
+        // 1. AUTH
         // ==========================================
         window.onload = async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -336,22 +307,17 @@
             let pass = document.getElementById('adminPass').value.trim();
             if(!phone || !pass) return alert('شماره و رمز عبور را وارد کنید.');
 
-            showLoader("در حال ورود به سیستم...");
+            showLoader("در حال ورود...");
             const { error } = await supabaseClient.auth.signInWithPassword({ email: phone + '@rahino.ir', password: pass });
-            if(error) {
-                hideLoader();
-                return alert('اطلاعات ورود اشتباه است.');
-            }
+            if(error) { hideLoader(); return alert('اطلاعات ورود اشتباه است.'); }
             verifyAdminRole(phone);
         }
 
         async function verifyAdminRole(phone) {
-            // Because of the is_admin() RLS policy, if the user is an admin, they can read the users table.
             const { data, error } = await supabaseClient.from('users').select('role').eq('phone_number', phone).single();
             if(error || !data || data.role !== 'admin') {
                 await supabaseClient.auth.signOut();
-                hideLoader();
-                alert('❌ دسترسی غیرمجاز! شما مجوز مدیریت پنل را ندارید.');
+                hideLoader(); alert('دسترسی غیرمجاز.');
                 document.getElementById('loginOverlay').style.display = 'flex';
             } else {
                 document.getElementById('loginOverlay').style.display = 'none';
@@ -360,28 +326,22 @@
                 fetchDatabaseInfo();
             }
         }
-
-        async function adminLogout() {
-            if(confirm('آیا از پنل خارج می‌شوید؟')) {
-                await supabaseClient.auth.signOut();
-                window.location.reload(); 
-            }
-        }
+        async function adminLogout() { if(confirm('خروج؟')) { await supabaseClient.auth.signOut(); window.location.reload(); } }
 
         // ==========================================
-        // 2. Fetch Data
+        // 2. FETCH DATA
         // ==========================================
         async function fetchDatabaseInfo() {
-            showLoader("در حال استخراج داده‌های یکپارچه...");
+            showLoader("در حال استخراج و تحلیل داده‌ها...");
             try {
                 const [users, subs, res, inv, inst, cancel, logs] = await Promise.all([
                     supabaseClient.from('users').select('phone_number, full_name, role'),
                     supabaseClient.from('pan_monthly_subs').select('*'),
                     supabaseClient.from('pan_reservations').select('*'),
                     supabaseClient.from('pan_invoices').select('*').eq('status', 'approved'),
-                    supabaseClient.from('pan_installments').select('*').neq('status', 'paid').order('due_date', { ascending: true }),
+                    supabaseClient.from('pan_installments').select('*').neq('status', 'paid'),
                     supabaseClient.from('cancellation_requests').select('*').eq('status', 'approved'),
-                    supabaseClient.from('attendance_logs').select('log_date, entry_time, exit_time').gte('log_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+                    supabaseClient.from('attendance_logs').select('*')
                 ]);
 
                 db.users = users.data || [];
@@ -392,282 +352,266 @@
                 db.cancellations = cancel.data || [];
                 db.logs = logs.data || [];
                 
-                calculateMetrics();
-                renderCRMTable();
+                calculateKPIs();
                 hideLoader();
-            } catch (err) {
-                console.error(err);
-                alert("خطا در دریافت اطلاعات دیتابیس.");
-                hideLoader();
-            }
+            } catch (err) { console.error(err); alert("خطا در دریافت اطلاعات دیتابیس."); hideLoader(); }
         }
 
         // ==========================================
-        // 3. Excel Parsing (Ezno)
+        // 3. EXCEL UPLOAD (EZNO)
         // ==========================================
         function handleExcelUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            showLoader("در حال پردازش و تبدیل ریال به تومان...");
+            showLoader("در حال ادغام داده‌های ازنو...");
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 
                 eznoData = jsonData.map(row => ({
                     name: `${row['نام'] || ''} ${row['نام خانوادگی'] || ''}`.trim(),
                     phone: row['شماره تماس'] ? `0${row['شماره تماس']}` : 'ندارد',
                     shamsiDate: row['تاریخ شمسی'],
-                    userPaidToman: (Number(row['پرداختی کاربر']) || 0) / 10,
-                    spaceShareToman: (Number(row['سهم فضا']) || 0) / 10,
-                    eznoShareToman: (Number(row['سهم ازنو']) || 0) / 10,
-                    count: Number(row['تعداد']) || 1, // دریافت تعداد روزها از اکسل ازنو
+                    count: Number(row['تعداد']) || 1, // 🚀 دریافت تعداد روز
+                    spaceShareToman: (Number(row['سهم فضا']) || 0) / 10, // 🚀 تبدیل ریال به تومان
                     status: row['وضعیت رزرو']
                 }));
 
-                calculateMetrics(); 
-                renderEznoTable();
-
+                calculateKPIs(); 
+                
                 const btn = document.getElementById('uploadBtn');
                 btn.innerHTML = '✅ <span>اکسل ازنو بروز شد</span>';
                 btn.style.background = 'linear-gradient(135deg, var(--success), #047857)';
-
                 hideLoader();
             };
             reader.readAsArrayBuffer(file);
         }
-        
+
         // ==========================================
-        // 4. Calculate KPI & Process Analytics
+        // 4. CALCULATE KPIs & RENDER CHARTS
         // ==========================================
-        function calculateMetrics() {
+        function calculateKPIs() {
             const todayShamsi = getTodayShamsi();
 
-            // --- 1. Capacity & Occupancy ---
-            let activeSubs = db.subs.filter(s => s.status === 'active' && s.end_date >= todayShamsi);
-            let activeCIP = activeSubs.filter(s => s.plan_type === 'cip').length;
-            let activeVIPMonthly = activeSubs.filter(s => s.plan_type === 'vip' || s.plan_type === 'student_plan').length;
+            // -- ظرفیت فعلی --
+            let activeCIP = db.subs.filter(s => s.plan_type === 'cip' && s.status === 'active' && s.end_date >= todayShamsi).length;
+            let activeVIPM = db.subs.filter(s => (s.plan_type === 'vip' || s.plan_type === 'student_plan') && s.status === 'active' && s.end_date >= todayShamsi).length;
             
-            let dailySite = db.reservations.filter(res => {
-                if (!res.reserved_dates) return false;
-                if (typeof res.reserved_dates === 'string') return res.reserved_dates.includes(todayShamsi);
-                if (Array.isArray(res.reserved_dates)) return res.reserved_dates.includes(todayShamsi);
-                return false;
-            }).length;
-
+            let dailySite = db.reservations.filter(r => r.reserved_dates && JSON.stringify(r.reserved_dates).includes(todayShamsi)).length;
             let dailyEzno = eznoData.filter(e => e.shamsiDate && e.shamsiDate.replace(/\//g, '-') === todayShamsi && e.status !== 'لغو شده').length;
 
-            let totalVIPOccupied = activeVIPMonthly + dailySite + dailyEzno;
-            let totalOccupied = activeCIP + totalVIPOccupied;
-            let emptyVIP = CAPACITY.vip - totalVIPOccupied;
-            emptyVIP = emptyVIP < 0 ? 0 : emptyVIP;
+            let totalVIP = activeVIPM + dailySite + dailyEzno;
+            let totalOcc = activeCIP + totalVIP;
+            let emptyVIP = Math.max(CAPACITY.vip - totalVIP, 0);
 
-            document.getElementById('kpiOccupancy').innerText = totalOccupied;
-            document.getElementById('occupancyBar').style.width = `${Math.min((totalOccupied / CAPACITY.total) * 100, 100)}%`;
+            document.getElementById('kpiOccupancy').innerText = totalOcc;
+            document.getElementById('occupancyBar').style.width = `${(totalOcc / CAPACITY.total) * 100}%`;
             document.getElementById('kpiOccCIP').innerText = `CIP: ${activeCIP}/${CAPACITY.cip}`;
-            document.getElementById('kpiOccVIP').innerText = `VIP: ${totalVIPOccupied}/${CAPACITY.vip}`;
+            document.getElementById('kpiOccVIP').innerText = `VIP: ${totalVIP}/${CAPACITY.vip}`;
 
-            let totalDaily = dailySite + dailyEzno;
-            document.getElementById('kpiDailyBookings').innerText = totalDaily;
-            document.getElementById('dailyBar').style.width = `${Math.min((totalDaily / 15) * 100, 100)}%`;
-            document.getElementById('kpiDailySite').innerText = `سایت: ${dailySite}`;
-            document.getElementById('kpiDailyEzno').innerText = `ازنو: ${dailyEzno}`;
-
-            // --- 2. Financials ---
-            let siteRevenue = db.invoices.reduce((sum, inv) => sum + (Number(inv.final_amount) || 0), 0);
-            let eznoRevenue = eznoData.reduce((sum, row) => sum + row.spaceShareToman, 0); 
-            let totalRev = siteRevenue + eznoRevenue;
+            // -- مالی --
+            let siteRev = db.invoices.reduce((sum, inv) => sum + (Number(inv.final_amount) || 0), 0);
+            let eznoRev = eznoData.reduce((sum, row) => sum + row.spaceShareToman, 0);
+            let totalRev = siteRev + eznoRev;
 
             document.getElementById('kpiTotalRevenue').innerText = totalRev.toLocaleString();
-            let totalRevCalc = totalRev === 0 ? 1 : totalRev;
-            document.getElementById('revenueBar').style.width = `${(siteRevenue / totalRevCalc) * 100}%`;
-            document.getElementById('kpiRevSite').innerText = `سایت: ${(siteRevenue/1000000).toFixed(1)}M`;
-            document.getElementById('kpiRevEzno').innerText = `ازنو: ${(eznoRevenue/1000000).toFixed(1)}M`;
+            document.getElementById('revenueBar').style.width = `${(siteRev / (totalRev||1)) * 100}%`;
+            document.getElementById('kpiRevSite').innerText = `سایت: ${(siteRev/1000000).toFixed(1)}M`;
+            document.getElementById('kpiRevEzno').innerText = `ازنو: ${(eznoRev/1000000).toFixed(1)}M`;
 
-            let pendingInstAmt = db.installments.reduce((sum, ins) => sum + (Number(ins.amount) || 0), 0);
-            let totalRefunds = db.cancellations.reduce((sum, c) => sum + (Number(c.refund_amount) || 0), 0);
-
-            document.getElementById('kpiPendingInstallments').innerText = pendingInstAmt.toLocaleString();
+            let instAmt = db.installments.reduce((sum, ins) => sum + (Number(ins.amount) || 0), 0);
+            let refunds = db.cancellations.reduce((sum, c) => sum + (Number(c.refund_amount) || 0), 0);
+            document.getElementById('kpiPendingInstallments').innerText = instAmt.toLocaleString();
             document.getElementById('installmentsBar').style.width = db.installments.length > 0 ? '50%' : '0%';
             document.getElementById('kpiInstallmentCount').innerText = `تعداد: ${db.installments.length} قسط`;
-            document.getElementById('kpiRefunds').innerText = totalRefunds.toLocaleString();
+            document.getElementById('kpiRefunds').innerText = refunds.toLocaleString();
 
-            // --- 3. Average Stay Duration ---
-            let totalHours = 0;
-            let validLogsCount = 0;
+            // -- میانگین حضور --
+            let totalHours = 0, validLogs = 0;
             db.logs.forEach(log => {
                 if(log.entry_time && log.exit_time) {
-                    let diffMs = new Date(log.exit_time) - new Date(log.entry_time);
-                    totalHours += (diffMs / (1000 * 60 * 60));
-                    validLogsCount++;
+                    totalHours += (new Date(log.exit_time) - new Date(log.entry_time)) / 3600000;
+                    validLogs++;
                 }
             });
-            let avgDuration = validLogsCount > 0 ? (totalHours / validLogsCount).toFixed(1) : 0;
-            document.getElementById('kpiAvgDuration').innerText = avgDuration;
-            document.getElementById('durationBar').style.width = `${Math.min((avgDuration / 14) * 100, 100)}%`; // assuming 14h max
-            document.getElementById('kpiTotalLogs').innerText = `محاسبه بر اساس ${validLogsCount} رکورد تردد کامل`;
+            let avgDur = validLogs > 0 ? (totalHours / validLogs).toFixed(1) : 0;
+            document.getElementById('kpiAvgDuration').innerText = avgDur;
+            document.getElementById('durationBar').style.width = `${(avgDur / 14) * 100}%`;
+            document.getElementById('kpiTotalLogs').innerText = `محاسبه بر اساس ${validLogs} رکورد کامل`;
 
-            // --- 4. Chart Analytics ---
-            prepareChartsData(activeCIP, activeVIPMonthly, totalDaily, emptyVIP, siteRevenue, eznoRevenue);
+            // -- پردازش نمودارها --
+            processAndDrawCharts(activeCIP, activeVIPM, dailySite + dailyEzno, emptyVIP, siteRev, eznoRev);
+            
+            // -- رندر جداول --
+            renderCRMTable(todayShamsi);
+            renderEznoTable();
         }
 
         // ==========================================
-        // 5. Chart.js Data Prep & Rendering
+        // 5. CHART.JS RENDERING (FIXED LOGIC)
         // ==========================================
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn';
         Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
 
-        function prepareChartsData(cip, vipM, vipD, empty, siteRev, eznoRev) {
+        function renderChart(id, type, data, options) {
+            if(charts[id]) charts[id].destroy();
+            charts[id] = new Chart(document.getElementById(id), { type, data, options });
+        }
+
+        function processAndDrawCharts(cip, vipM, vipD, empty, siteRev, eznoRev) {
             
-            // الف: ساعات اوج ترافیک (محاسبه میانگین همزمان)
+            // --- اصلاح منطق ساعات پیک ترافیک (میانگین‌گیری) ---
             let hourCounts = new Array(24).fill(0);
             let uniqueDays = new Set();
 
             db.logs.forEach(log => {
                 if(log.entry_time) {
-                    // استخراج روزهای یکتا برای میانگین‌گیری
-                    let logDay = log.log_date || new Date(log.entry_time).toDateString();
-                    uniqueDays.add(logDay);
-
+                    let d = log.log_date || new Date(log.entry_time).toDateString();
+                    uniqueDays.add(d);
+                    
                     let startH = new Date(log.entry_time).getHours();
                     let endH = log.exit_time ? new Date(log.exit_time).getHours() : new Date().getHours();
                     if(endH < startH) endH = 23; 
-                    for(let h = startH; h <= endH; h++) { 
-                        if(h >= 6 && h <= 22) hourCounts[h]++; 
-                    }
+                    for(let h = startH; h <= endH; h++) { if(h >= 6 && h <= 22) hourCounts[h]++; }
                 }
             });
 
-            // تقسیم مجموع تردد هر ساعت بر تعداد روزها
-            let numDays = uniqueDays.size > 0 ? uniqueDays.size : 1;
-            let displayHours = []; 
-            let displayDataHours = [];
+            let numDays = uniqueDays.size > 0 ? uniqueDays.size : 1; // جلوگیری از تقسیم بر صفر
+            let labelsH = [], dataH = [];
             for(let i=6; i<=22; i++) { 
-                displayHours.push(`${i}:00`); 
-                displayDataHours.push(Math.round(hourCounts[i] / numDays)); 
+                labelsH.push(`${i}:00`); 
+                dataH.push(Math.round(hourCounts[i] / numDays)); // 🚀 میانگین گیری صحیح
             }
 
-            // ب: پراکندگی روزهای هفته
-            const daysMap = [0, 0, 0, 0, 0, 0, 0]; 
-            db.logs.forEach(log => {
-                let day = new Date(log.log_date || log.entry_time).getDay();
-                daysMap[day]++;
-            });
-            const dayLabels = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-            const dayData = [daysMap[6], daysMap[0], daysMap[1], daysMap[2], daysMap[3], daysMap[4], daysMap[5]];
+            renderChart('trafficChart', 'line', {
+                labels: labelsH,
+                datasets: [{ label: 'میانگین افراد همزمان', data: dataH, borderColor: '#e59ea3', backgroundColor: 'rgba(229,158,163,0.15)', borderWidth: 3, fill: true, tension: 0.4 }]
+            }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
 
-            renderCharts(cip, vipM, vipD, empty, siteRev, eznoRev, displayHours, displayDataHours, dayLabels, dayData);
+            // --- نمودار روزانه مهمانان غیرماهانه در ایام هفته ---
+            // پیدا کردن کسانی که اشتراک ماهانه ندارند
+            const monthlyPhones = new Set(db.subs.map(s => s.phone_number));
+            let weeklyCounts = [0,0,0,0,0,0,0]; // Sun to Sat
+            
+            db.logs.forEach(log => {
+                // اگر در لیست ماهانه‌ها نیست، یعنی روزانه است
+                if (!monthlyPhones.has(log.student_nid)) {
+                    let dayIndex = new Date(log.log_date || log.entry_time).getDay();
+                    weeklyCounts[dayIndex]++;
+                }
+            });
+            // ترتیب شمسی: شنبه تا جمعه
+            const dayLabels = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+            const dayData = [weeklyCounts[6], weeklyCounts[0], weeklyCounts[1], weeklyCounts[2], weeklyCounts[3], weeklyCounts[4], weeklyCounts[5]];
+
+            renderChart('weekdayChart', 'bar', {
+                labels: dayLabels,
+                datasets: [{ label: 'تعداد مراجعین روزانه', data: dayData, backgroundColor: '#3b82f6', borderRadius: 6 }]
+            }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+
+            // --- نمودار ترکیب ظرفیت ---
+            renderChart('capacityMixChart', 'doughnut', {
+                labels: ['CIP ماهانه', 'VIP ماهانه', 'مهمان روزانه', 'ظرفیت خالی'],
+                datasets: [{ data: [cip, vipM, vipD, empty], backgroundColor: ['#8b5cf6', '#77bba9', '#3b82f6', '#1f2d29'], borderWidth: 0 }]
+            }, { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: {color:'#94a3b8'} } } });
+
+            // --- نمودار درآمد ---
+            renderChart('revenueSourceChart', 'bar', {
+                labels: ['درآمد کل (به تومان)'],
+                datasets: [
+                    { label: 'سایت راهینو', data: [siteRev], backgroundColor: '#10b981', borderRadius: 8 },
+                    { label: 'پلتفرم ازنو', data: [eznoRev], backgroundColor: '#f59e0b', borderRadius: 8 }
+                ]
+            }, { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => v/1000000 + 'M' } } }, plugins: { legend: { position: 'bottom', labels: {color:'#94a3b8'} } } });
         }
 
         // ==========================================
-        // 6. CRM Logic (اصلاح شمارش دقیق روزهای رزرو شده)
+        // 6. CRM & TABLES (FIXED LOGIC)
         // ==========================================
-        function getDaysCount(datesData) {
-            if (!datesData) return 0;
-            if (Array.isArray(datesData)) return datesData.length;
-            try {
-                let parsed = JSON.parse(datesData);
-                if (Array.isArray(parsed)) return parsed.length;
-            } catch(e) {}
-            if (typeof datesData === 'string') return datesData.split(',').length;
+        function switchTable(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tbl-crm').style.display = tab === 'crm' ? 'flex' : 'none';
+            document.getElementById('tbl-ezno').style.display = tab === 'ezno' ? 'flex' : 'none';
+        }
+
+        // تابع برای شمارش طول آرایه تاریخ‌ها
+        function getDaysCount(datesStr) {
+            if (!datesStr) return 0;
+            if (Array.isArray(datesStr)) return datesStr.length;
+            try { let p = JSON.parse(datesStr); if(Array.isArray(p)) return p.length; } catch(e){}
+            if (typeof datesStr === 'string') return datesStr.split(',').length;
             return 1;
         }
 
-        function renderCRMTable() {
-            const todayShamsi = getTodayShamsi();
+        function renderCRMTable(todayShamsi) {
             const students = db.users.filter(u => u.role !== 'admin');
-            
             let crmRows = [];
 
             students.forEach(user => {
                 let userSubs = db.subs.filter(s => s.phone_number === user.phone_number);
                 let activeSub = userSubs.find(s => s.status === 'active' && s.end_date >= todayShamsi);
                 
-                // شمارش آرایه تاریخ‌ها در رزرو سایت
+                // 🚀 شمارش دقیق تمام روزهایی که فرد در سایت رزرو کرده است
                 let userResCount = db.reservations
                     .filter(r => r.phone_number === user.phone_number)
                     .reduce((sum, r) => sum + getDaysCount(r.reserved_dates), 0);
                 
-                // شمارش ستون تعداد در رزروهای ازنو
+                // 🚀 شمارش مجموع فیلد "تعداد" برای رزروهای ازنو
                 let userEznoCount = eznoData
                     .filter(e => e.phone === user.phone_number)
                     .reduce((sum, e) => sum + e.count, 0);
 
                 let totalDailyCount = userResCount + userEznoCount;
-
                 let statusObj = { text: '', badge: '', recommendation: '' };
 
                 if (activeSub) {
-                    statusObj.text = 'ماهانه فعال';
-                    statusObj.badge = 'badge-success';
-                    statusObj.recommendation = 'عدم نیاز به اقدام (وفادار)';
+                    statusObj.text = 'ماهانه فعال'; statusObj.badge = 'badge-success'; statusObj.recommendation = 'ارسال پیامک تشکر / نیازی نیست';
                 } else if (userSubs.length > 0) {
-                    statusObj.text = 'ماهانه منقضی شده';
-                    statusObj.badge = 'badge-danger';
-                    statusObj.recommendation = 'پیامک کد تخفیف تمدید اشتراک 🎯';
-                } else if (totalDailyCount >= 3) {
-                    statusObj.text = 'مشتری مستمر روزانه';
-                    statusObj.badge = 'badge-purple';
-                    statusObj.recommendation = 'ارسال آفر ویژه ثبت‌نام ماهانه 🚀';
+                    statusObj.text = 'ماهانه منقضی شده'; statusObj.badge = 'badge-danger'; statusObj.recommendation = 'پیامک کد تخفیف ۳۰٪ تمدید 🎯';
+                } else if (totalDailyCount >= 4) {
+                    statusObj.text = 'مشتری مستمر روزانه'; statusObj.badge = 'badge-purple'; statusObj.recommendation = 'آفر ویژه (ارتقا به اشتراک ماهانه) 🚀';
                 } else if (totalDailyCount > 0) {
-                    statusObj.text = 'مشتری گذری';
-                    statusObj.badge = 'badge-info';
-                    statusObj.recommendation = 'پیامک یادآوری + کد تخفیف روزانه ✉️';
+                    statusObj.text = 'مشتری گذری'; statusObj.badge = 'badge-info'; statusObj.recommendation = 'ارسال کد تخفیف روزهای خلوت ✉️';
                 } else {
-                    statusObj.text = 'ثبت‌نام بدون رزرو';
-                    statusObj.badge = 'badge-warning';
-                    statusObj.recommendation = 'کمپین جذب اولیه (دعوتنامه)';
+                    statusObj.text = 'فقط ثبت‌نام'; statusObj.badge = 'badge-warning'; statusObj.recommendation = 'ارسال دعوتنامه / معرفی پانسیون';
                 }
 
-                crmRows.push({
-                    name: user.full_name || 'کاربر بدون نام',
-                    phone: user.phone_number,
-                    dailyCount: totalDailyCount,
-                    status: statusObj
-                });
+                crmRows.push({ name: user.full_name || 'بدون نام', phone: user.phone_number, count: totalDailyCount, status: statusObj });
             });
 
-            crmRows.sort((a, b) => b.dailyCount - a.dailyCount);
+            // مرتب‌سازی: اولویت با کسانی که پتانسیل خرید بیشتری دارند
+            crmRows.sort((a, b) => b.count - a.count);
 
-            const tbody = document.getElementById('crmTableBody');
-            tbody.innerHTML = crmRows.map(row => `
+            document.getElementById('crmTableBody').innerHTML = crmRows.map(row => `
                 <tr>
                     <td>${row.name}</td>
                     <td style="font-family:monospace; color:var(--text-muted); direction:ltr;">${row.phone}</td>
-                    <td style="font-weight:bold;">${row.dailyCount} روز</td>
+                    <td style="font-weight:900;">${row.count} روز</td>
                     <td><span class="badge ${row.status.badge}">${row.status.text}</span></td>
-                    <td style="color: var(--accent);">${row.status.recommendation}</td>
+                    <td style="color: var(--accent); font-size:12px;">${row.status.recommendation}</td>
                 </tr>
             `).join('');
         }
 
         function renderEznoTable() {
-            const tbody = document.getElementById('eznoTableBody');
-            if (eznoData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">رکوردی یافت نشد.</td></tr>';
-                return;
-            }
-            
-            const html = eznoData.slice(0, 30).map(row => {
-                let badge = 'badge-info';
-                if(row.status.includes('استفاده')) badge = 'badge-success';
-                else if(row.status.includes('لغو')) badge = 'badge-danger';
-
+            if (eznoData.length === 0) return;
+            document.getElementById('eznoTableBody').innerHTML = eznoData.slice(0, 30).map(row => {
+                let badge = row.status.includes('استفاده') ? 'badge-success' : (row.status.includes('لغو') ? 'badge-danger' : 'badge-info');
                 return `
                 <tr>
                     <td>${row.name}</td>
                     <td style="font-family:monospace; color:var(--text-muted); direction:ltr;">${row.phone}</td>
                     <td>${row.shamsiDate}</td>
-                    <td style="color: var(--success);">${row.spaceShareToman.toLocaleString()} <span style="font-size:10px; color:var(--text-muted)">تومان</span></td>
+                    <td>${row.count} روز</td>
+                    <td style="color: var(--success);">${row.spaceShareToman.toLocaleString()}</td>
                     <td><span class="badge ${badge}">${row.status}</span></td>
                 </tr>
             `}).join('');
-            
-            tbody.innerHTML = html;
         }
     </script>
 </body>
