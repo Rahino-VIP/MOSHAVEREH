@@ -22,7 +22,15 @@
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg-color); color: var(--text-main); padding-bottom: 50px; font-size: 14px; }
 
-        /* Navbar & Header */
+        /* Login Overlay */
+        .login-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 9000; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .login-box { background: var(--surface); padding: 40px 30px; border-radius: 24px; box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
+        .form-input { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 15px; border-radius: 12px; outline: none; text-align: center; font-family: 'Vazirmatn'; font-weight: bold; width: 100%; margin-bottom: 15px; font-size: 16px; letter-spacing: 1px; transition: 0.3s; }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-fade); }
+        .btn-main { background: var(--primary); color: #000; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; border: none; width: 100%; transition: 0.3s; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(119, 187, 169, 0.4); }
+
+        /* Navbar */
         .top-navbar { background: rgba(21, 30, 28, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .nav-brand { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
         .nav-brand span { color: var(--primary); }
@@ -34,110 +42,117 @@
         .btn-upload { background: linear-gradient(135deg, var(--info), #2563eb); color: white; padding: 10px 20px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
         .btn-upload:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
 
-        .app-container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 25px; }
+        .app-container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 30px; }
         
-        /* Section Titles */
         .section-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .section-title::before { content: ''; display: inline-block; width: 6px; height: 20px; background: var(--primary); border-radius: 4px; }
 
         /* KPI Cards Grid */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-        .kpi-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform 0.2s; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform 0.2s; }
         .kpi-card:hover { transform: translateY(-5px); border-color: rgba(119, 187, 169, 0.5); }
-        .kpi-icon { position: absolute; left: 20px; top: 20px; font-size: 28px; opacity: 0.2; }
+        .kpi-icon { position: absolute; left: 20px; top: 20px; font-size: 32px; opacity: 0.15; }
         .kpi-title { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px; }
-        .kpi-value { font-size: 28px; font-weight: 900; color: var(--text-main); display: flex; align-items: baseline; gap: 5px; }
-        .kpi-unit { font-size: 12px; font-weight: normal; color: var(--text-muted); }
+        .kpi-value { font-size: 30px; font-weight: 900; color: var(--text-main); display: flex; align-items: baseline; gap: 5px; }
+        .kpi-unit { font-size: 13px; font-weight: normal; color: var(--text-muted); }
         
-        /* Progress Bar */
         .progress-bg { background: var(--surface-light); height: 6px; border-radius: 10px; margin-top: 15px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
-        .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: bold; }
+        .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: bold; }
 
         /* Charts Grid */
-        .charts-grid { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 20px; }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .charts-grid-small { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .chart-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
         .chart-container { flex: 1; position: relative; min-height: 250px; width: 100%; }
 
-        /* Tables Grid */
-        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .table-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; }
-        .table-wrapper { overflow-x: auto; max-height: 350px; overflow-y: auto; margin-top: 15px; padding-right: 5px;}
+        /* Tables */
+        .table-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
+        .table-wrapper { overflow-x: auto; max-height: 400px; overflow-y: auto; margin-top: 15px; padding-right: 5px;}
         
-        /* Custom Scrollbar */
         .table-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
         .table-wrapper::-webkit-scrollbar-track { background: var(--surface-light); border-radius: 10px; }
         .table-wrapper::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
-        table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: right; }
-        th { position: sticky; top: 0; background: var(--surface-light); color: var(--text-muted); font-weight: bold; padding: 12px 15px; font-size: 12px; z-index: 10; border-bottom: 2px solid var(--border-color); }
-        td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: bold; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: right; min-width: 600px;}
+        th { position: sticky; top: 0; background: var(--surface-light); color: var(--text-muted); font-weight: bold; padding: 15px; font-size: 12px; z-index: 10; border-bottom: 2px solid var(--border-color); }
+        td { padding: 15px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: bold; vertical-align: middle; }
         tr:hover td { background: rgba(255,255,255,0.02); }
         tr:last-child td { border-bottom: none; }
 
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;}
-        .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-        .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-        .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 4px;}
+        .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.3); }
 
-        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; display: none; }
         .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .tab-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
 
-        @media (max-width: 1200px) {
-            .charts-grid { grid-template-columns: 1fr 1fr; }
-            .chart-box:first-child { grid-column: 1 / -1; }
-        }
         @media (max-width: 992px) {
-            .tables-grid { grid-template-columns: 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
+            .charts-grid, .charts-grid-small { grid-template-columns: 1fr; }
             .top-navbar { flex-direction: column; gap: 15px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- لودر اصلی -->
     <div class="loader-overlay" id="mainLoader">
         <div class="spinner"></div>
-        <h3 style="color: var(--primary);" id="loaderText">در حال همگام‌سازی داده‌ها...</h3>
+        <h3 style="color: var(--primary);" id="loaderText">لطفا چند لحظه صبر کنید...</h3>
     </div>
 
-    <header class="top-navbar">
-        <div class="nav-brand">📊 پنل مدیریت استراتژیک <span>راهینو</span></div>
-        <div style="display: flex; gap: 20px; align-items: center;">
+    <!-- فرم لاگین ادمین -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1 style="color: var(--primary); margin-bottom: 10px; font-weight: 900;">هوش تجاری راهینو</h1>
+            <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px;">ورود پرسنل مدیریت</p>
+            <input type="tel" id="adminPhone" class="form-input" placeholder="شماره موبایل" autocomplete="off">
+            <input type="password" id="adminPass" class="form-input" placeholder="رمز عبور">
+            <button class="btn-main" onclick="adminLogin()">ورود به داشبورد</button>
+        </div>
+    </div>
+
+    <!-- هدر -->
+    <header class="top-navbar" id="topNavbar" style="display: none;">
+        <div class="nav-brand">📊 قطب‌نمای <span>راهینو</span> | BI Dashboard</div>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center;">
             <div class="live-clock" id="liveClock">00:00:00</div>
             <div class="file-upload-wrapper">
                 <button class="btn-upload" id="uploadBtn">
-                    📥 <span>وارد کردن خروجی اکسل ازنو</span>
+                    📥 <span>بارگذاری فایل اکسل «ازنو»</span>
                 </button>
                 <input type="file" id="eznoFileInput" accept=".xlsx, .xls" onchange="handleExcelUpload(event)" />
             </div>
+            <button class="tab-btn" onclick="adminLogout()" style="border-color: var(--danger); color: var(--danger);">خروج 🚪</button>
         </div>
     </header>
 
-    <div class="app-container">
+    <div class="app-container" id="appContainer" style="display: none;">
         
-        <!-- ================= KPI METRICS ================= -->
-        <div class="section-title">شاخص‌های کلیدی عملکرد (امروز)</div>
+        <!-- KPI METRICS -->
+        <div class="section-title">شاخص‌های عملیاتی و مالی (امروز)</div>
         <div class="kpi-grid">
             
-            <!-- اشغال سالن -->
             <div class="kpi-card">
                 <div class="kpi-icon">🪑</div>
-                <div class="kpi-title">میزهای اشغال شده</div>
-                <div class="kpi-value"><span id="kpiOccupancy">0</span> <span class="kpi-unit">از 26 ظرفیت کل</span></div>
+                <div class="kpi-title">تراکم ظرفیت (اشغال میزها)</div>
+                <div class="kpi-value"><span id="kpiOccupancy">0</span> <span class="kpi-unit">از 26</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="occupancyBar" style="width: 0%; background: var(--primary);"></div></div>
                 <div class="progress-labels">
-                    <span id="kpiOccCIP">CIP: 0/4</span>
-                    <span id="kpiOccVIP">VIP: 0/22</span>
+                    <span id="kpiOccCIP">CIP: 0</span>
+                    <span id="kpiOccVIP">VIP: 0</span>
                 </div>
             </div>
 
-            <!-- درآمد ناخالص -->
             <div class="kpi-card">
                 <div class="kpi-icon">💳</div>
-                <div class="kpi-title">درآمد کل پانسیون (سایت + ازنو)</div>
+                <div class="kpi-title">درآمد کل سیستم (ناخالص)</div>
                 <div class="kpi-value" style="color: var(--success);"><span id="kpiTotalRevenue">0</span> <span class="kpi-unit">تومان</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="revenueBar" style="width: 0%; background: var(--success);"></div></div>
                 <div class="progress-labels">
@@ -146,103 +161,106 @@
                 </div>
             </div>
 
-            <!-- رزروهای روزانه -->
             <div class="kpi-card">
-                <div class="kpi-icon">📅</div>
-                <div class="kpi-title">مهمانان روزانه (امروز)</div>
-                <div class="kpi-value" style="color: var(--info);"><span id="kpiDailyBookings">0</span> <span class="kpi-unit">نفر</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="dailyBar" style="width: 0%; background: var(--info);"></div></div>
+                <div class="kpi-icon">⏳</div>
+                <div class="kpi-title">میانگین حضور دانش‌آموزان</div>
+                <div class="kpi-value" style="color: var(--info);"><span id="kpiAvgDuration">0</span> <span class="kpi-unit">ساعت در روز</span></div>
+                <div class="progress-bg"><div class="progress-fill" id="durationBar" style="width: 0%; background: var(--info);"></div></div>
                 <div class="progress-labels">
-                    <span id="kpiDailySite">رزرو سایت: 0</span>
-                    <span id="kpiDailyEzno">ازنو: 0</span>
+                    <span id="kpiTotalLogs" style="color: var(--text-muted);">بر اساس 0 رکورد اخیر</span>
                 </div>
             </div>
 
-            <!-- اقساط و مطالبات -->
             <div class="kpi-card">
-                <div class="kpi-icon">⏳</div>
-                <div class="kpi-title">اقساط در انتظار پرداخت</div>
-                <div class="kpi-value" style="color: var(--warning);"><span id="kpiPendingInstallments">0</span> <span class="kpi-unit">تومان</span></div>
+                <div class="kpi-icon">📉</div>
+                <div class="kpi-title">مطالبات و انصراف‌ها</div>
+                <div class="kpi-value" style="color: var(--warning);"><span id="kpiPendingInstallments">0</span> <span class="kpi-unit">تومان قسط</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="installmentsBar" style="width: 0%; background: var(--warning);"></div></div>
                 <div class="progress-labels">
                     <span id="kpiInstallmentCount">تعداد: 0 قسط</span>
-                    <span style="color:var(--danger);">استرداد: <span id="kpiRefunds">0</span></span>
+                    <span style="color:var(--danger);">استرداد: <span id="kpiRefunds">0</span>T</span>
                 </div>
             </div>
 
         </div>
 
-        <!-- ================= CHARTS ================= -->
-        <div class="section-title" style="margin-top: 15px;">نمودارهای تحلیلی</div>
+        <!-- CHARTS -->
+        <div class="section-title">تحلیل ترافیک و رفتار مشتریان</div>
         <div class="charts-grid">
-            <!-- ترافیک حضور و غیاب -->
             <div class="chart-box">
-                <div class="kpi-title">ساعات اوج ترافیک ورود (Peak Hours)</div>
+                <div class="kpi-title">ساعات اوج ترافیک حضور (Peak Hours) - 7 روز گذشته</div>
                 <div class="chart-container">
                     <canvas id="trafficChart"></canvas>
                 </div>
             </div>
-            
-            <!-- ترکیب ظرفیت -->
             <div class="chart-box">
-                <div class="kpi-title">ترکیب اعضای حاضر در پانسیون</div>
+                <div class="kpi-title">پراکندگی رزرو در روزهای هفته</div>
+                <div class="chart-container">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid-small">
+            <div class="chart-box">
+                <div class="kpi-title">ترکیب میزهای اشغال شده</div>
                 <div class="chart-container">
                     <canvas id="capacityMixChart"></canvas>
                 </div>
             </div>
-
-            <!-- منابع درآمدی -->
             <div class="chart-box">
-                <div class="kpi-title">سهم منابع درآمدی</div>
+                <div class="kpi-title">سهم پلتفرم‌ها از درآمد</div>
                 <div class="chart-container">
                     <canvas id="revenueSourceChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TABLES ================= -->
-        <div class="section-title" style="margin-top: 15px;">گزارش‌های عملیاتی</div>
-        <div class="tables-grid">
-            
-            <!-- جدول ازنو -->
-            <div class="table-box">
-                <div class="kpi-title">📥 آخرین رزروهای پلتفرم ازنو (تبدیل به تومان)</div>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>نام کاربر</th>
-                                <th>موبایل</th>
-                                <th>تاریخ شمسی</th>
-                                <th>سهم راهینو</th>
-                                <th>وضعیت</th>
-                            </tr>
-                        </thead>
-                        <tbody id="eznoTableBody">
-                            <tr><td colspan="5" style="text-align:center; color:var(--text-muted); font-weight:normal;">فایل اکسل را بارگذاری کنید...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <!-- TABLES -->
+        <div class="section-title">گزارشات و ابزارهای مارکتینگ</div>
+        <div style="display: flex; gap: 10px; margin-bottom: -15px;">
+            <button class="tab-btn active" onclick="switchTable('crm')">🎯 لیست هدف‌گذاری پیامک (CRM)</button>
+            <button class="tab-btn" onclick="switchTable('ezno')">📥 جدول رزروهای ازنو</button>
+        </div>
 
-            <!-- جدول اقساط -->
-            <div class="table-box">
-                <div class="kpi-title">⏳ اقساط سررسید شده یا در انتظار تایید</div>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>شماره موبایل</th>
-                                <th>تاریخ سررسید</th>
-                                <th>مبلغ قسط</th>
-                                <th>وضعیت</th>
-                            </tr>
-                        </thead>
-                        <tbody id="installmentsTableBody"></tbody>
-                    </table>
-                </div>
+        <!-- CRM Table -->
+        <div class="table-box" id="tbl-crm">
+            <div class="kpi-title" style="color: var(--primary);">سیستم هوشمند پیشنهاد هدف‌گذاری پیامکی (بر اساس رفتار کاربر)</div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نام کاربر</th>
+                            <th>موبایل</th>
+                            <th>تعداد روزانه</th>
+                            <th>وضعیت فعلی</th>
+                            <th>پیشنهاد اکشن مارکتینگ (پیامک)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crmTableBody"></tbody>
+                </table>
             </div>
+        </div>
 
+        <!-- Ezno Table -->
+        <div class="table-box" id="tbl-ezno" style="display: none;">
+            <div class="kpi-title" style="color: var(--info);">آخرین رزروهای ایمپورت شده از فایل ازنو (مبالغ تبدیل شده به تومان)</div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نام کاربر</th>
+                            <th>موبایل</th>
+                            <th>تاریخ شمسی</th>
+                            <th>سهم راهینو (تومان)</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eznoTableBody">
+                        <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">فایل اکسل را بارگذاری کنید.</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
@@ -253,15 +271,18 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // State Variables
-        let db = { subs: [], reservations: [], invoices: [], installments: [], cancellations: [], logs: [] };
+        // Global State
+        let db = { users: [], subs: [], reservations: [], invoices: [], installments: [], cancellations: [], logs: [] };
         let eznoData = []; 
         let charts = {};
 
-        // Constants
         const CAPACITY = { total: 26, cip: 4, vip: 22 };
 
-        // Utility: Live Clock
+        // Utilities
+        function toEnglishDigits(str) { 
+            return str ? str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
+        }
+
         setInterval(() => {
             document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Tehran' });
         }, 1000);
@@ -273,36 +294,80 @@
             return `${y}-${m}-${d}`;
         }
 
-        // Setup Chart Defaults for Dark Theme
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.font.family = 'Vazirmatn';
-        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
-        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(21, 30, 28, 0.9)';
-        Chart.defaults.plugins.tooltip.titleFont = { family: 'Vazirmatn', size: 14 };
-        Chart.defaults.plugins.tooltip.bodyFont = { family: 'Vazirmatn', size: 13 };
-        Chart.defaults.plugins.tooltip.padding = 12;
-        Chart.defaults.plugins.tooltip.cornerRadius = 8;
-        Chart.defaults.plugins.tooltip.borderColor = '#263632';
-        Chart.defaults.plugins.tooltip.borderWidth = 1;
+        function showLoader(text) {
+            document.getElementById('loaderText').innerText = text;
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('mainLoader').style.opacity = '1';
+        }
 
+        function hideLoader() {
+            document.getElementById('mainLoader').style.opacity = '0';
+            setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+        }
+
+        // ==========================================
+        // 1. Auth & Login
+        // ==========================================
         window.onload = async () => {
-            await fetchDatabaseInfo();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if(session) { verifyAdminRole(session.user.email.split('@')[0]); }
+            else { document.getElementById('loginOverlay').style.display = 'flex'; }
         };
 
+        async function adminLogin() {
+            let phone = toEnglishDigits(document.getElementById('adminPhone').value.trim());
+            let pass = document.getElementById('adminPass').value.trim();
+            if(!phone || !pass) return alert('شماره و رمز عبور را وارد کنید.');
+
+            showLoader("در حال ورود به سیستم...");
+            const { error } = await supabaseClient.auth.signInWithPassword({ email: phone + '@rahino.ir', password: pass });
+            if(error) {
+                hideLoader();
+                return alert('اطلاعات ورود اشتباه است.');
+            }
+            verifyAdminRole(phone);
+        }
+
+        async function verifyAdminRole(phone) {
+            // Because of the is_admin() RLS policy, if the user is an admin, they can read the users table.
+            const { data, error } = await supabaseClient.from('users').select('role').eq('phone_number', phone).single();
+            if(error || !data || data.role !== 'admin') {
+                await supabaseClient.auth.signOut();
+                hideLoader();
+                alert('❌ دسترسی غیرمجاز! شما مجوز مدیریت پنل را ندارید.');
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('topNavbar').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'flex';
+                fetchDatabaseInfo();
+            }
+        }
+
+        async function adminLogout() {
+            if(confirm('آیا از پنل خارج می‌شوید؟')) {
+                await supabaseClient.auth.signOut();
+                window.location.reload(); 
+            }
+        }
+
         // ==========================================
-        // 1. Fetch Data from Supabase
+        // 2. Fetch Data
         // ==========================================
         async function fetchDatabaseInfo() {
+            showLoader("در حال استخراج داده‌های یکپارچه...");
             try {
-                const [subs, res, inv, inst, cancel, logs] = await Promise.all([
-                    supabaseClient.from('pan_monthly_subs').select('*').eq('status', 'active'),
+                const [users, subs, res, inv, inst, cancel, logs] = await Promise.all([
+                    supabaseClient.from('users').select('phone_number, full_name, role'),
+                    supabaseClient.from('pan_monthly_subs').select('*'),
                     supabaseClient.from('pan_reservations').select('*'),
                     supabaseClient.from('pan_invoices').select('*').eq('status', 'approved'),
                     supabaseClient.from('pan_installments').select('*').neq('status', 'paid').order('due_date', { ascending: true }),
                     supabaseClient.from('cancellation_requests').select('*').eq('status', 'approved'),
-                    supabaseClient.from('attendance_logs').select('entry_time').gte('entry_time', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Logs from last 7 days for peak hours
+                    supabaseClient.from('attendance_logs').select('log_date, entry_time, exit_time').gte('log_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
                 ]);
 
+                db.users = users.data || [];
                 db.subs = subs.data || [];
                 db.reservations = res.data || [];
                 db.invoices = inv.data || [];
@@ -311,27 +376,23 @@
                 db.logs = logs.data || [];
                 
                 calculateMetrics();
-                renderInstallmentsTable();
-                
-                document.getElementById('mainLoader').style.opacity = '0';
-                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+                renderCRMTable();
+                hideLoader();
             } catch (err) {
                 console.error(err);
-                alert("خطا در ارتباط با سرور پایگاه داده.");
+                alert("خطا در دریافت اطلاعات دیتابیس.");
+                hideLoader();
             }
         }
 
         // ==========================================
-        // 2. Handle Ezno Excel Upload & Conversion
+        // 3. Excel Parsing (Ezno)
         // ==========================================
         function handleExcelUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            document.getElementById('mainLoader').style.display = 'flex';
-            document.getElementById('mainLoader').style.opacity = '1';
-            document.getElementById('loaderText').innerText = "در حال پردازش و تبدیل ریال به تومان...";
-
+            showLoader("در حال پردازش و تبدیل ریال به تومان...");
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
@@ -350,28 +411,28 @@
                     status: row['وضعیت رزرو']
                 }));
 
-                calculateMetrics(); // Recalculate with Ezno data
+                calculateMetrics(); 
                 renderEznoTable();
 
                 const btn = document.getElementById('uploadBtn');
-                btn.innerHTML = '✅ <span>پردازش شد (تبدیل به تومان)</span>';
+                btn.innerHTML = '✅ <span>اکسل ازنو بروز شد</span>';
                 btn.style.background = 'linear-gradient(135deg, var(--success), #047857)';
 
-                document.getElementById('mainLoader').style.opacity = '0';
-                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+                hideLoader();
             };
             reader.readAsArrayBuffer(file);
         }
 
         // ==========================================
-        // 3. Calculate All KPI Metrics
+        // 4. Calculate KPI & Process Analytics
         // ==========================================
         function calculateMetrics() {
             const todayShamsi = getTodayShamsi();
 
-            // --- ظرفیت و اشغال ---
-            let activeCIP = db.subs.filter(s => s.plan_type === 'cip' && s.end_date >= todayShamsi).length;
-            let activeVIPMonthly = db.subs.filter(s => (s.plan_type === 'vip' || s.plan_type === 'student_plan') && s.end_date >= todayShamsi).length;
+            // --- 1. Capacity & Occupancy ---
+            let activeSubs = db.subs.filter(s => s.status === 'active' && s.end_date >= todayShamsi);
+            let activeCIP = activeSubs.filter(s => s.plan_type === 'cip').length;
+            let activeVIPMonthly = activeSubs.filter(s => s.plan_type === 'vip' || s.plan_type === 'student_plan').length;
             
             let dailySite = db.reservations.filter(res => {
                 if (!res.reserved_dates) return false;
@@ -387,32 +448,28 @@
             let emptyVIP = CAPACITY.vip - totalVIPOccupied;
             emptyVIP = emptyVIP < 0 ? 0 : emptyVIP;
 
-            // DOM Updates: Occupancy
             document.getElementById('kpiOccupancy').innerText = totalOccupied;
-            document.getElementById('occupancyBar').style.width = `${(totalOccupied / CAPACITY.total) * 100}%`;
-            document.getElementById('kpiOccCIP').innerText = `CIP: ${activeCIP}/4`;
-            document.getElementById('kpiOccVIP').innerText = `VIP: ${totalVIPOccupied}/22`;
+            document.getElementById('occupancyBar').style.width = `${Math.min((totalOccupied / CAPACITY.total) * 100, 100)}%`;
+            document.getElementById('kpiOccCIP').innerText = `CIP: ${activeCIP}/${CAPACITY.cip}`;
+            document.getElementById('kpiOccVIP').innerText = `VIP: ${totalVIPOccupied}/${CAPACITY.vip}`;
 
-            // DOM Updates: Daily Bookings
             let totalDaily = dailySite + dailyEzno;
             document.getElementById('kpiDailyBookings').innerText = totalDaily;
-            let maxDailyExpectation = 15; // Arbitrary visual baseline for progress bar
-            document.getElementById('dailyBar').style.width = `${Math.min((totalDaily / maxDailyExpectation) * 100, 100)}%`;
+            document.getElementById('dailyBar').style.width = `${Math.min((totalDaily / 15) * 100, 100)}%`;
             document.getElementById('kpiDailySite').innerText = `سایت: ${dailySite}`;
             document.getElementById('kpiDailyEzno').innerText = `ازنو: ${dailyEzno}`;
 
-            // --- مالی و درآمد ---
+            // --- 2. Financials ---
             let siteRevenue = db.invoices.reduce((sum, inv) => sum + (Number(inv.final_amount) || 0), 0);
-            let eznoRevenue = eznoData.reduce((sum, row) => sum + row.spaceShareToman, 0); // 🚀 استفاده از مقدار تبدیل شده
+            let eznoRevenue = eznoData.reduce((sum, row) => sum + row.spaceShareToman, 0); 
             let totalRev = siteRevenue + eznoRevenue;
 
             document.getElementById('kpiTotalRevenue').innerText = totalRev.toLocaleString();
-            let totalRevCalc = totalRev === 0 ? 1 : totalRev; // prevent div by 0
+            let totalRevCalc = totalRev === 0 ? 1 : totalRev;
             document.getElementById('revenueBar').style.width = `${(siteRevenue / totalRevCalc) * 100}%`;
             document.getElementById('kpiRevSite').innerText = `سایت: ${(siteRevenue/1000000).toFixed(1)}M`;
             document.getElementById('kpiRevEzno').innerText = `ازنو: ${(eznoRevenue/1000000).toFixed(1)}M`;
 
-            // --- اقساط و استرداد ---
             let pendingInstAmt = db.installments.reduce((sum, ins) => sum + (Number(ins.amount) || 0), 0);
             let totalRefunds = db.cancellations.reduce((sum, c) => sum + (Number(c.refund_amount) || 0), 0);
 
@@ -421,37 +478,110 @@
             document.getElementById('kpiInstallmentCount').innerText = `تعداد: ${db.installments.length} قسط`;
             document.getElementById('kpiRefunds').innerText = totalRefunds.toLocaleString();
 
-            // Render Charts
-            renderCharts(activeCIP, activeVIPMonthly, totalDaily, emptyVIP, siteRevenue, eznoRevenue);
+            // --- 3. Average Stay Duration ---
+            let totalHours = 0;
+            let validLogsCount = 0;
+            db.logs.forEach(log => {
+                if(log.entry_time && log.exit_time) {
+                    let diffMs = new Date(log.exit_time) - new Date(log.entry_time);
+                    totalHours += (diffMs / (1000 * 60 * 60));
+                    validLogsCount++;
+                }
+            });
+            let avgDuration = validLogsCount > 0 ? (totalHours / validLogsCount).toFixed(1) : 0;
+            document.getElementById('kpiAvgDuration').innerText = avgDuration;
+            document.getElementById('durationBar').style.width = `${Math.min((avgDuration / 14) * 100, 100)}%`; // assuming 14h max
+            document.getElementById('kpiTotalLogs').innerText = `محاسبه بر اساس ${validLogsCount} رکورد تردد کامل`;
+
+            // --- 4. Chart Analytics ---
+            prepareChartsData(activeCIP, activeVIPMonthly, totalDaily, emptyVIP, siteRevenue, eznoRevenue);
         }
 
         // ==========================================
-        // 4. Render Charts (Chart.js)
+        // 5. Chart.js Data Prep & Rendering
         // ==========================================
-        function renderCharts(cip, vipM, vipD, empty, siteRev, eznoRev) {
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Vazirmatn';
+        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+
+        function prepareChartsData(cip, vipM, vipD, empty, siteRev, eznoRev) {
             
-            // 1. Capacity Mix (Doughnut)
+            // A. Peak Hours (Hourly Concurrency)
+            let hourCounts = new Array(24).fill(0);
+            db.logs.forEach(log => {
+                if(log.entry_time) {
+                    let startH = new Date(log.entry_time).getHours();
+                    let endH = log.exit_time ? new Date(log.exit_time).getHours() : new Date().getHours();
+                    if(endH < startH) endH = 23; // cross midnight safe-guard
+                    for(let h = startH; h <= endH; h++) { if(h >= 6 && h <= 22) hourCounts[h]++; }
+                }
+            });
+            let displayHours = []; let displayDataHours = [];
+            for(let i=6; i<=22; i++) { displayHours.push(`${i}:00`); displayDataHours.push(hourCounts[i]); }
+
+            // B. Day of Week Attendance
+            const daysMap = [0, 0, 0, 0, 0, 0, 0]; // Sun(0) to Sat(6)
+            db.logs.forEach(log => {
+                let day = new Date(log.log_date).getDay();
+                daysMap[day]++;
+            });
+            // Reorder to Persian Week: Sat(6), Sun(0), Mon(1), Tue(2), Wed(3), Thu(4), Fri(5)
+            const dayLabels = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+            const dayData = [daysMap[6], daysMap[0], daysMap[1], daysMap[2], daysMap[3], daysMap[4], daysMap[5]];
+
+            renderCharts(cip, vipM, vipD, empty, siteRev, eznoRev, displayHours, displayDataHours, dayLabels, dayData);
+        }
+
+        function renderCharts(cip, vipM, vipD, empty, siteRev, eznoRev, labelsH, dataH, labelsD, dataD) {
+            
+            // 1. Hourly Traffic
+            if (charts.traffic) charts.traffic.destroy();
+            charts.traffic = new Chart(document.getElementById('trafficChart'), {
+                type: 'line',
+                data: {
+                    labels: labelsH,
+                    datasets: [{
+                        label: 'شاخص تراکم همزمان',
+                        data: dataH,
+                        borderColor: '#e59ea3', backgroundColor: 'rgba(229, 158, 163, 0.15)',
+                        borderWidth: 3, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#e59ea3'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 2. Day of Week
+            if (charts.weekly) charts.weekly.destroy();
+            charts.weekly = new Chart(document.getElementById('weeklyChart'), {
+                type: 'bar',
+                data: {
+                    labels: labelsD,
+                    datasets: [{
+                        label: 'تعداد کل ترددهای ثبت شده',
+                        data: dataD,
+                        backgroundColor: '#8b5cf6', borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 3. Capacity Mix
             if (charts.capacity) charts.capacity.destroy();
             charts.capacity = new Chart(document.getElementById('capacityMixChart'), {
                 type: 'doughnut',
                 data: {
                     labels: ['CIP ماهانه', 'VIP ماهانه', 'مهمان روزانه', 'صندلی خالی'],
-                    datasets: [{
-                        data: [cip, vipM, vipD, empty],
-                        backgroundColor: ['#8b5cf6', '#77bba9', '#3b82f6', '#1f2d29'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
+                    datasets: [{ data: [cip, vipM, vipD, empty], backgroundColor: ['#8b5cf6', '#77bba9', '#3b82f6', '#1f2d29'], borderWidth: 0, hoverOffset: 4 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: {color:'#94a3b8', font:{family:'Vazirmatn'} } } } }
             });
 
-            // 2. Revenue Source (Bar)
+            // 4. Revenue Source
             if (charts.revenue) charts.revenue.destroy();
             charts.revenue = new Chart(document.getElementById('revenueSourceChart'), {
                 type: 'bar',
                 data: {
-                    labels: ['سهم منابع درآمدی'],
+                    labels: ['مقایسه درآمد'],
                     datasets: [
                         { label: 'سایت راهینو', data: [siteRev], backgroundColor: '#10b981', borderRadius: 8 },
                         { label: 'پلتفرم ازنو', data: [eznoRev], backgroundColor: '#f59e0b', borderRadius: 8 }
@@ -459,56 +589,87 @@
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { callback: function(val) { return val / 1000000 + 'M'; } } } },
-                    plugins: { legend: { position: 'bottom' } } 
-                }
-            });
-
-            // 3. Peak Hours Traffic (Line)
-            // محاسبه توزیع ساعات ورود
-            let hourCounts = new Array(24).fill(0);
-            db.logs.forEach(log => {
-                if(log.entry_time) {
-                    let hour = new Date(log.entry_time).getHours();
-                    hourCounts[hour]++;
-                }
-            });
-            // فقط ساعات 6 صبح تا 22 شب را نمایش دهیم
-            let displayHours = [];
-            let displayData = [];
-            for(let i=6; i<=22; i++) {
-                displayHours.push(`${i}:00`);
-                displayData.push(hourCounts[i]);
-            }
-
-            if (charts.traffic) charts.traffic.destroy();
-            charts.traffic = new Chart(document.getElementById('trafficChart'), {
-                type: 'line',
-                data: {
-                    labels: displayHours,
-                    datasets: [{
-                        label: 'تعداد ورود (۷ روز گذشته)',
-                        data: displayData,
-                        borderColor: '#e59ea3',
-                        backgroundColor: 'rgba(229, 158, 163, 0.2)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#e59ea3'
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-                    plugins: { legend: { display: false } }
+                    scales: { y: { beginAtZero: true, ticks: { callback: val => val / 1000000 + 'M' } } },
+                    plugins: { legend: { position: 'bottom', labels: {color:'#94a3b8', font:{family:'Vazirmatn'} } } } 
                 }
             });
         }
 
         // ==========================================
-        // 5. Render Tables
+        // 6. CRM Logic & Table Rendering
         // ==========================================
+        function switchTable(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tbl-crm').style.display = tab === 'crm' ? 'flex' : 'none';
+            document.getElementById('tbl-ezno').style.display = tab === 'ezno' ? 'flex' : 'none';
+        }
+
+        function renderCRMTable() {
+            const todayShamsi = getTodayShamsi();
+            const students = db.users.filter(u => u.role !== 'admin');
+            
+            let crmRows = [];
+
+            students.forEach(user => {
+                // Find all subs and res for this user
+                let userSubs = db.subs.filter(s => s.phone_number === user.phone_number);
+                let activeSub = userSubs.find(s => s.status === 'active' && s.end_date >= todayShamsi);
+                
+                let userResCount = db.reservations.filter(r => r.phone_number === user.phone_number).length;
+                // Add Ezno count by matching phone
+                let userEznoCount = eznoData.filter(e => e.phone === user.phone_number).length;
+                let totalDailyCount = userResCount + userEznoCount;
+
+                let statusObj = { text: '', badge: '', recommendation: '' };
+
+                if (activeSub) {
+                    // Check if expiring in less than 5 days (simple string comparison heuristic for shamsi)
+                    // For precise calculation, we should convert Shamsi to Date, but for simplicity here we tag as Active
+                    statusObj.text = 'ماهانه فعال';
+                    statusObj.badge = 'badge-success';
+                    statusObj.recommendation = 'عدم نیاز به اقدام (وفادار)';
+                } else if (userSubs.length > 0) {
+                    statusObj.text = 'ماهانه منقضی شده';
+                    statusObj.badge = 'badge-danger';
+                    statusObj.recommendation = 'پیامک کد تخفیف تمدید اشتراک 🎯';
+                } else if (totalDailyCount >= 3) {
+                    statusObj.text = 'مشتری مستمر روزانه';
+                    statusObj.badge = 'badge-purple';
+                    statusObj.recommendation = 'ارسال آفر ویژه ثبت‌نام ماهانه 🚀';
+                } else if (totalDailyCount > 0) {
+                    statusObj.text = 'مشتری گذری';
+                    statusObj.badge = 'badge-info';
+                    statusObj.recommendation = 'پیامک یادآوری + کد تخفیف روزانه ✉️';
+                } else {
+                    statusObj.text = 'ثبت‌نام بدون رزرو';
+                    statusObj.badge = 'badge-warning';
+                    statusObj.recommendation = 'کمپین جذب اولیه (دعوتنامه)';
+                }
+
+                crmRows.push({
+                    name: user.full_name || 'کاربر بدون نام',
+                    phone: user.phone_number,
+                    dailyCount: totalDailyCount,
+                    status: statusObj
+                });
+            });
+
+            // Sort by potential value (Expired -> Frequent Daily -> Passing -> None -> Active)
+            crmRows.sort((a, b) => b.dailyCount - a.dailyCount);
+
+            const tbody = document.getElementById('crmTableBody');
+            tbody.innerHTML = crmRows.map(row => `
+                <tr>
+                    <td>${row.name}</td>
+                    <td style="font-family:monospace; color:var(--text-muted); direction:ltr;">${row.phone}</td>
+                    <td>${row.dailyCount} بار</td>
+                    <td><span class="badge ${row.status.badge}">${row.status.text}</span></td>
+                    <td style="color: var(--accent);">${row.status.recommendation}</td>
+                </tr>
+            `).join('');
+        }
+
         function renderEznoTable() {
             const tbody = document.getElementById('eznoTableBody');
             if (eznoData.length === 0) {
@@ -516,8 +677,7 @@
                 return;
             }
             
-            // نمایش 20 رکورد آخر
-            const html = eznoData.slice(0, 20).map(row => {
+            const html = eznoData.slice(0, 30).map(row => {
                 let badge = 'badge-info';
                 if(row.status.includes('استفاده')) badge = 'badge-success';
                 else if(row.status.includes('لغو')) badge = 'badge-danger';
@@ -532,29 +692,6 @@
                 </tr>
             `}).join('');
             
-            tbody.innerHTML = html;
-        }
-
-        function renderInstallmentsTable() {
-            const tbody = document.getElementById('installmentsTableBody');
-            if (db.installments.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">قسط معوقه‌ای یافت نشد.</td></tr>';
-                return;
-            }
-
-            const html = db.installments.map(ins => {
-                let statusTxt = ins.status === 'pending_upload' ? '⏳ منتظر فیش' : '🔴 معوقه / نامشخص';
-                let badge = ins.status === 'pending_upload' ? 'badge-warning' : 'badge-danger';
-                
-                return `
-                <tr>
-                    <td style="font-family:monospace; color:var(--text-muted); direction:ltr;">${ins.phone_number}</td>
-                    <td><span class="badge badge-info" style="font-size:13px;">${ins.due_date}</span></td>
-                    <td style="font-weight:900;">${Number(ins.amount).toLocaleString()}</td>
-                    <td><span class="badge ${badge}">${statusTxt}</span></td>
-                </tr>
-            `}).join('');
-
             tbody.innerHTML = html;
         }
     </script>
