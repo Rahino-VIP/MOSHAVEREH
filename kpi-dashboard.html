@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد KPI پانسیون | راهینو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root { 
+            --primary: #77bba9; --primary-hover: #8fd0bf; --primary-fade: rgba(119, 187, 169, 0.15);
+            --accent: #e59ea3; --accent-fade: rgba(229, 158, 163, 0.15);
+            --bg-color: #121918; --surface: #1b2624; --surface-light: #253330;
+            --border-color: #2d3d3a; --text-main: #f1f5f9; --text-muted: #94a3b8;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6;
+            --shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); padding-bottom: 50px; }
+
+        .top-navbar { background: var(--surface); border-bottom: 1px solid var(--border-color); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
+        .nav-brand { font-size: 22px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .nav-brand span { color: var(--primary); }
+
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        .btn-upload { background: var(--surface-light); color: var(--accent); padding: 10px 20px; border-radius: 12px; font-weight: bold; border: 1px dashed var(--accent); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-upload:hover { background: var(--accent-fade); }
+
+        .app-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px; background: var(--primary); border-radius: 0 16px 16px 0; }
+        .kpi-card.accent::before { background: var(--accent); }
+        .kpi-card.warning::before { background: var(--warning); }
+        .kpi-card.info::before { background: var(--info); }
+        .kpi-title { font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 10px; }
+        .kpi-value { font-size: 32px; font-weight: 900; color: var(--text-main); display: flex; align-items: baseline; gap: 5px; }
+        .kpi-unit { font-size: 14px; font-weight: normal; color: var(--text-muted); }
+        .kpi-trend { font-size: 12px; font-weight: bold; margin-top: 10px; display: flex; align-items: center; gap: 5px; }
+        
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .chart-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+        .chart-title { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+
+        .table-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: bold; }
+        td { color: var(--text-main); font-weight: bold; }
+        tr:last-child td { border-bottom: none; }
+        
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; transition: 0.3s opacity; }
+        .spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .top-navbar { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="mainLoader">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary);" id="loaderText">در حال استخراج داده‌های یکپارچه...</h3>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-brand">📊 داشبورد KPI <span>راهینو</span></div>
+        <div class="file-upload-wrapper">
+            <button class="btn-upload" id="uploadBtn">
+                <span>📥 بارگذاری فایل اکسل «ازنو»</span>
+            </button>
+            <input type="file" id="eznoFileInput" accept=".xlsx, .xls" onchange="handleExcelUpload(event)" />
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">تخت‌های اشغال شده (امروز)</div>
+                <div class="kpi-value"><span id="kpiOccupancy">0</span> <span class="kpi-unit">از 26</span></div>
+                <div class="kpi-trend"><span id="kpiOccupancyDetail" style="color: var(--text-muted);">0 CIP | 0 VIP</span></div>
+            </div>
+            <div class="kpi-card accent">
+                <div class="kpi-title">درآمد کل پانسیون (ناخالص)</div>
+                <div class="kpi-value"><span id="kpiTotalRevenue">0</span> <span class="kpi-unit">تومان</span></div>
+                <div class="kpi-trend text-success"><span id="kpiRevenueDetail">شامل فاکتورهای سایت + ازنو</span></div>
+            </div>
+            <div class="kpi-card info">
+                <div class="kpi-title">رزروهای روزانه (امروز)</div>
+                <div class="kpi-value"><span id="kpiDailyBookings">0</span> <span class="kpi-unit">نفر</span></div>
+                <div class="kpi-trend"><span id="kpiDailyDetail" style="color: var(--text-muted);">راهینو: 0 | ازنو: 0</span></div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="kpi-title">استرداد و انصراف</div>
+                <div class="kpi-value"><span id="kpiRefunds">0</span> <span class="kpi-unit">تومان</span></div>
+                <div class="kpi-trend" style="color: var(--danger);"><span id="kpiRefundCount">0 درخواست موفق</span></div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-box">
+                <div class="chart-title">ترکیب ظرفیت فعال سالن (VIP و CIP)</div>
+                <canvas id="capacityChart" height="100"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">سهم منابع درآمدی</div>
+                <canvas id="revenueSourceChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Ezno Data Table -->
+        <div class="table-box" id="eznoTableContainer" style="display: none;">
+            <div class="chart-title" style="margin: 20px 20px 0 20px; border: none;">📋 آخرین ورودی‌های ثبت شده از طریق پلتفرم ازنو</div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نام و نام خانوادگی</th>
+                            <th>شماره تماس</th>
+                            <th>تاریخ شمسی</th>
+                            <th>سهم راهینو (تومان)</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eznoTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 🔒 استفاده از کلید معمولی (Anon Key)
+        const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global State
+        let dbData = { subs: [], reservations: [], invoices: [], cancellations: [] };
+        let eznoData = []; 
+        let charts = {};
+
+        const TOTAL_CAPACITY = 26;
+        const CIP_CAPACITY = 4;
+        const VIP_CAPACITY = 22;
+
+        window.onload = async () => {
+            await fetchSupabaseData();
+            updateDashboard();
+        };
+
+        function getTodayShamsi() {
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Tehran' }).formatToParts(new Date());
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}-${m}-${d}`;
+        }
+
+        async function fetchSupabaseData() {
+            try {
+                const [subsRes, resRes, invRes, cancelRes] = await Promise.all([
+                    supabaseClient.from('pan_monthly_subs').select('*').eq('status', 'active'),
+                    supabaseClient.from('pan_reservations').select('*'),
+                    supabaseClient.from('pan_invoices').select('*').eq('status', 'approved'),
+                    supabaseClient.from('cancellation_requests').select('*').eq('status', 'approved')
+                ]);
+
+                dbData.subs = subsRes.data || [];
+                dbData.reservations = resRes.data || [];
+                dbData.invoices = invRes.data || [];
+                dbData.cancellations = cancelRes.data || [];
+                
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+            } catch (err) {
+                console.error(err);
+                alert("خطا در دریافت اطلاعات دیتابیس.");
+            }
+        }
+
+        // =======================
+        // Excel Processing Logic
+        // =======================
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('mainLoader').style.display = 'flex';
+            document.getElementById('mainLoader').style.opacity = '1';
+            document.getElementById('loaderText').innerText = "در حال پردازش فایل ازنو...";
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                // پاکسازی و نگاشت داده‌های اکسل
+                eznoData = jsonData.map(row => ({
+                    planName: row['نام پلن'],
+                    name: `${row['نام'] || ''} ${row['نام خانوادگی'] || ''}`.trim(),
+                    phone: row['شماره تماس'],
+                    shamsiDate: row['تاریخ شمسی'],
+                    userPaid: Number(row['پرداختی کاربر']) || 0,
+                    spaceShare: Number(row['سهم فضا']) || 0,
+                    eznoShare: Number(row['سهم ازنو']) || 0,
+                    status: row['وضعیت رزرو']
+                }));
+
+                updateDashboard();
+                renderEznoTable();
+
+                document.getElementById('uploadBtn').innerHTML = '<span>✅ فایل ازنو بروزرسانی شد</span>';
+                document.getElementById('uploadBtn').style.borderColor = 'var(--success)';
+                document.getElementById('uploadBtn').style.color = 'var(--success)';
+
+                document.getElementById('mainLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('mainLoader').style.display = 'none', 300);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // =======================
+        // Dashboard Core Logic
+        // =======================
+        function updateDashboard() {
+            const todayShamsi = getTodayShamsi();
+
+            // 1. محاسبه ظرفیت
+            let activeCIP = dbData.subs.filter(s => s.plan_type === 'cip' && s.end_date >= todayShamsi).length;
+            let activeVIPMonthly = dbData.subs.filter(s => (s.plan_type === 'vip' || s.plan_type === 'student_plan') && s.end_date >= todayShamsi).length;
+            
+            // رزروهای روزانه سایت خودمان
+            let dailySiteReservations = dbData.reservations.filter(res => {
+                if (!res.reserved_dates) return false;
+                if (typeof res.reserved_dates === 'string') return res.reserved_dates.includes(todayShamsi);
+                if (Array.isArray(res.reserved_dates)) return res.reserved_dates.includes(todayShamsi);
+                return false;
+            }).length;
+
+            // رزروهای روزانه ازنو (فقط آنهایی که تاریخ امروز را دارند و کنسل نشده‌اند)
+            let dailyEznoReservations = eznoData.filter(e => e.shamsiDate && e.shamsiDate.replace(/\//g, '-') === todayShamsi && e.status !== 'لغو شده').length;
+
+            let totalDaily = dailySiteReservations + dailyEznoReservations;
+            let totalVIPOccupied = activeVIPMonthly + totalDaily;
+            let totalOccupancy = activeCIP + totalVIPOccupied;
+            let emptyVIP = VIP_CAPACITY - totalVIPOccupied;
+
+            // بروزرسانی کارت ظرفیت
+            document.getElementById('kpiOccupancy').innerText = totalOccupancy;
+            document.getElementById('kpiOccupancyDetail').innerText = `${activeCIP} CIP | ${totalVIPOccupied} VIP`;
+
+            // بروزرسانی کارت رزروهای روزانه
+            document.getElementById('kpiDailyBookings').innerText = totalDaily;
+            document.getElementById('kpiDailyDetail').innerText = `ثبت سایت: ${dailySiteReservations} | ثبت ازنو: ${dailyEznoReservations}`;
+
+            // 2. محاسبات مالی
+            // درآمدهای سایت (جمع فاکتورهای تایید شده)
+            let siteRevenue = dbData.invoices.reduce((sum, inv) => sum + (Number(inv.final_amount) || 0), 0);
+            
+            // درآمدهای ازنو (جمع ستون سهم فضا)
+            let eznoRevenue = eznoData.reduce((sum, row) => sum + row.spaceShare, 0);
+            let totalRevenue = siteRevenue + eznoRevenue;
+
+            document.getElementById('kpiTotalRevenue').innerText = totalRevenue.toLocaleString();
+
+            // محاسبات کنسلی
+            let totalRefunds = dbData.cancellations.reduce((sum, c) => sum + (Number(c.refund_amount) || 0), 0);
+            document.getElementById('kpiRefunds').innerText = totalRefunds.toLocaleString();
+            document.getElementById('kpiRefundCount').innerText = `${dbData.cancellations.length} درخواست پردازش شده`;
+
+            // 3. بروزرسانی نمودارها
+            updateCharts(activeCIP, activeVIPMonthly, totalDaily, emptyVIP, siteRevenue, eznoRevenue);
+        }
+
+        // =======================
+        // Charts Implementation
+        // =======================
+        function updateCharts(cip, vipMonthly, vipDaily, emptyVip, siteRev, eznoRev) {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Vazirmatn';
+
+            // Chart 1: Capacity Breakdown
+            const ctxCap = document.getElementById('capacityChart').getContext('2d');
+            if (charts.capacity) charts.capacity.destroy();
+            charts.capacity = new Chart(ctxCap, {
+                type: 'bar',
+                data: {
+                    labels: ['CIP (ظرفیت 4)', 'VIP (ظرفیت 22)'],
+                    datasets: [
+                        { label: 'ثبت‌نام ماهانه', data: [cip, vipMonthly], backgroundColor: '#77bba9' },
+                        { label: 'روزانه (سایت + ازنو)', data: [0, vipDaily], backgroundColor: '#e59ea3' },
+                        { label: 'ظرفیت خالی', data: [CIP_CAPACITY - cip, emptyVip < 0 ? 0 : emptyVip], backgroundColor: '#2d3d3a' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                    plugins: { legend: { position: 'top', rtl: true } }
+                }
+            });
+
+            // Chart 2: Revenue Source
+            const ctxRev = document.getElementById('revenueSourceChart').getContext('2d');
+            if (charts.revenue) charts.revenue.destroy();
+            charts.revenue = new Chart(ctxRev, {
+                type: 'doughnut',
+                data: {
+                    labels: ['فروش مستقیم (سایت)', 'سهم راهینو از پلتفرم ازنو'],
+                    datasets: [{
+                        data: [siteRev, eznoRev],
+                        backgroundColor: ['#77bba9', '#3b82f6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '70%',
+                    plugins: { legend: { position: 'bottom', rtl: true } }
+                }
+            });
+        }
+
+        function renderEznoTable() {
+            if (eznoData.length === 0) return;
+            document.getElementById('eznoTableContainer').style.display = 'block';
+            
+            // نمایش فقط 10 رکورد آخر از فایل اکسل
+            const recentData = eznoData.slice(0, 10);
+            const tbody = document.getElementById('eznoTableBody');
+            tbody.innerHTML = recentData.map(row => `
+                <tr>
+                    <td>${row.name}</td>
+                    <td style="font-family: monospace; color: var(--text-muted); direction:ltr;">0${row.phone}</td>
+                    <td>${row.shamsiDate}</td>
+                    <td style="color: var(--success);">${row.spaceShare.toLocaleString()}</td>
+                    <td>${row.status === 'استفاده شده' ? '✅ استفاده شده' : (row.status === 'لغو شده' ? '❌ لغو شده' : '⏳ '+row.status)}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
