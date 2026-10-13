@@ -417,7 +417,6 @@
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                 
-                // 🚀 تبدیل مقادیر مالی از ریال به تومان (تقسیم بر 10)
                 eznoData = jsonData.map(row => ({
                     name: `${row['نام'] || ''} ${row['نام خانوادگی'] || ''}`.trim(),
                     phone: row['شماره تماس'] ? `0${row['شماره تماس']}` : 'ندارد',
@@ -425,6 +424,7 @@
                     userPaidToman: (Number(row['پرداختی کاربر']) || 0) / 10,
                     spaceShareToman: (Number(row['سهم فضا']) || 0) / 10,
                     eznoShareToman: (Number(row['سهم ازنو']) || 0) / 10,
+                    count: Number(row['تعداد']) || 1, // دریافت تعداد روزها از اکسل ازنو
                     status: row['وضعیت رزرو']
                 }));
 
@@ -439,7 +439,7 @@
             };
             reader.readAsArrayBuffer(file);
         }
-
+        
         // ==========================================
         // 4. Calculate KPI & Process Analytics
         // ==========================================
@@ -523,103 +523,58 @@
 
         function prepareChartsData(cip, vipM, vipD, empty, siteRev, eznoRev) {
             
-            // A. Peak Hours (Hourly Concurrency)
+            // الف: ساعات اوج ترافیک (محاسبه میانگین همزمان)
             let hourCounts = new Array(24).fill(0);
+            let uniqueDays = new Set();
+
             db.logs.forEach(log => {
                 if(log.entry_time) {
+                    // استخراج روزهای یکتا برای میانگین‌گیری
+                    let logDay = log.log_date || new Date(log.entry_time).toDateString();
+                    uniqueDays.add(logDay);
+
                     let startH = new Date(log.entry_time).getHours();
                     let endH = log.exit_time ? new Date(log.exit_time).getHours() : new Date().getHours();
-                    if(endH < startH) endH = 23; // cross midnight safe-guard
-                    for(let h = startH; h <= endH; h++) { if(h >= 6 && h <= 22) hourCounts[h]++; }
+                    if(endH < startH) endH = 23; 
+                    for(let h = startH; h <= endH; h++) { 
+                        if(h >= 6 && h <= 22) hourCounts[h]++; 
+                    }
                 }
             });
-            let displayHours = []; let displayDataHours = [];
-            for(let i=6; i<=22; i++) { displayHours.push(`${i}:00`); displayDataHours.push(hourCounts[i]); }
 
-            // B. Day of Week Attendance
-            const daysMap = [0, 0, 0, 0, 0, 0, 0]; // Sun(0) to Sat(6)
+            // تقسیم مجموع تردد هر ساعت بر تعداد روزها
+            let numDays = uniqueDays.size > 0 ? uniqueDays.size : 1;
+            let displayHours = []; 
+            let displayDataHours = [];
+            for(let i=6; i<=22; i++) { 
+                displayHours.push(`${i}:00`); 
+                displayDataHours.push(Math.round(hourCounts[i] / numDays)); 
+            }
+
+            // ب: پراکندگی روزهای هفته
+            const daysMap = [0, 0, 0, 0, 0, 0, 0]; 
             db.logs.forEach(log => {
-                let day = new Date(log.log_date).getDay();
+                let day = new Date(log.log_date || log.entry_time).getDay();
                 daysMap[day]++;
             });
-            // Reorder to Persian Week: Sat(6), Sun(0), Mon(1), Tue(2), Wed(3), Thu(4), Fri(5)
             const dayLabels = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
             const dayData = [daysMap[6], daysMap[0], daysMap[1], daysMap[2], daysMap[3], daysMap[4], daysMap[5]];
 
             renderCharts(cip, vipM, vipD, empty, siteRev, eznoRev, displayHours, displayDataHours, dayLabels, dayData);
         }
 
-        function renderCharts(cip, vipM, vipD, empty, siteRev, eznoRev, labelsH, dataH, labelsD, dataD) {
-            
-            // 1. Hourly Traffic
-            if (charts.traffic) charts.traffic.destroy();
-            charts.traffic = new Chart(document.getElementById('trafficChart'), {
-                type: 'line',
-                data: {
-                    labels: labelsH,
-                    datasets: [{
-                        label: 'شاخص تراکم همزمان',
-                        data: dataH,
-                        borderColor: '#e59ea3', backgroundColor: 'rgba(229, 158, 163, 0.15)',
-                        borderWidth: 3, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#e59ea3'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // 2. Day of Week
-            if (charts.weekly) charts.weekly.destroy();
-            charts.weekly = new Chart(document.getElementById('weeklyChart'), {
-                type: 'bar',
-                data: {
-                    labels: labelsD,
-                    datasets: [{
-                        label: 'تعداد کل ترددهای ثبت شده',
-                        data: dataD,
-                        backgroundColor: '#8b5cf6', borderRadius: 6
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            // 3. Capacity Mix
-            if (charts.capacity) charts.capacity.destroy();
-            charts.capacity = new Chart(document.getElementById('capacityMixChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['CIP ماهانه', 'VIP ماهانه', 'مهمان روزانه', 'صندلی خالی'],
-                    datasets: [{ data: [cip, vipM, vipD, empty], backgroundColor: ['#8b5cf6', '#77bba9', '#3b82f6', '#1f2d29'], borderWidth: 0, hoverOffset: 4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: {color:'#94a3b8', font:{family:'Vazirmatn'} } } } }
-            });
-
-            // 4. Revenue Source
-            if (charts.revenue) charts.revenue.destroy();
-            charts.revenue = new Chart(document.getElementById('revenueSourceChart'), {
-                type: 'bar',
-                data: {
-                    labels: ['مقایسه درآمد'],
-                    datasets: [
-                        { label: 'سایت راهینو', data: [siteRev], backgroundColor: '#10b981', borderRadius: 8 },
-                        { label: 'پلتفرم ازنو', data: [eznoRev], backgroundColor: '#f59e0b', borderRadius: 8 }
-                    ]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { callback: val => val / 1000000 + 'M' } } },
-                    plugins: { legend: { position: 'bottom', labels: {color:'#94a3b8', font:{family:'Vazirmatn'} } } } 
-                }
-            });
-        }
-
         // ==========================================
-        // 6. CRM Logic & Table Rendering
+        // 6. CRM Logic (اصلاح شمارش دقیق روزهای رزرو شده)
         // ==========================================
-        function switchTable(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('tbl-crm').style.display = tab === 'crm' ? 'flex' : 'none';
-            document.getElementById('tbl-ezno').style.display = tab === 'ezno' ? 'flex' : 'none';
+        function getDaysCount(datesData) {
+            if (!datesData) return 0;
+            if (Array.isArray(datesData)) return datesData.length;
+            try {
+                let parsed = JSON.parse(datesData);
+                if (Array.isArray(parsed)) return parsed.length;
+            } catch(e) {}
+            if (typeof datesData === 'string') return datesData.split(',').length;
+            return 1;
         }
 
         function renderCRMTable() {
@@ -629,20 +584,24 @@
             let crmRows = [];
 
             students.forEach(user => {
-                // Find all subs and res for this user
                 let userSubs = db.subs.filter(s => s.phone_number === user.phone_number);
                 let activeSub = userSubs.find(s => s.status === 'active' && s.end_date >= todayShamsi);
                 
-                let userResCount = db.reservations.filter(r => r.phone_number === user.phone_number).length;
-                // Add Ezno count by matching phone
-                let userEznoCount = eznoData.filter(e => e.phone === user.phone_number).length;
+                // شمارش آرایه تاریخ‌ها در رزرو سایت
+                let userResCount = db.reservations
+                    .filter(r => r.phone_number === user.phone_number)
+                    .reduce((sum, r) => sum + getDaysCount(r.reserved_dates), 0);
+                
+                // شمارش ستون تعداد در رزروهای ازنو
+                let userEznoCount = eznoData
+                    .filter(e => e.phone === user.phone_number)
+                    .reduce((sum, e) => sum + e.count, 0);
+
                 let totalDailyCount = userResCount + userEznoCount;
 
                 let statusObj = { text: '', badge: '', recommendation: '' };
 
                 if (activeSub) {
-                    // Check if expiring in less than 5 days (simple string comparison heuristic for shamsi)
-                    // For precise calculation, we should convert Shamsi to Date, but for simplicity here we tag as Active
                     statusObj.text = 'ماهانه فعال';
                     statusObj.badge = 'badge-success';
                     statusObj.recommendation = 'عدم نیاز به اقدام (وفادار)';
@@ -672,7 +631,6 @@
                 });
             });
 
-            // Sort by potential value (Expired -> Frequent Daily -> Passing -> None -> Active)
             crmRows.sort((a, b) => b.dailyCount - a.dailyCount);
 
             const tbody = document.getElementById('crmTableBody');
@@ -680,7 +638,7 @@
                 <tr>
                     <td>${row.name}</td>
                     <td style="font-family:monospace; color:var(--text-muted); direction:ltr;">${row.phone}</td>
-                    <td>${row.dailyCount} بار</td>
+                    <td style="font-weight:bold;">${row.dailyCount} روز</td>
                     <td><span class="badge ${row.status.badge}">${row.status.text}</span></td>
                     <td style="color: var(--accent);">${row.status.recommendation}</td>
                 </tr>
