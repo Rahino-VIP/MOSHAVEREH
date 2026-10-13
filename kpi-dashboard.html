@@ -251,7 +251,7 @@
         // 🔒 Supabase Config
         const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // State Variables
         let db = { subs: [], reservations: [], invoices: [], installments: [], cancellations: [], logs: [] };
@@ -295,12 +295,12 @@
         async function fetchDatabaseInfo() {
             try {
                 const [subs, res, inv, inst, cancel, logs] = await Promise.all([
-                    supabase.from('pan_monthly_subs').select('*').eq('status', 'active'),
-                    supabase.from('pan_reservations').select('*'),
-                    supabase.from('pan_invoices').select('*').eq('status', 'approved'),
-                    supabase.from('pan_installments').select('*').neq('status', 'paid').order('due_date', { ascending: true }),
-                    supabase.from('cancellation_requests').select('*').eq('status', 'approved'),
-                    supabase.from('attendance_logs').select('entry_time').gte('entry_time', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Logs from last 7 days for peak hours
+                    supabaseClient.from('pan_monthly_subs').select('*').eq('status', 'active'),
+                    supabaseClient.from('pan_reservations').select('*'),
+                    supabaseClient.from('pan_invoices').select('*').eq('status', 'approved'),
+                    supabaseClient.from('pan_installments').select('*').neq('status', 'paid').order('due_date', { ascending: true }),
+                    supabaseClient.from('cancellation_requests').select('*').eq('status', 'approved'),
+                    supabaseClient.from('attendance_logs').select('entry_time').gte('entry_time', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Logs from last 7 days for peak hours
                 ]);
 
                 db.subs = subs.data || [];
