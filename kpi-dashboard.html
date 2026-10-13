@@ -137,8 +137,10 @@
         
         <!-- KPI METRICS -->
         <div class="section-title">شاخص‌های عملیاتی و مالی (امروز)</div>
+        <!-- KPI Cards Grid -->
         <div class="kpi-grid">
             
+            <!-- اشغال سالن -->
             <div class="kpi-card">
                 <div class="kpi-icon">🪑</div>
                 <div class="kpi-title">تراکم ظرفیت (اشغال میزها)</div>
@@ -150,6 +152,19 @@
                 </div>
             </div>
 
+            <!-- رزروهای روزانه (کارت جا افتاده) -->
+            <div class="kpi-card">
+                <div class="kpi-icon">📅</div>
+                <div class="kpi-title">مهمانان روزانه (امروز)</div>
+                <div class="kpi-value" style="color: var(--info);"><span id="kpiDailyBookings">0</span> <span class="kpi-unit">نفر</span></div>
+                <div class="progress-bg"><div class="progress-fill" id="dailyBar" style="width: 0%; background: var(--info);"></div></div>
+                <div class="progress-labels">
+                    <span id="kpiDailySite">رزرو سایت: 0</span>
+                    <span id="kpiDailyEzno">ازنو: 0</span>
+                </div>
+            </div>
+
+            <!-- درآمد ناخالص -->
             <div class="kpi-card">
                 <div class="kpi-icon">💳</div>
                 <div class="kpi-title">درآمد کل سیستم (ناخالص)</div>
@@ -161,16 +176,18 @@
                 </div>
             </div>
 
+            <!-- میانگین حضور -->
             <div class="kpi-card">
                 <div class="kpi-icon">⏳</div>
                 <div class="kpi-title">میانگین حضور دانش‌آموزان</div>
-                <div class="kpi-value" style="color: var(--info);"><span id="kpiAvgDuration">0</span> <span class="kpi-unit">ساعت در روز</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="durationBar" style="width: 0%; background: var(--info);"></div></div>
+                <div class="kpi-value" style="color: var(--purple);"><span id="kpiAvgDuration">0</span> <span class="kpi-unit">ساعت در روز</span></div>
+                <div class="progress-bg"><div class="progress-fill" id="durationBar" style="width: 0%; background: var(--purple);"></div></div>
                 <div class="progress-labels">
                     <span id="kpiTotalLogs" style="color: var(--text-muted);">بر اساس 0 رکورد اخیر</span>
                 </div>
             </div>
 
+            <!-- اقساط و مطالبات -->
             <div class="kpi-card">
                 <div class="kpi-icon">📉</div>
                 <div class="kpi-title">مطالبات و انصراف‌ها</div>
