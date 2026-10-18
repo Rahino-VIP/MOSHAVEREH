@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>داشبورد هوشمند پیامک راهینو | ویژه آیفون</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vazirmatn Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #020617;
+      color: #f1f5f9;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dir-ltr {
+      direction: ltr;
+      unicode-bidi: embed;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24 md:pb-10 selection:bg-indigo-500 selection:text-white">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl transition-all duration-300 bg-emerald-950/95 border-emerald-500/40 text-emerald-200 text-xs sm:text-sm font-bold max-w-md w-[92%]">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-base shrink-0"></i>
+    <span id="toast-text" class="leading-relaxed">عملیات با موفقیت انجام شد.</span>
+  </div>
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3.5">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
+          <i class="fa-solid fa-comment-sms text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-sm sm:text-base md:text-lg text-white">داشبورد پیامک هوشمند راهینو</h1>
+            <span class="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+              متصل به آیفون
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block mt-0.5">
+            رادار خودکار تمدید قراردادها، یادآوری اقساط و ارسال شخصی‌سازی‌شده از خط سیم‌کارت شما
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="syncWithSupabase()" id="btn-sync" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition" title="دریافت آخرین اطلاعات از Supabase">
+          <i id="sync-icon" class="fa-solid fa-arrows-rotate text-emerald-400"></i>
+          <span class="hidden sm:inline">بروزرسانی دیتا</span>
+        </button>
+
+        <button onclick="openSettingsModal()" id="btn-db-status" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-bold border border-indigo-500/30 transition">
+          <i class="fa-solid fa-database"></i>
+          <span id="db-status-text">تنظیمات سوپابیس</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto px-4 pt-5">
+    
+    <!-- Top Summary KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div onclick="switchTab('radar')" class="cursor-pointer p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/40 transition flex items-center justify-between">
+        <div>
+          <p class="text-[11px] sm:text-xs text-slate-400 mb-1">مشمولین رادار امروز</p>
+          <p class="text-xl sm:text-2xl font-black text-white">
+            <span id="stat-radar-count">۰</span>
+            <span class="text-xs font-normal text-slate-400">نفر</span>
+          </p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+          <i class="fa-solid fa-bolt text-lg"></i>
+        </div>
+      </div>
+
+      <div onclick="switchTab('outbox')" class="cursor-pointer p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/40 transition flex items-center justify-between">
+        <div>
+          <p class="text-[11px] sm:text-xs text-slate-400 mb-1">صف آماده ارسال آیفون</p>
+          <p class="text-xl sm:text-2xl font-black text-emerald-400">
+            <span id="stat-outbox-count">۰</span>
+            <span class="text-xs font-normal text-slate-400">پیامک</span>
+          </p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+          <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+        </div>
+      </div>
+
+      <div onclick="switchTab('campaign')" class="cursor-pointer p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-violet-500/40 transition flex items-center justify-between">
+        <div>
+          <p class="text-[11px] sm:text-xs text-slate-400 mb-1">اشتراک‌های ماهانه فعال</p>
+          <p class="text-xl sm:text-2xl font-black text-white">
+            <span id="stat-subs-count">۰</span>
+            <span class="text-xs font-normal text-slate-400">نفر</span>
+          </p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-violet-500/15 text-violet-400 flex items-center justify-center">
+          <i class="fa-solid fa-user-check text-lg"></i>
+        </div>
+      </div>
+
+      <div onclick="switchTab('radar')" class="cursor-pointer p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-sky-500/40 transition flex items-center justify-between">
+        <div>
+          <p class="text-[11px] sm:text-xs text-slate-400 mb-1">کل دانش‌آموزان دیتابیس</p>
+          <p class="text-xl sm:text-2xl font-black text-sky-400">
+            <span id="stat-users-count">۰</span>
+            <span class="text-xs font-normal text-slate-400">نفر</span>
+          </p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center">
+          <i class="fa-solid fa-users text-lg"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Navigation Tabs -->
+    <div class="hidden md:flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 mb-6">
+      <button onclick="switchTab('radar')" id="dtab-radar" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+        <i class="fa-solid fa-bolt"></i>
+        <span>۱. رادار هوشمند و قوانین خودکار</span>
+        <span id="dbadge-radar" class="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white">۰</span>
+      </button>
+
+      <button onclick="switchTab('campaign')" id="dtab-campaign" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>۲. کمپین تبلیغاتی و تخفیف</span>
+      </button>
+
+      <button onclick="switchTab('outbox')" id="dtab-outbox" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-solid fa-paper-plane"></i>
+        <span>۳. صف ارسال آیفون (Outbox)</span>
+        <span id="dbadge-outbox" class="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300">۰</span>
+      </button>
+
+      <button onclick="switchTab('guide')" id="dtab-guide" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-brands fa-apple text-sm"></i>
+        <span>۴. راهنمای اتصال آیفون و SQL</span>
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: SMART RADAR & AUTOMATION RULES      -->
+    <!-- ========================================== -->
+    <section id="sec-radar" class="space-y-5">
+      
+      <!-- Persian Date Bar & Quick Presets -->
+      <div class="p-4 rounded-2xl bg-gradient-to-l from-indigo-950/70 via-slate-900 to-slate-900 border border-indigo-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <i class="fa-regular fa-calendar-check text-indigo-400"></i>
+            <h2 class="text-sm font-extrabold text-white">تقویم شمسی رادار هوشمند (مقایسه خودکار قراردادها و اقساط)</h2>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            تاریخ امروز را تنظیم کنید تا رادار بر اساس جداول <code class="text-indigo-300">pan_monthly_subs</code> و <code class="text-indigo-300">pan_installments</code> افراد مشمول امروز را لیست کند.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="changeJalaliDate(-1)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 font-medium">
+            <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i> روز قبل
+          </button>
+
+          <input id="input-today-jalali" type="text" value="1405-07-25" onchange="onDateInputChange(this.value)" class="dir-ltr w-32 text-center bg-slate-950 border border-indigo-500/50 rounded-xl px-3 py-1.5 text-sm font-black text-indigo-300 focus:outline-none focus:border-indigo-400" />
+
+          <button onclick="changeJalaliDate(1)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 font-medium">
+            روز بعد <i class="fa-solid fa-chevron-left mr-1 text-[10px]"></i>
+          </button>
+
+          <button onclick="setRealSolarToday()" class="px-3 py-1.5 rounded-xl bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/30 text-xs font-bold">
+            تاریخ واقعی امروز
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Test Date Chips matching User's SQL Data -->
+      <div class="flex flex-wrap items-center gap-2 px-1">
+        <span class="text-[11px] text-slate-400 font-medium">تست سریع تاریخ‌های دیتابیس شما:</span>
+        <button onclick="setTodayJalali('1405-07-25')" class="date-chip text-[11px] px-3 py-1 rounded-xl border transition bg-indigo-600 text-white border-indigo-500" data-date="1405-07-25">
+          ۲۵ مهر ۱۴۰۵ (سررسید قسط معصومه + ۳ روز به پایان سارینا + ۵ روز به پایان روژینا)
+        </button>
+        <button onclick="setTodayJalali('1405-07-27')" class="date-chip text-[11px] px-3 py-1 rounded-xl border transition bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700" data-date="1405-07-27">
+          ۲۷ مهر ۱۴۰۵ (۱ روز به پایان سارینا + ۳ روز به پایان روژینا و ستایش)
+        </button>
+        <button onclick="setTodayJalali('1405-07-30')" class="date-chip text-[11px] px-3 py-1 rounded-xl border transition bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700" data-date="1405-07-30">
+          ۳۰ مهر ۱۴۰۵ (۲ روز مانده به قسط فاطمه موسوی + ۵ روز به پایان نادیا و حدیث)
+        </button>
+      </div>
+
+      <!-- Expandable Automation Rules Settings Box -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+        <button onclick="toggleRulesAccordion()" class="w-full p-4 flex items-center justify-between text-right hover:bg-slate-800/50 transition">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div>
+              <h3 class="text-xs sm:text-sm font-bold text-white">تنظیم شروط و زمان‌بندی قوانین خودکار (کلیک برای باز/بسته شدن)</h3>
+              <p class="text-[11px] text-slate-400">تعیین روزهای یادآوری تمدید قرارداد (۵، ۳، ۱ روز قبل)، یادآوری اقساط و گیرنده پیامک</p>
+            </div>
+          </div>
+          <i id="rules-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+        </button>
+
+        <div id="rules-Body" class="hidden border-t border-slate-800 p-4 space-y-4 bg-slate-950/50">
+          <div id="rules-container" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Bar for Today's Matched List -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-3">
+          <input type="checkbox" id="chk-select-all-radar" checked onchange="toggleSelectAllRadar(this.checked)" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+          <div>
+            <h3 class="text-sm font-bold text-white">
+              لیست پیامک‌های شخصی‌سازی‌شده امروز (<span id="radar-list-count">۰</span> مورد)
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              متن هر دانش‌آموز به صورت اختصاصی ساخته شده است. می‌توانید شماره گیرنده (دانش‌آموز / پدر / مادر) را تغییر دهید.
+            </p>
+          </div>
+        </div>
+
+        <button onclick="queueSelectedRadarMatches()" id="btn-queue-radar" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition shrink-0">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>افزودن موارد انتخابی به صف ارسال آیفون</span>
+        </button>
+      </div>
+
+      <!-- Matched Customers Grid -->
+      <div id="radar-matches-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: BULK & PROMO CAMPAIGN BUILDER       -->
+    <!-- ========================================== -->
+    <section id="sec-campaign" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Right Column: Filters & Template -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-filter text-indigo-400"></i>
+              <h3 class="text-sm font-bold text-white">۱. فیلتر هوشمند دانش‌آموزان</h3>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">دسته‌بندی مشتریان:</label>
+              <select id="camp-segment" onchange="renderCampaignList()" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="all">همه کاربران فعال و تایید شده</option>
+                <option value="daily_only">رزروهای روزانه که اشتراک ماهانه ندارند (پیشنهاد ویژه!)</option>
+                <option value="approved_no_sub">تایید شده‌ها (Approved) که هنوز اشتراک نخریده‌اند</option>
+                <option value="draft_only">ثبت‌نام‌های نیمه‌کاره (Draft)</option>
+                <option value="monthly_subscribers">دارای اشتراک ماهانه فعال</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">پایه تحصیلی:</label>
+                <select id="camp-grade" onchange="renderCampaignList()" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                  <option value="all">همه پایه‌ها</option>
+                  <option value="دوازدهم">دوازدهم</option>
+                  <option value="پشت کنکوری">پشت کنکوری</option>
+                  <option value="یازدهم">یازدهم</option>
+                  <option value="دهم">دهم</option>
+                  <option value="دانشجو">دانشجو</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">رشته تحصیلی:</label>
+                <select id="camp-major" onchange="renderCampaignList()" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                  <option value="all">همه رشته‌ها</option>
+                  <option value="تجربی">تجربی</option>
+                  <option value="ریاضی">ریاضی</option>
+                  <option value="انسانی">انسانی</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs absolute right-3.5 top-3"></i>
+              <input id="camp-search" type="text" oninput="renderCampaignList()" placeholder="جستجوی نام یا شماره موبایل..." class="w-full rounded-xl bg-slate-950 border border-slate-800 pr-9 pl-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500" />
+            </div>
+          </div>
+
+          <!-- Promo Message Editor -->
+          <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white">۲. قالب پیامک تخفیف / دعوت</h3>
+              <span class="text-[11px] text-indigo-400">شخصی‌سازی خودکار</span>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="setPromoPreset(0)" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-300 border border-slate-700 transition">تخفیف ثبت‌نام ماهانه</button>
+              <button onclick="setPromoPreset(1)" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-300 border border-slate-700 transition">تبدیل روزانه به ماهانه</button>
+              <button onclick="setPromoPreset(2)" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-300 border border-slate-700 transition">تکمیل ثبت‌نام</button>
+              <button onclick="setPromoPreset(3)" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-300 border border-slate-700 transition">دعوت دوستان (کد معرف)</button>
+            </div>
+
+            <textarea id="camp-template" rows="4" oninput="renderCampaignList()" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-xs text-slate-200 leading-relaxed focus:border-indigo-500 focus:outline-none">سلام {name} عزیز 🌱
+یک کد تخفیف ۱۵٪ ویژه ثبت‌نام و تمدید اشتراک ماهانه پانسیون مطالعاتی راهینو برای شما فعال شد!
+کد اختصاصی شما: VIP-{referral_code}
+مهلت استفاده تا پایان هفته ✨</textarea>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] text-slate-500">افزودن متغیر:</span>
+              <button onclick="insertCampTag('{name}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono">{name}</button>
+              <button onclick="insertCampTag('{grade}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono">{grade}</button>
+              <button onclick="insertCampTag('{major}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono">{major}</button>
+              <button onclick="insertCampTag('{school}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono">{school}</button>
+              <button onclick="insertCampTag('{referral_code}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono">{referral_code}</button>
+            </div>
+
+            <button onclick="queueCampaignMessages()" class="w-full py-3 rounded-xl bg-gradient-to-l from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>افزودن مخاطبین انتخابی به صف ارسال آیفون</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Left Column: Filtered Recipients Preview -->
+        <div class="lg:col-span-7 p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="chk-select-all-camp" checked onchange="toggleSelectAllCampaign(this.checked)" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+              <span class="text-xs font-bold text-white">لیست مخاطبان فیلتر شده (<span id="camp-count">۰</span> نفر)</span>
+            </div>
+            <span class="text-[11px] text-slate-400">روی هر کارت کلیک کنید تا انتخاب/لغو شود</span>
+          </div>
+
+          <div id="camp-users-list" class="space-y-2.5 max-h-[540px] overflow-y-auto pl-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: IPHONE OUTBOX QUEUE (`sms_outbox`)  -->
+    <!-- ========================================== -->
+    <section id="sec-outbox" class="hidden space-y-5">
+      
+      <!-- 1-Click iPhone Shortcut Execution Banner -->
+      <div class="p-5 rounded-3xl bg-gradient-to-l from-emerald-950/90 via-teal-950/60 to-slate-900 border border-emerald-500/40 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="space-y-1.5 text-center md:text-right">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">
+            <i class="fa-brands fa-apple text-sm"></i>
+            <span>آماده ارسال خودکار با سیم‌کارت آیفون شما</span>
+          </div>
+          <h2 class="text-base sm:text-lg font-black text-white">
+            <span id="outbox-banner-count">۰</span> پیامک شخصی‌سازی‌شده در صف انتظار ارسال است
+          </h2>
+          <p class="text-xs text-slate-300 max-w-xl leading-relaxed">
+            در آیفون خود روی دکمه سبز روبرو بزنید تا برنامه <strong class="text-white">Shortcuts</strong> باز شود و تمام پیامک‌های صف را با وقفه امن ۴ ثانیه‌ای پشت سر هم ارسال کند؛ یا با دکمه کنار هر کارت، تک‌به‌تک بفرستید.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto shrink-0">
+          <a id="link-run-shortcut" href="shortcuts://run-shortcut?name=RahinoSMS" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-play"></i>
+            <span>اجرای شورتکات ارسال خودکار در آیفون</span>
+          </a>
+
+          <button onclick="copyOutboxJSON()" class="w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center justify-center gap-1.5 transition">
+            <i class="fa-regular fa-copy text-indigo-400"></i>
+            <span>کپی JSON صف</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pending Queue Container -->
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+          <h3 class="text-sm font-bold text-white">لیست پیامک‌های در انتظار ارسال</h3>
+          <div class="flex items-center gap-2">
+            <button onclick="markAllOutboxSent()" class="text-xs px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-medium">
+              علامت‌گذاری همه به عنوان ارسال‌شده
+            </button>
+            <button onclick="clearOutbox()" class="text-xs px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 flex items-center gap-1 font-medium">
+              <i class="fa-regular fa-trash-can"></i>
+              <span>پاکسازی صف</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="outbox-pending-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: IPHONE SHORTCUT & SUPABASE SQL GUIDE-->
+    <!-- ========================================== -->
+    <section id="sec-guide" class="hidden space-y-5">
+      
+      <!-- Step 0: How to open/host this file -->
+      <div class="p-5 rounded-2xl bg-gradient-to-l from-indigo-950/80 to-slate-900 border border-indigo-500/30 space-y-2">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-indigo-400"></i>
+          <span>چطور این داشبورد را روی گوشی آیفون یا سایت خود باز کنید؟</span>
+        </h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          ۱. همین الان با زدن دکمه <strong>Preview (پیش‌نمایش)</strong> بالای ادیتور، داشبورد به صورت زنده جلوی شماست.<br/>
+          ۲. برای استفاده دائمی روی گوشی آیفون، کدهای همین فایل را با نام <code class="text-amber-300">sms.html</code> ذخیره کنید و در پوشه <code class="text-amber-300">public_html</code> هاست خود آپلود نمایید (یا فایل را مستقیم در آیفون باز کنید).
+        </p>
+      </div>
+
+      <!-- Step 1: SQL Table Creation -->
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">۱</span>
+            <span>ساخت جدول صف پیامک (`sms_outbox`) در Supabase</span>
+          </h3>
+          <button onclick="copySQLCode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+            <i class="fa-regular fa-copy"></i>
+            <span>کپی کد SQL</span>
+          </button>
+        </div>
+        <p class="text-xs text-slate-400">
+          وارد پنل Supabase خود شوید، از منوی سمت چپ به <strong>SQL Editor</strong> بروید و کد زیر را Run کنید تا جدول صف ارسال ساخته شود:
+        </p>
+        <pre id="sql-code-block" class="dir-ltr p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-300 font-mono text-xs overflow-x-auto leading-relaxed">CREATE TABLE IF NOT EXISTS public.sms_outbox (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  customer_name text,
+  phone text NOT NULL,
+  message text NOT NULL,
+  reason_badge text,
+  is_sent boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+ALTER TABLE public.sms_outbox ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access to sms_outbox" ON public.sms_outbox
+  FOR ALL USING (true) WITH CHECK (true);</pre>
+      </div>
+
+      <!-- Step 2: iPhone Shortcuts Step-by-Step -->
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">۲</span>
+          <span>تنظیم شورتکات آیفون با نام `RahinoSMS` (برای ارسال خودکار ۵۰ پیامک)</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300 leading-relaxed">
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <p class="font-bold text-indigo-400">بخش اول: دریافت لیست پیام‌های صف از سوپابیس</p>
+            <ol class="list-decimal list-inside space-y-1.5">
+              <li>در آیفون وارد اپ <strong>Shortcuts</strong> شوید و یک شورتکات به نام دقیق <code class="text-emerald-300 font-bold">RahinoSMS</code> بسازید.</li>
+              <li>اکشن <strong>Get Contents of URL</strong> را اضافه کنید و آدرس زیر را قرار دهید:</li>
+            </ol>
+            <code class="block dir-ltr p-2 rounded-lg bg-slate-900 text-[11px] text-amber-300 break-all">
+              https://YOUR_PROJECT.supabase.co/rest/v1/sms_outbox?is_sent=eq.false&select=id,phone,message
+            </code>
+            <p class="text-[11px] text-slate-400">
+              در قسمت <strong>Headers</strong> این اکشن، دو ردیف اضافه کنید:<br/>
+              • کلید <code class="text-white">apikey</code> با مقدار کلید <code class="text-emerald-300">service_role</code> سوپابیس<br/>
+              • کلید <code class="text-white">Authorization</code> با مقدار <code class="text-emerald-300">Bearer YOUR_SERVICE_ROLE_KEY</code>
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <p class="font-bold text-indigo-400">بخش دوم: حلقه ارسال از سیم‌کارت و خروج از صف</p>
+            <ol class="list-decimal list-inside space-y-1.5">
+              <li>اکشن <strong>Repeat with Each</strong> را زیر مرحله قبل بگذارید.</li>
+              <li>داخل حلقه، با سه اکشن <strong>Get Dictionary Value</strong> مقادیر <code class="text-emerald-300">phone</code>، <code class="text-emerald-300">message</code> و <code class="text-emerald-300">id</code> را از <em>Repeat Item</em> بگیرید.</li>
+              <li>اکشن <strong>Send Message</strong> را اضافه کنید، متغیر <code class="text-emerald-300">message</code> و گیرنده <code class="text-emerald-300">phone</code> را بدهید و <strong class="text-rose-400">تیک Show When Run را خاموش کنید</strong>.</li>
+              <li>برای اینکه پیام دوباره ارسال نشود، یک <strong>Get Contents of URL</strong> دیگر با متد <code class="text-amber-300">PATCH</code> به آدرس <code class="dir-ltr">/rest/v1/sms_outbox?id=eq.[id]</code> و Request Body از نوع JSON با مقدار <code class="dir-ltr">{"is_sent": true}</code> بگذارید.</li>
+              <li>اکشن <strong>Wait 4 seconds</strong> را در انتهای حلقه بگذارید تا اپراتور سیم‌کارت را مسدود نکند.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="md:hidden fixed bottom-0 right-0 left-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 px-2 py-2 flex items-center justify-around">
+    <button onclick="switchTab('radar')" id="mtab-radar" class="relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-400 font-bold">
+      <i class="fa-solid fa-bolt text-base mb-0.5"></i>
+      <span class="text-[10px]">رادار امروز</span>
+      <span id="mbadge-radar" class="absolute top-0 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black flex items-center justify-center">۰</span>
+    </button>
+
+    <button onclick="switchTab('campaign')" id="mtab-campaign" class="relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400">
+      <i class="fa-solid fa-wand-magic-sparkles text-base mb-0.5"></i>
+      <span class="text-[10px]">کمپین و تخفیف</span>
+    </button>
+
+    <button onclick="switchTab('outbox')" id="mtab-outbox" class="relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400">
+      <i class="fa-solid fa-paper-plane text-base mb-0.5"></i>
+      <span class="text-[10px]">صف آیفون</span>
+      <span id="mbadge-outbox" class="absolute top-0 right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black flex items-center justify-center">۰</span>
+    </button>
+
+    <button onclick="switchTab('guide')" id="mtab-guide" class="relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400">
+      <i class="fa-brands fa-apple text-base mb-0.5"></i>
+      <span class="text-[10px]">راهنمای آیفون</span>
+    </button>
+  </nav>
+
+  <!-- Supabase Settings Modal -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-database text-indigo-400"></i>
+          <h3 class="font-bold text-base text-white">تنظیمات اتصال زنده به Supabase</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        داده‌های واقعی جداول شما به صورت پیش‌فرض داخل داشبورد بارگذاری شده‌اند. در صورتی که می‌خواهید داشبورد مستقیماً به دیتابیس زنده شما متصل شود، مشخصات پروژه Supabase خود را وارد کنید:
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">آدرس پروژه (Project URL):</label>
+          <input id="inp-sb-url" type="text" placeholder="https://xyzcompany.supabase.co" class="dir-ltr w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">کلید دسترسی (Service Role Key برای عبور از RLS):</label>
+          <input id="inp-sb-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="dir-ltr w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">نام شورتکات در گوشی آیفون شما:</label>
+          <input id="inp-shortcut-name" type="text" value="RahinoSMS" class="dir-ltr w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium">
+          انصراف
+        </button>
+        <button onclick="saveSettingsAndSync()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25">
+          ذخیره و اتصال به دیتابیس
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- APPLICATION JAVASCRIPT                     -->
+  <!-- ========================================== -->
+  <script>
+    // ۱. داده‌های استخراج‌شده از فایل‌های SQL شما
+    let users = [
+      { phone_number: '09034030966', full_name: 'ستایش مولایی', grade: 'دوازدهم', major: 'ریاضی فیزیک', school_name: 'عاشورا', wallet_balance: 0, status: 'active', father_phone: '09124260030', mother_phone: '09104260030', referral_code: 'RH-MRUIL' },
+      { phone_number: '09381035663', full_name: 'سارینا مقدم', grade: 'دوازدهم', major: 'ریاضی', school_name: 'تیزهوشان', wallet_balance: 0, status: 'approved', father_phone: '', mother_phone: '', referral_code: 'RH-GK7SM' },
+      { phone_number: '09019286762', full_name: 'روژینا قاسمی', grade: 'دوازدهم', major: 'تجربی', school_name: 'شهید فخری زاده', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-ZZGDF' },
+      { phone_number: '09104200997', full_name: 'ستایش قاسمی', grade: 'پشت کنکوری', major: 'تجربی', school_name: '-', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-3P3LG' },
+      { phone_number: '09304100690', full_name: 'نادیا یعقوبی', grade: 'پشت کنکوری', major: 'تجربی', school_name: '-', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-DXOX2' },
+      { phone_number: '09368595835', full_name: 'حدیث ذوالفقاری', grade: 'دوازدهم', major: 'تجربی', school_name: 'اندیشه پارسیان', wallet_balance: -25000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-WB81H' },
+      { phone_number: '09394024054', full_name: 'یگانه امامی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'مولود کعبه', wallet_balance: 0, status: 'active', father_phone: '09394024054', mother_phone: '09394024054', referral_code: 'RH-NABWD' },
+      { phone_number: '09015413968', full_name: 'زینب علیمرادی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'شاهد', wallet_balance: 0, status: 'active', father_phone: '09356593548', mother_phone: '09358122913', referral_code: 'RH-W6RTB' },
+      { phone_number: '09214372746', full_name: 'مهرانه فضعلی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'شهید عیسی وند', wallet_balance: 0, status: 'active', father_phone: '09351876040', mother_phone: '09351876040', referral_code: 'RH-N7S9Z' },
+      { phone_number: '09923962356', full_name: 'آرمیتا موسی‌وند', grade: 'پشت کنکوری', major: 'ریاضی', school_name: '-', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-3PD9T' },
+      { phone_number: '09372767577', full_name: 'فاطمه رجبی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'اندیشه نو', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-XBFFU' },
+      { phone_number: '09905303076', full_name: 'سیده زهرا حسینی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'حضرت معصومه', wallet_balance: 0, status: 'approved', father_phone: '', mother_phone: '', referral_code: 'RH-78IJ0' },
+      { phone_number: '09196409730', full_name: 'معصومه احمدی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'حق شناس', wallet_balance: 40000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-GARJH' },
+      { phone_number: '09043660352', full_name: 'فاطمه محمدی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'عاشورا', wallet_balance: 0, status: 'active', father_phone: '09123660352', mother_phone: '09394849841', referral_code: 'RH-FAIL8' },
+      { phone_number: '09125972922', full_name: 'کبری چراغی', grade: 'دانشجو', major: 'حقوق', school_name: 'دانشگاه الزهرا', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-62960' },
+      { phone_number: '09195576019', full_name: 'دنیز مصلحی', grade: 'دوازدهم', major: 'انسانی', school_name: 'محمد رسول الله', wallet_balance: -125000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-3MV0Z' },
+      { phone_number: '09231408507', full_name: 'ریحانه جمالی', grade: 'پشت کنکوری', major: 'تجربی', school_name: '...', wallet_balance: 90000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-E2W9O' },
+      { phone_number: '09199927714', full_name: 'زهرا منتظران', grade: 'دانشجو', major: 'حقوق بین‌الملل', school_name: 'تهران', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: '' },
+      { phone_number: '09100251277', full_name: 'فاطمه موسوی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'فرهیختگان', wallet_balance: -85000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-V106V' },
+      { phone_number: '09915915067', full_name: 'هستی درخشنده', grade: 'دوازدهم', major: 'انسانی', school_name: 'محمد رسول الله', wallet_balance: -195000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-KCPNY' },
+      { phone_number: '09356336103', full_name: 'هستی برامکی', grade: 'پشت کنکوری', major: 'تجربی', school_name: 'اندیشه نو', wallet_balance: 273000, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-XJQDN' },
+      { phone_number: '09012066041', full_name: 'دنیا سلیمانی', grade: 'دانشجو', major: 'کامپیوتر', school_name: 'آزاد کرج', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-YDZPT' },
+      { phone_number: '09010842074', full_name: 'فاطمه وظیفه مند', grade: 'دوازدهم', major: 'انسانی', school_name: 'عاشورا', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-WWU3O' },
+      { phone_number: '09219681710', full_name: 'آسنا نهانی', grade: 'یازدهم', major: 'تجربی', school_name: 'فرزانگان', wallet_balance: 0, status: 'active', father_phone: '', mother_phone: '', referral_code: 'RH-FR8E2' },
+      { phone_number: '09332122346', full_name: 'نگار عبداله آبادی', grade: 'دانشجو', major: 'روانشناسی', school_name: 'کرج', wallet_balance: 0, status: 'approved', father_phone: '', mother_phone: '', referral_code: 'RH-N3TPZ' },
+      { phone_number: '09026657569', full_name: 'ستایش حسنی', grade: 'دوازدهم', major: 'تجربی', school_name: 'بیک محمد لویی', wallet_balance: 0, status: 'draft', father_phone: '09026657569', mother_phone: '09369115366', referral_code: 'RH-IGSEP' },
+      { phone_number: '09102400749', full_name: 'آناهید قرنی', grade: 'یازدهم', major: 'تجربی', school_name: 'مهرآدخت', wallet_balance: 0, status: 'draft', father_phone: '09124363830', mother_phone: '09123678758', referral_code: 'RH-573OL' },
+      { phone_number: '09360385795', full_name: 'امینه باباجانی', grade: 'فارغ التحصیل', major: 'تجربی', school_name: 'الزهرا', wallet_balance: -80000, status: 'approved', father_phone: '', mother_phone: '', referral_code: 'RH-RZ5B1' }
+    ];
+
+    let subs = [
+      { id: 'd84ae8b9', phone_number: '09034030966', plan_type: 'cip', start_date: '1405-06-28', end_date: '1405-07-27', status: 'active' },
+      { id: 'e44de773', phone_number: '09381035663', plan_type: 'vip', start_date: '1405-06-29', end_date: '1405-07-28', status: 'active' },
+      { id: 'a462036e', phone_number: '09019286762', plan_type: 'cip', start_date: '1405-07-01', end_date: '1405-07-30', status: 'active' },
+      { id: 'd1831db2', phone_number: '09104200997', plan_type: 'cip', start_date: '1405-07-01', end_date: '1405-07-30', status: 'active' },
+      { id: '373e38ed', phone_number: '09304100690', plan_type: 'cip', start_date: '1405-07-05', end_date: '1405-08-04', status: 'active' },
+      { id: '507ada68', phone_number: '09368595835', plan_type: 'vip', start_date: '1405-07-05', end_date: '1405-08-04', status: 'active' },
+      { id: '150f690e', phone_number: '09394024054', plan_type: 'vip', start_date: '1405-07-06', end_date: '1405-08-05', status: 'active' },
+      { id: '91c7722b', phone_number: '09015413968', plan_type: 'vip', start_date: '1405-07-11', end_date: '1405-08-10', status: 'active' },
+      { id: '975d28c4', phone_number: '09214372746', plan_type: 'vip', start_date: '1405-07-11', end_date: '1405-08-10', status: 'active' },
+      { id: '0282db35', phone_number: '09923962356', plan_type: 'vip', start_date: '1405-07-13', end_date: '1405-08-12', status: 'active' },
+      { id: '03d2ecec', phone_number: '09372767577', plan_type: 'vip', start_date: '1405-07-14', end_date: '1405-08-13', status: 'active' },
+      { id: '6bda5f92', phone_number: '09905303076', plan_type: 'vip', start_date: '1405-07-15', end_date: '1405-08-14', status: 'active' },
+      { id: 'bd106685', phone_number: '09196409730', plan_type: 'vip', start_date: '1405-07-16', end_date: '1405-08-15', status: 'active' },
+      { id: '5695470c', phone_number: '09043660352', plan_type: 'vip', start_date: '1405-07-19', end_date: '1405-08-18', status: 'active' },
+      { id: 'f4a577bd', phone_number: '09125972922', plan_type: 'vip', start_date: '1405-07-19', end_date: '1405-08-18', status: 'active' },
+      { id: '036c4f42', phone_number: '09195576019', plan_type: 'student_plan', start_date: '1405-07-20', end_date: '1405-08-19', status: 'active' },
+      { id: '05cb7b78', phone_number: '09231408507', plan_type: 'vip', start_date: '1405-07-20', end_date: '1405-08-19', status: 'active' },
+      { id: '1a632876', phone_number: '09199927714', plan_type: 'vip', start_date: '1405-07-21', end_date: '1405-08-20', status: 'active' },
+      { id: '3378484a', phone_number: '09100251277', plan_type: 'vip', start_date: '1405-07-21', end_date: '1405-08-20', status: 'active' },
+      { id: 'f7b8d9ca', phone_number: '09915915067', plan_type: 'student_plan', start_date: '1405-07-21', end_date: '1405-08-20', status: 'active' },
+      { id: '4d7b31c9', phone_number: '09356336103', plan_type: 'vip', start_date: '1405-07-22', end_date: '1405-08-21', status: 'active' }
+    ];
+
+    let installments = [
+      { id: '27043190', invoice_id: '68efe520', phone_number: '09394024054', installment_number: 1, due_date: '1405-07-25', amount: 1800000, status: 'paid' },
+      { id: '3f6eeca9', invoice_id: '3433728a', phone_number: '09196409730', installment_number: 1, due_date: '1405-07-25', amount: 1800000, status: 'pending_upload' },
+      { id: 'cb2c089a', invoice_id: 'bfd9fcd1', phone_number: '09100251277', installment_number: 1, due_date: '1405-08-02', amount: 1800000, status: 'pending_upload' }
+    ];
+
+    let reservations = [
+      { id: '81343c33', phone_number: '09012066041', reserved_dates: ['1405-07-25', '1405-07-27'] },
+      { id: '9bc88fb7', phone_number: '09219681710', reserved_dates: ['1405-07-23', '1405-07-24'] },
+      { id: '81c5f008', phone_number: '09332122346', reserved_dates: ['1405-07-23', '1405-07-24'] },
+      { id: 'bf6572cb', phone_number: '09010842074', reserved_dates: ['1405-07-25'] }
+    ];
+
+    let rules = [
+      {
+        id: 'rule_sub',
+        title: 'یادآوری تمدید قرارداد ماهانه',
+        category: 'subscription',
+        enabled: true,
+        triggerDays: [5, 3, 2, 1, 0],
+        requireNoNextSub: true,
+        targetPhone: 'student',
+        template: '{name} عزیز، سلام 🌱\nتنها {days_text} به پایان اشتراک ماهانه ({plan}) شما در تاریخ {end_date} باقی مانده است.\nدر صورت تمایل به تمدید میز مطالعاتی خود با حفظ اولویت، لطفاً از طریق پنل اقدام فرمایید ✨'
+      },
+      {
+        id: 'rule_inst',
+        title: 'یادآوری سررسید اقساط',
+        category: 'installment',
+        enabled: true,
+        triggerDays: [2, 1, 0, -1],
+        targetPhone: 'student',
+        template: '{name} جان، سلام 🌸\nیادآوری موعد قسط شماره {installment_num} شما به مبلغ {amount} تومان با سررسید {due_date} ({days_text}).\nلطفاً پس از واریز، تصویر فیش را در پنل بارگذاری نمایید 🙏'
+      },
+      {
+        id: 'rule_wallet',
+        title: 'تسویه بدهی کیف پول',
+        category: 'wallet',
+        enabled: true,
+        triggerDays: [0],
+        targetPhone: 'student',
+        template: 'سلام {name} عزیز 🌱\nموجودی کیف پول شما در سامانه راهینو مبلغ {wallet} تومان (بدهکار) می‌باشد. لطفاً جهت شارژ حساب و تسویه از طریق پنل کاربری اقدام فرمایید.'
+      }
+    ];
+
+    let todayJalali = '1405-07-25';
+    let currentRadarMatches = [];
+    let selectedRadarIds = new Set();
+    let customMessageEdits = {};
+    let customPhoneOverrides = {};
+
+    let selectedCampaignPhones = new Set();
+    let outbox = [];
+
+    // بارگذاری تنظیمات از LocalStorage
+    let sbConfig = { url: '', key: '', shortcutName: 'RahinoSMS' };
+    try {
+      const savedOutbox = localStorage.getItem('rahino_html_outbox');
+      if (savedOutbox) outbox = JSON.parse(savedOutbox);
+      const savedSb = localStorage.getItem('rahino_html_sb');
+      if (savedSb) sbConfig = JSON.parse(savedSb);
+    } catch (e) {}
+
+    // ۲. توابع محاسبه تاریخ شمسی
+    function jalaliToDays(dateStr) {
+      if (!dateStr || typeof dateStr !== 'string') return null;
+      const parts = dateStr.trim().split(/[-/]/).map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) return null;
+      const [jy, jm, jd] = parts;
+      const yearDays = (jy - 1400) * 365 + Math.floor((jy - 1400) / 4);
+      const monthDays = jm <= 6 ? (jm - 1) * 31 : 6 * 31 + (jm - 7) * 30;
+      return yearDays + monthDays + jd;
+    }
+
+    function daysToJalali(totalDays) {
+      let jy = 1400;
+      while (true) {
+        const nextYearDays = (jy + 1 - 1400) * 365 + Math.floor((jy + 1 - 1400) / 4);
+        if (totalDays > nextYearDays) jy++;
+        else break;
+      }
+      const startOfYear = (jy - 1400) * 365 + Math.floor((jy - 1400) / 4);
+      let rem = totalDays - startOfYear;
+      let jm = 1;
+      while (jm <= 12) {
+        const mLen = jm <= 6 ? 31 : 30;
+        if (rem > mLen) {
+          rem -= mLen;
+          jm++;
+        } else break;
+      }
+      const jd = Math.max(1, rem);
+      return `${jy}-${String(jm).padStart(2, '0')}-${String(jd).padStart(2, '0')}`;
+    }
+
+    function diffJalaliDays(targetDateStr, currentStr) {
+      const t = jalaliToDays(targetDateStr);
+      const c = jalaliToDays(currentStr);
+      if (t === null || c === null) return null;
+      return t - c;
+    }
+
+    function toPersianDigits(val) {
+      return String(val).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    }
+
+    function formatMoney(num) {
+      return Math.abs(Number(num) || 0).toLocaleString('fa-IR');
+    }
+
+    function planLabel(plan) {
+      if (plan === 'cip') return 'طرح ویژه CIP';
+      if (plan === 'vip') return 'طرح VIP';
+      if (plan === 'student_plan') return 'طرح دانش‌آموزی';
+      return plan || 'اشتراک ماهانه';
+    }
+
+    function formatDaysText(days) {
+      if (days === 0) return 'امروز (روز پایانی/سررسید)';
+      if (days > 0) return `${toPersianDigits(days)} روز`;
+      return `${toPersianDigits(Math.abs(days))} روز گذشته از سررسید`;
+    }
+
+    // ۳. مدیریت اعلان (Toast)
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = msg;
+      t.classList.remove('hidden');
+      t.classList.add('flex');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        t.classList.add('hidden');
+        t.classList.remove('flex');
+      }, 3500);
+    }
+
+    // ۴. جابجایی بین تب‌ها
+    function switchTab(tabId) {
+      ['radar', 'campaign', 'outbox', 'guide'].forEach(id => {
+        document.getElementById(`sec-${id}`).classList.toggle('hidden', id !== tabId);
+
+        const dBtn = document.getElementById(`dtab-${id}`);
+        if (dBtn) {
+          if (id === tabId) {
+            dBtn.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30';
+          } else {
+            dBtn.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60';
+          }
+        }
+
+        const mBtn = document.getElementById(`mtab-${id}`);
+        if (mBtn) {
+          if (id === tabId) {
+            mBtn.className = 'relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-400 font-bold';
+          } else {
+            mBtn.className = 'relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400';
+          }
+        }
+      });
+
+      if (tabId === 'campaign') renderCampaignList();
+      if (tabId === 'outbox') renderOutbox();
+    }
+
+    function toggleRulesAccordion() {
+      const body = document.getElementById('rules-Body');
+      const chev = document.getElementById('rules-chevron');
+      body.classList.toggle('hidden');
+      chev.classList.toggle('rotate-180');
+    }
+
+    // ۵. رندر قوانین اتومیشن
+    function renderRulesConfig() {
+      const container = document.getElementById('rules-container');
+      const dayChoices = [5, 3, 2, 1, 0, -1];
+
+      container.innerHTML = rules.map((r, idx) => `
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRuleEnabled(${idx}, this.checked)" class="w-4 h-4 rounded accent-indigo-600" />
+                <span class="font-bold text-xs text-white">${r.title}</span>
+              </label>
+              <select onchange="changeRuleTargetPhone(${idx}, this.value)" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300">
+                <option value="student" ${r.targetPhone === 'student' ? 'selected' : ''}>گیرنده: دانش‌آموز</option>
+                <option value="father" ${r.targetPhone === 'father' ? 'selected' : ''}>گیرنده: پدر</option>
+                <option value="mother" ${r.targetPhone === 'mother' ? 'selected' : ''}>گیرنده: مادر</option>
+              </select>
+            </div>
+
+            ${r.category !== 'wallet' ? `
+              <div>
+                <span class="block text-[11px] text-slate-400 mb-1.5">روزهای ارسال پیامک (نسبت به سررسید):</span>
+                <div class="flex flex-wrap gap-1.5">
+                  ${dayChoices.map(d => {
+                    const active = r.triggerDays.includes(d);
+                    const lbl = d === 0 ? 'روز سررسید' : d > 0 ? `${toPersianDigits(d)} روز مانده` : `${toPersianDigits(Math.abs(d))} روز دیرکرد`;
+                    return `<button onclick="toggleRuleDay(${idx}, ${d})" class="px-2 py-1 rounded-lg text-[11px] border transition ${active ? 'bg-indigo-600 text-white border-indigo-500 font-bold' : 'bg-slate-950 text-slate-400 border-slate-800'}">${lbl}</button>`;
+                  }).join('')}
+                </div>
+              </div>
+            ` : `
+              <p class="text-[11px] text-slate-400">ارسال خودکار به تمام دانش‌آموزانی که موجودی کیف پول منفی دارند.</p>
+            `}
+
+            <textarea rows="3" oninput="updateRuleTemplate(${idx}, this.value)" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-[11px] text-slate-200 leading-relaxed focus:outline-none focus:border-indigo-500">${r.template}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleRuleEnabled(idx, val) {
+      rules[idx].enabled = val;
+      computeAndRenderRadar();
+    }
+    function changeRuleTargetPhone(idx, val) {
+      rules[idx].targetPhone = val;
+      computeAndRenderRadar();
+    }
+    function toggleRuleDay(idx, dayVal) {
+      const arr = rules[idx].triggerDays;
+      if (arr.includes(dayVal)) {
+        rules[idx].triggerDays = arr.filter(x => x !== dayVal);
+      } else {
+        rules[idx].triggerDays = [...arr, dayVal].sort((a, b) => b - a);
+      }
+      renderRulesConfig();
+      computeAndRenderRadar();
+    }
+    function updateRuleTemplate(idx, val) {
+      rules[idx].template = val;
+      computeAndRenderRadar();
+    }
+
+    // ۶. محاسبه و رندر رادار هوشمند امروز
+    function computeAndRenderRadar() {
+      const userMap = {};
+      users.forEach(u => { userMap[u.phone_number] = u; });
+
+      const matches = [];
+
+      rules.forEach(rule => {
+        if (!rule.enabled) return;
+
+        // ۱. تمدید قرارداد ماهانه
+        if (rule.category === 'subscription') {
+          subs.forEach(sub => {
+            if (sub.status !== 'active') return;
+            const daysLeft = diffJalaliDays(sub.end_date, todayJalali);
+            if (daysLeft === null || !rule.triggerDays.includes(daysLeft)) return;
+
+            if (rule.requireNoNextSub) {
+              const hasNewer = subs.some(other =>
+                other.phone_number === sub.phone_number &&
+                other.id !== sub.id &&
+                jalaliToDays(other.start_date) > jalaliToDays(sub.start_date)
+              );
+              if (hasNewer) return;
+            }
+
+            const u = userMap[sub.phone_number] || { full_name: 'دانش‌آموز گرامی', phone_number: sub.phone_number };
+            const defaultPhone = rule.targetPhone === 'father' && u.father_phone ? u.father_phone :
+                                 rule.targetPhone === 'mother' && u.mother_phone ? u.mother_phone : sub.phone_number;
+
+            const msg = rule.template
+              .replace(/\{name\}/g, u.full_name || 'دانش‌آموز')
+              .replace(/\{plan\}/g, planLabel(sub.plan_type))
+              .replace(/\{end_date\}/g, sub.end_date)
+              .replace(/\{days_left\}/g, toPersianDigits(Math.abs(daysLeft)))
+              .replace(/\{days_text\}/g, formatDaysText(daysLeft));
+
+            matches.push({
+              matchId: `sub_${sub.id}_${daysLeft}`,
+              category: 'subscription',
+              customer_name: u.full_name || sub.phone_number,
+              phone: defaultPhone,
+              student_phone: sub.phone_number,
+              father_phone: u.father_phone || '',
+              mother_phone: u.mother_phone || '',
+              grade: u.grade || '',
+              major: u.major || '',
+              reason_badge: daysLeft === 0 ? `پایان قرارداد امروز (${planLabel(sub.plan_type)})` : `${toPersianDigits(daysLeft)} روز مانده به پایان ${planLabel(sub.plan_type)}`,
+              message: msg
+            });
+          });
+        }
+
+        // ۲. یادآوری اقساط
+        if (rule.category === 'installment') {
+          installments.forEach(inst => {
+            if (inst.status === 'paid') return;
+            const daysLeft = diffJalaliDays(inst.due_date, todayJalali);
+            if (daysLeft === null || !rule.triggerDays.includes(daysLeft)) return;
+
+            const u = userMap[inst.phone_number] || { full_name: 'دانش‌آموز گرامی', phone_number: inst.phone_number };
+            const defaultPhone = rule.targetPhone === 'father' && u.father_phone ? u.father_phone :
+                                 rule.targetPhone === 'mother' && u.mother_phone ? u.mother_phone : inst.phone_number;
+
+            const msg = rule.template
+              .replace(/\{name\}/g, u.full_name || 'دانش‌آموز')
+              .replace(/\{amount\}/g, formatMoney(inst.amount))
+              .replace(/\{due_date\}/g, inst.due_date)
+              .replace(/\{installment_num\}/g, toPersianDigits(inst.installment_number || 1))
+              .replace(/\{days_left\}/g, toPersianDigits(Math.abs(daysLeft)))
+              .replace(/\{days_text\}/g, formatDaysText(daysLeft));
+
+            matches.push({
+              matchId: `inst_${inst.id}_${daysLeft}`,
+              category: 'installment',
+              customer_name: u.full_name || inst.phone_number,
+              phone: defaultPhone,
+              student_phone: inst.phone_number,
+              father_phone: u.father_phone || '',
+              mother_phone: u.mother_phone || '',
+              grade: u.grade || '',
+              major: u.major || '',
+              reason_badge: daysLeft === 0 ? `سررسید قسط امروز (${formatMoney(inst.amount)} ت)` : daysLeft > 0 ? `${toPersianDigits(daysLeft)} روز مانده به قسط (${formatMoney(inst.amount)} ت)` : `${toPersianDigits(Math.abs(daysLeft))} روز دیرکرد قسط`,
+              message: msg
+            });
+          });
+        }
+
+        // ۳. بدهی کیف پول
+        if (rule.category === 'wallet') {
+          users.forEach(u => {
+            const bal = Number(u.wallet_balance || 0);
+            if (bal >= 0 || u.status === 'blocked') return;
+
+            const msg = rule.template
+              .replace(/\{name\}/g, u.full_name || 'دانش‌آموز')
+              .replace(/\{wallet\}/g, formatMoney(bal));
+
+            matches.push({
+              matchId: `wallet_${u.phone_number}`,
+              category: 'wallet',
+              customer_name: u.full_name,
+              phone: u.phone_number,
+              student_phone: u.phone_number,
+              father_phone: u.father_phone || '',
+              mother_phone: u.mother_phone || '',
+              grade: u.grade || '',
+              major: u.major || '',
+              reason_badge: `بدهی کیف پول (${formatMoney(bal)}- تومان)`,
+              message: msg
+            });
+          });
+        }
+      });
+
+      currentRadarMatches = matches;
+      selectedRadarIds = new Set(matches.map(m => m.matchId));
+      renderRadarCards();
+      updateTopCounters();
+    }
+
+    function renderRadarCards() {
+      const grid = document.getElementById('radar-matches-grid');
+      document.getElementById('radar-list-count').innerText = toPersianDigits(currentRadarMatches.length);
+
+      if (currentRadarMatches.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full p-10 rounded-2xl bg-slate-900/50 border border-slate-800 text-center space-y-2">
+            <i class="fa-solid fa-circle-check text-3xl text-emerald-400"></i>
+            <p class="text-sm font-bold text-slate-200">در تاریخ ${todayJalali} هیچ موردی مشمول قوانین نشد.</p>
+            <p class="text-xs text-slate-400">می‌توانید از دکمه‌های بالای صفحه تاریخ را تغییر دهید.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = currentRadarMatches.map(item => {
+        const checked = selectedRadarIds.has(item.matchId);
+        const finalPhone = customPhoneOverrides[item.matchId] || item.phone;
+        const finalMsg = customMessageEdits[item.matchId] !== undefined ? customMessageEdits[item.matchId] : item.message;
+
+        const badgeStyle = item.category === 'subscription'
+          ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+          : item.category === 'installment'
+          ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+          : 'bg-sky-500/15 text-sky-300 border-sky-500/30';
+
+        return `
+          <div class="p-4 rounded-2xl border transition ${checked ? 'bg-slate-900 border-indigo-500/50 shadow-lg shadow-indigo-950/20' : 'bg-slate-900/40 border-slate-800 opacity-65'}">
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRadarItem('${item.matchId}', this.checked)" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-sm text-white">${item.customer_name}</h4>
+                    ${item.grade ? `<span class="text-[11px] text-slate-400">(${item.grade} ${item.major})</span>` : ''}
+                  </div>
+                  <span class="inline-block mt-1 text-[11px] px-2 py-0.5 rounded-lg border font-medium ${badgeStyle}">
+                    ${item.reason_badge}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 mb-2.5">
+              <span class="text-[11px] text-slate-400">ارسال به:</span>
+              <button onclick="setRadarPhone('${item.matchId}', '${item.student_phone}')" class="px-2 py-1 rounded-lg border text-[11px] dir-ltr ${finalPhone === item.student_phone ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 font-bold' : 'bg-slate-800 border-slate-700 text-slate-400'}">
+                دانش‌آموز (${item.student_phone})
+              </button>
+              ${item.father_phone ? `
+                <button onclick="setRadarPhone('${item.matchId}', '${item.father_phone}')" class="px-2 py-1 rounded-lg border text-[11px] ${finalPhone === item.father_phone ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 font-bold' : 'bg-slate-800 border-slate-700 text-slate-400'}">
+                  پدر (${item.father_phone})
+                </button>
+              ` : ''}
+              ${item.mother_phone ? `
+                <button onclick="setRadarPhone('${item.matchId}', '${item.mother_phone}')" class="px-2 py-1 rounded-lg border text-[11px] ${finalPhone === item.mother_phone ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 font-bold' : 'bg-slate-800 border-slate-700 text-slate-400'}">
+                  مادر (${item.mother_phone})
+                </button>
+              ` : ''}
+            </div>
+
+            <textarea rows="3" oninput="editRadarMsg('${item.matchId}', this.value)" class="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-indigo-500 p-2.5 text-xs text-slate-200 leading-relaxed focus:outline-none">${finalMsg}</textarea>
+
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
+              <a href="sms:${finalPhone}?&body=${encodeURIComponent(finalMsg)}" class="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 font-medium">
+                <i class="fa-solid fa-comment-sms"></i>
+                <span>ارسال مستقیم با آیفون</span>
+              </a>
+
+              <button onclick="queueSingleRadarItem('${item.matchId}')" class="text-[11px] px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 font-medium">
+                + افزودن به صف آیفون
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleRadarItem(matchId, checked) {
+      if (checked) selectedRadarIds.add(matchId);
+      else selectedRadarIds.delete(matchId);
+      renderRadarCards();
+    }
+
+    function toggleSelectAllRadar(checked) {
+      if (checked) selectedRadarIds = new Set(currentRadarMatches.map(m => m.matchId));
+      else selectedRadarIds.clear();
+      renderRadarCards();
+    }
+
+    function setRadarPhone(matchId, phone) {
+      customPhoneOverrides[matchId] = phone;
+      renderRadarCards();
+    }
+
+    function editRadarMsg(matchId, text) {
+      customMessageEdits[matchId] = text;
+    }
+
+    function queueSingleRadarItem(matchId) {
+      const m = currentRadarMatches.find(x => x.matchId === matchId);
+      if (!m) return;
+      addItemsToOutbox([{
+        customer_name: m.customer_name,
+        phone: customPhoneOverrides[m.matchId] || m.phone,
+        message: customMessageEdits[m.matchId] !== undefined ? customMessageEdits[m.matchId] : m.message,
+        reason_badge: m.reason_badge
+      }]);
+    }
+
+    function queueSelectedRadarMatches() {
+      const selected = currentRadarMatches.filter(m => selectedRadarIds.has(m.matchId)).map(m => ({
+        customer_name: m.customer_name,
+        phone: customPhoneOverrides[m.matchId] || m.phone,
+        message: customMessageEdits[m.matchId] !== undefined ? customMessageEdits[m.matchId] : m.message,
+        reason_badge: m.reason_badge
+      }));
+      if (selected.length === 0) {
+        showToast('لطفاً حداقل یک مورد را انتخاب کنید.');
+        return;
+      }
+      addItemsToOutbox(selected);
+      switchTab('outbox');
+    }
+
+    // ۷. مدیریت تغییر تاریخ شمسی
+    function setTodayJalali(dateStr) {
+      todayJalali = dateStr;
+      document.getElementById('input-today-jalali').value = dateStr;
+      document.querySelectorAll('.date-chip').forEach(btn => {
+        if (btn.getAttribute('data-date') === dateStr) {
+          btn.className = 'date-chip text-[11px] px-3 py-1 rounded-xl border transition bg-indigo-600 text-white border-indigo-500';
+        } else {
+          btn.className = 'date-chip text-[11px] px-3 py-1 rounded-xl border transition bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700';
+        }
+      });
+      computeAndRenderRadar();
+    }
+
+    function changeJalaliDate(delta) {
+      const d = jalaliToDays(todayJalali);
+      if (d !== null) setTodayJalali(daysToJalali(d + delta));
+    }
+
+    function onDateInputChange(val) {
+      if (jalaliToDays(val) !== null) setTodayJalali(val.trim());
+    }
+
+    function setRealSolarToday() {
+      try {
+        const parts = new Intl.DateTimeFormat('en-US-u-ca-persian', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).formatToParts(new Date());
+        const y = parts.find(p => p.type === 'year').value;
+        const m = parts.find(p => p.type === 'month').value;
+        const d = parts.find(p => p.type === 'day').value;
+        setTodayJalali(`${y}-${m}-${d}`);
+        showToast(`تاریخ به امروز واقعی (${y}-${m}-${d}) تغییر یافت.`);
+      } catch (e) {
+        setTodayJalali('1405-07-25');
+      }
+    }
+
+    // ۸. بخش کمپین تبلیغاتی و فیلتر مخاطبان
+    const PROMO_PRESETS = [
+      'سلام {name} عزیز 🌱\nیک کد تخفیف ۱۵٪ ویژه ثبت‌نام و تمدید اشتراک ماهانه پانسیون مطالعاتی راهینو برای شما فعال شد!\nکد اختصاصی شما: VIP-{referral_code}\nمهلت استفاده تا پایان هفته ✨',
+      '{name} جان سلام 🌸\nبا توجه به حضور منظم شما در رزروهای روزانه راهینو، در صورت ثبت‌نام اشتراک ماهانه VIP، مبلغ ۲۰۰ هزار تومان هدیه در کیف پول شما شارژ خواهد شد!',
+      'سلام {name} عزیز 👋\nثبت‌نام اولیه شما در سامانه پانسیون مطالعاتی راهینو تایید شده است. جهت انتخاب میز و نهایی‌سازی اشتراک خود وارد پنل کاربری شوید.',
+      '{name} عزیز، سلام ✨\nبا اشتراک‌گذاری کد معرف اختصاصی خود ({referral_code}) با دوستانتان، به ازای هر ثبت‌نام هدیه ویژه در کیف پول راهینو دریافت کنید!'
+    ];
+
+    function setPromoPreset(idx) {
+      document.getElementById('camp-template').value = PROMO_PRESETS[idx];
+      renderCampaignList();
+    }
+
+    function insertCampTag(tag) {
+      const el = document.getElementById('camp-template');
+      el.value = el.value + ' ' + tag;
+      renderCampaignList();
+    }
+
+    function getFilteredCampaignUsers() {
+      const seg = document.getElementById('camp-segment').value;
+      const grade = document.getElementById('camp-grade').value;
+      const major = document.getElementById('camp-major').value;
+      const q = (document.getElementById('camp-search').value || '').trim();
+
+      const subSet = new Set(subs.map(s => s.phone_number));
+      const resSet = new Set(reservations.map(r => r.phone_number));
+
+      return users.filter(u => {
+        if (u.status === 'blocked') return false;
+        if (grade !== 'all' && u.grade !== grade) return false;
+        if (major !== 'all' && !(u.major || '').includes(major)) return false;
+
+        if (seg === 'daily_only' && (!resSet.has(u.phone_number) || subSet.has(u.phone_number))) return false;
+        if (seg === 'approved_no_sub' && (u.status !== 'approved' || subSet.has(u.phone_number))) return false;
+        if (seg === 'draft_only' && u.status !== 'draft') return false;
+        if (seg === 'monthly_subscribers' && !subSet.has(u.phone_number)) return false;
+
+        if (q && !(u.full_name || '').includes(q) && !(u.phone_number || '').includes(q)) return false;
+        return true;
+      });
+    }
+
+    function formatCampText(u, tpl) {
+      return tpl
+        .replace(/\{name\}/g, u.full_name || 'دانش‌آموز عزیز')
+        .replace(/\{grade\}/g, u.grade || '')
+        .replace(/\{major\}/g, u.major || '')
+        .replace(/\{school\}/g, u.school_name || '')
+        .replace(/\{referral_code\}/g, u.referral_code || 'RAHINO');
+    }
+
+    function renderCampaignList() {
+      const list = getFilteredCampaignUsers();
+      const tpl = document.getElementById('camp-template').value;
+      document.getElementById('camp-count').innerText = toPersianDigits(list.length);
+
+      if (selectedCampaignPhones.size === 0 && list.length > 0) {
+        list.forEach(u => selectedCampaignPhones.add(u.phone_number));
+      }
+
+      const container = document.getElementById('camp-users-list');
+      container.innerHTML = list.map(u => {
+        const checked = selectedCampaignPhones.has(u.phone_number);
+        const preview = formatCampText(u, tpl);
+        return `
+          <div onclick="toggleCampUser('${u.phone_number}')" class="cursor-pointer p-3 rounded-xl border transition ${checked ? 'bg-slate-950 border-indigo-500/40' : 'bg-slate-950/30 border-slate-800/60 opacity-60'}">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCampUser('${u.phone_number}')" class="w-4 h-4 rounded accent-indigo-600" />
+                <span class="font-bold text-xs text-white">${u.full_name}</span>
+                <span class="text-[11px] text-indigo-400 dir-ltr font-mono">${u.phone_number}</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">${u.grade || '-'} | ${u.major || '-'}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 bg-slate-900 p-2 rounded-lg whitespace-pre-line leading-relaxed">${preview}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleCampUser(phone) {
+      if (selectedCampaignPhones.has(phone)) selectedCampaignPhones.delete(phone);
+      else selectedCampaignPhones.add(phone);
+      renderCampaignList();
+    }
+
+    function toggleSelectAllCampaign(checked) {
+      const list = getFilteredCampaignUsers();
+      if (checked) list.forEach(u => selectedCampaignPhones.add(u.phone_number));
+      else selectedCampaignPhones.clear();
+      renderCampaignList();
+    }
+
+    function queueCampaignMessages() {
+      const list = getFilteredCampaignUsers().filter(u => selectedCampaignPhones.has(u.phone_number));
+      const tpl = document.getElementById('camp-template').value;
+      if (list.length === 0) {
+        showToast('هیچ مخاطبی انتخاب نشده است.');
+        return;
+      }
+      const items = list.map(u => ({
+        customer_name: u.full_name,
+        phone: u.phone_number,
+        message: formatCampText(u, tpl),
+        reason_badge: 'کمپین تبلیغاتی و تخفیف'
+      }));
+      addItemsToOutbox(items);
+      switchTab('outbox');
+    }
+
+    // ۹. مدیریت صف ارسال آیفون (`sms_outbox`)
+    async function addItemsToOutbox(items) {
+      const prepared = items.map(it => ({
+        id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        customer_name: it.customer_name,
+        phone: it.phone,
+        message: it.message,
+        reason_badge: it.reason_badge || 'یادآوری',
+        is_sent: false,
+        created_at: new Date().toISOString()
+      }));
+
+      outbox = [...prepared, ...outbox];
+      saveOutbox();
+      updateTopCounters();
+      renderOutbox();
+
+      // اگر به Supabase متصل باشد، مستقیم داخل جدول sms_outbox هم درج می‌کند
+      if (sbConfig.url && sbConfig.key) {
+        try {
+          const baseUrl = sbConfig.url.replace(/\/$/, '');
+          await fetch(`${baseUrl}/rest/v1/sms_outbox`, {
+            method: 'POST',
+            headers: {
+              apikey: sbConfig.key,
+              Authorization: `Bearer ${sbConfig.key}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify(prepared.map(({ id, customer_name, phone, message, reason_badge, is_sent }) => ({
+              id, customer_name, phone, message, reason_badge, is_sent
+            })))
+          });
+        } catch (err) {
+          console.warn('ذخیره محلی انجام شد.');
+        }
+      }
+
+      showToast(`${toPersianDigits(prepared.length)} پیامک شخصی‌سازی‌شده به صف ارسال آیفون اضافه شد!`);
+    }
+
+    function saveOutbox() {
+      try {
+        localStorage.setItem('rahino_html_outbox', JSON.stringify(outbox));
+      } catch (e) {}
+    }
+
+    function renderOutbox() {
+      const pending = outbox.filter(x => !x.is_sent);
+      document.getElementById('outbox-banner-count').innerText = toPersianDigits(pending.length);
+      document.getElementById('link-run-shortcut').href = `shortcuts://run-shortcut?name=${encodeURIComponent(sbConfig.shortcutName || 'RahinoSMS')}`;
+
+      const grid = document.getElementById('outbox-pending-grid');
+      if (pending.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-10 text-center space-y-2">
+            <i class="fa-regular fa-paper-plane text-3xl text-slate-600"></i>
+            <p class="text-xs text-slate-400">صف ارسال در حال حاضر خالی است.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = pending.map(item => `
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-xs text-white">${item.customer_name}</span>
+                <span class="text-xs text-indigo-400 font-mono dir-ltr">${item.phone}</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">${item.reason_badge}</span>
+            </div>
+            <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed bg-slate-900 p-2.5 rounded-lg">${item.message}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-900">
+            <a href="sms:${item.phone}?&body=${encodeURIComponent(item.message)}" onclick="markSingleSent('${item.id}')" class="text-[11px] px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold flex items-center gap-1.5">
+              <i class="fa-solid fa-comment-sms"></i>
+              <span>ارسال تک‌کلیکی با آیفون</span>
+            </a>
+
+            <button onclick="removeOutboxItem('${item.id}')" class="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1">
+              <i class="fa-regular fa-trash-can"></i>
+              <span>حذف</span>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function markSingleSent(id) {
+      outbox = outbox.map(x => x.id === id ? { ...x, is_sent: true } : x);
+      saveOutbox();
+      updateTopCounters();
+      setTimeout(renderOutbox, 500);
+    }
+
+    function removeOutboxItem(id) {
+      outbox = outbox.filter(x => x.id !== id);
+      saveOutbox();
+      updateTopCounters();
+      renderOutbox();
+    }
+
+    function markAllOutboxSent() {
+      outbox = outbox.map(x => ({ ...x, is_sent: true }));
+      saveOutbox();
+      updateTopCounters();
+      renderOutbox();
+      showToast('تمام پیام‌های صف به عنوان ارسال‌شده علامت‌گذاری شدند.');
+    }
+
+    function clearOutbox() {
+      outbox = [];
+      saveOutbox();
+      updateTopCounters();
+      renderOutbox();
+      showToast('صف ارسال پاکسازی شد.');
+    }
+
+    function copyOutboxJSON() {
+      const pending = outbox.filter(x => !x.is_sent).map(({ id, phone, message }) => ({ id, phone, message }));
+      copyTextToClipboard(JSON.stringify(pending, null, 2));
+      showToast('لیست پیام‌های صف با فرمت JSON کپی شد!');
+    }
+
+    function copySQLCode() {
+      const code = document.getElementById('sql-code-block').innerText;
+      copyTextToClipboard(code);
+      showToast('کد ساخت جدول SQL کپی شد!');
+    }
+
+    function copyTextToClipboard(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    // ۱۰. اتصال زنده به Supabase
+    function openSettingsModal() {
+      document.getElementById('inp-sb-url').value = sbConfig.url || '';
+      document.getElementById('inp-sb-key').value = sbConfig.key || '';
+      document.getElementById('inp-shortcut-name').value = sbConfig.shortcutName || 'RahinoSMS';
+      const modal = document.getElementById('modal-settings');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById('modal-settings');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveSettingsAndSync() {
+      sbConfig.url = document.getElementById('inp-sb-url').value.trim();
+      sbConfig.key = document.getElementById('inp-sb-key').value.trim();
+      sbConfig.shortcutName = document.getElementById('inp-shortcut-name').value.trim() || 'RahinoSMS';
+      try {
+        localStorage.setItem('rahino_html_sb', JSON.stringify(sbConfig));
+      } catch (e) {}
+      closeSettingsModal();
+      if (sbConfig.url && sbConfig.key) {
+        syncWithSupabase();
+      } else {
+        showToast('تنظیمات ذخیره شد.');
+      }
+    }
+
+    async function syncWithSupabase() {
+      if (!sbConfig.url || !sbConfig.key) {
+        openSettingsModal();
+        return;
+      }
+      const icon = document.getElementById('sync-icon');
+      icon.classList.add('fa-spin');
+      try {
+        const baseUrl = sbConfig.url.replace(/\/$/, '');
+        const headers = {
+          apikey: sbConfig.key,
+          Authorization: `Bearer ${sbConfig.key}`
+        };
+
+        const [uRes, sRes, iRes, rRes] = await Promise.all([
+          fetch(`${baseUrl}/rest/v1/users?select=*`, { headers }),
+          fetch(`${baseUrl}/rest/v1/pan_monthly_subs?select=*`, { headers }),
+          fetch(`${baseUrl}/rest/v1/pan_installments?select=*`, { headers }),
+          fetch(`${baseUrl}/rest/v1/pan_reservations?select=*`, { headers })
+        ]);
+
+        if (uRes.ok) users = await uRes.json();
+        if (sRes.ok) subs = await sRes.json();
+        if (iRes.ok) installments = await iRes.json();
+        if (rRes.ok) reservations = await rRes.json();
+
+        document.getElementById('db-status-text').innerText = 'متصل به Supabase';
+        computeAndRenderRadar();
+        showToast('آخرین اطلاعات جداول با موفقیت از Supabase دریافت شد!');
+      } catch (err) {
+        showToast('خطا در ارتباط با Supabase. آدرس و کلید را بررسی کنید.');
+      } finally {
+        icon.classList.remove('fa-spin');
+      }
+    }
+
+    function updateTopCounters() {
+      const pendingCount = outbox.filter(x => !x.is_sent).length;
+      document.getElementById('stat-radar-count').innerText = toPersianDigits(currentRadarMatches.length);
+      document.getElementById('stat-outbox-count').innerText = toPersianDigits(pendingCount);
+      document.getElementById('stat-subs-count').innerText = toPersianDigits(subs.filter(s => s.status === 'active').length);
+      document.getElementById('stat-users-count').innerText = toPersianDigits(users.length);
+
+      document.getElementById('dbadge-radar').innerText = toPersianDigits(currentRadarMatches.length);
+      document.getElementById('mbadge-radar').innerText = toPersianDigits(currentRadarMatches.length);
+      document.getElementById('dbadge-outbox').innerText = toPersianDigits(pendingCount);
+      document.getElementById('mbadge-outbox').innerText = toPersianDigits(pendingCount);
+    }
+
+    // مقداردهی اولیه هنگام بارگذاری صفحه
+    window.addEventListener('DOMContentLoaded', () => {
+      if (sbConfig.url && sbConfig.key) {
+        document.getElementById('db-status-text').innerText = 'متصل به Supabase';
+      }
+      renderRulesConfig();
+      computeAndRenderRadar();
+    });
+  </script>
+</body>
+</html>
