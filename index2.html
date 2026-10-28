@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>قطب‌نمای راهینو | سامانه جامع برنامه‌ریزی و مشاوره هوشمند</title>
+
+    <!-- 📱 تنظیمات وب‌اپلیکیشن (PWA & iOS Safari) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0e1514">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="قطب‌نما">
+    <link rel="apple-touch-icon" href="https://etlutqwwqeahevsskjih.supabase.co/storage/v1/object/public/photo/Gemini_Generated_Image_j6dhndj6dhndj6dh%20(1).png">
+
+    <!-- 🔤 فونت وزیرمتن و کتابخانه‌های پایه -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@0.469.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- 🎨 فایل استایل مرکزی (تمام ظاهر اپ در این فایل قرار می‌گیرد) -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="dark">
+
+    <!-- ==========================================================================
+         🔔 ۱. المان‌های سراسری: لودر اولیه و نوتیفیکیشن درون‌برنامه‌ای (Toast)
+         ========================================================================== -->
+    <div id="globalLoader" class="page-loader">
+        <div class="spinner"></div>
+        <p class="loader-text">در حال همگام‌سازی قطب‌نما...</p>
+    </div>
+
+    <div id="appToast" class="app-toast" role="status" aria-live="polite">
+        <i data-lucide="info" class="icon-sm"></i>
+        <span id="appToastText">پیام سیستم</span>
+    </div>
+
+
+    <!-- ==========================================================================
+         🔐 ۲. پوسته احراز هویت و ثبت‌نام (AUTH & ONBOARDING SHELL)
+         زمانی که کاربر لاگین نیست یا در حال ثبت‌نام است، این بخش فعال می‌شود
+         ========================================================================== -->
+    <div id="shell-auth" class="shell-container" style="display: none;">
+
+        <!-- ----------------------------------------------------------------------
+             🔑 نما ۱: صفحه ورود (Login View)
+             ---------------------------------------------------------------------- -->
+        <section id="view-login" class="auth-view active">
+            <div class="auth-box">
+                <div class="logo-container">
+                    <img src="https://etlutqwwqeahevsskjih.supabase.co/storage/v1/object/public/photo/optimized_by_opt.imum.ir__2026-07-29_19-19-13.jpg" alt="لوگو راهینو" class="logo-img">
+                </div>
+                <h1 class="auth-title">قطب‌نمای راهینو</h1>
+                <p class="auth-subtitle">سامانه هوشمند مدیریت، مشاوره و برنامه‌ریزی تحصیلی</p>
+
+                <div id="loginAlert" class="alert-box"></div>
+
+                <div class="form-group">
+                    <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل (یا کد ملی)</label>
+                    <input type="tel" id="loginUsername" class="modern-input ltr-input" placeholder="0912..." maxlength="11" autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label><i data-lucide="lock" class="icon-sm"></i> رمز عبور</label>
+                    <input type="password" id="loginPassword" class="modern-input ltr-input" placeholder="••••••••" autocomplete="current-password">
+                </div>
+
+                <button class="btn-primary-full" id="btnLoginSubmit" onclick="AuthModule.handleLogin()">
+                    <i data-lucide="log-in" class="icon"></i>
+                    <span>ورود به حساب کاربری</span>
+                </button>
+
+                <div class="auth-footer-links">
+                    <button type="button" class="link-btn" onclick="UI.openModal('forgotPasswordModal')">
+                        <i data-lucide="key-round" class="icon-sm"></i>
+                        <span>فراموشی رمز عبور</span>
+                    </button>
+                    <button type="button" class="link-btn primary" onclick="Router.goToAuthView('register-step1')">
+                        <i data-lucide="user-plus" class="icon-sm"></i>
+                        <span>ثبت‌نام دانش‌آموز جدید</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ----------------------------------------------------------------------
+             📝 نما ۲: ثبت‌نام مرحله اول - تشکیل پرونده سریع (Register Step 1)
+             ---------------------------------------------------------------------- -->
+        <section id="view-register-step1" class="auth-view">
+            <div class="auth-box wide">
+                <div class="stepper-bar">
+                    <div class="step-item active">
+                        <span class="step-num">۱</span>
+                        <span class="step-label">تشکیل پرونده</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step-item">
+                        <span class="step-num">۲</span>
+                        <span class="step-label">انتخاب طرح و فعال‌سازی</span>
+                    </div>
+                </div>
+
+                <div class="auth-header">
+                    <h2>تشکیل پرونده در قطب‌نما</h2>
+                    <p>اطلاعات پایه خود را وارد کنید؛ سایر مشخصات را می‌توانید بعداً در پروفایل تکمیل نمایید.</p>
+                </div>
+
+                <div id="regStep1Alert" class="alert-box"></div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label><i data-lucide="user" class="icon-sm"></i> نام و نام خانوادگی</label>
+                        <input type="text" id="regFullName" class="modern-input" placeholder="مثال: علی رضایی">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل دانش‌آموز (نام کاربری)</label>
+                        <input type="tel" id="regPhone" class="modern-input ltr-input" placeholder="09..." maxlength="11">
+                    </div>
+
+                    <!-- انتخاب پایه تحصیلی با دکمه‌های درون‌برنامه‌ای (بدون select مرورگر) -->
+                    <div class="form-group full-col">
+                        <label><i data-lucide="graduation-cap" class="icon-sm"></i> پایه تحصیلی</label>
+                        <input type="hidden" id="regGrade" value="">
+                        <div class="segmented-pills" id="regGradePills">
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regGrade', 'دهم', this)">دهم</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regGrade', 'یازدهم', this)">یازدهم</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regGrade', 'دوازدهم', this)">دوازدهم</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regGrade', 'پشت کنکوری', this)">فارغ‌التحصیل</button>
+                        </div>
+                    </div>
+
+                    <!-- انتخاب رشته تحصیلی با دکمه‌های درون‌برنامه‌ای -->
+                    <div class="form-group full-col">
+                        <label><i data-lucide="book-open" class="icon-sm"></i> رشته تحصیلی</label>
+                        <input type="hidden" id="regMajor" value="">
+                        <div class="segmented-pills" id="regMajorPills">
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regMajor', 'تجربی', this)">علوم تجربی</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regMajor', 'ریاضی', this)">ریاضی فیزیک</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('regMajor', 'انسانی', this)">علوم انسانی</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i data-lucide="gift" class="icon-sm"></i> کد معرف دوستان (اختیاری - ۱۰۰ هزار تومان هدیه)</label>
+                        <input type="text" id="regReferralCodeInput" class="modern-input ltr-input" placeholder="مثال: RH-A1B2C">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i data-lucide="lock" class="icon-sm"></i> رمز عبور دلخواه (حداقل ۶ کاراکتر)</label>
+                        <input type="password" id="regPassword" class="modern-input ltr-input" placeholder="حداقل ۶ حرف یا عدد">
+                    </div>
+
+                    <!-- سوال امنیتی با دراپ‌داون اختصاصی درون‌برنامه‌ای -->
+                    <div class="form-group full-col security-card">
+                        <label><i data-lucide="shield-check" class="icon-sm"></i> سوال امنیتی (جهت بازیابی رمز عبور در آینده)</label>
+                        <div class="custom-select-wrap" id="regSecQuestionWrap">
+                            <input type="hidden" id="regSecQuestion" value="نام بهترین دوست دوران کودکی شما چیست؟">
+                            <div class="custom-select-trigger" onclick="UI.toggleDropdown('regSecQuestionWrap', event)">
+                                <span id="regSecQuestionLabel">نام بهترین دوست دوران کودکی شما چیست؟</span>
+                                <i data-lucide="chevron-down" class="icon-sm"></i>
+                            </div>
+                            <div class="custom-select-menu">
+                                <div class="custom-select-item selected" onclick="UI.selectDropdownItem('regSecQuestionWrap', 'regSecQuestion', 'regSecQuestionLabel', 'نام بهترین دوست دوران کودکی شما چیست؟', this)">نام بهترین دوست دوران کودکی شما چیست؟</div>
+                                <div class="custom-select-item" onclick="UI.selectDropdownItem('regSecQuestionWrap', 'regSecQuestion', 'regSecQuestionLabel', 'نام معلم کلاس اول ابتدایی شما چه بود؟', this)">نام معلم کلاس اول ابتدایی شما چه بود؟</div>
+                                <div class="custom-select-item" onclick="UI.selectDropdownItem('regSecQuestionWrap', 'regSecQuestion', 'regSecQuestionLabel', 'نام شهر محل تولد پدربزرگ شما چیست؟', this)">نام شهر محل تولد پدربزرگ شما چیست؟</div>
+                                <div class="custom-select-item" onclick="UI.selectDropdownItem('regSecQuestionWrap', 'regSecQuestion', 'regSecQuestionLabel', 'رنگ یا غذای مورد علاقه شما در کودکی؟', this)">رنگ یا غذای مورد علاقه شما در کودکی؟</div>
+                            </div>
+                        </div>
+                        <input type="text" id="regSecAnswer" class="modern-input" placeholder="پاسخ سوال امنیتی را اینجا بنویسید...">
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn-primary-full" id="btnRegStep1Submit" onclick="AuthModule.submitStep1()">
+                        <span>تایید و ادامه به مرحله بعد</span>
+                        <i data-lucide="arrow-left" class="icon"></i>
+                    </button>
+                    <button class="btn-outline-full" onclick="Router.goToAuthView('login')">
+                        <span>بازگشت به صفحه ورود</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ----------------------------------------------------------------------
+             💳 نما ۳: ثبت‌نام مرحله دوم - انتخاب طرح مشاوره و پرداخت (Register Step 2)
+             ---------------------------------------------------------------------- -->
+        <section id="view-register-step2" class="auth-view">
+            <div class="auth-box wide">
+                <div class="stepper-bar">
+                    <div class="step-item done">
+                        <span class="step-num"><i data-lucide="check" class="icon-sm"></i></span>
+                        <span class="step-label">تشکیل پرونده</span>
+                    </div>
+                    <div class="step-line active"></div>
+                    <div class="step-item active">
+                        <span class="step-num">۲</span>
+                        <span class="step-label">انتخاب طرح و فعال‌سازی</span>
+                    </div>
+                </div>
+
+                <div class="auth-header">
+                    <h2>انتخاب طرح مشاوره و برنامه‌ریزی قطب‌نما</h2>
+                    <div class="user-badge" id="step2UserInfoBadge">در حال بارگذاری مشخصات...</div>
+                </div>
+
+                <!-- ۱. کارت‌های انتخاب طرح مشاوره -->
+                <div class="section-title">
+                    <span class="bar"></span>
+                    <i data-lucide="compass" class="icon-sm"></i>
+                    <span>۱. طرح مشاوره مد نظر خود را انتخاب کنید</span>
+                </div>
+                <div class="plans-grid" id="step2ConsultPlansGrid"></div>
+
+                <!-- ۲. کارت‌های انتخاب مدت زمان اشتراک (جایگزین منوی کشویی قدیمی) -->
+                <div id="step2DurationSection" style="display: none;">
+                    <div class="section-title">
+                        <span class="bar"></span>
+                        <i data-lucide="calendar-clock" class="icon-sm"></i>
+                        <span>۲. مدت زمان اشتراک را انتخاب کنید</span>
+                    </div>
+                    <input type="hidden" id="step2SelectedDuration" value="1">
+                    <div class="duration-cards-grid" id="step2DurationGrid">
+                        <div class="duration-card active" data-dur="1" onclick="StoreModule.selectStep2Duration('1', this)">
+                            <div class="dur-title">۱ ماهه</div>
+                            <div class="dur-sub">پرداخت ماه‌به‌ماه</div>
+                        </div>
+                        <div class="duration-card" data-dur="3" onclick="StoreModule.selectStep2Duration('3', this)">
+                            <span class="dur-badge">۵٪ تخفیف</span>
+                            <div class="dur-title">۳ ماهه</div>
+                            <div class="dur-sub">یک فصل کامل مطالعاتی</div>
+                        </div>
+                        <div class="duration-card" data-dur="konkur" onclick="StoreModule.selectStep2Duration('konkur', this)">
+                            <span class="dur-badge gold" id="step2KonkurDiscountBadge">۱۵٪ تخفیف ویژه</span>
+                            <div class="dur-title">تا روز کنکور</div>
+                            <div class="dur-sub" id="step2KonkurMonthsLabel">پوشش کامل تا کنکور</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ۳. فاکتور، کد تخفیف و آپلود فیش -->
+                <div id="step2InvoiceSection" class="invoice-container" style="display: none;">
+                    <div class="promo-row">
+                        <input type="text" id="step2PromoInput" class="modern-input" placeholder="کد تخفیف دارید؟ اینجا وارد کنید...">
+                        <button type="button" class="btn-promo" onclick="StoreModule.applyStep2Promo()">اعمال کد</button>
+                    </div>
+                    <div id="step2PromoMessage" class="promo-feedback"></div>
+
+                    <div class="segmented-pills" id="step2PayMethodSwitch">
+                        <button type="button" class="pill-btn active" id="btnStep2Cash" onclick="StoreModule.setStep2PayMethod('cash')">
+                            <i data-lucide="credit-card" class="icon-sm"></i> پرداخت نقدی
+                        </button>
+                        <button type="button" class="pill-btn" id="btnStep2Installments" onclick="StoreModule.setStep2PayMethod('installments')">
+                            <i data-lucide="calendar-range" class="icon-sm"></i> پرداخت اقساطی
+                        </button>
+                    </div>
+
+                    <div class="invoice-rows">
+                        <div class="inv-row"><span>هزینه پایه طرح مشاوره:</span><span id="step2InvBase">۰ تومان</span></div>
+                        <div class="inv-row discount" id="step2RowPromoDisc" style="display:none;"><span>کد تخفیف:</span><span id="step2InvPromoDisc">- ۰ تومان</span></div>
+                        <div class="inv-row discount" id="step2RowTimeDisc" style="display:none;"><span>تخفیف زمانی طرح:</span><span id="step2InvTimeDisc">- ۰ تومان</span></div>
+                        <div class="inv-row discount" id="step2RowRefDisc" style="display:none;"><span>هدیه کد معرف دوستان:</span><span id="step2InvRefDisc">- ۱۰۰,۰۰۰ تومان</span></div>
+                        <div class="inv-total"><span>مبلغ کل فاکتور:</span><span id="step2InvTotal">۰ تومان</span></div>
+                    </div>
+
+                    <ul class="installments-preview-list" id="step2InstallmentDetails" style="display:none;"></ul>
+
+                    <!-- باکس قوانین و مقررات -->
+                    <div class="rules-box">
+                        <div class="rules-header"><i data-lucide="scroll-text" class="icon-sm"></i> قوانین و مقررات پذیرش قطب‌نما</div>
+                        <div class="rules-scroll"><ul id="step2RulesList"></ul></div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="step2RulesCheck">
+                            <span>تمامی قوانین و شرایط فوق را مطالعه کردم و می‌پذیرم.</span>
+                        </label>
+                    </div>
+
+                    <!-- اطلاعات کارت بانکی و آپلود فیش -->
+                    <div class="bank-card-box">
+                        <div class="pay-now-label">مبلغ قابل واریز در این لحظه:</div>
+                        <div class="pay-now-amount" id="step2PayNowAmount">۰ تومان</div>
+                        <div class="bank-row">
+                            <div>
+                                <small>شماره کارت بانک سامان (ارشاد شفیعی فرد)</small>
+                                <div class="card-num" id="step2CardNum">6219 8618 1038 0484</div>
+                            </div>
+                            <button type="button" class="btn-copy-inline" onclick="UI.copyText('6219861810380484', this)">
+                                <i data-lucide="copy" class="icon-sm"></i><span>کپی کارت</span>
+                            </button>
+                        </div>
+                        <div class="bank-row" id="step2ShabaBox" style="display:none;">
+                            <div>
+                                <small class="danger-text">مبالغ بالای ۱۵ میلیون تومان (شماره شبا پایا/ساتنا)</small>
+                                <div class="shaba-num" id="step2ShabaNum">IR200560611828006108618001</div>
+                            </div>
+                            <button type="button" class="btn-copy-inline" onclick="UI.copyText('IR200560611828006108618001', this)">
+                                <i data-lucide="copy" class="icon-sm"></i><span>کپی شبا</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="receipt-upload-box" id="step2ReceiptBox" onclick="document.getElementById('step2ReceiptInput').click()">
+                        <i data-lucide="upload-cloud" class="icon-xl"></i>
+                        <div id="step2ReceiptLabel">آپلود تصویر فیش واریزی (الزامی)</div>
+                        <input type="file" id="step2ReceiptInput" accept="image/*" style="display:none;" onchange="StoreModule.handleReceiptFile(this, 'step2')">
+                    </div>
+
+                    <div class="action-row">
+                        <button class="btn-primary-full" id="btnStep2Submit" onclick="StoreModule.submitStep2Invoice()">
+                            <i data-lucide="check-circle-2" class="icon"></i>
+                            <span>تایید نهایی و ثبت فاکتور</span>
+                        </button>
+                        <button class="btn-outline-full" onclick="Router.goToAuthView('login')">انصراف و بازگشت</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+
+    <!-- ==========================================================================
+         🧭 ۳. پوسته اصلی اپلیکیشن (MAIN SPA SHELL)
+         شامل ۵ تب اصلی + صفحه پروفایل + صفحات تمدید و تعویض اشتراک
+         ========================================================================== -->
+    <div id="shell-app" class="app-shell" style="display: none;">
+
+        <!-- ======================================================================
+             🏠 تب ۱: ماژول خانه (TAB 1: HOME MODULE)
+             هدر بالای صفحه (نام دانش‌آموز + پیام‌ها + پروفایل) فقط در این تب قرار دارد
+             ====================================================================== -->
+        <section id="tab-home" class="spa-view active">
+            
+            <!-- 🔝 هدر اختصاصی تب خانه -->
+            <header class="home-top-navbar" id="homeTopHeader">
+                <div class="brand-user">
+                    <div class="avatar-ring" onclick="Router.openSubPage('profile')" title="پروفایل و تنظیمات">
+                        <div class="avatar-inner" id="avatarInitial">ق</div>
+                    </div>
+                    <div class="greeting-col">
+                        <h1 id="greetingText">سلام، دانش‌آموز عزیز!</h1>
+                        <div class="greeting-meta">
+                            <span id="todayShamsiDate">امروز</span>
+                            <span class="konkur-pill">
+                                <i data-lucide="flame" class="icon-sm"></i>
+                                <span id="konkurDaysLeft">قطب‌نمای راهینو</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-actions">
+                    <button class="nav-icon-btn" onclick="UI.openModal('messagesModal')" title="صندوق پیام‌ها">
+                        <i data-lucide="bell" class="icon"></i>
+                        <span class="nav-badge" id="msgBadge">0</span>
+                    </button>
+                    <button class="nav-icon-btn" onclick="Router.openSubPage('profile')" title="پروفایل، پوسته و تنظیمات">
+                        <i data-lucide="settings" class="icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- خلاصه وضعیت امروز دانش‌آموز (آماده توسعه در فاز تکمیل خانه) -->
+            <div class="card-box hero-summary-card">
+                <div class="card-header-row">
+                    <div class="module-title-group">
+                        <div class="module-icon-badge"><i data-lucide="compass" class="icon"></i></div>
+                        <div>
+                            <h2>میز کار امروز شما</h2>
+                            <p>خلاصه مأموریت‌ها، عادت‌ها و مرورهای امروز</p>
+                        </div>
+                    </div>
+                    <button class="streak-pill" onclick="ToolsModule.openWakeupChallenge()">
+                        <i data-lucide="flame" class="icon-sm"></i>
+                        <span id="homeStreakCount">0</span>
+                    </button>
+                </div>
+
+                <div class="kpi-grid-4">
+                    <div class="kpi-card clickable" onclick="Router.switchMainTab('planning')">
+                        <div class="kpi-top"><span>عملیات امروز</span><i data-lucide="calendar-check-2" class="icon-sm primary-text"></i></div>
+                        <div class="kpi-val" id="homeTodayProgress">۰٪</div>
+                        <div class="kpi-sub">مشاهده برنامه امروز</div>
+                    </div>
+                    <div class="kpi-card clickable" onclick="Router.switchMainTab('report')">
+                        <div class="kpi-top"><span>گزارش امروز</span><i data-lucide="file-pen-line" class="icon-sm accent-text"></i></div>
+                        <div class="kpi-val" id="homeReportStatus">ثبت نشده</div>
+                        <div class="kpi-sub">ثبت ساعت مطالعه و تست</div>
+                    </div>
+                    <div class="kpi-card clickable" onclick="UI.openModal('flashcardModal')">
+                        <div class="kpi-top"><span>فلش‌کارت امروز</span><i data-lucide="layers" class="icon-sm indigo-text"></i></div>
+                        <div class="kpi-val" id="homeFcCount">۰ کارت</div>
+                        <div class="kpi-sub">مرور سریع نکات</div>
+                    </div>
+                    <div class="kpi-card clickable" onclick="Router.switchMainTab('analytics')">
+                        <div class="kpi-top"><span>رادار عملکرد</span><i data-lucide="bar-chart-3" class="icon-sm gold-text"></i></div>
+                        <div class="kpi-val" id="homeTotalHours">۰ ساعت</div>
+                        <div class="kpi-sub">مشاهده نمودارها</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ویجت سریع عادت‌های امروز در صفحه خانه -->
+            <div class="card-box">
+                <div class="card-header-row">
+                    <div class="section-inline-title">
+                        <i data-lucide="check-circle-2" class="icon primary-text"></i>
+                        <span>عادت‌های روزانه امروز</span>
+                    </div>
+                    <span id="habitProgressText" class="status-pill">۰ از ۴</span>
+                </div>
+                <div id="homeHabitsContainer" class="habits-grid-2"></div>
+            </div>
+
+        </section>
+
+
+        <!-- ======================================================================
+             📝 تب ۲: ماژول ثبت گزارش روزانه (TAB 2: REPORT MODULE)
+             ====================================================================== -->
+        <section id="tab-report" class="spa-view">
+            <div class="module-top-bar">
+                <div class="module-title-group">
+                    <div class="module-icon-badge"><i data-lucide="file-pen-line" class="icon"></i></div>
+                    <div>
+                        <h2>ثبت گزارش عملکرد روزانه</h2>
+                        <p>ساعت مطالعه، تست و لایف‌استایل خود را ثبت کنید</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نوار انتخاب تاریخ (۷ روز اخیر) -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="calendar-days" class="icon-sm"></i>
+                <span>انتخاب روز گزارش</span>
+            </div>
+            <div class="date-slider" id="dateSlider"></div>
+
+            <!-- کارت‌های دروس مطالعه شده -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="book-open" class="icon-sm"></i>
+                <span>عملکرد درسی</span>
+            </div>
+            <div id="courseContainer"></div>
+            <button type="button" class="btn-dashed-add" onclick="ReportModule.addCourseCard()">
+                <i data-lucide="plus-circle" class="icon"></i>
+                <span>اضافه کردن درس جدید</span>
+            </button>
+
+            <!-- اسلایدرهای لایف‌استایل و خواب -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="heart-pulse" class="icon-sm"></i>
+                <span>لایف‌استایل و ریکاوری</span>
+            </div>
+            <div class="card-box">
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label"><i data-lucide="moon" class="icon-sm indigo-text"></i> ساعت خواب دیشب</span>
+                        <span class="slider-val" id="val_sleep">23:00</span>
+                    </div>
+                    <input type="range" id="life_sleep" min="21" max="27" step="0.5" value="23" oninput="ReportModule.updateTimeFormat(this.value, 'val_sleep')">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label"><i data-lucide="sunrise" class="icon-sm gold-text"></i> ساعت بیداری امروز</span>
+                        <span class="slider-val" id="val_wake">07:00</span>
+                    </div>
+                    <input type="range" id="life_wake" min="4" max="12" step="0.5" value="7" oninput="ReportModule.updateTimeFormat(this.value, 'val_wake')">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label"><i data-lucide="smartphone" class="icon-sm danger-text"></i> استفاده از گوشی و فضای مجازی</span>
+                        <span class="slider-val" id="val_phone">1.5 ساعت</span>
+                    </div>
+                    <input type="range" id="life_phone" min="0" max="5" step="0.5" value="1.5" oninput="document.getElementById('val_phone').innerText = this.value + (this.value==5?'+':'') + ' ساعت'">
+                </div>
+                <div class="slider-group" style="margin-bottom:0;">
+                    <div class="slider-header">
+                        <span class="slider-label"><i data-lucide="coffee" class="icon-sm primary-text"></i> چرت و استراحت روزانه</span>
+                        <span class="slider-val" id="val_nap">0 ساعت</span>
+                    </div>
+                    <input type="range" id="life_nap" min="0" max="3" step="0.5" value="0" oninput="document.getElementById('val_nap').innerText = this.value + (this.value==3?'+':'') + ' ساعت'">
+                </div>
+            </div>
+
+            <!-- وضعیت روحی -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="smile-plus" class="icon-sm"></i>
+                <span>وضعیت روحی و انرژی امروز</span>
+            </div>
+            <div class="mood-grid">
+                <div class="mood-btn" onclick="ReportModule.setMood(this, 'عالی')">
+                    <div class="mood-icon-circle"><i data-lucide="zap" class="icon"></i></div>
+                    <small>عالی</small>
+                </div>
+                <div class="mood-btn active" onclick="ReportModule.setMood(this, 'خوب')">
+                    <div class="mood-icon-circle"><i data-lucide="smile" class="icon"></i></div>
+                    <small>خوب</small>
+                </div>
+                <div class="mood-btn" onclick="ReportModule.setMood(this, 'معمولی')">
+                    <div class="mood-icon-circle"><i data-lucide="meh" class="icon"></i></div>
+                    <small>معمولی</small>
+                </div>
+                <div class="mood-btn" onclick="ReportModule.setMood(this, 'بد')">
+                    <div class="mood-icon-circle"><i data-lucide="frown" class="icon"></i></div>
+                    <small>خسته / بد</small>
+                </div>
+            </div>
+            <input type="hidden" id="life_mood" value="خوب">
+
+            <button type="button" class="btn-primary-full" id="submitReportBtn" onclick="ReportModule.submitReport()">
+                <i data-lucide="send" class="icon"></i>
+                <span>ثبت نهایی گزارش روزانه</span>
+            </button>
+
+            <button type="button" class="btn-danger-soft" onclick="ReportModule.confirmDeleteReport()">
+                <i data-lucide="trash-2" class="icon-sm"></i>
+                <span>پاک کردن کل گزارشِ این روز</span>
+            </button>
+        </section>
+
+
+        <!-- ======================================================================
+             🗓️ تب ۳: ماژول برنامه‌ریزی (TAB 3: PLANNING MODULE)
+             شامل ۴ زیربخش: عملیات امروز | تقویم هفته | اتاق فکر | پیکربندی هسته
+             ====================================================================== -->
+        <section id="tab-planning" class="spa-view">
+            <div class="module-top-bar">
+                <div class="module-title-group">
+                    <div class="module-icon-badge"><i data-lucide="calendar-check-2" class="icon"></i></div>
+                    <div>
+                        <h2>مرکز فرماندهی و برنامه‌ریزی</h2>
+                        <p id="todayDateLabel">برنامه مطالعاتی هوشمند قطب‌نما</p>
+                    </div>
+                </div>
+                <button class="streak-pill" title="زنجیره بیداری شما" onclick="ToolsModule.openWakeupChallenge()">
+                    <i data-lucide="flame" class="icon-sm"></i>
+                    <span id="streakCount">0</span>
+                </button>
+            </div>
+
+            <!-- تب‌های داخلی بخش برنامه‌ریزی -->
+            <div class="subtabs-bar">
+                <button type="button" class="subtab-btn active" onclick="PlanningModule.switchSubtab('today', this)">
+                    <i data-lucide="target" class="icon-sm"></i>
+                    <span>عملیات امروز</span>
+                </button>
+                <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('week', this)">
+                    <i data-lucide="calendar-range" class="icon-sm"></i>
+                    <span>تقویم هفته</span>
+                </button>
+                <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('request', this)">
+                    <i data-lucide="compass" class="icon-sm"></i>
+                    <span>اتاق فکر</span>
+                </button>
+                <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('setup', this)">
+                    <i data-lucide="sliders-horizontal" class="icon-sm"></i>
+                    <span>پیکربندی هسته</span>
+                </button>
+            </div>
+
+            <!-- ۳-۱: عملیات امروز (schedule) -->
+            <div id="subtab-plan-today" class="sub-view active">
+                <div id="aiMotivationBox" class="card-box motivation-banner" style="display: none;">
+                    <button type="button" class="close-banner-btn" onclick="PlanningModule.dismissDailyMotivation()">
+                        <i data-lucide="x" class="icon-sm"></i>
+                    </button>
+                    <div class="motivation-header">
+                        <i data-lucide="sparkles" class="icon primary-text"></i>
+                        <span>انرژی و پیام امروزت:</span>
+                    </div>
+                    <p id="aiMotivationText"></p>
+                </div>
+
+                <div class="progress-box">
+                    <div class="progress-header">
+                        <span><i data-lucide="activity" class="icon-sm primary-text"></i> پیشرفت مأموریت‌های امروز</span>
+                        <span id="progressText" class="primary-text">0%</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+                </div>
+
+                <div id="questsContainer"></div>
+            </div>
+
+            <!-- ۳-۲: تقویم هفته (week) -->
+            <div id="subtab-plan-week" class="sub-view">
+                <div class="card-box week-selector-bar">
+                    <div class="section-inline-title">
+                        <i data-lucide="folder-clock" class="icon primary-text"></i>
+                        <span>انتخاب هفته برنامه‌ریزی:</span>
+                    </div>
+                    <div id="weekDropdownContainer" class="week-dropdown-holder"></div>
+                </div>
+
+                <div class="progress-box" id="weeklyProgressBox" style="display:none;">
+                    <div class="progress-header">
+                        <span>تراز پیشرفت این هفته</span>
+                        <div class="progress-legend">
+                            <span id="successPercentText" class="success-text">0% انجام شده</span>
+                            <span id="dangerPercentText" class="danger-text">0% جبرانی</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="successBar" style="width: 0%;"></div>
+                        <div class="progress-bar-fill-danger" id="dangerBar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div id="aiWeeklyMotivationBox" class="card-box motivation-banner" style="display: none;">
+                    <button type="button" class="close-banner-btn" onclick="PlanningModule.dismissWeeklyMotivation()">
+                        <i data-lucide="x" class="icon-sm"></i>
+                    </button>
+                    <div class="motivation-header">
+                        <i data-lucide="compass" class="icon primary-text"></i>
+                        <span>استراتژی این هفته:</span>
+                    </div>
+                    <p id="aiWeeklyMotivationText"></p>
+                </div>
+
+                <div class="gcal-wrapper">
+                    <div class="gcal-container" id="gcalGrid"></div>
+                </div>
+            </div>
+
+            <!-- ۳-۳: اتاق فکر (request) -->
+            <div id="subtab-plan-request" class="sub-view">
+                <div class="card-box center-card">
+                    <div class="modal-icon-ring"><i data-lucide="send" class="icon-lg"></i></div>
+                    <h3>فرم استراتژی اتاق فکر</h3>
+                    <p class="muted-desc">اولویت‌های هفته آینده خود را مشخص کنید تا هسته برنامه‌ریز بهترین برنامه را تدوین کند.</p>
+
+                    <div id="fridayForm">
+                        <div id="timeLockMessage" class="lock-alert-box" style="display: none;">
+                            <i data-lucide="lock" class="icon-xl danger-text"></i>
+                            <h4>پنجره استراتژی بسته است</h4>
+                            <p>فرم درخواست برنامه هفتگی از <strong>پنجشنبه ساعت ۲۰:۰۰</strong> تا <strong>جمعه ساعت ۲۰:۰۰</strong> فعال می‌شود.</p>
+                        </div>
+
+                        <div id="requestFormContent" style="display: none; text-align:right;">
+                            <div id="dynamicSwitchesArea"></div>
+                            <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه امتحان فارسی دارم یا جمعه مهمانی دعوتیم...)"></textarea>
+                            <button type="button" class="btn-primary-full" id="btnRequestPlan" onclick="PlanningModule.sendScheduleRequest()">
+                                <i data-lucide="sparkles" class="icon"></i>
+                                <span>ارسال پرونده به اتاق مشاور</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ۳-۴: پیکربندی هسته برنامه‌ریز (vip-setup) -->
+            <div id="subtab-plan-setup" class="sub-view">
+                <div class="card-box">
+                    <div class="section-title" style="margin-top:0;">
+                        <span class="bar"></span>
+                        <i data-lucide="flag" class="icon-sm"></i>
+                        <span>۱. هدف نهایی شما</span>
+                    </div>
+                    <input type="text" id="studentGoal" class="modern-input" placeholder="مثلاً: پزشکی دانشگاه تهران، مهندسی شریف یا رتبه زیر ۱۰۰۰...">
+
+                    <div class="section-title">
+                        <span class="bar"></span>
+                        <i data-lucide="brain" class="icon-sm"></i>
+                        <span>۲. استراتژی ذهنی (حداکثر ۳ درس)</span>
+                    </div>
+                    <p class="field-hint">پارت اول صبح با کدام درس‌ها شروع شود؟ (قورباغه طلایی)</p>
+                    <div class="chips-container" id="startSubjectsContainer"></div>
+
+                    <p class="field-hint">پارت آخر شب با کدام درس‌ها تمام شود؟</p>
+                    <div class="chips-container" id="endSubjectsContainer"></div>
+
+                    <div class="section-title">
+                        <span class="bar"></span>
+                        <i data-lucide="school" class="icon-sm"></i>
+                        <span>۳. تقویم کلاس‌ها و مدرسه</span>
+                    </div>
+                    <div id="classesContainer"></div>
+                    <button type="button" class="btn-dashed-add" onclick="PlanningModule.addClassCard()">
+                        <i data-lucide="plus-circle" class="icon"></i>
+                        <span>افزودن کلاس یا تایم مدرسه جدید</span>
+                    </button>
+
+                    <div class="section-title">
+                        <span class="bar"></span>
+                        <i data-lucide="gauge" class="icon-sm"></i>
+                        <span>۴. ارزیابی سطح دروس (حداکثر ۳ درس)</span>
+                    </div>
+                    <p class="field-hint">قوی‌ترین درس‌های شما (نقاط قوت):</p>
+                    <div class="chips-container" id="strengthsContainer"></div>
+
+                    <p class="field-hint">درس‌های نیازمند توجه بیشتر (نقاط ضعف):</p>
+                    <div class="chips-container" id="weaknessesContainer"></div>
+
+                    <div class="section-title">
+                        <span class="bar"></span>
+                        <i data-lucide="file-check-2" class="icon-sm"></i>
+                        <span>۵. برنامه آزمون‌های آزمایشی</span>
+                    </div>
+                    <div class="chips-container" id="examsContainer">
+                        <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="قلم‌چی">قلم‌چی</div>
+                        <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="ماز">ماز</div>
+                        <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="گزینه دو">گزینه دو</div>
+                    </div>
+                    <input type="text" id="customExam" class="modern-input" placeholder="آزمون دیگری شرکت می‌کنید؟ اینجا بنویسید...">
+
+                    <div id="farhangianSection" style="display: none; margin-top:16px;">
+                        <label class="toggle-row">
+                            <span class="toggle-label">
+                                <i data-lucide="graduation-cap" class="icon-sm primary-text"></i>
+                                <span>متقاضی کنکور دانشگاه فرهنگیان هستم</span>
+                            </span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="farhangianToggle">
+                                <span class="toggle-slider"></span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <button type="button" class="btn-primary-full" id="saveVipBtn" onclick="PlanningModule.saveVipSettings()" style="margin-top:18px;">
+                        <i data-lucide="save" class="icon"></i>
+                        <span>ذخیره تنظیمات هسته برنامه‌ریز</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ======================================================================
+             📊 تب ۴: ماژول تحلیل عملکرد (TAB 4: ANALYTICS MODULE)
+             شامل ۲ زیربخش: ۱) رادار، نمودارها و دفترچه گزارش | ۲) کلینیک هوشمند و اسپرینت آزمون
+             ====================================================================== -->
+        <section id="tab-analytics" class="spa-view">
+            <div class="module-top-bar">
+                <div class="module-title-group">
+                    <div class="module-icon-badge"><i data-lucide="bar-chart-3" class="icon"></i></div>
+                    <div>
+                        <h2>آزمایشگاه تحلیل عملکرد</h2>
+                        <p>پایش نموداری مطالعه، رادار آزمون و کلینیک هوش مصنوعی</p>
+                    </div>
+                </div>
+                <span class="konkur-pill" id="analyticsTierBadge">قطب‌نما</span>
+            </div>
+
+            <div class="subtabs-bar">
+                <button type="button" class="subtab-btn active" onclick="AnalyticsModule.switchSubtab('stats', this)">
+                    <i data-lucide="pie-chart" class="icon-sm"></i>
+                    <span>۱. رادار، نمودارها و دفترچه گزارش</span>
+                </button>
+                <button type="button" class="subtab-btn" onclick="AnalyticsModule.switchSubtab('clinic', this)">
+                    <i data-lucide="brain-circuit" class="icon-sm"></i>
+                    <span>۲. کلینیک هوشمند و اسپرینت آزمون</span>
+                </button>
+            </div>
+
+            <!-- ۴-۱: رادار، نمودارها و دفترچه گزارش (dashboard + promax-radar + history) -->
+            <div id="subtab-ana-stats" class="sub-view active">
+                <div class="rank-hero-card">
+                    <div class="rank-hero-header">
+                        <div class="module-title-group">
+                            <div class="rank-icon-box"><i data-lucide="award" class="icon-lg"></i></div>
+                            <div>
+                                <div class="rank-label">جایگاه و درجه مطالعاتی شما</div>
+                                <div class="rank-title" id="dashRankTitle">جنگجوی تازه‌نفس</div>
+                            </div>
+                        </div>
+                        <div class="rank-hours-box">
+                            <div id="dashTotalHoursHero">۰ ساعت</div>
+                            <small id="dashNextRankLabel">تا درجه بعدی</small>
+                        </div>
+                    </div>
+                    <div class="progress-bar-bg dark-track">
+                        <div class="progress-bar-fill" id="dashRankProgressFill" style="width:5%;"></div>
+                    </div>
+                </div>
+
+                <div class="kpi-grid-4">
+                    <div class="kpi-card">
+                        <div class="kpi-top"><span>کل مطالعه</span><i data-lucide="clock" class="icon-sm primary-text"></i></div>
+                        <div class="kpi-val" id="kpiTotalStudy">0</div>
+                        <div class="kpi-sub">ساعت ثبت‌شده</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-top"><span>کل تست‌ها</span><i data-lucide="check-square" class="icon-sm accent-text"></i></div>
+                        <div class="kpi-val" id="kpiTotalTests">0</div>
+                        <div class="kpi-sub">تست حل‌شده</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-top"><span>رکورد روزانه</span><i data-lucide="trophy" class="icon-sm gold-text"></i></div>
+                        <div class="kpi-val" id="kpiMaxDaily">0</div>
+                        <div class="kpi-sub">بیشترین ساعت</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-top"><span>میانگین روزانه</span><i data-lucide="trending-up" class="icon-sm indigo-text"></i></div>
+                        <div class="kpi-val" id="kpiAvgDaily">0</div>
+                        <div class="kpi-sub">ساعت در روز</div>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <div class="section-inline-title" style="margin-bottom:12px;">
+                        <i data-lucide="bar-chart-2" class="icon primary-text"></i>
+                        <span>روند مطالعه و تست‌زنی (هفتگی)</span>
+                    </div>
+                    <div class="chart-container-fixed"><canvas id="dashTrendChart"></canvas></div>
+                </div>
+
+                <div class="analytics-split-grid">
+                    <div class="card-box">
+                        <div class="section-inline-title" style="margin-bottom:12px;">
+                            <i data-lucide="pie-chart" class="icon accent-text"></i>
+                            <span>سهم دروس از کل مطالعه</span>
+                        </div>
+                        <div class="chart-container-fixed small"><canvas id="dashSubjectChart"></canvas></div>
+                    </div>
+
+                    <div class="card-box">
+                        <div class="section-inline-title" style="margin-bottom:12px;">
+                            <i data-lucide="heart-handshake" class="icon primary-text"></i>
+                            <span>رادار لایف‌استایل و ریکاوری</span>
+                        </div>
+                        <div class="lifestyle-summary-list">
+                            <div class="toggle-row static">
+                                <span><i data-lucide="moon" class="icon-sm indigo-text"></i> الگوی خواب غالب:</span>
+                                <strong id="lifeSleepProfile" class="primary-text">در حال محاسبه</strong>
+                            </div>
+                            <div class="toggle-row static">
+                                <span><i data-lucide="smartphone" class="icon-sm danger-text"></i> میانگین مصرف گوشی:</span>
+                                <strong id="lifePhoneAvg" class="danger-text">۰ ساعت</strong>
+                            </div>
+                            <div class="toggle-row static">
+                                <span><i data-lucide="smile" class="icon-sm gold-text"></i> شاخص روحیه و انرژی:</span>
+                                <strong id="lifeMoodSummary" class="gold-text">خوب</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- رادار تراز آزمون‌ها (promax-radar) -->
+                <div class="section-title">
+                    <span class="bar"></span>
+                    <i data-lucide="radar" class="icon-sm"></i>
+                    <span>رادار آزمون‌ها و بازدهی تراز (ProMax Radar)</span>
+                </div>
+                <div class="card-box" id="promaxRadarSection">
+                    <div class="kpi-grid-4">
+                        <div class="kpi-card subtle">
+                            <div class="kpi-top"><span>سقف تراز</span><i data-lucide="flame" class="icon-sm gold-text"></i></div>
+                            <div class="kpi-val" id="radarMaxTaraz">—</div>
+                            <div class="kpi-sub">بالاترین تراز آزمون</div>
+                        </div>
+                        <div class="kpi-card subtle">
+                            <div class="kpi-top"><span>میانگین تراز</span><i data-lucide="activity" class="icon-sm primary-text"></i></div>
+                            <div class="kpi-val" id="radarAvgTaraz">—</div>
+                            <div class="kpi-sub">تراز کل آزمون‌ها</div>
+                        </div>
+                        <div class="kpi-card subtle">
+                            <div class="kpi-top"><span>نقطه قوت پایدار</span><i data-lucide="shield-check" class="icon-sm success-text"></i></div>
+                            <div class="kpi-val small-text" id="radarBestSubj">—</div>
+                            <div class="kpi-sub">بهترین عملکرد</div>
+                        </div>
+                        <div class="kpi-card subtle">
+                            <div class="kpi-top"><span>نیازمند جراحی</span><i data-lucide="alert-triangle" class="icon-sm danger-text"></i></div>
+                            <div class="kpi-val small-text" id="radarWorstSubj">—</div>
+                            <div class="kpi-sub">کمترین عملکرد</div>
+                        </div>
+                    </div>
+                    <div class="chart-container-fixed small"><canvas id="radarTarazChart"></canvas></div>
+                </div>
+
+                <!-- دفترچه آرشیو گزارش‌ها (history) -->
+                <div class="section-title">
+                    <span class="bar"></span>
+                    <i data-lucide="book-open-check" class="icon-sm"></i>
+                    <span>دفترچه آرشیو گزارش‌های اخیر (۱۴ روز گذشته)</span>
+                </div>
+                <div id="historyAccordionContainer"></div>
+            </div>
+
+            <!-- ۴-۲: کلینیک هوشمند و اسپرینت آزمون (ai-standard + promax-sprints) -->
+            <div id="subtab-ana-clinic" class="sub-view">
+                <div class="card-box">
+                    <div class="card-header-row">
+                        <div class="module-title-group">
+                            <div class="module-icon-badge"><i data-lucide="brain-circuit" class="icon"></i></div>
+                            <div>
+                                <h3>ارزیابی و تحلیل هوشمند هفتگی</h3>
+                                <p>بررسی خودکار گزارش‌های هفته (حداقل ۶ گزارش در هفته)</p>
+                            </div>
+                        </div>
+                        <span class="konkur-pill" id="aiWeeklyQuotaBadge">فعال</span>
+                    </div>
+                    <div id="aiStandardWeeksContainer"></div>
+                </div>
+
+                <div class="section-title">
+                    <span class="bar"></span>
+                    <i data-lucide="crown" class="icon-sm"></i>
+                    <span>پرونده‌های اسپرینت و کالبدشکافی کارنامه آزمون (VIP / ProMax)</span>
+                </div>
+                <div id="promaxSprintsContainer"></div>
+            </div>
+        </section>
+
+
+        <!-- ======================================================================
+             🧰 تب ۵: ماژول جعبه ابزارها (TAB 5: TOOLS MODULE)
+             ====================================================================== -->
+        <section id="tab-tools" class="spa-view">
+            <div class="module-top-bar">
+                <div class="module-title-group">
+                    <div class="module-icon-badge"><i data-lucide="layout-grid" class="icon"></i></div>
+                    <div>
+                        <h2>جعبه ابزار هوشمند قطب‌نما</h2>
+                        <p>ابزارک‌های کمکی برای مرور سریع، تمرکز و نظم روزانه</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tools-square-grid">
+                <div class="tool-square-card" onclick="UI.openModal('flashcardModal')">
+                    <div class="tool-square-icon indigo"><i data-lucide="layers" class="icon-lg"></i></div>
+                    <div>
+                        <div class="tool-square-title">فلش‌کارت مرور سریع</div>
+                        <div class="tool-square-desc" id="toolFcCountLabel">مرور فرمول‌ها و نکات فرار کنکوری</div>
+                    </div>
+                </div>
+
+                <div class="tool-square-card" onclick="UI.openModal('habitModal')">
+                    <div class="tool-square-icon accent"><i data-lucide="flame" class="icon-lg"></i></div>
+                    <div>
+                        <div class="tool-square-title">ردیاب عادت‌ها</div>
+                        <div class="tool-square-desc">مدیریت و تیک زدن عادت‌های طلایی روزانه</div>
+                    </div>
+                </div>
+
+                <div class="tool-square-card" onclick="PlanningModule.openTimer('مطالعه آزاد پومودورو', 'تمرکز عمیق ۵۰ دقیقه‌ای', '00:00', '00:50')">
+                    <div class="tool-square-icon primary"><i data-lucide="timer" class="icon-lg"></i></div>
+                    <div>
+                        <div class="tool-square-title">تایمر تمرکز و باران</div>
+                        <div class="tool-square-desc">تنفس هدایت‌شده + تایمر مطالعه و صدای محیطی</div>
+                    </div>
+                </div>
+
+                <div class="tool-square-card" onclick="ToolsModule.openWakeupChallenge()">
+                    <div class="tool-square-icon gold"><i data-lucide="sunrise" class="icon-lg"></i></div>
+                    <div>
+                        <div class="tool-square-title">چالش بیدارباش</div>
+                        <div class="tool-square-desc">ثبت بیداری صبحگاهی (۰۵:۰۰ تا ۰۷:۳۰) و مینی‌گیم</div>
+                    </div>
+                </div>
+
+                <div class="tool-square-card" onclick="UI.showToast('بخش آزمونک‌های روزانه به‌زودی فعال می‌شود.', 'info')">
+                    <span class="tool-soon-pill">به‌زودی</span>
+                    <div class="tool-square-icon info"><i data-lucide="file-question" class="icon-lg"></i></div>
+                    <div>
+                        <div class="tool-square-title">آزمونک روزانه</div>
+                        <div class="tool-square-desc">کوییزهای ۵ سوالی سریع برای تثبیت مطالب</div>
+                    </div>
+                </div>
+
+                <div class="tool-square-card" onclick="UI.showToast('سالن مطالعه آنلاین گروهی در آپدیت بعدی فعال می‌شود.', 'info')">
+                    <span class="tool-soon-pill">به‌زودی</span>
+                    <div class="tool-square-icon success"><i data-lucide="users" class="icon-lg"></i></div>
+                    <div>
+                        <div class="tool-square-title">سالن مطالعه آنلاین</div>
+                        <div class="tool-square-desc">مطالعه همزمان در کنار رتبه‌های برتر راهینو</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ======================================================================
+             👤 زیرصفحه ۶: پروفایل، اشتراک، تنظیمات پوسته و خروج (PROFILE VIEW)
+             بدون رفرش صفحه از طریق دکمه تنظیمات در هدر خانه باز می‌شود
+             ====================================================================== -->
+        <section id="view-profile" class="spa-view">
+            <div class="module-top-bar">
+                <button type="button" class="nav-icon-btn" onclick="Router.switchMainTab('home')" title="بازگشت به خانه">
+                    <i data-lucide="arrow-right" class="icon"></i>
+                </button>
+                <div class="module-title-group">
+                    <h2>پروفایل، اشتراک و تنظیمات</h2>
+                </div>
+                <div style="width:42px;"></div>
+            </div>
+
+            <!-- ۱. تنظیمات پوسته (دارک/لایت) و خروج از حساب -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="sliders-horizontal" class="icon-sm"></i>
+                <span>پوسته برنامه و حساب کاربری</span>
+            </div>
+            <div class="card-box">
+                <div class="pref-row">
+                    <div class="pref-info">
+                        <i data-lucide="palette" class="icon primary-text"></i>
+                        <div>
+                            <div class="pref-title">حالت نمایش برنامه</div>
+                            <div class="pref-sub">انتخاب پوسته تیره (Dark) یا روشن (Light)</div>
+                        </div>
+                    </div>
+                    <div class="theme-pill-switch">
+                        <button type="button" class="theme-pill-opt" id="btnThemeLight" onclick="UI.setTheme('light')">
+                            <i data-lucide="sun" class="icon-sm"></i><span>روشن</span>
+                        </button>
+                        <button type="button" class="theme-pill-opt active" id="btnThemeDark" onclick="UI.setTheme('dark')">
+                            <i data-lucide="moon" class="icon-sm"></i><span>تیره</span>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn-danger-soft" onclick="UI.openModal('logoutModal')">
+                    <i data-lucide="log-out" class="icon-sm"></i>
+                    <span>خروج از حساب کاربری</span>
+                </button>
+            </div>
+
+            <!-- ۲. اشتراک فعال و دکمه‌های تمدید / ارتقا -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="sparkles" class="icon-sm"></i>
+                <span>اشتراک فعال شما</span>
+            </div>
+            <div id="profileSubscriptionsContainer" class="sub-grid"></div>
+
+            <div class="action-buttons-group">
+                <button type="button" class="btn-action primary" onclick="Router.openSubPage('store-renew')">
+                    <i data-lucide="calendar-plus" class="icon"></i>
+                    <span>تمدید اشتراک قطب‌نما</span>
+                </button>
+                <button type="button" class="btn-action accent" onclick="Router.openSubPage('store-swap')">
+                    <i data-lucide="arrow-left-right" class="icon"></i>
+                    <span>تعویض و ارتقای طرح</span>
+                </button>
+            </div>
+
+            <!-- ۳. اقساط و فیش‌های پرداختی (در صورت وجود قسط) -->
+            <div id="profileInstallmentsBox" class="card-box" style="display: none;">
+                <div class="section-inline-title" style="margin-bottom:12px;">
+                    <i data-lucide="credit-card" class="icon primary-text"></i>
+                    <span>اقساط و فیش‌های پرداختی شما</span>
+                </div>
+                <div id="profileInstallmentsTimeline" class="timeline"></div>
+                <input type="file" id="hiddenInstReceiptInput" accept="image/*" style="display: none;" onchange="ProfileModule.handleInstallmentUpload(this)">
+            </div>
+
+            <!-- ۴. کیف پول، برداشت وجه و کد دعوت دوستان -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="wallet" class="icon-sm"></i>
+                <span>سیستم پاداش و کیف پول</span>
+            </div>
+            <div class="card-box center-card">
+                <div class="muted-desc">موجودی قابل استفاده:</div>
+                <div class="wallet-balance"><span id="uiWalletBalance">0</span> <small>تومان</small></div>
+
+                <div id="withdrawSection">
+                    <button type="button" id="btnOpenWithdraw" class="btn-action success" style="display: none;" onclick="document.getElementById('withdrawFormBox').style.display='block'">
+                        <i data-lucide="landmark" class="icon"></i>
+                        <span>درخواست برداشت وجه</span>
+                    </button>
+                    <div id="withdrawFormBox" class="withdraw-form-box" style="display:none;">
+                        <input type="text" class="modern-input" id="inpWithdrawName" placeholder="نام و نام خانوادگی صاحب حساب">
+                        <input type="text" class="modern-input ltr-input" id="inpWithdrawCard" placeholder="شماره کارت ۱۶ رقمی" maxlength="16">
+                        <input type="text" class="modern-input ltr-input" id="inpWithdrawShaba" placeholder="شماره شبا (بدون IR)" maxlength="24" style="display:none;">
+                        <button type="button" class="btn-primary-full" id="btnSubmitWithdraw" onclick="ProfileModule.submitWithdrawRequest()">ثبت درخواست برداشت</button>
+                    </div>
+                </div>
+
+                <div class="share-container">
+                    <div class="share-header"><i data-lucide="gift" class="icon-sm"></i> کد دعوت اختصاصی شما (۱۰۰ هزار تومان هدیه)</div>
+                    <div class="ref-code-box" id="uiRefCode">RH-0000</div>
+                    <button type="button" class="btn-copy" onclick="ProfileModule.copyReferralText(this)">
+                        <i data-lucide="share-2" class="icon-sm"></i>
+                        <span>کپی متن دعوت و ارسال برای دوستان</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ۵. تکمیل مشخصات پرونده (فیلدهایی که در ثبت‌نام اولیه null بودند) -->
+            <div class="section-title">
+                <span class="bar"></span>
+                <i data-lucide="user-cog" class="icon-sm"></i>
+                <span>مشخصات و تکمیل پرونده</span>
+            </div>
+            <div class="card-box">
+                <div class="form-grid-2">
+                    <div class="form-group full-col">
+                        <label><i data-lucide="user" class="icon-sm"></i> نام و نام خانوادگی</label>
+                        <input type="text" class="modern-input" id="inpName" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="graduation-cap" class="icon-sm"></i> پایه تحصیلی</label>
+                        <input type="text" class="modern-input" id="inpGrade" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="book-open" class="icon-sm"></i> رشته تحصیلی</label>
+                        <input type="text" class="modern-input" id="inpMajor" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="calendar" class="icon-sm"></i> تاریخ تولد (شمسی)</label>
+                        <input type="text" class="modern-input" id="inpBirthdate" placeholder="مثال: 1386/05/12">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="school" class="icon-sm"></i> نام مدرسه یا آموزشگاه</label>
+                        <input type="text" class="modern-input" id="inpSchool" placeholder="مثال: فرزانگان">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="map-pin" class="icon-sm"></i> استان محل سکونت</label>
+                        <input type="text" class="modern-input" id="inpProvince" placeholder="مثال: تهران">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="building-2" class="icon-sm"></i> شهر محل سکونت</label>
+                        <input type="text" class="modern-input" id="inpCity" placeholder="مثال: تهران">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل دانش‌آموز</label>
+                        <input type="tel" class="modern-input ltr-input" id="inpPhone" maxlength="11">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="lock" class="icon-sm"></i> رمز عبور ورود به پنل</label>
+                        <input type="text" class="modern-input ltr-input" id="inpPass">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="phone-call" class="icon-sm"></i> شماره موبایل پدر</label>
+                        <input type="tel" class="modern-input ltr-input" id="inpFather" maxlength="11" placeholder="09...">
+                    </div>
+                    <div class="form-group">
+                        <label><i data-lucide="phone-call" class="icon-sm"></i> شماره موبایل مادر</label>
+                        <input type="tel" class="modern-input ltr-input" id="inpMother" maxlength="11" placeholder="09...">
+                    </div>
+
+                    <!-- سوال یک‌بارمصرف نحوه آشنایی (به محض پر شدن در دیتابیس، مخفی می‌شود) -->
+                    <div class="form-group full-col" id="referralSourceGroup" style="display: none;">
+                        <label><i data-lucide="Compass" class="icon-sm"></i> چگونه با قطب‌نمای راهینو آشنا شدید؟</label>
+                        <input type="hidden" id="inpReferralSource" value="">
+                        <div class="segmented-pills" id="profileReferralPills">
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('inpReferralSource', 'معرفی دوستان', this)">معرفی دوستان</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('inpReferralSource', 'اینستاگرام', this)">اینستاگرام</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('inpReferralSource', 'تلگرام', this)">تلگرام</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('inpReferralSource', 'پانسیون راهینو', this)">پانسیون راهینو</button>
+                            <button type="button" class="pill-btn" onclick="AuthModule.selectPill('inpReferralSource', 'سایر', this)">سایر</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-primary-full" id="btnSaveProfile" onclick="ProfileModule.saveSettings()">
+                    <i data-lucide="save" class="icon"></i>
+                    <span>بروزرسانی اطلاعات پرونده</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ======================================================================
+             🔄 زیرصفحه ۷: تمدید سریع اشتراک و تعویض/ارتقای طرح (STORE RENEW & SWAP)
+             ====================================================================== -->
+        <section id="view-store-renew" class="spa-view">
+            <div class="module-top-bar">
+                <button type="button" class="nav-icon-btn" onclick="Router.openSubPage('profile')" title="بازگشت به پروفایل">
+                    <i data-lucide="arrow-right" class="icon"></i>
+                </button>
+                <div class="module-title-group">
+                    <h2>تمدید اشتراک قطب‌نما</h2>
+                </div>
+                <div style="width:42px;"></div>
+            </div>
+            <!-- محتوای تمدید اشتراک توسط js/store.js رندر می‌شود -->
+            <div id="storeRenewContainer"></div>
+        </section>
+
+        <section id="view-store-swap" class="spa-view">
+            <div class="module-top-bar">
+                <button type="button" class="nav-icon-btn" onclick="Router.openSubPage('profile')" title="بازگشت به پروفایل">
+                    <i data-lucide="arrow-right" class="icon"></i>
+                </button>
+                <div class="module-title-group">
+                    <h2>تعویض و ارتقای طرح (Trade-in)</h2>
+                </div>
+                <div style="width:42px;"></div>
+            </div>
+            <!-- محتوای تعویض طرح توسط js/store.js رندر می‌شود -->
+            <div id="storeSwapContainer"></div>
+        </section>
+
+
+        <!-- ======================================================================
+             🧭 نوار ناوبری پایینی ۵ تبی (Fixed Bottom Navigation)
+             ====================================================================== -->
+        <nav class="bottom-nav-wrap" id="mainBottomNav" aria-label="ناوبری اصلی">
+            <button type="button" class="bnav-item active" data-tab="home" onclick="Router.switchMainTab('home')">
+                <div class="bnav-icon-box"><i data-lucide="home" class="icon"></i></div>
+                <span>خانه</span>
+            </button>
+            <button type="button" class="bnav-item" data-tab="report" onclick="Router.switchMainTab('report')">
+                <div class="bnav-icon-box"><i data-lucide="file-pen-line" class="icon"></i></div>
+                <span>گزارش</span>
+            </button>
+            <button type="button" class="bnav-item" data-tab="planning" onclick="Router.switchMainTab('planning')">
+                <div class="bnav-icon-box"><i data-lucide="calendar-check-2" class="icon"></i></div>
+                <span>برنامه‌ریزی</span>
+            </button>
+            <button type="button" class="bnav-item" data-tab="analytics" onclick="Router.switchMainTab('analytics')">
+                <div class="bnav-icon-box"><i data-lucide="bar-chart-3" class="icon"></i></div>
+                <span>تحلیل عملکرد</span>
+            </button>
+            <button type="button" class="bnav-item" data-tab="tools" onclick="Router.switchMainTab('tools')">
+                <div class="bnav-icon-box"><i data-lucide="layout-grid" class="icon"></i></div>
+                <span>ابزارها</span>
+            </button>
+        </nav>
+
+    </div>
+
+
+    <!-- ==========================================================================
+         🪟 ۴. مودال‌های سراسری اپلیکیشن (GLOBAL MODALS)
+         ========================================================================== -->
+
+    <!-- ۱. مودال فراموشی رمز عبور (۲ مرحله‌ای درون یک مودال) -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal">
+            <div class="modal-icon-ring"><i data-lucide="key-round" class="icon-lg"></i></div>
+            <h3>بازیابی رمز عبور</h3>
+
+            <!-- گام ۱: دریافت شماره موبایل -->
+            <div id="forgotStep1Box">
+                <p>شماره موبایل (یا کد ملی) خود را وارد کنید تا سوال امنیتی شما نمایش داده شود.</p>
+                <input type="tel" id="forgotIdentityInput" class="modern-input ltr-input" placeholder="09..." style="margin-bottom:12px;">
+                <button type="button" class="btn-modal" id="btnForgotFetchQ" onclick="AuthModule.fetchSecurityQuestion()">دریافت سوال امنیتی</button>
+            </div>
+
+            <!-- گام ۲: پاسخ به سوال امنیتی و ثبت رمز جدید -->
+            <div id="forgotStep2Box" style="display:none;">
+                <div class="security-question-banner" id="lblForgotSecQuestion"></div>
+                <input type="text" id="forgotSecAnswerInput" class="modern-input" placeholder="پاسخ سوال امنیتی..." style="margin-bottom:10px;">
+                <input type="password" id="forgotNewPasswordInput" class="modern-input ltr-input" placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)" style="margin-bottom:12px;">
+                <button type="button" class="btn-modal" id="btnForgotResetSubmit" onclick="AuthModule.submitPasswordReset()">ثبت رمز عبور جدید</button>
+            </div>
+
+            <div id="forgotModalAlert" class="alert-box" style="margin-top:10px;"></div>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">انصراف</button>
+        </div>
+    </div>
+
+    <!-- ۲. مودال تایید درون‌برنامه‌ای (جایگزین confirm مرورگر) -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <div class="modal-icon-ring gold"><i data-lucide="alert-triangle" class="icon-lg"></i></div>
+            <h3 id="confirmModalTitle">تایید عملیات</h3>
+            <p id="confirmModalText">آیا از انجام این کار اطمینان دارید؟</p>
+            <button type="button" class="btn-modal" id="confirmModalYesBtn">بله، انجام شود</button>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">انصراف</button>
+        </div>
+    </div>
+
+    <!-- ۳. مودال تایید خروج از حساب کاربری -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal">
+            <div class="modal-icon-ring danger"><i data-lucide="log-out" class="icon-lg"></i></div>
+            <h3>خروج از حساب کاربری</h3>
+            <p>آیا مطمئن هستید که می‌خواهید از حساب کاربری خود خارج شوید؟</p>
+            <button type="button" class="btn-modal danger" onclick="AuthModule.logout()">بله، خارج می‌شوم</button>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">انصراف</button>
+        </div>
+    </div>
+
+    <!-- ۴. مودال مینی‌گیم بیدارباش صبحگاهی -->
+    <div class="modal-overlay" id="wakeupModal">
+        <div class="modal">
+            <div class="modal-icon-ring gold"><i data-lucide="alarm-clock" class="icon-lg"></i></div>
+            <h3>عملیات بیدارباش صبحگاهی</h3>
+            <p>برای ثبت بیداری و افزایش زنجیره سحرخیزی، چالش زیر را قبل از اتمام زمان حل کن:</p>
+            <div id="gameTimerDisplay" class="game-timer">00:15</div>
+            <div id="quizContainer" class="quiz-stage"></div>
+            <button type="button" class="btn-modal-outline" onclick="ToolsModule.closeWakeupModal()">بستن</button>
+        </div>
+    </div>
+
+    <!-- ۵. مودال تایمر تمرکز، تنفس و پخش‌کننده صدای محیطی -->
+    <div class="modal-overlay" id="timerModal">
+        <div class="modal">
+            <div id="timerSubjectName" class="timer-subject-header"></div>
+            <div id="breathContainer" class="breath-stage">
+                <div id="breathCircle" class="breath-circle">
+                    <span id="breathText">آماده...</span>
+                </div>
+            </div>
+            <div id="timerDisplay" class="focus-timer-digits" style="display: none;">00:00</div>
+            <div class="music-player-box">
+                <div id="musicTrackName" class="music-track-title">صدای محیطی: آماده پخش</div>
+                <div class="music-controls">
+                    <button type="button" id="loopModeBtn" onclick="PlanningModule.toggleLoopMode()" class="action-circle" title="حالت تکرار">
+                        <i data-lucide="repeat-1" class="icon-sm"></i>
+                    </button>
+                    <div class="music-main-btns">
+                        <button type="button" onclick="PlanningModule.prevMusic()" class="action-circle"><i data-lucide="skip-back" class="icon-sm"></i></button>
+                        <button type="button" id="playPauseBtn" onclick="PlanningModule.toggleMusic()" class="action-circle primary-play"><i data-lucide="play" class="icon"></i></button>
+                        <button type="button" onclick="PlanningModule.nextMusic()" class="action-circle"><i data-lucide="skip-forward" class="icon-sm"></i></button>
+                    </div>
+                    <div style="width:38px;"></div>
+                </div>
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="PlanningModule.closeTimer()">
+                <i data-lucide="square" class="icon-sm"></i>
+                <span>توقف پارت و بازگشت</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ۶. مودال جشن تکمیل مأموریت‌های روزانه -->
+    <div class="modal-overlay" id="celebrationModal">
+        <div class="modal">
+            <div class="modal-icon-ring success"><i data-lucide="trophy" class="icon-lg"></i></div>
+            <h3 class="success-text">فوق‌العاده بودی قهرمان!</h3>
+            <p>تمام مأموریت‌های برنامه‌ریزی‌شده امروز را با موفقیت به پایان رساندی.</p>
+            <button type="button" class="btn-modal" onclick="UI.closeModals()">ادامه مسیر</button>
+        </div>
+    </div>
+
+    <!-- ۷. مودال فلش‌کارت سه‌بعدی -->
+    <div class="modal-overlay" id="flashcardModal">
+        <div class="modal">
+            <div class="card-header-row" style="margin-bottom:12px;">
+                <h3 style="margin:0;font-size:16px;"><i data-lucide="layers" class="icon indigo-text"></i> جعبه فلش‌کارت و نکات فرار</h3>
+                <span id="fcIndexBadge" class="status-pill">۱ / ۳</span>
+            </div>
+
+            <div class="flashcard-stage" id="fcStage" onclick="this.classList.toggle('flipped')">
+                <div class="flashcard-inner">
+                    <div class="flashcard-face front">
+                        <small class="fc-hint">سوال / نکته (برای چرخش لمس کنید)</small>
+                        <div id="fcFrontText" class="fc-text">...</div>
+                    </div>
+                    <div class="flashcard-face back">
+                        <small class="fc-hint accent">پاسخ / فرمول</small>
+                        <div id="fcBackText" class="fc-text">...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fc-nav-row">
+                <button type="button" class="btn-modal-outline" onclick="ToolsModule.prevFlashcard()">قبلی</button>
+                <button type="button" class="del-icon-btn" onclick="ToolsModule.deleteCurrentFlashcard()" title="حذف کارت"><i data-lucide="trash-2" class="icon-sm"></i></button>
+                <button type="button" class="btn-modal-outline" onclick="ToolsModule.nextFlashcard()">بعدی</button>
+            </div>
+
+            <div class="fc-add-box">
+                <input type="text" class="modern-input" id="inpFcFront" placeholder="سوال یا عنوان نکته...">
+                <input type="text" class="modern-input" id="inpFcBack" placeholder="پاسخ یا فرمول...">
+                <button type="button" class="btn-modal" onclick="ToolsModule.addFlashcard()">
+                    <i data-lucide="plus" class="icon-sm"></i><span>افزودن به فلش‌کارت‌ها</span>
+                </button>
+            </div>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">بستن</button>
+        </div>
+    </div>
+
+    <!-- ۸. مودال مدیریت عادت‌های روزانه (Habit Tracker) -->
+    <div class="modal-overlay" id="habitModal">
+        <div class="modal">
+            <div class="modal-icon-ring accent"><i data-lucide="flame" class="icon-lg"></i></div>
+            <h3>ردیاب عادت‌های روزانه</h3>
+            <p>عادت‌های کلیدی روزانه خود را تیک بزنید یا عادت شخصی جدید اضافه کنید.</p>
+            <div id="modalHabitsContainer" class="habits-list-vertical"></div>
+            <div class="habit-add-row">
+                <input type="text" class="modern-input" id="inpNewHabit" placeholder="عادت جدید (مثلاً: ۳۰ تست قرابت)...">
+                <button type="button" class="btn-modal auto-width" onclick="ToolsModule.addCustomHabit()">
+                    <i data-lucide="plus" class="icon-sm"></i>
+                </button>
+            </div>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">بستن</button>
+        </div>
+    </div>
+
+    <!-- ۹. مودال صندوق پیام‌ها -->
+    <div class="modal-overlay" id="messagesModal">
+        <div class="modal">
+            <div class="modal-icon-ring"><i data-lucide="bell" class="icon-lg"></i></div>
+            <h3>صندوق پیام‌های مشاور و سیستم</h3>
+            <div id="messagesListContainer" class="messages-scroll-box"></div>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">بستن</button>
+        </div>
+    </div>
+
+    <!-- ۱۰. مودال ارتقای اشتراک -->
+    <div class="modal-overlay" id="upsellModal">
+        <div class="modal">
+            <div class="modal-icon-ring gold"><i data-lucide="crown" class="icon-lg"></i></div>
+            <h3>ویژه دانش‌آموزان طرح مشاوره قطب‌نما</h3>
+            <p>برای استفاده کامل از این قابلیت، می‌توانید از بخش پروفایل یا فروشگاه، اشتراک مشاوره قطب‌نما را تهیه فرمایید.</p>
+            <button type="button" class="btn-modal" onclick="UI.closeModals(); Router.openSubPage('store-renew');">
+                <i data-lucide="sparkles" class="icon-sm"></i>
+                <span>مشاهده و ارتقای اشتراک</span>
+            </button>
+            <button type="button" class="btn-modal-outline" onclick="UI.closeModals()">فعلاً ادامه</button>
+        </div>
+    </div>
+
+
+    <!-- ==========================================================================
+         ⚙️ ۵. ماژول‌های جاوااسکریپت (تفکیک‌شده برای نگهداری و توسعه آسان)
+         ========================================================================== -->
+    <script src="js/core.js"></script>       <!-- تنظیمات سوپابیس، AppState، Router و توابع UI -->
+    <script src="js/auth.js"></script>       <!-- ورود، ثبت‌نام مرحله ۱، فراموشی رمز و همگام‌سازی پانسیون -->
+    <script src="js/store.js"></script>      <!-- ثبت‌نام مرحله ۲، تمدید اشتراک و تعویض طرح (Trade-in) -->
+    <script src="js/report.js"></script>     <!-- تب ۲: ثبت و ویرایش گزارش روزانه -->
+    <script src="js/planning.js"></script>   <!-- تب ۳: عملیات امروز، تقویم هفته، اتاق فکر و پیکربندی VIP -->
+    <script src="js/analytics.js"></script>  <!-- تب ۴: رادار، نمودارها، تاریخچه و کلینیک هوش مصنوعی -->
+    <script src="js/tools.js"></script>      <!-- تب ۵ و ۱: فلش‌کارت، عادت‌ها، چالش بیدارباش و پروفایل -->
+
+</body>
+</html>
