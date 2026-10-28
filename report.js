@@ -256,36 +256,45 @@ const ReportModule = {
         if (h >= 24) h -= 24;
         const el = document.getElementById(labelId);
         if (el) {
-            el.innerText = `${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}`; } },  timeStrToSliderVal(timeStr, isSleep = false) { if (!timeStr) return isSleep ? 23 : 7; const parts = String(timeStr).split(':'); let h = parseInt(parts[0]) \vert{}\vert{} 0; const m = parseInt(parts[1]) \vert{}\vert{} 0; if (isSleep && h < 12) h += 24; return h + (m >= 30 ? 0.5 : 0); },  setMood(elem, val) { document.querySelectorAll('#tab-report .mood-btn').forEach(b => b.classList.remove('active')); if (elem) elem.classList.add('active'); const input = document.getElementById('life_mood'); if (input) input.value = val; },  setMoodByValue(val) { const input = document.getElementById('life_mood'); if (input) input.value = val; const moodMap = ['عالی', 'خوب', 'معمولی', 'بد']; const idx = moodMap.indexOf(val); const btns = document.querySelectorAll('#tab-report .mood-btn'); btns.forEach((b, i) => b.classList.toggle('active', i === (idx !== -1 ? idx : 1))); },
-            () => this.executeDeleteReport()
-        );
+            el.innerText = `${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}`; 
+        } 
     },
 
-    async executeDeleteReport() {
-        const uid = String(AppState.userId);
-        try {
-            const { error } = await supabaseClient
-                .from('daily_reports')
-                .delete()
-                .eq('chat_id', uid)
-                .eq('report_date', this.selectedDate);
+    timeStrToSliderVal(timeStr, isSleep = false) { 
+        if (!timeStr) return isSleep ? 23 : 7; 
+        const parts = String(timeStr).split(':'); 
+        let h = parseInt(parts[0]) || 0; 
+        const m = parseInt(parts[1]) || 0; 
+        if (isSleep && h < 12) h += 24; 
+        return h + (m >= 30 ? 0.5 : 0); 
+    },
 
-            if (error) throw error;
+    setMood(elem, val) { 
+        document.querySelectorAll('#tab-report .mood-btn').forEach(b => b.classList.remove('active')); 
+        if (elem) elem.classList.add('active'); 
+        const input = document.getElementById('life_mood'); 
+        if (input) input.value = val; 
+    },
 
-            // بروزرسانی حافظه مرکزی (AppState) بدون نیاز به رفرش صفحه
-            AppState.dailyReports = (AppState.dailyReports || []).filter(r => r.report_date !== this.selectedDate);
-            AppState.completedDates = AppState.dailyReports.map(r => r.report_date);
+    setMoodByValue(val) { 
+        const input = document.getElementById('life_mood'); 
+        if (input) input.value = val; 
+        const moodMap = ['عالی', 'خوب', 'معمولی', 'بد']; 
+        const idx = moodMap.indexOf(val); 
+        const btns = document.querySelectorAll('#tab-report .mood-btn'); 
+        btns.forEach((b, i) => b.classList.toggle('active', i === (idx !== -1 ? idx : 1))); 
+    },
 
-            this.generateDateChips();
-            this.loadReportForDate(this.selectedDate);
-
-            // همگام‌سازی فوری با تب تحلیل عملکرد
-            if (window.AnalyticsModule) AnalyticsModule.init();
-
-            UI.showToast('گزارش این روز با موفقیت حذف شد.', 'success');
-        } catch (err) {
-            UI.showToast('خطا در حذف گزارش. لطفاً اتصال اینترنت را بررسی کنید.', 'error');
-        }
+    // ====================================================================== 
+    // 🗑️ ۶. حذف گزارش روز انتخاب‌شده (با مودال تایید درون‌برنامه‌ای) 
+    // ====================================================================== 
+    confirmDeleteReport() { 
+        if (!this.selectedDate) return; 
+        UI.confirm( 
+            'حذف گزارش روزانه', 
+            `آیا مطمئن هستید که کل گزارش تاریخ (${this.selectedDate}) از پرونده شما پاک شود؟`,
+            () => this.executeDeleteReport()
+        );
     },
 
     // ======================================================================
