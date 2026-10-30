@@ -413,10 +413,16 @@ const AppCore = {
                 Storage.set('qotbnama_full_name', AppState.fullName);
 
                 const g = stRes.data.grade || 'دوازدهم';
-                const m = stRes.data.major || 'تجربی';
-                AppState.studentGrade = g.includes('یازدهم') ? 'یازدهم' : (g.includes('دهم') ? 'دهم' : 'دوازدهم');
-                AppState.studentMajor = m.includes('ریاضی') ? 'ریاضی' : (m.includes('انسانی') ? 'انسانی' : 'تجربی');
+const m = stRes.data.major || 'تجربی';
 
+// ✅ اول «دوازدهم» و «پشت کنکوری» چک شود تا با «دهم» قاطی نشود
+AppState.studentGrade = (g.includes('دوازدهم') || g.includes('پشت') || g.includes('فارغ'))
+    ? 'دوازدهم'
+    : (g.includes('یازدهم') ? 'یازدهم' : (g.includes('دهم') ? 'دهم' : 'دوازدهم'));
+
+AppState.studentMajor = m.includes('ریاضی') ? 'ریاضی' : (m.includes('انسانی') ? 'انسانی' : 'تجربی');
+
+AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studentMajor] || SUBJECTS_DICT['دوازدهم']['تجربی'];
                 const streak = stRes.data.wake_streak || 0;
                 const sEl1 = document.getElementById('streakCount');
                 const sEl2 = document.getElementById('homeStreakCount');
