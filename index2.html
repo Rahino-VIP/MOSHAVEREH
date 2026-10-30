@@ -761,155 +761,225 @@
                 </button>
             </div>
 
-            <!-- ۴-۱: رادار، نمودارها و دفترچه گزارش (dashboard + promax-radar + history) -->
+            <!-- ==================================================================
+                 ۴-۱: رادار، نمودارها و دفترچه گزارش (dashboard + promax-radar + history)
+                 ================================================================== -->
             <div id="subtab-ana-stats" class="sub-view active">
+                
+                <!-- بنر مقام و درجه مطالعاتی (مشابه dashboard.html) -->
                 <div class="rank-hero-card">
                     <div class="rank-hero-header">
                         <div class="module-title-group">
-                            <div class="rank-icon-box"><i data-lucide="award" class="icon-lg"></i></div>
+                            <div class="rank-icon-box"><i data-lucide="crown" class="icon-lg"></i></div>
                             <div>
-                                <div class="rank-label">جایگاه و درجه مطالعاتی شما</div>
-                                <div class="rank-title" id="dashRankTitle">جنگجوی تازه‌نفس</div>
+                                <div class="rank-label">مقام فعلی در سیستم:</div>
+                                <div class="rank-title" id="dashRankTitle">در حال محاسبه...</div>
                             </div>
                         </div>
                         <div class="rank-hours-box">
                             <div id="dashTotalHoursHero">۰ ساعت</div>
-                            <small id="dashNextRankLabel">تا درجه بعدی</small>
+                            <small id="dashNextRankLabel">هدف بعدی</small>
                         </div>
                     </div>
                     <div class="progress-bar-bg dark-track">
-                        <div class="progress-bar-fill" id="dashRankProgressFill" style="width:5%;"></div>
+                        <div class="progress-bar-fill" id="dashRankProgressFill" style="width:0%;"></div>
                     </div>
                 </div>
 
+                <!-- ۴ کارت آماری (تغییر کارت چهارم به رکورد تست در یک روز) -->
                 <div class="kpi-grid-4">
                     <div class="kpi-card">
-                        <div class="kpi-top"><span>کل مطالعه</span><i data-lucide="clock" class="icon-sm primary-text"></i></div>
+                        <div class="kpi-top"><span>ساعت مطالعه کل</span><i data-lucide="clock" class="icon-sm primary-text"></i></div>
                         <div class="kpi-val" id="kpiTotalStudy">0</div>
-                        <div class="kpi-sub">ساعت ثبت‌شده</div>
+                        <div class="kpi-sub">مجموع ساعت ثبت‌شده</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-top"><span>کل تست‌ها</span><i data-lucide="check-square" class="icon-sm accent-text"></i></div>
+                        <div class="kpi-top"><span>مجموع تست‌ها</span><i data-lucide="target" class="icon-sm accent-text"></i></div>
                         <div class="kpi-val" id="kpiTotalTests">0</div>
-                        <div class="kpi-sub">تست حل‌شده</div>
+                        <div class="kpi-sub">کل تست حل‌شده</div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-top"><span>رکورد روزانه</span><i data-lucide="trophy" class="icon-sm gold-text"></i></div>
-                        <div class="kpi-val" id="kpiMaxDaily">0</div>
-                        <div class="kpi-sub">بیشترین ساعت</div>
+                    <div class="kpi-card highlight-record">
+                        <div class="kpi-top"><span>رکورد ساعت روزانه</span><i data-lucide="trophy" class="icon-sm gold-text"></i></div>
+                        <div class="kpi-val gold-text" id="kpiMaxDaily">0</div>
+                        <div class="kpi-sub">بیشترین ساعت در یک روز</div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-top"><span>میانگین روزانه</span><i data-lucide="trending-up" class="icon-sm indigo-text"></i></div>
-                        <div class="kpi-val" id="kpiAvgDaily">0</div>
-                        <div class="kpi-sub">ساعت در روز</div>
+                    <div class="kpi-card highlight-record">
+                        <div class="kpi-top"><span>رکورد تست روزانه</span><i data-lucide="zap" class="icon-sm accent-text"></i></div>
+                        <div class="kpi-val accent-text" id="kpiMaxTestsDaily">0</div>
+                        <div class="kpi-sub">بیشترین تست در یک روز</div>
                     </div>
                 </div>
 
+                <!-- نمودار روند پیشرفت با ۳ دکمه تغییر حالت (روند کل هفتگی / همین هفته / هفته گذشته) -->
                 <div class="card-box">
-                    <div class="section-inline-title" style="margin-bottom:12px;">
-                        <i data-lucide="bar-chart-2" class="icon primary-text"></i>
-                        <span>روند مطالعه و تست‌زنی (هفتگی)</span>
+                    <div class="chart-header-Controls">
+                        <div class="section-inline-title">
+                            <i data-lucide="bar-chart-2" class="icon primary-text"></i>
+                            <span id="trendChartTitle">روند پیشرفت (عملکرد هفتگی)</span>
+                        </div>
+                        <div class="segmented-pills compact-pills" id="trendChartModeSwitch">
+                            <button type="button" class="pill-btn active" onclick="AnalyticsModule.setTrendMode('all_weeks', this)">کل هفته‌ها</button>
+                            <button type="button" class="pill-btn" onclick="AnalyticsModule.setTrendMode('this_week', this)">همین هفته</button>
+                            <button type="button" class="pill-btn" onclick="AnalyticsModule.setTrendMode('last_week', this)">هفته گذشته</button>
+                        </div>
                     </div>
-                    <div class="chart-container-fixed"><canvas id="dashTrendChart"></canvas></div>
-                </div>
-
-                <div class="analytics-split-grid">
-                    <div class="card-box">
-                        <div class="section-inline-title" style="margin-bottom:12px;">
-                            <i data-lucide="pie-chart" class="icon accent-text"></i>
-                            <span>سهم دروس از کل مطالعه</span>
-                        </div>
-                        <div class="chart-container-fixed small"><canvas id="dashSubjectChart"></canvas></div>
-                    </div>
-
-                    <div class="card-box">
-                        <div class="section-inline-title" style="margin-bottom:12px;">
-                            <i data-lucide="heart-handshake" class="icon primary-text"></i>
-                            <span>رادار لایف‌استایل و ریکاوری</span>
-                        </div>
-                        <div class="lifestyle-summary-list">
-                            <div class="toggle-row static">
-                                <span><i data-lucide="moon" class="icon-sm indigo-text"></i> الگوی خواب غالب:</span>
-                                <strong id="lifeSleepProfile" class="primary-text">در حال محاسبه</strong>
-                            </div>
-                            <div class="toggle-row static">
-                                <span><i data-lucide="smartphone" class="icon-sm danger-text"></i> میانگین مصرف گوشی:</span>
-                                <strong id="lifePhoneAvg" class="danger-text">۰ ساعت</strong>
-                            </div>
-                            <div class="toggle-row static">
-                                <span><i data-lucide="smile" class="icon-sm gold-text"></i> شاخص روحیه و انرژی:</span>
-                                <strong id="lifeMoodSummary" class="gold-text">خوب</strong>
-                            </div>
-                        </div>
+                    <div class="chart-container-fixed" style="height:260px;">
+                        <canvas id="dashTrendChart"></canvas>
                     </div>
                 </div>
 
-                <!-- رادار تراز آزمون‌ها (promax-radar) -->
+                <!-- سهم دروس از کل زمان (مشابه dashboard.html) -->
+                <div class="section-title">
+                    <span class="bar"></span>
+                    <i data-lucide="pie-chart" class="icon-sm"></i>
+                    <span>سهم دروس از کل زمان</span>
+                </div>
+                <div class="card-box" style="text-align: center;">
+                    <div style="margin-bottom: 14px; font-size: 14px; font-weight: 900; color: var(--primary); display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <i data-lucide="medal" class="icon-sm gold-text"></i>
+                        <span>درس محبوب :</span>
+                        <span id="favSubjectName" class="accent-text">...</span>
+                    </div>
+                    <div class="chart-container-fixed small" style="max-width:280px; margin:0 auto;">
+                        <canvas id="dashSubjectChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- رادار لایف‌استایل و ریکاوری (مشابه dashboard.html) -->
+                <div class="section-title">
+                    <span class="bar"></span>
+                    <i data-lucide="heart-pulse" class="icon-sm"></i>
+                    <span>رادار لایف‌استایل و ریکاوری</span>
+                </div>
+                <div class="life-cards-stack">
+                    <!-- کارت ۱: تیپ‌شناسی خواب -->
+                    <div class="life-detail-card">
+                        <div class="life-detail-info">
+                            <h4 id="sleepProfileName">تیپ‌شناسی خواب</h4>
+                            <p id="sleepProfileDesc">در حال محاسبه...</p>
+                        </div>
+                        <div id="sleepSvgBox" class="life-detail-icon"></div>
+                    </div>
+
+                    <!-- کارت ۲: باتری تمرکز و مصرف گوشی -->
+                    <div class="life-detail-card">
+                        <div class="life-detail-info">
+                            <h4 id="batteryName">باتری تمرکز (میزان استفاده از گوشی)</h4>
+                            <p id="batteryDesc">میانگین استفاده از گوشی: ۰ ساعت</p>
+                        </div>
+                        <div id="batterySvgBox" class="life-detail-icon"></div>
+                    </div>
+
+                    <!-- کارت ۳: نوار وضعیت روحی -->
+                    <div class="card-box" style="margin-bottom:0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 900; color: var(--text-main);">
+                            <span>آمار حال روحی</span>
+                            <span id="moodDaysCount" class="primary-text">بر اساس ۰ روز</span>
+                        </div>
+                        <div class="mood-bar-track" id="moodBar"></div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-weight: 800;">
+                            <span style="display:flex;align-items:center;gap:4px;"><span class="dot-legend success"></span> عالی / خوب</span>
+                            <span style="display:flex;align-items:center;gap:4px;"><span class="dot-legend warning"></span> معمولی</span>
+                            <span style="display:flex;align-items:center;gap:4px;"><span class="dot-legend danger"></span> خسته / بد</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- رادار آزمون‌ها و بازدهی تراز (ProMax Radar - متصل به exam_results) -->
                 <div class="section-title">
                     <span class="bar"></span>
                     <i data-lucide="radar" class="icon-sm"></i>
                     <span>رادار آزمون‌ها و بازدهی تراز (ProMax Radar)</span>
                 </div>
-                <div class="card-box" id="promaxRadarSection">
-                    <div class="kpi-grid-4">
-                        <div class="kpi-card subtle">
-                            <div class="kpi-top"><span>سقف تراز</span><i data-lucide="flame" class="icon-sm gold-text"></i></div>
-                            <div class="kpi-val" id="radarMaxTaraz">—</div>
-                            <div class="kpi-sub">بالاترین تراز آزمون</div>
+                <div id="promaxRadarSection">
+                    <div id="promaxRadarContent" style="display:none;">
+                        <div class="kpi-grid-4">
+                            <div class="kpi-card subtle">
+                                <div class="kpi-top"><span>بهترین تراز کسب‌شده</span><i data-lucide="flame" class="icon-sm gold-text"></i></div>
+                                <div class="kpi-val gold-text" id="radarMaxTaraz">—</div>
+                                <div class="kpi-sub">سقف تراز آزمون‌ها</div>
+                            </div>
+                            <div class="kpi-card subtle">
+                                <div class="kpi-top"><span>میانگین تراز کل</span><i data-lucide="activity" class="icon-sm primary-text"></i></div>
+                                <div class="kpi-val primary-text" id="radarAvgTaraz">—</div>
+                                <div class="kpi-sub">میانگین تمام آزمون‌ها</div>
+                            </div>
+                            <div class="kpi-card subtle" style="border-bottom: 2px solid var(--success);">
+                                <div class="kpi-top"><span>بهترین درس (نقطه قوت)</span><i data-lucide="shield-check" class="icon-sm success-text"></i></div>
+                                <div class="kpi-val small-text success-text" id="radarBestSubj">—</div>
+                                <div class="kpi-sub">بالاترین میانگین تراز</div>
+                            </div>
+                            <div class="kpi-card subtle" style="border-bottom: 2px solid var(--danger);">
+                                <div class="kpi-top"><span>پاشنه آشیل (نقطه ضعف)</span><i data-lucide="alert-triangle" class="icon-sm danger-text"></i></div>
+                                <div class="kpi-val small-text danger-text" id="radarWorstSubj">—</div>
+                                <div class="kpi-sub">نیازمند تمرکز ویژه</div>
+                            </div>
                         </div>
-                        <div class="kpi-card subtle">
-                            <div class="kpi-top"><span>میانگین تراز</span><i data-lucide="activity" class="icon-sm primary-text"></i></div>
-                            <div class="kpi-val" id="radarAvgTaraz">—</div>
-                            <div class="kpi-sub">تراز کل آزمون‌ها</div>
+
+                        <div class="card-box">
+                            <div class="section-inline-title" style="margin-bottom:4px;">
+                                <i data-lucide="trending-up" class="icon-sm primary-text"></i>
+                                <span>نبض پیشرفت تو (روند تراز آزمون‌ها)</span>
+                            </div>
+                            <p class="field-hint" style="margin-top:0;">روند تغییرات تراز کل در آزمون‌های تاییدشده اخیر</p>
+                            <div class="chart-container-fixed small"><canvas id="radarTarazChart"></canvas></div>
                         </div>
-                        <div class="kpi-card subtle">
-                            <div class="kpi-top"><span>نقطه قوت پایدار</span><i data-lucide="shield-check" class="icon-sm success-text"></i></div>
-                            <div class="kpi-val small-text" id="radarBestSubj">—</div>
-                            <div class="kpi-sub">بهترین عملکرد</div>
+
+                        <div class="card-box">
+                            <div class="section-inline-title" style="margin-bottom:4px;">
+                                <i data-lucide="clock" class="icon-sm gold-text"></i>
+                                <span>تکامل مدیریت زمان در آزمون</span>
+                            </div>
+                            <p class="field-hint" style="margin-top:0;">مقایسه تعداد پاسخ‌های درست (سبز)، غلط (قرمز) و نزده (خاکستری)</p>
+                            <div class="chart-container-fixed small"><canvas id="radarTimeMgmtChart"></canvas></div>
                         </div>
-                        <div class="kpi-card subtle">
-                            <div class="kpi-top"><span>نیازمند جراحی</span><i data-lucide="alert-triangle" class="icon-sm danger-text"></i></div>
-                            <div class="kpi-val small-text" id="radarWorstSubj">—</div>
-                            <div class="kpi-sub">کمترین عملکرد</div>
+
+                        <div class="card-box">
+                            <div class="section-inline-title" style="margin-bottom:4px;">
+                                <i data-lucide="scale" class="icon-sm accent-text"></i>
+                                <span>ترازوی عدالت (تست در برابر تراز)</span>
+                            </div>
+                            <p class="field-hint" style="margin-top:0;">مقایسه مجموع تست‌های زده‌شده در دوره دوهفته‌ای (ستون) با تراز آزمون (خط)</p>
+                            <div class="chart-container-fixed small"><canvas id="radarRoiChart"></canvas></div>
                         </div>
                     </div>
-                    <div class="chart-container-fixed small"><canvas id="radarTarazChart"></canvas></div>
+
+                    <div id="promaxRadarEmpty" class="card-box center-card" style="display:none;">
+                        <div class="modal-icon-ring"><i data-lucide="folder-search" class="icon-lg"></i></div>
+                        <h3>هنوز کارنامه تاییدشده‌ای برای رسم رادار ثبت نشده است</h3>
+                        <p class="muted-desc" id="promaxRadarEmptyDesc">پس از ثبت و تایید اولین کارنامه آزمون در بخش «کلینیک هوشمند»، نمودارهای رادار تراز و مدیریت زمان فعال می‌شوند.</p>
+                    </div>
                 </div>
 
-                <!-- دفترچه آرشیو گزارش‌ها (history) -->
+                <!-- دفترچه گزارش‌ها (۱۴ روز اخیر - دقیقاً مشابه history.html) -->
                 <div class="section-title">
                     <span class="bar"></span>
                     <i data-lucide="book-open-check" class="icon-sm"></i>
-                    <span>دفترچه آرشیو گزارش‌های اخیر (۱۴ روز گذشته)</span>
+                    <span>دفترچه گزارش‌ها (۱۴ روز اخیر)</span>
                 </div>
                 <div id="historyAccordionContainer"></div>
             </div>
 
-            <!-- ۴-۲: کلینیک هوشمند و اسپرینت آزمون (ai-standard + promax-sprints) -->
+            <!-- ==================================================================
+                 ۴-۲: کلینیک هوشمند و اسپرینت آزمون (متصل به week_status_calendar)
+                 ================================================================== -->
             <div id="subtab-ana-clinic" class="sub-view">
-                <div class="card-box">
-                    <div class="card-header-row">
-                        <div class="module-title-group">
-                            <div class="module-icon-badge"><i data-lucide="brain-circuit" class="icon"></i></div>
-                            <div>
-                                <h3>ارزیابی و تحلیل هوشمند هفتگی</h3>
-                                <p>بررسی خودکار گزارش‌های هفته (حداقل ۶ گزارش در هفته)</p>
-                            </div>
+                <div class="card-box" style="background: var(--primary-fade); border-color: rgba(99,152,137,0.35);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="module-icon-badge"><i data-lucide="sparkles" class="icon"></i></div>
+                        <div>
+                            <h3 style="font-size:14.5px; font-weight:900; color:var(--primary);">کلینیک هوشمند و پرونده‌های هفتگی</h3>
+                            <p style="font-size:12px; color:var(--text-muted);">
+                                برای باز شدن قفل تحلیل هر هفته، باید حداقل <strong class="accent-text">۶ گزارش شبانه</strong> در بازه تاریخی آن هفته ثبت کرده باشید.
+                            </p>
                         </div>
-                        <span class="konkur-pill" id="aiWeeklyQuotaBadge">فعال</span>
                     </div>
-                    <div id="aiStandardWeeksContainer"></div>
                 </div>
 
-                <div class="section-title">
-                    <span class="bar"></span>
-                    <i data-lucide="crown" class="icon-sm"></i>
-                    <span>پرونده‌های اسپرینت و کالبدشکافی کارنامه آزمون (VIP / ProMax)</span>
-                </div>
-                <div id="promaxSprintsContainer"></div>
+                <!-- لیست پرونده‌های هفتگی از جدول week_status_calendar -->
+                <div id="clinicDossiersContainer" class="dossier-list-stack"></div>
             </div>
         </section>
-
 
         <!-- ======================================================================
              🧰 تب ۵: ماژول جعبه ابزارها (TAB 5: TOOLS MODULE)
