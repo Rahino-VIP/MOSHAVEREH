@@ -8,12 +8,49 @@ const ReportModule = {
     courseCounter: 0,
 
     // ======================================================================
+    // 🎯 تشخیص دقیق لیست دروس بر اساس پایه و رشته دانش‌آموز از SUBJECTS_DICT
+    // ======================================================================
+    getSubjectsForStudent() {
+        const rawGrade = String(AppState.studentData?.grade || AppState.studentGrade || 'دوازدهم');
+        const rawMajor = String(AppState.studentData?.major || AppState.studentMajor || 'تجربی');
+
+        // مهم: اول «دوازدهم» و «یازدهم» چک می‌شوند چون هر دو در انتهای خود کلمه «دهم» را دارند!
+        let targetGrade = 'دوازدهم';
+        if (rawGrade.includes('دوازدهم') || rawGrade.includes('پشت') || rawGrade.includes('فارغ')) {
+            targetGrade = 'دوازدهم';
+        } else if (rawGrade.includes('یازدهم')) {
+            targetGrade = 'یازدهم';
+        } else if (rawGrade.includes('دهم')) {
+            targetGrade = 'دهم';
+        }
+
+        let targetMajor = 'تجربی';
+        if (rawMajor.includes('ریاضی')) {
+            targetMajor = 'ریاضی';
+        } else if (rawMajor.includes('انسانی')) {
+            targetMajor = 'انسانی';
+        }
+
+        AppState.studentGrade = targetGrade;
+        AppState.studentMajor = targetMajor;
+
+        if (typeof SUBJECTS_DICT !== 'undefined' && SUBJECTS_DICT[targetGrade]?.[targetMajor]) {
+            AppState.globalSubjects = SUBJECTS_DICT[targetGrade][targetMajor];
+            return AppState.globalSubjects;
+        }
+
+        return (AppState.globalSubjects && AppState.globalSubjects.length > 0)
+            ? AppState.globalSubjects
+            : ["حسابان ۲", "هندسه ۳", "گسسته", "فیزیک ۳", "شیمی ۳", "فارسی", "عربی", "دینی", "زبان", "سایر"];
+    },
+
+    // ======================================================================
     // 🚀 ۱. راه‌اندازی اولیه ماژول گزارش (فراخوانی خودکار از AppCore)
     // ======================================================================
     init() {
+        this.getSubjectsForStudent();
         this.generateDateChips();
 
-        // اگر تاریخی انتخاب نشده، تاریخ امروز انتخاب و اطلاعاتش بارگذاری شود
         if (this.selectedDate) {
             this.loadReportForDate(this.selectedDate);
         } else {
@@ -51,7 +88,6 @@ const ReportModule = {
 
             if (i === 0) {
                 if (!this.selectedDate) this.selectedDate = shamsiEng;
-                // بروزرسانی وضعیت گزارش امروز در کارت خلاصه تب خانه
                 const homeRepEl = document.getElementById('homeReportStatus');
                 if (homeRepEl) {
                     homeRepEl.innerText = isCompleted ? 'ثبت شده' : 'ثبت نشده';
@@ -74,7 +110,6 @@ const ReportModule = {
         UI.refreshIcons();
     },
 
-    // مدیریت کلیک روی روزهای نوار تاریخ
     handleDateClick(element, dateStr, isCompleted) {
         if (dateStr === this.selectedDate) return;
 
@@ -108,7 +143,6 @@ const ReportModule = {
         const existingReport = (AppState.dailyReports || []).find(r => r.report_date === dateStr);
 
         if (existingReport) {
-            // ۱. پر کردن کارت‌های دروس ثبت‌شده
             const courses = Array.isArray(existingReport.courses) ? existingReport.courses : [];
             if (courses.length > 0) {
                 courses.forEach(c => this.addCourseCard(c));
@@ -116,7 +150,6 @@ const ReportModule = {
                 this.addCourseCard();
             }
 
-            // ۲. پر کردن اسلایدرهای لایف‌استایل
             const life = existingReport.lifestyle || {};
             const sleepNum = this.timeStrToSliderVal(life.sleepLast || '23:00', true);
             const wakeNum = this.timeStrToSliderVal(life.wakeToday || '07:00', false);
@@ -146,10 +179,8 @@ const ReportModule = {
                 document.getElementById('val_nap').innerText = `${napVal}${napVal == 3 ? '+' : ''} ساعت`;
             }
 
-            // ۳. تنظیم وضعیت روحی
             this.setMoodByValue(moodVal);
         } else {
-            // فرم خام برای روز جدید
             this.addCourseCard();
             const sleepInput = document.getElementById('life_sleep');
             const wakeInput = document.getElementById('life_wake');
@@ -175,10 +206,7 @@ const ReportModule = {
         const container = document.getElementById('courseContainer');
         if (!container) return;
 
-        // دریافت لیست دروس ایمن و دقیق از حافظه مرکزی
-        const subjects = (AppState.globalSubjects && Array.isArray(AppState.globalSubjects) && AppState.globalSubjects.length > 0)
-            ? AppState.globalSubjects
-            : ["زیست ۱", "فیزیک ۱", "شیمی ۱", "ریاضی ۱", "فارسی", "عربی", "دینی", "زبان", "سایر"];
+        const subjects = this.getSubjectsForStudent();
 
         const selectedSubj = prefill?.name && subjects.includes(prefill.name) ? prefill.name : (prefill?.name || subjects[0]);
         const eduVal = parseFloat(prefill?.edu) || 0;
@@ -187,10 +215,10 @@ const ReportModule = {
 
         const div = document.createElement('div');
         div.className = 'course-card';
-        div.id = `course_${id}`;  
-        
+        div.id = `course_${id}`;
+
         const wrapId = `courseSelectWrap_${id}`;
-        const hiddenInputId = `courseSubjVal_${id}`; 
+        const hiddenInputId = `courseSubjVal_${id}`;
         const labelId = `courseSubjText_${id}`;
 
         const menuItemsHtml = subjects.map(s => `
@@ -254,48 +282,48 @@ const ReportModule = {
     // ⏱️ ۵. توابع کمکی زمان خواب و وضعیت روحی
     // ======================================================================
     updateTimeFormat(val, labelId) {
-        let num = parseFloat(val);
+        const num = parseFloat(val);
         let h = Math.floor(num);
-        let m = (num - h) * 60;
+        const m = (num - h) * 60;
         if (h >= 24) h -= 24;
         const el = document.getElementById(labelId);
         if (el) {
-            el.innerText = `${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}`; 
-        } 
+            el.innerText = `${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}`;
+        }
     },
 
-    timeStrToSliderVal(timeStr, isSleep = false) { 
-        if (!timeStr) return isSleep ? 23 : 7; 
-        const parts = String(timeStr).split(':'); 
-        let h = parseInt(parts[0]) || 0; 
-        const m = parseInt(parts[1]) || 0; 
-        if (isSleep && h < 12) h += 24; 
-        return h + (m >= 30 ? 0.5 : 0); 
+    timeStrToSliderVal(timeStr, isSleep = false) {
+        if (!timeStr) return isSleep ? 23 : 7;
+        const parts = String(timeStr).split(':');
+        let h = parseInt(parts[0]) || 0;
+        const m = parseInt(parts[1]) || 0;
+        if (isSleep && h < 12) h += 24;
+        return h + (m >= 30 ? 0.5 : 0);
     },
 
-    setMood(elem, val) { 
-        document.querySelectorAll('#tab-report .mood-btn').forEach(b => b.classList.remove('active')); 
-        if (elem) elem.classList.add('active'); 
-        const input = document.getElementById('life_mood'); 
-        if (input) input.value = val; 
+    setMood(elem, val) {
+        document.querySelectorAll('#tab-report .mood-btn').forEach(b => b.classList.remove('active'));
+        if (elem) elem.classList.add('active');
+        const input = document.getElementById('life_mood');
+        if (input) input.value = val;
     },
 
-    setMoodByValue(val) { 
-        const input = document.getElementById('life_mood'); 
-        if (input) input.value = val; 
-        const moodMap = ['عالی', 'خوب', 'معمولی', 'بد']; 
-        const idx = moodMap.indexOf(val); 
-        const btns = document.querySelectorAll('#tab-report .mood-btn'); 
-        btns.forEach((b, i) => b.classList.toggle('active', i === (idx !== -1 ? idx : 1))); 
+    setMoodByValue(val) {
+        const input = document.getElementById('life_mood');
+        if (input) input.value = val;
+        const moodMap = ['عالی', 'خوب', 'معمولی', 'بد'];
+        const idx = moodMap.indexOf(val);
+        const btns = document.querySelectorAll('#tab-report .mood-btn');
+        btns.forEach((b, i) => b.classList.toggle('active', i === (idx !== -1 ? idx : 1)));
     },
 
-    // ====================================================================== 
-    // 🗑️ ۶. حذف گزارش روز انتخاب‌شده (با مودال تایید درون‌برنامه‌ای) 
-    // ====================================================================== 
-    confirmDeleteReport() { 
-        if (!this.selectedDate) return; 
-        UI.confirm( 
-            'حذف گزارش روزانه', 
+    // ======================================================================
+    // 🗑️ ۶. حذف گزارش روز انتخاب‌شده (با مودال تایید درون‌برنامه‌ای)
+    // ======================================================================
+    confirmDeleteReport() {
+        if (!this.selectedDate) return;
+        UI.confirm(
+            'حذف گزارش روزانه',
             `آیا مطمئن هستید که کل گزارش تاریخ (${this.selectedDate}) از پرونده شما پاک شود؟`,
             () => this.executeDeleteReport()
         );
@@ -312,14 +340,12 @@ const ReportModule = {
 
             if (error) throw error;
 
-            // بروزرسانی حافظه مرکزی (AppState) بدون نیاز به رفرش صفحه
             AppState.dailyReports = (AppState.dailyReports || []).filter(r => r.report_date !== this.selectedDate);
             AppState.completedDates = AppState.dailyReports.map(r => r.report_date);
 
             this.generateDateChips();
             this.loadReportForDate(this.selectedDate);
 
-            // همگام‌سازی فوری با تب تحلیل عملکرد
             if (window.AnalyticsModule) AnalyticsModule.init();
 
             UI.showToast('گزارش این روز با موفقیت حذف شد.', 'success');
@@ -382,7 +408,6 @@ const ReportModule = {
             };
 
             try {
-                // بررسی وجود رکورد قبلی برای همان تاریخ (برای سازگاری ۱۰۰٪ با سرورهای مختلف سوپابیس)
                 const { data: existingRows } = await supabaseClient
                     .from('daily_reports')
                     .select('id')
@@ -403,7 +428,6 @@ const ReportModule = {
                     if (insErr) throw insErr;
                 }
 
-                // بروزرسانی فوری AppState در حافظه
                 const idx = (AppState.dailyReports || []).findIndex(r => r.report_date === this.selectedDate);
                 if (idx >= 0) {
                     AppState.dailyReports[idx] = { ...AppState.dailyReports[idx], ...payload };
@@ -411,11 +435,9 @@ const ReportModule = {
                     AppState.dailyReports.unshift(payload);
                 }
 
-                // مرتب‌سازی نزولی گزارش‌ها بر اساس تاریخ
                 AppState.dailyReports.sort((a, b) => String(b.report_date).localeCompare(String(a.report_date)));
                 AppState.completedDates = AppState.dailyReports.map(r => r.report_date);
 
-                // بروزرسانی نوار تاریخ و هماهنگ‌سازی با تب تحلیل عملکرد و تب خانه
                 this.generateDateChips();
                 if (window.AnalyticsModule) AnalyticsModule.init();
 
