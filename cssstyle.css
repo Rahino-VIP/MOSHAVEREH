@@ -896,3 +896,177 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
     padding: 18px; font-size: 13.5px; line-height: 2; color: var(--text-main);
     margin-bottom: 16px; text-align: right;
 }
+
+/* ==========================================================================
+   🧰 ۱۲. استایل‌های پیشرفته جعبه ابزار: هبیت‌ترکر، لایتنر LaTeX و تایمر سینماتیک
+   ========================================================================== */
+.modal.modal-wide { max-width: 580px; padding: 22px 18px; }
+
+/* ۱. ردیاب عادت‌ها (طراحی موبایل‌پسند بدون اسکرول افقی) */
+.habit-stats-banner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 14px; margin-bottom: 14px; text-align: right;
+}
+.habit-matrix-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 14px; margin-bottom: 10px;
+    transition: 0.2s;
+}
+.habit-card-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; gap: 8px;
+}
+.habit-card-title {
+    font-size: 13.5px; font-weight: 900; color: var(--text-main);
+    display: flex; align-items: center; gap: 6px;
+}
+.habit-days-row {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
+    direction: rtl;
+}
+.habit-day-cell {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 6px 2px; cursor: pointer;
+    transition: 0.2s; user-select: none;
+}
+.habit-day-cell small { font-size: 9.5px; color: var(--text-muted); font-weight: 800; }
+.habit-day-cell .day-num { font-size: 11px; font-weight: 900; color: var(--text-main); }
+.habit-day-cell .check-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border); display: flex;
+    align-items: center; justify-content: center; transition: 0.2s;
+}
+.habit-day-cell.done {
+    border-color: var(--success); background: var(--success-fade);
+}
+.habit-day-cell.done .check-dot {
+    background: var(--success); border-color: var(--success); color: #fff;
+}
+.habit-day-cell.is-today { border-color: var(--primary); }
+
+/* هیت‌مپ ماهانه عادت‌ها */
+.heatmap-grid {
+    display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;
+    padding: 12px; background: var(--surface-2); border-radius: 16px;
+    border: 1px solid var(--border); margin-bottom: 14px;
+}
+.heatmap-cell {
+    aspect-ratio: 1; border-radius: 7px; background: var(--surface);
+    border: 1px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-size: 10px; font-weight: 800; color: var(--text-muted);
+}
+.heatmap-cell.lvl-1 { background: rgba(16, 185, 129, 0.25); color: var(--text-main); border-color: rgba(16, 185, 129, 0.4); }
+.heatmap-cell.lvl-2 { background: rgba(16, 185, 129, 0.55); color: #fff; border-color: var(--success); }
+.heatmap-cell.lvl-3 { background: var(--success); color: #fff; border-color: var(--success); }
+
+/* ۲. جعبه لایتنر و دستیار فرمول‌ساز LaTeX */
+.katex { direction: ltr !important; display: inline-block; font-size: 1.08em !important; }
+.katex-display { direction: ltr !important; margin: 8px 0 !important; overflow-x: auto; overflow-y: hidden; }
+
+.leitner-boxes-bar {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    margin-bottom: 14px;
+}
+.leitner-slot {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px 4px; text-align: center;
+}
+.leitner-slot span { display: block; font-size: 10px; color: var(--text-muted); font-weight: 800; }
+.leitner-slot strong { font-size: 14px; font-weight: 900; color: var(--primary); }
+
+.leitner-grade-btns {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px;
+}
+.btn-leitner {
+    padding: 11px 6px; border-radius: 14px; border: 1.5px solid transparent;
+    font-size: 12px; font-weight: 900; cursor: pointer; transition: 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.btn-leitner small { font-size: 9.5px; opacity: 0.85; font-weight: 700; }
+.btn-leitner.hard { background: var(--danger-fade); color: var(--danger); border-color: rgba(239,68,68,0.35); }
+.btn-leitner.medium { background: var(--gold-fade); color: var(--gold); border-color: rgba(245,158,11,0.35); }
+.btn-leitner.easy { background: var(--success-fade); color: var(--success); border-color: rgba(16,185,129,0.35); }
+.btn-leitner:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+/* نوار ابزار فرمول‌ساز لمسی برای دانش‌آموز */
+.latex-helper-box {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px; margin-bottom: 10px; text-align: right;
+}
+.latex-chips-row {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px;
+    margin-bottom: 8px; scrollbar-width: none;
+}
+.latex-chips-row::-webkit-scrollbar { display: none; }
+.latex-chip {
+    flex: 0 0 auto; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-main); padding: 5px 10px; border-radius: 9px;
+    font-size: 11.5px; font-weight: 800; cursor: pointer; transition: 0.2s;
+}
+.latex-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-fade); }
+.latex-live-preview {
+    background: var(--surface); border: 1px dashed var(--primary);
+    border-radius: 12px; padding: 10px 12px; min-height: 44px;
+    font-size: 13px; color: var(--text-main); margin-top: 8px;
+}
+
+/* ۳. تایمر تمرکز تمام‌صفحه سینماتیک (Fullscreen Immersive Pomodoro) */
+.immersive-timer-overlay {
+    position: fixed; inset: 0; z-index: 6000;
+    background: #090d16; color: #f8fafc;
+    display: none; flex-direction: column; justify-content: space-between;
+    align-items: center; padding: 24px 20px; overflow: hidden;
+    transition: background 0.8s ease;
+}
+.immersive-timer-overlay.active { display: flex; }
+.immersive-timer-overlay.break-phase { background: #0c2922; }
+
+/* تم ۱: موج مایع (Liquid Wave) */
+.liquid-wave-bg {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 0%; background: linear-gradient(180deg, rgba(99, 152, 137, 0.35), rgba(99, 152, 137, 0.75));
+    transition: height 1s linear; z-index: 1; pointer-events: none;
+}
+.liquid-wave-bg::before {
+    content: ''; position: absolute; top: -18px; left: -50%; width: 200%; height: 36px;
+    background: radial-gradient(circle, rgba(119,187,169,0.45) 20%, transparent 70%);
+    animation: waveMove 6s infinite linear;
+}
+@keyframes waveMove { 0% { transform: translateX(0); } 100% { transform: translateX(25%); } }
+
+/* تم ۲: کسوف نئونی (Eclipse Ring) */
+.eclipse-ring-stage {
+    position: relative; width: 270px; height: 270px;
+    display: flex; align-items: center; justify-content: center; z-index: 5;
+}
+.eclipse-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.eclipse-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+.eclipse-progress {
+    fill: none; stroke: #77bba9; stroke-width: 8; stroke-linecap: round;
+    filter: drop-shadow(0 0 12px rgba(119, 187, 169, 0.8));
+    transition: stroke-dashoffset 1s linear;
+}
+
+/* تم ۳: ساعت ورق‌خور کلاسیک (Retro Flip) */
+.flip-clock-stage {
+    display: none; gap: 14px; align-items: center; z-index: 5; direction: ltr;
+}
+.flip-card-unit {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 22px; padding: 24px 22px; min-width: 120px; text-align: center;
+    font-size: 64px; font-weight: 900; font-family: monospace; color: #fff;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.45); position: relative;
+}
+.flip-card-unit::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 2px; background: rgba(0,0,0,0.45);
+}
+
+/* سازگاری تایمر با چرخش افقی گوشی (Landscape) */
+@media (orientation: landscape) and (max-height: 540px) {
+    .immersive-timer-overlay { padding: 12px 24px; }
+    .eclipse-ring-stage { width: 195px; height: 195px; }
+    .flip-card-unit { font-size: 46px; padding: 14px 18px; min-width: 95px; }
+}
