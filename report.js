@@ -175,7 +175,8 @@ const ReportModule = {
         const container = document.getElementById('courseContainer');
         if (!container) return;
 
-        const subjects = (AppState.globalSubjects && AppState.globalSubjects.length > 0)
+        // دریافت لیست دروس ایمن و دقیق از حافظه مرکزی
+        const subjects = (AppState.globalSubjects && Array.isArray(AppState.globalSubjects) && AppState.globalSubjects.length > 0)
             ? AppState.globalSubjects
             : ["زیست ۱", "فیزیک ۱", "شیمی ۱", "ریاضی ۱", "فارسی", "عربی", "دینی", "زبان", "سایر"];
 
@@ -186,8 +187,11 @@ const ReportModule = {
 
         const div = document.createElement('div');
         div.className = 'course-card';
-        div.id = `course_${id}`;  const wrapId = `courseSelectWrap_${id}`;
-        const hiddenInputId = `courseSubjVal_${id}`; const labelId = `courseSubjText_${id}`;
+        div.id = `course_${id}`;  
+        
+        const wrapId = `courseSelectWrap_${id}`;
+        const hiddenInputId = `courseSubjVal_${id}`; 
+        const labelId = `courseSubjText_${id}`;
 
         const menuItemsHtml = subjects.map(s => `
             <div class="custom-select-item ${s === selectedSubj ? 'selected' : ''}"
@@ -250,9 +254,9 @@ const ReportModule = {
     // ⏱️ ۵. توابع کمکی زمان خواب و وضعیت روحی
     // ======================================================================
     updateTimeFormat(val, labelId) {
-        const num = parseFloat(val);
+        let num = parseFloat(val);
         let h = Math.floor(num);
-        const m = (num - h) * 60;
+        let m = (num - h) * 60;
         if (h >= 24) h -= 24;
         const el = document.getElementById(labelId);
         if (el) {
@@ -295,6 +299,33 @@ const ReportModule = {
             `آیا مطمئن هستید که کل گزارش تاریخ (${this.selectedDate}) از پرونده شما پاک شود؟`,
             () => this.executeDeleteReport()
         );
+    },
+
+    async executeDeleteReport() {
+        const uid = String(AppState.userId);
+        try {
+            const { error } = await supabaseClient
+                .from('daily_reports')
+                .delete()
+                .eq('chat_id', uid)
+                .eq('report_date', this.selectedDate);
+
+            if (error) throw error;
+
+            // بروزرسانی حافظه مرکزی (AppState) بدون نیاز به رفرش صفحه
+            AppState.dailyReports = (AppState.dailyReports || []).filter(r => r.report_date !== this.selectedDate);
+            AppState.completedDates = AppState.dailyReports.map(r => r.report_date);
+
+            this.generateDateChips();
+            this.loadReportForDate(this.selectedDate);
+
+            // همگام‌سازی فوری با تب تحلیل عملکرد
+            if (window.AnalyticsModule) AnalyticsModule.init();
+
+            UI.showToast('گزارش این روز با موفقیت حذف شد.', 'success');
+        } catch (err) {
+            UI.showToast('خطا در حذف گزارش. لطفاً اتصال اینترنت را بررسی کنید.', 'error');
+        }
     },
 
     // ======================================================================
