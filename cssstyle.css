@@ -781,3 +781,118 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
 .habits-list-vertical { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; text-align: right; }
 .habit-add-row { display: flex; gap: 6px; margin-bottom: 14px; }
 .messages-scroll-box { text-align: right; max-height: 260px; overflow-y: auto; margin: 12px 0; }
+
+/* ==========================================================================
+   🔬 ۱۱. استایل‌های تکمیلی بخش تحلیل عملکرد، لایف‌استایل و کلینیک هوشمند
+   ========================================================================== */
+.kpi-card.highlight-record {
+    background: linear-gradient(145deg, var(--surface), var(--gold-fade));
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.chart-header-Controls {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.compact-pills { padding: 4px; border-radius: 12px; gap: 4px; }
+.compact-pills .pill-btn { min-width: auto; padding: 6px 11px; font-size: 11.5px; border-radius: 9px; }
+
+/* کارت‌های لایف‌استایل و نوار حال روحی (مشابه dashboard.html) */
+.life-cards-stack { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.life-detail-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 16px 18px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; box-shadow: var(--shadow);
+}
+.life-detail-info h4 { font-size: 14.5px; font-weight: 900; color: var(--primary); margin-bottom: 4px; }
+.life-detail-info p { font-size: 12px; color: var(--text-muted); font-weight: 700; line-height: 1.85; }
+.life-detail-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.mood-bar-track {
+    display: flex; width: 100%; height: 14px;
+    border-radius: 10px; overflow: hidden; margin: 12px 0;
+    background: var(--surface-2);
+}
+.mood-segment {
+    height: 100%; display: flex; justify-content: center; align-items: center;
+    font-size: 10px; color: #fff; font-weight: 900; transition: width 0.5s ease;
+}
+.dot-legend { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.dot-legend.success { background: var(--success); }
+.dot-legend.warning { background: var(--gold); }
+.dot-legend.danger { background: var(--danger); }
+
+/* استایل دفترچه گزارش‌های ۱۴ روز اخیر (مشابه history.html) */
+.history-date-badge {
+    background: var(--primary); color: #fff;
+    padding: 5px 12px; border-radius: 10px;
+    font-size: 13px; font-weight: 900;
+}
+.history-summary-pills {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12.5px; font-weight: 800; color: var(--text-muted);
+}
+.history-summary-pills span { display: inline-flex; align-items: center; gap: 4px; }
+.history-life-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+.history-life-widget {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 13px 15px; border-radius: 15px;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.history-course-item {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 14px; border-radius: 16px; margin-bottom: 8px;
+}
+.history-course-name {
+    font-size: 14px; font-weight: 900; color: var(--primary);
+    border-bottom: 1px dashed var(--border); padding-bottom: 7px; margin-bottom: 9px; display: block;
+}
+.history-course-badges { display: flex; justify-content: space-between; gap: 6px; }
+.history-course-badges span {
+    flex: 1; text-align: center; font-size: 11px; font-weight: 800;
+    padding: 6px 8px; border-radius: 9px;
+}
+.h-badge-edu { background: var(--primary-fade); color: var(--primary); }
+.h-badge-std { background: var(--success-fade); color: var(--success); }
+.h-badge-tst { background: var(--accent-fade); color: var(--accent); }
+
+/* استایل کارت‌های کلینیک هوشمند و آپلود ۲ فایل کارنامه */
+.dossier-list-stack { display: flex; flex-direction: column; gap: 12px; }
+.clinic-dossier-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); transition: 0.25s;
+}
+.clinic-dossier-header {
+    padding: 16px 18px; display: flex; justify-content: space-between;
+    align-items: center; cursor: pointer; gap: 10px; transition: 0.2s;
+}
+.clinic-dossier-header:hover { background: var(--surface-2); }
+.clinic-dossier-body {
+    display: none; padding: 18px; border-top: 1px dashed var(--border);
+    background: var(--surface-2);
+}
+.clinic-dossier-card.open .clinic-dossier-body { display: block; animation: fadeSlideUp 0.25s ease-out; }
+
+.dual-upload-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+}
+@media (max-width: 520px) { .dual-upload-grid { grid-template-columns: 1fr; } }
+.exam-upload-slot {
+    border: 2px dashed var(--primary); background: var(--primary-fade);
+    border-radius: 16px; padding: 16px 12px; text-align: center;
+    cursor: pointer; transition: 0.2s; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.exam-upload-slot:hover { filter: brightness(1.05); }
+.exam-upload-slot.has-file { border-color: var(--success); background: var(--success-fade); }
+.ai-result-formatted {
+    background: var(--surface); border: 1px solid var(--border);
+    border-right: 4px solid var(--primary); border-radius: 16px;
+    padding: 18px; font-size: 13.5px; line-height: 2; color: var(--text-main);
+    margin-bottom: 16px; text-align: right;
+}
