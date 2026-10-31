@@ -1171,6 +1171,12 @@ const ToolsModule = {
                 UI.showToast('تبریک! تمام پارت‌های مطالعه این جلسه را با موفقیت کامل کردی.', 'success');
                 if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
                 document.getElementById('pomoSubStatus').innerText = 'جلسه کامل شد!';
+
+                // 👈 این ۲ خط اینجا اضافه می‌شود:
+                if (this.activeQuestBlockId && window.PlanningModule) {
+                    PlanningModule.toggleQuest(this.activeQuestBlockId);
+                    this.activeQuestBlockId = null;
+                }
             }
         } else {
             const nextRound = this.pomoRuntime.currentRound + 1;
