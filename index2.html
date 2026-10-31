@@ -530,7 +530,7 @@
 
         <!-- ======================================================================
              🗓️ تب ۳: ماژول برنامه‌ریزی (TAB 3: PLANNING MODULE)
-             شامل ۴ زیربخش: عملیات امروز | تقویم هفته | اتاق فکر | پیکربندی هسته
+             شامل ۳ زیربخش: عملیات امروز | تقویم هفته | اتاق فکر (به همراه پیکربندی هسته)
              ====================================================================== -->
         <section id="tab-planning" class="spa-view">
             <div class="module-top-bar">
@@ -547,189 +547,290 @@
                 </button>
             </div>
 
-            <!-- تب‌های داخلی بخش برنامه‌ریزی -->
-            <div class="subtabs-bar">
-                <button type="button" class="subtab-btn active" onclick="PlanningModule.switchSubtab('today', this)">
-                    <i data-lucide="target" class="icon-sm"></i>
-                    <span>عملیات امروز</span>
-                </button>
-                <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('week', this)">
-                    <i data-lucide="calendar-range" class="icon-sm"></i>
-                    <span>تقویم هفته</span>
-                </button>
-                <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('request', this)">
-                    <i data-lucide="compass" class="icon-sm"></i>
-                    <span>اتاق فکر</span>
-                </button>
-                <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('setup', this)">
-                    <i data-lucide="sliders-horizontal" class="icon-sm"></i>
-                    <span>پیکربندی هسته</span>
+            <!-- 🔒 صفحه قفل ویژه کاربران بدون اشتراک -->
+            <div id="planningLockedView" class="card-box center-card" style="display: none; padding: 36px 20px;">
+                <div class="modal-icon-ring gold"><i data-lucide="lock" class="icon-lg"></i></div>
+                <h3 style="margin-bottom: 8px;">برنامه‌ریزی هوشمند ویژه اعضای اشتراکی است</h3>
+                <p class="muted-desc">
+                    برای دریافت برنامه هفتگی شخصی‌سازی‌شده منطبق با بودجه‌بندی آزمون‌ها، مدیریت باکس‌های جبرانی و تقویم ساعتی، یکی از اشتراک‌های قطب‌نما (با مشاور یا خودخوان) را تهیه فرمایید.
+                </p>
+                <button type="button" class="btn-primary-full" style="max-width: 280px; margin: 0 auto;" onclick="Router.openSubPage('store-renew')">
+                    <i data-lucide="sparkles" class="icon-sm"></i>
+                    <span>مشاهده و تهیه اشتراک</span>
                 </button>
             </div>
 
-            <!-- ۳-۱: عملیات امروز (schedule) -->
-            <div id="subtab-plan-today" class="sub-view active">
-                <div id="aiMotivationBox" class="card-box motivation-banner" style="display: none;">
-                    <button type="button" class="close-banner-btn" onclick="PlanningModule.dismissDailyMotivation()">
-                        <i data-lucide="x" class="icon-sm"></i>
+            <!-- 🔓 محتوای اصلی برنامه‌ریزی (برای کاربران دارای اشتراک) -->
+            <div id="planningMainContent">
+
+                <!-- نوار ۳ تایی تب‌های برنامه‌ریزی -->
+                <div class="subtabs-bar">
+                    <button type="button" class="subtab-btn active" onclick="PlanningModule.switchSubtab('today', this)">
+                        <i data-lucide="target" class="icon-sm"></i>
+                        <span>عملیات امروز</span>
                     </button>
-                    <div class="motivation-header">
-                        <i data-lucide="sparkles" class="icon primary-text"></i>
-                        <span>انرژی و پیام امروزت:</span>
-                    </div>
-                    <p id="aiMotivationText"></p>
-                </div>
-
-                <div class="progress-box">
-                    <div class="progress-header">
-                        <span><i data-lucide="activity" class="icon-sm primary-text"></i> پیشرفت مأموریت‌های امروز</span>
-                        <span id="progressText" class="primary-text">0%</span>
-                    </div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-                </div>
-
-                <div id="questsContainer"></div>
-            </div>
-
-            <!-- ۳-۲: تقویم هفته (week) -->
-            <div id="subtab-plan-week" class="sub-view">
-                <div class="card-box week-selector-bar">
-                    <div class="section-inline-title">
-                        <i data-lucide="folder-clock" class="icon primary-text"></i>
-                        <span>انتخاب هفته برنامه‌ریزی:</span>
-                    </div>
-                    <div id="weekDropdownContainer" class="week-dropdown-holder"></div>
-                </div>
-
-                <div class="progress-box" id="weeklyProgressBox" style="display:none;">
-                    <div class="progress-header">
-                        <span>تراز پیشرفت این هفته</span>
-                        <div class="progress-legend">
-                            <span id="successPercentText" class="success-text">0% انجام شده</span>
-                            <span id="dangerPercentText" class="danger-text">0% جبرانی</span>
-                        </div>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="successBar" style="width: 0%;"></div>
-                        <div class="progress-bar-fill-danger" id="dangerBar" style="width: 0%;"></div>
-                    </div>
-                </div>
-
-                <div id="aiWeeklyMotivationBox" class="card-box motivation-banner" style="display: none;">
-                    <button type="button" class="close-banner-btn" onclick="PlanningModule.dismissWeeklyMotivation()">
-                        <i data-lucide="x" class="icon-sm"></i>
+                    <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('week', this)">
+                        <i data-lucide="calendar-range" class="icon-sm"></i>
+                        <span>تقویم هفته</span>
                     </button>
-                    <div class="motivation-header">
-                        <i data-lucide="compass" class="icon primary-text"></i>
-                        <span>استراتژی این هفته:</span>
-                    </div>
-                    <p id="aiWeeklyMotivationText"></p>
+                    <button type="button" class="subtab-btn" onclick="PlanningModule.switchSubtab('request', this)">
+                        <i data-lucide="compass" class="icon-sm"></i>
+                        <span>اتاق فکر و درخواست برنامه</span>
+                    </button>
                 </div>
 
-                <div class="gcal-wrapper">
-                    <div class="gcal-container" id="gcalGrid"></div>
-                </div>
-            </div>
-
-            <!-- ۳-۳: اتاق فکر (request) -->
-            <div id="subtab-plan-request" class="sub-view">
-                <div class="card-box center-card">
-                    <div class="modal-icon-ring"><i data-lucide="send" class="icon-lg"></i></div>
-                    <h3>فرم استراتژی اتاق فکر</h3>
-                    <p class="muted-desc">اولویت‌های هفته آینده خود را مشخص کنید تا هسته برنامه‌ریز بهترین برنامه را تدوین کند.</p>
-
-                    <div id="fridayForm">
-                        <div id="timeLockMessage" class="lock-alert-box" style="display: none;">
-                            <i data-lucide="lock" class="icon-xl danger-text"></i>
-                            <h4>پنجره استراتژی بسته است</h4>
-                            <p>فرم درخواست برنامه هفتگی از <strong>پنجشنبه ساعت ۲۰:۰۰</strong> تا <strong>جمعه ساعت ۲۰:۰۰</strong> فعال می‌شود.</p>
+                <!-- ۳-۱: عملیات امروز (schedule) -->
+                <div id="subtab-plan-today" class="sub-view active">
+                    <div id="aiMotivationBox" class="card-box motivation-banner" style="display: none;">
+                        <button type="button" class="close-banner-btn" onclick="PlanningModule.dismissDailyMotivation()">
+                            <i data-lucide="x" class="icon-sm"></i>
+                        </button>
+                        <div class="motivation-header">
+                            <i data-lucide="sparkles" class="icon primary-text"></i>
+                            <span>انرژی و پیام امروزت:</span>
                         </div>
+                        <p id="aiMotivationText"></p>
+                    </div>
 
-                        <div id="requestFormContent" style="display: none; text-align:right;">
-                            <div id="dynamicSwitchesArea"></div>
-                            <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت برای مشاور (مثلاً: سه‌شنبه امتحان فارسی دارم یا جمعه مهمانی دعوتیم...)"></textarea>
-                            <button type="button" class="btn-primary-full" id="btnRequestPlan" onclick="PlanningModule.sendScheduleRequest()">
-                                <i data-lucide="sparkles" class="icon"></i>
-                                <span>ارسال پرونده به اتاق مشاور</span>
+                    <div class="progress-box">
+                        <div class="progress-header">
+                            <span><i data-lucide="activity" class="icon-sm primary-text"></i> پیشرفت مأموریت‌های امروز</span>
+                            <span id="progressText" class="primary-text">0%</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+                    </div>
+
+                    <div id="questsContainer"></div>
+                </div>
+
+                <!-- ۳-۲: تقویم هفته (week) + دکمه دانلود برنامه -->
+                <div id="subtab-plan-week" class="sub-view">
+                    <div class="card-box week-selector-bar">
+                        <div class="section-inline-title">
+                            <i data-lucide="folder-clock" class="icon primary-text"></i>
+                            <span>هفته برنامه‌ریزی:</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:flex-end; flex-wrap:wrap;">
+                            <div id="weekDropdownContainer" class="week-dropdown-holder" style="min-width:180px;"></div>
+                            <button type="button" class="btn-copy-inline" onclick="PlanningModule.downloadWeeklyScheduleImage()" title="دانلود تصویر برنامه هفتگی">
+                                <i data-lucide="download" class="icon-sm"></i>
+                                <span>دانلود عکس</span>
+                            </button>
+                            <button type="button" class="btn-copy-inline" onclick="PlanningModule.printWeeklySchedulePdf()" title="چاپ یا ذخیره PDF برنامه">
+                                <i data-lucide="printer" class="icon-sm"></i>
+                                <span>چاپ / PDF</span>
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- ۳-۴: پیکربندی هسته برنامه‌ریز (vip-setup) -->
-            <div id="subtab-plan-setup" class="sub-view">
-                <div class="card-box">
-                    <div class="section-title" style="margin-top:0;">
-                        <span class="bar"></span>
-                        <i data-lucide="flag" class="icon-sm"></i>
-                        <span>۱. هدف نهایی شما</span>
-                    </div>
-                    <input type="text" id="studentGoal" class="modern-input" placeholder="مثلاً: پزشکی دانشگاه تهران، مهندسی شریف یا رتبه زیر ۱۰۰۰...">
-
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="brain" class="icon-sm"></i>
-                        <span>۲. استراتژی ذهنی (حداکثر ۳ درس)</span>
-                    </div>
-                    <p class="field-hint">پارت اول صبح با کدام درس‌ها شروع شود؟ (قورباغه طلایی)</p>
-                    <div class="chips-container" id="startSubjectsContainer"></div>
-
-                    <p class="field-hint">پارت آخر شب با کدام درس‌ها تمام شود؟</p>
-                    <div class="chips-container" id="endSubjectsContainer"></div>
-
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="school" class="icon-sm"></i>
-                        <span>۳. تقویم کلاس‌ها و مدرسه</span>
-                    </div>
-                    <div id="classesContainer"></div>
-                    <button type="button" class="btn-dashed-add" onclick="PlanningModule.addClassCard()">
-                        <i data-lucide="plus-circle" class="icon"></i>
-                        <span>افزودن کلاس یا تایم مدرسه جدید</span>
-                    </button>
-
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="gauge" class="icon-sm"></i>
-                        <span>۴. ارزیابی سطح دروس (حداکثر ۳ درس)</span>
-                    </div>
-                    <p class="field-hint">قوی‌ترین درس‌های شما (نقاط قوت):</p>
-                    <div class="chips-container" id="strengthsContainer"></div>
-
-                    <p class="field-hint">درس‌های نیازمند توجه بیشتر (نقاط ضعف):</p>
-                    <div class="chips-container" id="weaknessesContainer"></div>
-
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="file-check-2" class="icon-sm"></i>
-                        <span>۵. برنامه آزمون‌های آزمایشی</span>
-                    </div>
-                    <div class="chips-container" id="examsContainer">
-                        <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="قلم‌چی">قلم‌چی</div>
-                        <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="ماز">ماز</div>
-                        <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="گزینه دو">گزینه دو</div>
-                    </div>
-                    <input type="text" id="customExam" class="modern-input" placeholder="آزمون دیگری شرکت می‌کنید؟ اینجا بنویسید...">
-
-                    <div id="farhangianSection" style="display: none; margin-top:16px;">
-                        <label class="toggle-row">
-                            <span class="toggle-label">
-                                <i data-lucide="graduation-cap" class="icon-sm primary-text"></i>
-                                <span>متقاضی کنکور دانشگاه فرهنگیان هستم</span>
-                            </span>
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="farhangianToggle">
-                                <span class="toggle-slider"></span>
+                    <div class="progress-box" id="weeklyProgressBox" style="display:none;">
+                        <div class="progress-header">
+                            <span>تراز پیشرفت این هفته</span>
+                            <div class="progress-legend">
+                                <span id="successPercentText" class="success-text">0% انجام شده</span>
+                                <span id="dangerPercentText" class="danger-text">0% جبرانی</span>
                             </div>
-                        </label>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="successBar" style="width: 0%;"></div>
+                            <div class="progress-bar-fill-danger" id="dangerBar" style="width: 0%;"></div>
+                        </div>
                     </div>
 
-                    <button type="button" class="btn-primary-full" id="saveVipBtn" onclick="PlanningModule.saveVipSettings()" style="margin-top:18px;">
-                        <i data-lucide="save" class="icon"></i>
-                        <span>ذخیره تنظیمات هسته برنامه‌ریز</span>
-                    </button>
+                    <div id="aiWeeklyMotivationBox" class="card-box motivation-banner" style="display: none;">
+                        <button type="button" class="close-banner-btn" onclick="PlanningModule.dismissWeeklyMotivation()">
+                            <i data-lucide="x" class="icon-sm"></i>
+                        </button>
+                        <div class="motivation-header">
+                            <i data-lucide="compass" class="icon primary-text"></i>
+                            <span>استراتژی این هفته:</span>
+                        </div>
+                        <p id="aiWeeklyMotivationText"></p>
+                    </div>
+
+                    <div class="gcal-wrapper">
+                        <div class="gcal-container" id="gcalGrid"></div>
+                    </div>
                 </div>
+
+                <!-- ۳-۳: اتاق فکر و درخواست برنامه + دکمه بالای صفحه برای پیکربندی هسته -->
+                <div id="subtab-plan-request" class="sub-view">
+                    
+                    <!-- نوار بالایی اتاق فکر: دکمه باز کردن پیکربندی هسته -->
+                    <div class="card-box" style="padding:14px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; background:linear-gradient(135deg, var(--surface), var(--primary-fade));">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="module-icon-badge"><i data-lucide="sliders-horizontal" class="icon-sm"></i></div>
+                            <div>
+                                <div style="font-size:13.5px; font-weight:900; color:var(--text-main);">پیکربندی هسته، کلاس‌های ثابت و ساعت بیداری</div>
+                                <div style="font-size:11px; color:var(--text-muted);" id="vipSetupSummaryText">هدف، نقاط قوت/ضعف و بازه مطالعه روزانه</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-modal auto-width" style="padding:9px 14px; font-size:12px; margin:0;" onclick="PlanningModule.toggleSetupPanel()">
+                            <i data-lucide="settings-2" class="icon-sm"></i>
+                            <span id="btnToggleSetupLabel">ویرایش پیکربندی هسته</span>
+                        </button>
+                    </div>
+
+                    <!-- پنل بازشوی پیکربندی هسته (مخفی در حالت پیش‌فرض) -->
+                    <div id="inlineVipSetupPanel" class="card-box" style="display: none; border: 2px solid var(--primary);">
+                        <div class="card-header-row">
+                            <h3 style="font-size:15.5px; font-weight:900; color:var(--primary); display:flex; align-items:center; gap:6px;">
+                                <i data-lucide="crown" class="icon-sm gold-text"></i>
+                                <span>پیکربندی پایه هسته برنامه‌ریز</span>
+                            </h3>
+                            <button type="button" class="del-icon-btn" style="width:32px;height:32px;" onclick="PlanningModule.toggleSetupPanel()">
+                                <i data-lucide="x" class="icon-sm"></i>
+                            </button>
+                        </div>
+
+                        <div class="section-title" style="margin-top:0;">
+                            <span class="bar"></span>
+                            <i data-lucide="clock" class="icon-sm"></i>
+                            <span>۱. بازه ساعت مطالعه روزانه شما (پشتیبانی تا ۲ بامداد)</span>
+                        </div>
+                        <p class="field-hint">مشخص کنید روز مطالعاتی شما از چه ساعتی شروع و در چه ساعتی از شب به پایان می‌رسد:</p>
+                        <div class="form-grid-2">
+                            <div class="slider-group" style="margin-bottom:0;">
+                                <div class="slider-header">
+                                    <span class="slider-label"><i data-lucide="sunrise" class="icon-sm gold-text"></i> شروع مطالعه روزانه</span>
+                                    <span class="slider-val" id="val_study_start">07:00</span>
+                                </div>
+                                <input type="range" id="inpStudyStartHour" min="6" max="13" step="0.5" value="7"
+                                       oninput="document.getElementById('val_study_start').innerText = PlanningModule.formatTimeDisplay(this.value)">
+                            </div>
+                            <div class="slider-group" style="margin-bottom:0;">
+                                <div class="slider-header">
+                                    <span class="slider-label"><i data-lucide="moon" class="icon-sm indigo-text"></i> پایان مطالعه شبانه</span>
+                                    <span class="slider-val" id="val_study_end">23:30</span>
+                                </div>
+                                <input type="range" id="inpStudyEndHour" min="20" max="26" step="0.5" value="23.5"
+                                       oninput="document.getElementById('val_study_end').innerText = PlanningModule.formatExtendedTimeDisplay(this.value)">
+                            </div>
+                        </div>
+
+                        <div class="section-title">
+                            <span class="bar"></span>
+                            <i data-lucide="flag" class="icon-sm"></i>
+                            <span>۲. هدف نهایی شما</span>
+                        </div>
+                        <input type="text" id="studentGoal" class="modern-input" placeholder="مثلاً: پزشکی دانشگاه تهران، مهندسی شریف یا رتبه زیر ۱۰۰۰...">
+
+                        <div class="section-title">
+                            <span class="bar"></span>
+                            <i data-lucide="brain" class="icon-sm"></i>
+                            <span>۳. استراتژی ذهنی (حداکثر ۳ درس)</span>
+                        </div>
+                        <p class="field-hint">پارت اول روز با کدام درس‌ها شروع شود؟ (قورباغه طلایی)</p>
+                        <div class="chips-container" id="startSubjectsContainer"></div>
+
+                        <p class="field-hint">پارت آخر شب با کدام درس‌ها تمام شود؟ (درس آرام‌بخش)</p>
+                        <div class="chips-container" id="endSubjectsContainer"></div>
+
+                        <div class="section-title">
+                            <span class="bar"></span>
+                            <i data-lucide="school" class="icon-sm"></i>
+                            <span>۴. تقویم کلاس‌های ثابت و مدرسه</span>
+                        </div>
+                        <div id="classesContainer"></div>
+                        <button type="button" class="btn-dashed-add" onclick="PlanningModule.addClassCard()">
+                            <i data-lucide="plus-circle" class="icon"></i>
+                            <span>افزودن کلاس یا تایم مدرسه جدید</span>
+                        </button>
+
+                        <div class="section-title">
+                            <span class="bar"></span>
+                            <i data-lucide="gauge" class="icon-sm"></i>
+                            <span>۵. ارزیابی سطح دروس (حداکثر ۳ درس)</span>
+                        </div>
+                        <p class="field-hint">قوی‌ترین درس‌های شما (نقاط قوت):</p>
+                        <div class="chips-container" id="strengthsContainer"></div>
+
+                        <p class="field-hint">درس‌های نیازمند توجه بیشتر (نقاط ضعف):</p>
+                        <div class="chips-container" id="weaknessesContainer"></div>
+
+                        <div class="section-title">
+                            <span class="bar"></span>
+                            <i data-lucide="file-check-2" class="icon-sm"></i>
+                            <span>۶. برنامه آزمون‌های آزمایشی</span>
+                        </div>
+                        <div class="chips-container" id="examsContainer">
+                            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="قلم‌چی">قلم‌چی</div>
+                            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="ماز">ماز</div>
+                            <div class="chip exam-chip" onclick="this.classList.toggle('active')" data-exam="گزینه دو">گزینه دو</div>
+                        </div>
+                        <input type="text" id="customExam" class="modern-input" placeholder="آزمون دیگری شرکت می‌کنید؟ اینجا بنویسید...">
+
+                        <div id="farhangianSection" style="display: none; margin-top:16px;">
+                            <label class="toggle-row">
+                                <span class="toggle-label">
+                                    <i data-lucide="graduation-cap" class="icon-sm primary-text"></i>
+                                    <span>متقاضی کنکور دانشگاه فرهنگیان هستم</span>
+                                </span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="farhangianToggle">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <button type="button" class="btn-primary-full" id="saveVipBtn" onclick="PlanningModule.saveVipSettings()" style="margin-top:18px;">
+                            <i data-lucide="save" class="icon"></i>
+                            <span>ذخیره پیکربندی هسته</span>
+                        </button>
+                    </div>
+
+                    <!-- کارت اصلی فرم استراتژی هفته و درخواست برنامه -->
+                    <div class="card-box center-card" id="fridayActionBox">
+                        <div class="modal-icon-ring"><i data-lucide="compass" class="icon-lg"></i></div>
+                        <h3 id="requestBoxMainTitle">فرم استراتژی و دریافت برنامه هفتگی</h3>
+                        <p class="muted-desc" id="requestBoxSubDesc">اولویت‌ها و زمان‌های محدودیت این هفته خود را مشخص کنید تا برنامه منطبق با بودجه‌بندی آزمون تدوین شود.</p>
+
+                        <div id="fridayForm">
+                            <div id="timeLockMessage" class="lock-alert-box" style="display: none;">
+                                <i data-lucide="lock" class="icon-xl danger-text"></i>
+                                <h4>پنجره استراتژی هفته آینده بسته است</h4>
+                                <p>فرم درخواست برنامه هفتگی از <strong>پنجشنبه ساعت ۲۰:۰۰</strong> تا <strong>جمعه ساعت ۲۰:۰۰</strong> باز می‌شود.</p>
+                            </div>
+
+                            <div id="requestFormContent" style="display: none; text-align:right;">
+                                
+                                <!-- ۱. سوییچ‌های پویا از دیتابیس -->
+                                <div id="dynamicSwitchesArea" style="margin-bottom: 14px;"></div>
+
+                                <!-- ۲. انتخاب روزها یا بازه‌های غیبت / مهمانی در این هفته -->
+                                <div class="card-box" style="background:var(--surface-2); padding:14px; margin-bottom:14px;">
+                                    <div style="font-size:13px; font-weight:900; color:var(--text-main); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                                        <i data-lucide="calendar-off" class="icon-sm accent-text"></i>
+                                        <span>روزها یا ساعت‌هایی که این هفته نمی‌توانید مطالعه کنید (مهمانی / مشغله):</span>
+                                    </div>
+                                    <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">اگر روزی را کامل وقت ندارید روی دایره آن روز بزنید، یا بازه ساعتی غیبت را اضافه کنید:</p>
+                                    <div class="days-container" id="dayOffCirclesContainer" style="margin: 8px 0 12px 0;">
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="شنبه">ش</div>
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="یکشنبه">ی</div>
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="دوشنبه">د</div>
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="سه‌شنبه">س</div>
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="چهارشنبه">چ</div>
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="پنجشنبه">پ</div>
+                                        <div class="day-circle" onclick="this.classList.toggle('active')" data-day="جمعه">ج</div>
+                                    </div>
+                                    <div id="busySlotsListContainer"></div>
+                                    <button type="button" class="btn-dashed-add" style="padding:10px; font-size:12px; margin-bottom:0;" onclick="PlanningModule.addBusySlotRow()">
+                                        <i data-lucide="plus" class="icon-sm"></i>
+                                        <span>افزودن ساعت مشغله / مهمانی خاص در هفته</span>
+                                    </button>
+                                </div>
+
+                                <textarea class="modern-input" id="nextWeekNote" rows="3" placeholder="یادداشت تکمیلی (مثلاً: سه‌شنبه امتحان مدرسه دارم...)"></textarea>
+                                
+                                <button type="button" class="btn-primary-full" id="btnRequestPlan" onclick="PlanningModule.sendScheduleRequest()" style="margin-top:12px;">
+                                    <i data-lucide="sparkles" class="icon"></i>
+                                    <span id="btnRequestPlanLabel">دریافت برنامه هوشمند</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
