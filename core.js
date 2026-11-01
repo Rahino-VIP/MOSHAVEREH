@@ -1,27 +1,23 @@
 /* ==========================================================================
    📦 فایل هسته مرکزی قطب‌نما (js/core.js)
-   شامل: تنظیمات اتصال به سوپابیس، مدیریت حافظه (AppState)، مسیریاب (Router) و ابزارهای UI
+   شامل: اتصال امن به سوپابیس، مدیریت حافظه (AppState)، مسیریاب (Router)،
+   تشخیص ۴ سطح اشتراک (Free, Plus, VIP, ProMax) و بیدارباش خودکار ۵ تا ۷ صبح
    ========================================================================== */
 
-// 🔗 ۱. تنظیمات مرکزی اتصال (برای انتقال به سرور داخلی، فقط این ۲ خط را تغییر دهید)
 const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
-// ایجاد کلاینت سراسری سوپابیس
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==========================================================================
-// 💾 ۲. مدیریت ایمن حافظه مرورگر (Storage Helpers)
+// 💾 ۱. مدیریت ایمن حافظه مرورگر (Storage Helpers)
 // ==========================================================================
 const Storage = {
     get(key, fallback = null) {
         try {
             const val = localStorage.getItem(key);
             return val !== null ? val : fallback;
-        } catch (_) {
-            return fallback;
-        }
+        } catch (_) { return fallback; }
     },
     set(key, val) {
         try { localStorage.setItem(key, val); } catch (_) {}
@@ -32,8 +28,7 @@ const Storage = {
 };
 
 // ==========================================================================
-// 🧠 ۳. وضعیت سراسری کش‌شده در حافظه (AppState)
-// اطلاعات یک‌بار از دیتابیس خوانده شده و بدون رفرش بین تمام تب‌ها به اشتراک گذاشته می‌شود
+// 🧠 ۲. وضعیت سراسری کش‌شده در حافظه (AppState)
 // ==========================================================================
 const AppState = {
     userId: Storage.get('qotbnama_user_id') || Storage.get('national_id') || null,
@@ -41,21 +36,22 @@ const AppState = {
     fullName: Storage.get('qotbnama_full_name', 'دانش‌آموز'),
     userAuthToken: SUPABASE_KEY,
 
-    currentShell: 'auth',      // 'auth' | 'app'
-    currentTab: 'home',        // 'home' | 'report' | 'planning' | 'analytics' | 'tools'
-    currentSubPage: null,      // 'profile' | 'store-renew' | 'store-swap' | null
+    currentShell: 'auth',
+    currentTab: 'home',
+    currentSubPage: null,
 
-    isConsultant: false,
-    hasPansionActive: false,
+    // سطوح دسترسی: 'free' | 'plus' | 'vip' | 'promax'
+    accessTier: 'free',
+    isPlusOrHigher: false,     // آیا اشتراک پلاس یا مشاوره دارد؟
+    isConsultant: false,       // آیا اشتراک با مشاور انسانی (VIP / ProMax) دارد؟
+    hasPansionActive: false,   // آیا عضو فعال پانسیون است؟ (مشمول ۳۰٪ تخفیف طرح الماس مشاوره)
     planType: Storage.get('qotbnama_plan', 'free'),
-    userMode: Storage.get('qotbnama_user_mode', 'consult'),
 
     studentData: {},
     studentGrade: 'دوازدهم',
     studentMajor: 'تجربی',
     globalSubjects: [],
 
-    // داده‌های کش‌شده ماژول‌ها
     dailyReports: [],
     completedDates: [],
     allSchedules: [],
@@ -68,7 +64,6 @@ const AppState = {
     aiAnalyses: [],
     messages: [],
 
-    // داده‌های فروشگاه (مرحله ۲، تمدید و تعویض)
     services: [],
     promos: [],
     rules: [],
@@ -76,7 +71,7 @@ const AppState = {
     konkurDurationMonths: 10
 };
 
-// 📚 دیکشنری یکپارچه و ۱۰۰٪ منطبق با ستون book_name در جدول knowledge_graph و exam_budgets
+// دیکشنری استاندارد دروس (منطبق با ستون book_name در جدول knowledge_graph)
 const SUBJECTS_DICT = { 
     "دهم": { 
         "ریاضی": ["ریاضی ۱", "هندسه ۱", "فیزیک ۱", "شیمی ۱", "فارسی ۱", "عربی ۱", "دین و زندگی ۱", "انگلیسی ۱", "جغرافیا", "سایر"], 
@@ -95,7 +90,6 @@ const SUBJECTS_DICT = {
     } 
 };
 
-// تابع یکسان‌ساز نام دروس (تبدیل نام‌های قدیمی و اعداد انگلیسی به نام استاندارد knowledge_graph)
 window.normalizeSubjectName = function(rawName) {
     if (!rawName) return '';
     let s = String(rawName).trim()
@@ -114,16 +108,15 @@ window.normalizeSubjectName = function(rawName) {
     };
     return map[s] || s;
 };
+
 // ==========================================================================
-// 🛠️ ۴. ابزارهای ظاهری و توابع کمکی (UI & Formatting Utilities)
+// 🛠️ ۳. ابزارهای ظاهری و توابع کمکی (UI Utilities)
 // ==========================================================================
 const UI = {
     toastTimer: null,
 
     refreshIcons() {
-        try {
-            if (window.lucide) window.lucide.createIcons();
-        } catch (_) {}
+        try { if (window.lucide) window.lucide.createIcons(); } catch (_) {}
     },
 
     showLoader(text = 'در حال همگام‌سازی قطب‌نما...') {
@@ -149,16 +142,13 @@ const UI = {
         txt.innerText = msg;
         toast.className = `app-toast show ${type}`;
         clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3400);
+        this.toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3500);
     },
 
     showAlertBox(boxId, msg, type = 'error') {
         const box = document.getElementById(boxId);
         if (!box) return;
-        if (!msg) {
-            box.style.display = 'none';
-            return;
-        }
+        if (!msg) { box.style.display = 'none'; return; }
         box.className = `alert-box ${type === 'error' ? 'alert-error' : 'alert-success'}`;
         box.innerText = msg;
         box.style.display = 'block';
@@ -244,7 +234,6 @@ const UI = {
                 this.showToast('در حافظه کپی شد.', 'success');
             }
         };
-
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(doFeedback);
         } else {
@@ -274,7 +263,6 @@ const UI = {
     }
 };
 
-// بستن خودکار منوهای کشویی با کلیک بیرون از آن‌ها
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.custom-select-wrap')) {
         document.querySelectorAll('.custom-select-wrap.open').forEach(w => w.classList.remove('open'));
@@ -282,8 +270,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ==========================================================================
-// 🧭 ۵. مسیریاب تک‌صفحه‌ای (SPA Router)
-// جابه‌جایی آنی بین صفحات احراز هویت، ۵ تب اصلی و صفحات پروفایل/فروشگاه بدون رفرش
+// 🧭 ۴. مسیریاب تک‌صفحه‌ای (SPA Router)
 // ==========================================================================
 const Router = {
     showAuthShell(viewName = 'login') {
@@ -316,12 +303,10 @@ const Router = {
         AppState.currentTab = tabId;
         AppState.currentSubPage = null;
 
-        // مخفی کردن تمام نماهای داخل پوسته اپ
         document.querySelectorAll('#shell-app .spa-view').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`tab-${tabId}`);
         if (targetView) targetView.classList.add('active');
 
-        // نمایش نوار ناوبری پایینی و فعال‌سازی تب انتخاب‌شده
         const bottomNav = document.getElementById('mainBottomNav');
         if (bottomNav) bottomNav.style.display = 'grid';
 
@@ -329,7 +314,6 @@ const Router = {
             btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
         });
 
-        // رندر نمودارها در صورت ورود به تب تحلیل عملکرد
         if (tabId === 'analytics' && window.AnalyticsModule) {
             AnalyticsModule.renderCharts();
         }
@@ -345,7 +329,6 @@ const Router = {
         const targetView = document.getElementById(`view-${pageName}`);
         if (targetView) targetView.classList.add('active');
 
-        // فراخوانی متدهای مربوط به زیرصفحه
         if (pageName === 'profile' && window.ProfileModule) {
             ProfileModule.renderProfileView();
         } else if (pageName === 'store-renew' && window.StoreModule) {
@@ -360,16 +343,13 @@ const Router = {
 };
 
 // ==========================================================================
-// 🚀 ۶. راه‌انداز مرکزی اپلیکیشن (App Bootstrapper)
-// بارگذاری اولیه اطلاعات کاربر پس از ورود و آماده‌سازی تمام ۵ تب
+// 🚀 ۵. راه‌انداز مرکزی اپلیکیشن و اجرای خودکار چالش بیدارباش (۰۵:۰۰ تا ۰۷:۰۰ صبح)
 // ==========================================================================
 const AppCore = {
     async init() {
-        // ۱. اعمال پوسته ذخیره‌شده
         UI.setTheme(Storage.get('theme', 'dark'));
         UI.refreshIcons();
 
-        // ۲. بررسی سشن فعال سوپابیس و وضعیت لاگین کاربر
         try {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
@@ -377,14 +357,10 @@ const AppCore = {
             }
 
             const savedUserId = Storage.get('qotbnama_user_id');
-            const tempRegNid = Storage.get('temp_reg_nid');
-
             if (savedUserId && session) {
                 AppState.userId = savedUserId;
                 await this.bootstrapLoggedInUser();
                 Router.showAppShell('home');
-            } else if (tempRegNid) {
-                Router.showAuthShell('register-step2');
             } else {
                 Router.showAuthShell('login');
             }
@@ -401,7 +377,6 @@ const AppCore = {
         const uid = String(AppState.userId);
         const uphone = String(AppState.userPhone || uid);
 
-        // تنظیم تاریخ شمسی امروز در هدر خانه و برنامه‌ریزی
         try {
             const todayFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
             const dateEl1 = document.getElementById('todayShamsiDate');
@@ -411,37 +386,32 @@ const AppCore = {
         } catch (_) {}
 
         try {
-            // دریافت موازی داده‌های پایه از سوپابیس (فقط یک‌بار در ابتدای باز شدن اپ)
             const [stRes, conSubRes, panSubRes, sysRes, repRes, schRes, vipRes, msgRes, exRes, aiRes] = await Promise.all([
                 supabaseClient.from('students').select('*').eq('national_id', uid).maybeSingle(),
-                supabaseClient.from('subscriptions').select('*').or(`student_nid.eq.${uid},user_phone.eq.${uphone}`).eq('service_category', 'consult').eq('status', 'active'),
+                supabaseClient.from('subscriptions').select('*').or(`student_nid.eq.${uid},user_phone.eq.${uphone}`).eq('service_category', 'consult').eq('status', 'active').order('created_at', { ascending: false }),
                 supabaseClient.from('pan_monthly_subs').select('*').eq('phone_number', uphone).eq('status', 'active'),
                 supabaseClient.from('system_settings').select('konkur_date').limit(1),
                 supabaseClient.from('daily_reports').select('*').eq('chat_id', uid).order('report_date', { ascending: false }),
                 supabaseClient.from('ai_schedules').select('*').eq('national_id', uid).eq('status', 'approved').order('target_start_date', { ascending: false }),
                 supabaseClient.from('vip_settings').select('*').eq('national_id', uid).maybeSingle(),
                 supabaseClient.from('messages').select('*').eq('student_nid', uid).order('created_at', { ascending: false }).limit(20),
-                supabaseClient.from('exam_results').select('*').eq('chat_id', uid).eq('status', 'approved').order('created_at', { ascending: true }),
+                supabaseClient.from('exam_results').select('*').eq('chat_id', uid).order('created_at', { ascending: true }),
                 supabaseClient.from('ai_analyses').select('*').eq('chat_id', uid).order('created_at', { ascending: false })
             ]);
 
-            // ۱. اطلاعات دانش‌آموز و دروس پایه/رشته
             if (stRes.data) {
                 AppState.studentData = stRes.data;
                 AppState.fullName = stRes.data.full_name || AppState.fullName;
                 Storage.set('qotbnama_full_name', AppState.fullName);
 
                 const g = stRes.data.grade || 'دوازدهم';
-const m = stRes.data.major || 'تجربی';
+                const m = stRes.data.major || 'تجربی';
+                // مهم: اول دوازدهم چک شود تا با دهم تداخل پیدا نکند
+                AppState.studentGrade = (g.includes('دوازدهم') || g.includes('پشت') || g.includes('فارغ'))
+                    ? 'دوازدهم'
+                    : (g.includes('یازدهم') ? 'یازدهم' : (g.includes('دهم') ? 'دهم' : 'دوازدهم'));
+                AppState.studentMajor = m.includes('ریاضی') ? 'ریاضی' : (m.includes('انسانی') ? 'انسانی' : 'تجربی');
 
-// ✅ اول «دوازدهم» و «پشت کنکوری» چک شود تا با «دهم» قاطی نشود
-AppState.studentGrade = (g.includes('دوازدهم') || g.includes('پشت') || g.includes('فارغ'))
-    ? 'دوازدهم'
-    : (g.includes('یازدهم') ? 'یازدهم' : (g.includes('دهم') ? 'دهم' : 'دوازدهم'));
-
-AppState.studentMajor = m.includes('ریاضی') ? 'ریاضی' : (m.includes('انسانی') ? 'انسانی' : 'تجربی');
-
-AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studentMajor] || SUBJECTS_DICT['دوازدهم']['تجربی'];
                 const streak = stRes.data.wake_streak || 0;
                 const sEl1 = document.getElementById('streakCount');
                 const sEl2 = document.getElementById('homeStreakCount');
@@ -451,14 +421,12 @@ AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studen
 
             AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studentMajor] || SUBJECTS_DICT['دوازدهم']['تجربی'];
 
-            // نام و حرف اول آواتار در هدر خانه
             const firstName = AppState.fullName.trim().split(' ')[0];
             const greetEl = document.getElementById('greetingText');
             const avatarEl = document.getElementById('avatarInitial');
             if (greetEl) greetEl.innerText = `سلام، ${firstName} عزیز!`;
             if (avatarEl) avatarEl.innerText = firstName.charAt(0) || 'ق';
 
-            // ۲. شمارش معکوس روزهای مانده تا کنکور
             if (sysRes.data && sysRes.data.length > 0 && sysRes.data[0].konkur_date) {
                 AppState.konkurDateObj = new Date(sysRes.data[0].konkur_date);
                 const diffDays = Math.ceil((AppState.konkurDateObj - new Date()) / (1000 * 3600 * 24));
@@ -469,22 +437,45 @@ AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studen
                 }
             }
 
-            // ۳. بررسی اشتراک مشاوره یا پانسیون ماهانه
+            // تشخیص دقیق ۴ سطح اشتراک (Free, Plus, VIP, ProMax) و عضویت پانسیون
             AppState.subscriptions = conSubRes.data || [];
             const panSubs = panSubRes.data || [];
-            AppState.isConsultant = AppState.subscriptions.length > 0;
             AppState.hasPansionActive = panSubs.length > 0;
 
             const tierBadge = document.getElementById('analyticsTierBadge');
-            if (AppState.isConsultant) {
-                AppState.planType = (AppState.subscriptions[0].service_type || 'vip').toLowerCase();
-                if (tierBadge) tierBadge.innerText = `طرح ${AppState.subscriptions[0].service_type}`;
+            if (AppState.subscriptions.length > 0) {
+                const stype = String(AppState.subscriptions[0].service_type || '').toLowerCase();
+                AppState.planType = stype;
+                AppState.isPlusOrHigher = true;
+
+                if (stype.includes('پلاس') || stype.includes('plus')) {
+                    AppState.accessTier = 'plus';
+                    AppState.isConsultant = false;
+                    if (tierBadge) tierBadge.innerText = 'اشتراک قطب‌نما پلاس';
+                } else if (stype.includes('مکس') || stype.includes('max') || stype.includes('ویژه')) {
+                    AppState.accessTier = 'promax';
+                    AppState.isConsultant = true;
+                    if (tierBadge) tierBadge.innerText = `طرح مشاوره ${AppState.subscriptions[0].service_type}`;
+                } else {
+                    AppState.accessTier = 'vip';
+                    AppState.isConsultant = true;
+                    if (tierBadge) tierBadge.innerText = `طرح مشاوره ${AppState.subscriptions[0].service_type}`;
+                }
             } else if (AppState.hasPansionActive) {
-                AppState.planType = 'pansion_free';
-                if (tierBadge) tierBadge.innerText = 'دسترسی رایگان پانسیون';
+                // اعضای ماهانه پانسیون به صورت خودکار سطح پلاس دارند
+                AppState.accessTier = 'plus';
+                AppState.isPlusOrHigher = true;
+                AppState.isConsultant = false;
+                AppState.planType = 'plus';
+                if (tierBadge) tierBadge.innerText = 'قطب‌نما پلاس (هدیه پانسیون)';
+            } else {
+                AppState.accessTier = 'free';
+                AppState.isPlusOrHigher = false;
+                AppState.isConsultant = false;
+                AppState.planType = 'free';
+                if (tierBadge) tierBadge.innerText = 'نسخه رایگان (۱ بار تست هدیه)';
             }
 
-            // ۴. ذخیره داده‌های کش‌شده برای ماژول‌ها
             AppState.dailyReports = repRes.data || [];
             AppState.completedDates = AppState.dailyReports.map(r => r.report_date);
             AppState.allSchedules = schRes.data || [];
@@ -497,7 +488,6 @@ AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studen
             AppState.examResults = exRes.data || [];
             AppState.aiAnalyses = aiRes.data || [];
 
-            // ۵. راه‌اندازی اولیه تمام ماژول‌های بارگذاری‌شده
             this.renderMessagesModal();
             if (window.ReportModule) ReportModule.init();
             if (window.PlanningModule) PlanningModule.init();
@@ -505,12 +495,32 @@ AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studen
             if (window.ToolsModule) ToolsModule.init();
             if (window.ProfileModule) ProfileModule.init();
 
+            // ⏰ بررسی خودکار چالش بیدارباش صبحگاهی (فقط بین ساعت ۰۵:۰۰ تا ۰۷:۰۰ صبح به وقت ایران)
+            this.checkAutoMorningWakeup();
+
         } catch (err) {
             console.error("Error loading user workspace:", err);
         } finally {
             UI.hideLoader();
             UI.refreshIcons();
         }
+    },
+
+    // اجرای خودکار چالش بیدارباش صرفاً در صورت باز کردن اپ قبل از ساعت ۷ صبح (بدون هیچ دکمه دستی)
+    checkAutoMorningWakeup() {
+        try {
+            const iranNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" }));
+            const hour = iranNow.getHours();
+            const todayIso = iranNow.toISOString().split('T')[0];
+            const lastWake = AppState.studentData?.last_wakeup_date;
+
+            // پنجره بیدارباش: از ساعت ۰۵:۰۰ تا قبل از ۰۷:۰۰ صبح
+            if (hour >= 5 && hour < 7 && lastWake !== todayIso) {
+                if (window.ToolsModule && typeof ToolsModule.triggerAutoWakeupModal === 'function') {
+                    setTimeout(() => ToolsModule.triggerAutoWakeupModal(), 600);
+                }
+            }
+        } catch (_) {}
     },
 
     renderMessagesModal() {
@@ -541,7 +551,6 @@ AppState.globalSubjects = SUBJECTS_DICT[AppState.studentGrade]?.[AppState.studen
     }
 };
 
-// شروع خودکار برنامه پس از بارگذاری DOM
 window.addEventListener('DOMContentLoaded', () => {
     AppCore.init();
 });
