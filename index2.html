@@ -15,11 +15,13 @@
 
     <!-- 🔤 فونت وزیرمتن و کتابخانه‌های پایه -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/lucide@0.469.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
+    <!-- بارگذاری ۱۰۰٪ داخلی از هاست ایران (بدون وابستگی به اینترنت بین‌الملل) -->
+    <link rel="stylesheet" href="vendor/katex.min.css">
+    <script src="vendor/supabase.js"></script>
+    <script src="vendor/lucide.js"></script>
+    <script src="vendor/chart.js"></script>
+    <script src="vendor/confetti.js"></script>
+    <script src="vendor/katex.min.js"></script>
     <!-- 🎨 فایل استایل مرکزی (تمام ظاهر اپ در این فایل قرار می‌گیرد) -->
     <link rel="stylesheet" href="cssstyle.css">
 </head>
@@ -366,10 +368,6 @@
                             <p>خلاصه مأموریت‌ها، عادت‌ها و مرورهای امروز</p>
                         </div>
                     </div>
-                    <button class="streak-pill" onclick="ToolsModule.openWakeupChallenge()">
-                        <i data-lucide="flame" class="icon-sm"></i>
-                        <span id="homeStreakCount">0</span>
-                    </button>
                 </div>
 
                 <div class="kpi-grid-4">
@@ -533,10 +531,6 @@
                         <p id="todayDateLabel">برنامه مطالعاتی هوشمند قطب‌نما</p>
                     </div>
                 </div>
-                <button class="streak-pill" title="زنجیره بیداری شما" onclick="ToolsModule.openWakeupChallenge()">
-                    <i data-lucide="flame" class="icon-sm"></i>
-                    <span id="streakCount">0</span>
-                </button>
             </div>
 
             <!-- 🔒 صفحه قفل ویژه کاربران بدون اشتراک -->
@@ -1083,7 +1077,7 @@
                     <div class="module-icon-badge"><i data-lucide="layout-grid" class="icon"></i></div>
                     <div>
                         <h2>جعبه ابزار هوشمند قطب‌نما</h2>
-                        <p>ابزارک‌های کمکی برای مرور سریع، تمرکز و نظم روزانه</p>
+                        <p>ابزارهای تمرکز عمیق، مرور لایتنر و ردیابی عادت‌های کنکوری</p>
                     </div>
                 </div>
             </div>
@@ -1092,32 +1086,24 @@
                 <div class="tool-square-card" onclick="UI.openModal('flashcardModal')">
                     <div class="tool-square-icon indigo"><i data-lucide="layers" class="icon-lg"></i></div>
                     <div>
-                        <div class="tool-square-title">فلش‌کارت مرور سریع</div>
-                        <div class="tool-square-desc" id="toolFcCountLabel">مرور فرمول‌ها و نکات فرار کنکوری</div>
+                        <div class="tool-square-title">فلش‌کارت و لایتنر</div>
+                        <div class="tool-square-desc" id="toolFcCountLabel">مرور هوشمند فرمول‌ها و نکات به تفکیک فصل</div>
                     </div>
                 </div>
 
                 <div class="tool-square-card" onclick="UI.openModal('habitModal')">
-                    <div class="tool-square-icon accent"><i data-lucide="flame" class="icon-lg"></i></div>
+                    <div class="tool-square-icon accent"><i data-lucide="calendar-check" class="icon-lg"></i></div>
                     <div>
                         <div class="tool-square-title">ردیاب عادت‌ها</div>
-                        <div class="tool-square-desc">مدیریت و تیک زدن عادت‌های طلایی روزانه</div>
+                        <div class="tool-square-desc" id="toolHabitSummaryLabel">جدول پیوستگی هفتگی و آمار پایبندی</div>
                     </div>
                 </div>
 
                 <div class="tool-square-card" onclick="ToolsModule.openImmersiveTimer('تمرکز عمیق پومودورو', 45)">
                     <div class="tool-square-icon primary"><i data-lucide="timer" class="icon-lg"></i></div>
                     <div>
-                        <div class="tool-square-title">تایمر تمرکز و باران</div>
-                        <div class="tool-square-desc">تنفس هدایت‌شده + تایمر مطالعه و صدای محیطی</div>
-                    </div>
-                </div>
-
-                <div class="tool-square-card" onclick="ToolsModule.openWakeupChallenge()">
-                    <div class="tool-square-icon gold"><i data-lucide="sunrise" class="icon-lg"></i></div>
-                    <div>
-                        <div class="tool-square-title">چالش بیدارباش</div>
-                        <div class="tool-square-desc">ثبت بیداری صبحگاهی (۰۵:۰۰ تا ۰۷:۳۰) و مینی‌گیم</div>
+                        <div class="tool-square-title">تایمر تمرکز سینماتیک</div>
+                        <div class="tool-square-desc">پومودورو تمام‌صفحه با ۳ انیمیشن زنده و صدای باران</div>
                     </div>
                 </div>
 
@@ -1127,15 +1113,6 @@
                     <div>
                         <div class="tool-square-title">آزمونک روزانه</div>
                         <div class="tool-square-desc">کوییزهای ۵ سوالی سریع برای تثبیت مطالب</div>
-                    </div>
-                </div>
-
-                <div class="tool-square-card" onclick="UI.showToast('سالن مطالعه آنلاین گروهی در آپدیت بعدی فعال می‌شود.', 'info')">
-                    <span class="tool-soon-pill">به‌زودی</span>
-                    <div class="tool-square-icon success"><i data-lucide="users" class="icon-lg"></i></div>
-                    <div>
-                        <div class="tool-square-title">سالن مطالعه آنلاین</div>
-                        <div class="tool-square-desc">مطالعه همزمان در کنار رتبه‌های برتر راهینو</div>
                     </div>
                 </div>
             </div>
