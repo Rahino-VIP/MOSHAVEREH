@@ -27,7 +27,7 @@ const AuthModule = {
         const identity = UI.toEngDigits(rawInput);
 
         if (!identity || !password) {
-            return UI.showAlertBox('loginAlert', 'لطفاً شماره موبایل (یا کد ملی) و رمز عبور را وارد کنید.', 'error');
+            return UI.showAlertBox('loginAlert', 'لطفاً شماره موبایل و رمز عبور را وارد کنید.', 'error');
         }
 
         const btn = document.getElementById('btnLoginSubmit');
@@ -344,7 +344,7 @@ const AuthModule = {
         const identity = UI.toEngDigits(rawVal);
 
         if (!identity) {
-            return UI.showAlertBox('forgotModalAlert', 'لطفاً شماره موبایل یا کد ملی خود را وارد کنید.', 'error');
+            return UI.showAlertBox('forgotModalAlert', 'لطفاً شماره موبایل خود را وارد کنید.', 'error');
         }
 
         const btn = document.getElementById('btnForgotFetchQ');
