@@ -1,26 +1,25 @@
 /* ==========================================================================
-   💳 ماژول جامع فروشگاه، اشتراک پلاس و مشاوره با فعال‌سازی آنی (js/store.js)
+   💳 ماژول جامع فروشگاه، اشتراک پرو (بدون مشاور) و طرح‌های مشاوره (پلاس و VIP)
    شامل:
-   ۱. پکیج‌های قطب‌نما پلاس (۱ ماهه ۳۹۰ت، ۳ ماهه ۸۹۰ت، ۶ ماهه ۱۴۹۰ت) + طرح‌های مشاوره پایه
-   ۲. اعمال خودکار ۳۰٪ تخفیف «طرح الماس» روی مشاوره برای اعضای پانسیون
-   ۳. اعمال خودکار ۱۰۰,۰۰۰ تومان هدیه کد معرف (تخفیف خریدار + شارژ کیف پول معرف)
-   ۴. فعال‌سازی آنی اشتراک در دیتابیس (process_instant_checkout) بدون گوگل اسکریپت
-   ۵. تجمیع تمام قراردادهای فعال در بخش تعویض و ارتقای طرح (Trade-in)
+   ۱. نمایش هر ۳ سطح: اشتراک پرو (۳۹۰/۸۹۰/۱۴۹۰) + طرح پلاس مشاوره + طرح VIP مشاوره
+   ۲. بستن تمدید برای کسانی که اشتراک «تا روز کنکور» دارند ("این دیگه تهشه!")
+   ۳. فعال شدن گزینه پرداخت اقساطی فقط برای مبالغ بالای ۳ میلیون تومان
+   ۴. اعمال ۳۰٪ تخفیف طرح الماس پانسیون روی هر دو طرح مشاوره (پلاس و VIP)
+   ۵. فعال‌سازی آنی در دیتابیس + ارسال تصویر فیش به ربات بله
    ========================================================================== */
 
 const StoreModule = {
     catalogLoaded: false,
 
-    // تعرفه مصوب اشتراک قطب‌نما پلاس (بدون مشاور)
-    plusPricing: {
+    // تعرفه مصوب اشتراک قطب‌نما پرو (هوشمند - بدون مشاور)
+    proPricing: {
         '1': 390000,
         '3': 890000,
         '6': 1490000
     },
 
-    // وضعیت داخلی فروشگاه اصلی (register-step2)
     step2State: {
-        consultType: 'none', // 'پلاس' یا نوع طرح مشاوره از جدول services
+        consultType: 'none', // 'pro' (بدون مشاور) | 'plus' (مشاوره استاندارد) | 'vip' (مشاوره ویژه)
         durationVal: '1',
         durationMonths: 1,
         paymentMethod: 'cash',
@@ -32,11 +31,10 @@ const StoreModule = {
         finance: { base: 0, diamondDisc: 0, promoDisc: 0, timeDisc: 0, refDisc: 0, discount: 0, walletUsed: 0, final: 0, upfront: 0, installments: [] }
     },
 
-    // وضعیت داخلی تمدید اشتراک (Renew)
     renewState: {
         activeSub: null,
         serviceObj: null,
-        isPlusPlan: false,
+        isProPlan: false,
         startDate: null,
         maxMonths: 10,
         durationVal: '1',
@@ -49,7 +47,6 @@ const StoreModule = {
         finance: { base: 0, diamondDisc: 0, discount: 0, walletUsed: 0, newWallet: 0, final: 0, upfront: 0, installments: [] }
     },
 
-    // وضعیت داخلی تعویض و ارتقای طرح (Swap / Trade-in)
     swapState: {
         selectedPlanId: 'no_change',
         selectedPlanType: 'no_change',
@@ -78,9 +75,6 @@ const StoreModule = {
         }
     },
 
-    // ======================================================================
-    // 🔄 ۰. بارگذاری کاتالوگ خدمات، کدهای تخفیف، قوانین و تاریخ کنکور
-    // ======================================================================
     async ensureCatalogLoaded() {
         if (this.catalogLoaded && AppState.services.length > 0) return;
 
@@ -130,13 +124,29 @@ const StoreModule = {
         return null;
     },
 
-    isPlusType(planType) {
+    // تشخیص اینکه آیا طرح انتخاب‌شده «اشتراک پرو (بدون مشاور)» است یا خیر
+    isProType(planType) {
         const t = String(planType || '').trim().toLowerCase();
-        return t === 'پلاس' || t === 'plus';
+        return t === 'pro' || t === 'پرو';
     },
 
-    getTimeDiscountRate(durationVal, months, paymentMethod, isPlus = false) {
-        if (isPlus) return 0; // قیمت پکیج‌های ۳ ماهه و ۶ ماهه پلاس از قبل تخفیف‌دار و مقطوع است
+    // ارسال تصویر فیش واریزی به ربات بله در پس‌زمینه
+    sendReceiptToBale(nationalId, operationTitle, planName, durationStr, paidNow, receiptBase64) {
+        if (!receiptBase64 || typeof GAS_WEBAPP_URL === 'undefined') return;
+        try {
+            fetch(GAS_WEBAPP_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'send_bale_receipt',
+                    photo_base64: receiptBase64,
+                    caption: `🧾 فیش جدید قطب‌نما (${operationTitle})\n👤 دانش‌آموز: ${AppState.fullName} (${nationalId})\n🎯 طرح: ${planName} (${durationStr})\n💰 مبلغ واریزی الان: ${UI.formatMoney(paidNow)} تومان`
+                })
+            }).catch(() => {});
+        } catch (_) {}
+    },
+
+    getTimeDiscountRate(durationVal, months, paymentMethod, isPro = false) {
+        if (isPro) return 0;
         if (durationVal === 'konkur') {
             if (months >= 8) return paymentMethod === 'cash' ? 0.15 : 0.08;
             if (months >= 6) return paymentMethod === 'cash' ? 0.10 : 0.05;
@@ -267,7 +277,7 @@ const StoreModule = {
     },
 
     // ======================================================================
-    // 🟢 بخش ۱: ویترین اصلی خرید اشتراک (پلاس + طرح‌های مشاوره)
+    // 🟢 بخش ۱: ویترین اصلی خرید اشتراک (پرو + طرح پلاس مشاوره + طرح VIP مشاوره)
     // ======================================================================
     async initStep2View() {
         UI.showLoader('در حال بارگذاری طرح‌های قطب‌نما...');
@@ -291,7 +301,6 @@ const StoreModule = {
         AppState.studentGrade = normGrade;
         AppState.studentMajor = normMajor;
 
-        // بررسی عضویت فعال در پانسیون برای اعطای ۳۰٪ تخفیف «طرح الماس» روی مشاوره
         const userPhone = st?.phone_number || AppState.userPhone || targetNid;
         const { data: panSubs } = await supabaseClient
             .from('pan_monthly_subs')
@@ -308,7 +317,6 @@ const StoreModule = {
             badgeEl.innerHTML = `${st?.full_name || AppState.fullName} | پایه ${rawGrade} (${normMajor}) ${AppState.hasPansionActive ? '<span class="diamond-badge" style="margin-right:6px;">💎 مشمول ۳۰٪ تخفیف طرح الماس پانسیون</span>' : ''}`;
         }
 
-        // بررسی کد معرف (اگر در ثبت‌نام وارد کرده و هنوز از تخفیف اولین خرید استفاده نکرده است)
         this.step2State.hasReferral = false;
         const refCode = UI.toEngDigits(st?.invited_by || Storage.get('temp_referral_code'));
         if (refCode && refCode.trim().length > 0 && !st?.referral_rewarded) {
@@ -338,18 +346,18 @@ const StoreModule = {
         const grid = document.getElementById('step2ConsultPlansGrid');
         if (!grid) return;
 
-        // ۱. کارت اول: اشتراک قطب‌نما پلاس (بدون مشاور - دسترسی کامل به اپ)
-        const isPlusSelected = this.isPlusType(this.step2State.consultType);
+        // ۱. کارت اول: اشتراک قطب‌نما پرو (بدون مشاور - دسترسی کامل به ابزارها و برنامه هوشمند)
+        const isProSelected = this.isProType(this.step2State.consultType);
         let html = `
-            <div class="option-card ${isPlusSelected ? 'selected' : ''}"
-                 onclick="StoreModule.selectStep2Plan('پلاس')">
+            <div class="option-card ${isProSelected ? 'selected' : ''}"
+                 onclick="StoreModule.selectStep2Plan('pro')">
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <div class="opt-title">🚀 اشتراک قطب‌نما پلاس</div>
+                        <div class="opt-title">🚀 اشتراک قطب‌نما پرو (PRO)</div>
                         <span class="dur-badge">بدون مشاور</span>
                     </div>
-                    <div class="opt-desc">باز شدن کامل تمام امکانات هوشمند اپلیکیشن ویژه دانش‌آموزان خودخوان</div>
-                    <div class="opt-price">${UI.formatMoney(this.plusPricing['1'])} <small style="font-size:11px;color:var(--text-muted);">تومان / ماهانه</small></div>
+                    <div class="opt-desc">دسترسی نامحدود به تمام امکانات هوشمند اپلیکیشن ویژه محصلان خودخوان</div>
+                    <div class="opt-price">${UI.formatMoney(this.proPricing['1'])} <small style="font-size:11px;color:var(--text-muted);">تومان / ماهانه</small></div>
                     <ul class="features-list">
                         <li><i data-lucide="check" class="icon-sm primary-text"></i><span>ساخت نامحدود برنامه هفتگی هوشمند (منطبق با بودجه آزمون)</span></li>
                         <li><i data-lucide="check" class="icon-sm primary-text"></i><span>کلینیک تحلیل هوشمند هفتگی + آرشیو کامل نمودارها</span></li>
@@ -360,19 +368,18 @@ const StoreModule = {
             </div>
         `;
 
-        // ۲. کارت‌های مشاوره از جدول services متناسب با پایه و رشته
+        // ۲. کارت‌های مشاوره از جدول services (هم طرح پلاس PLUS و هم طرح VIP نمایش داده می‌شوند!)
         const availablePlans = (AppState.services || []).filter(x =>
             x.category === 'consult' &&
-            !this.isPlusType(x.type) &&
             Number(x.base_price) > 0 &&
             (x.target_grade === AppState.studentGrade || x.target_grade === 'all') &&
             (x.target_major === AppState.studentMajor || x.target_major === 'all')
-        );
+        ).sort((a, b) => (parseInt(a.base_price) || 0) - (parseInt(b.base_price) || 0));
 
         availablePlans.forEach(plan => {
             const rawPrice = parseInt(plan.base_price) || 0;
             const displayPrice = this.step2State.isDiamondEligible ? Math.round(rawPrice * 0.70) : rawPrice;
-            const isSelected = this.step2State.consultType === plan.type;
+            const isSelected = String(this.step2State.consultType).toLowerCase() === String(plan.type).toLowerCase();
             const cap = plan.capacity !== null && plan.capacity !== undefined ? parseInt(plan.capacity) : 99;
             const isFull = cap <= 0;
 
@@ -384,15 +391,19 @@ const StoreModule = {
                 ? `<div class="danger-text" style="font-size:11.5px;font-weight:800;margin-top:6px;">ظرفیت تکمیل</div>`
                 : `<div class="${cap <= 5 ? 'danger-text' : 'success-text'}" style="font-size:11.5px;font-weight:800;margin-top:6px;">ظرفیت باقی‌مانده: ${cap} نفر</div>`;
 
-            const featuresHtml = plan.features
-                ? `<ul class="features-list">${plan.features.split('\n').filter(Boolean).map(f => `<li><i data-lucide="check" class="icon-sm primary-text"></i><span>${f}</span></li>`).join('')}</ul>`
+            const cleanFeatures = (plan.features || '').split('\n').map(f => f.replace(/^✅\s*/, '').trim()).filter(Boolean);
+            const featuresHtml = cleanFeatures.length > 0
+                ? `<ul class="features-list">${cleanFeatures.map(f => `<li><i data-lucide="check" class="icon-sm primary-text"></i><span>${f}</span></li>`).join('')}</ul>`
                 : '';
 
             html += `
                 <div class="option-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled' : ''}"
                      ${isFull ? '' : `onclick="StoreModule.selectStep2Plan('${plan.type}')"`}>
                     <div>
-                        <div class="opt-title">${plan.title}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <div class="opt-title">${plan.title}</div>
+                            <span class="dur-badge gold">با مشاور</span>
+                        </div>
                         <div class="opt-desc">${plan.description || ''}</div>
                         ${diamondHtml}
                         <div class="opt-price">${UI.formatMoney(displayPrice)} <small style="font-size:11px;color:var(--text-muted);">تومان / ماه</small></div>
@@ -412,12 +423,10 @@ const StoreModule = {
         this.renderStep2PlanCards();
 
         const durGrid = document.getElementById('step2DurationGrid');
-        const paySwitch = document.getElementById('step2PayMethodSwitch');
-        const isPlus = this.isPlusType(planType);
+        const isPro = this.isProType(planType);
 
-        if (isPlus) {
+        if (isPro) {
             this.step2State.paymentMethod = 'cash';
-            if (paySwitch) paySwitch.style.display = 'none';
             if (durGrid) {
                 durGrid.innerHTML = `
                     <div class="duration-card active" onclick="StoreModule.selectStep2Duration('1', this)">
@@ -437,7 +446,6 @@ const StoreModule = {
                 `;
             }
         } else {
-            if (paySwitch) paySwitch.style.display = 'flex';
             const shamsiKDate = AppState.konkurDateObj
                 ? new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(AppState.konkurDateObj)
                 : 'روز کنکور';
@@ -508,7 +516,7 @@ const StoreModule = {
     calculateStep2Invoice() {
         if (this.step2State.consultType === 'none') return;
 
-        const isPlus = this.isPlusType(this.step2State.consultType);
+        const isPro = this.isProType(this.step2State.consultType);
         const dVal = String(this.step2State.durationVal);
         const durMonths = dVal === 'konkur' ? AppState.konkurDurationMonths : (parseFloat(dVal) || 1);
         this.step2State.durationMonths = durMonths;
@@ -516,20 +524,19 @@ const StoreModule = {
         let totalBase = 0;
         let diamondDisc = 0;
 
-        if (isPlus) {
-            totalBase = this.plusPricing[dVal] || 390000;
+        if (isPro) {
+            totalBase = this.proPricing[dVal] || 390000;
         } else {
             const planObj = (AppState.services || []).find(x =>
                 x.category === 'consult' &&
-                x.type === this.step2State.consultType &&
+                String(x.type).toLowerCase() === String(this.step2State.consultType).toLowerCase() &&
                 (x.target_grade === AppState.studentGrade || x.target_grade === 'all') &&
                 (x.target_major === AppState.studentMajor || x.target_major === 'all')
-            ) || (AppState.services || []).find(x => x.type === this.step2State.consultType);
+            ) || (AppState.services || []).find(x => String(x.type).toLowerCase() === String(this.step2State.consultType).toLowerCase());
 
             const monthlyPrice = planObj ? parseInt(planObj.base_price) : 0;
             totalBase = Math.round(monthlyPrice * durMonths);
 
-            // اعمال ۳۰٪ تخفیف طرح الماس ویژه اعضای پانسیون روی طرح‌های مشاوره
             if (this.step2State.isDiamondEligible) {
                 diamondDisc = Math.round(totalBase * 0.30);
             }
@@ -539,19 +546,30 @@ const StoreModule = {
         const promoDisc = Math.round(afterDiamond * this.step2State.promoRate);
         const afterPromo = Math.max(0, afterDiamond - promoDisc);
 
-        const timeRate = this.getTimeDiscountRate(dVal, durMonths, this.step2State.paymentMethod, isPlus);
+        // بررسی شرط ۳ میلیون تومان برای نمایش یا مخفی‌سازی دکمه اقساط (مورد ۳)
+        const refDisc = this.step2State.hasReferral ? 100000 : 0;
+        const curWallet = Number(AppState.studentData?.wallet_balance) || 0;
+        const approxPayable = Math.max(0, afterPromo - refDisc - curWallet);
+        const canUseInstallments = !isPro && approxPayable > 3000000;
+
+        const paySwitch = document.getElementById('step2PayMethodSwitch');
+        if (paySwitch) {
+            paySwitch.style.display = canUseInstallments ? 'flex' : 'none';
+        }
+        if (!canUseInstallments && this.step2State.paymentMethod === 'installments') {
+            this.step2State.paymentMethod = 'cash';
+            document.getElementById('btnStep2Cash')?.classList.add('active');
+            document.getElementById('btnStep2Installments')?.classList.remove('active');
+        }
+
+        const timeRate = this.getTimeDiscountRate(dVal, durMonths, this.step2State.paymentMethod, isPro);
         const timeDisc = Math.round(afterPromo * timeRate);
 
         let finalTotal = Math.max(0, afterPromo - timeDisc);
-
-        // اعمال ۱۰۰,۰۰۰ تومان هدیه کد معرف دوستان
-        const refDisc = this.step2State.hasReferral ? 100000 : 0;
         if (refDisc > 0) {
             finalTotal = Math.max(0, finalTotal - refDisc);
         }
 
-        // کسر از موجودی کیف پول (در صورت داشتن موجودی)
-        const curWallet = Number(AppState.studentData?.wallet_balance) || 0;
         const walletUsed = Math.min(curWallet, finalTotal);
         finalTotal -= walletUsed;
 
@@ -593,7 +611,7 @@ const StoreModule = {
         document.getElementById('step2InvTotal').innerText = `${UI.formatMoney(finalTotal)} تومان`;
 
         const instListEl = document.getElementById('step2InstallmentDetails');
-        if (!isPlus && this.step2State.paymentMethod === 'installments' && finalTotal > 0) {
+        if (canUseInstallments && this.step2State.paymentMethod === 'installments' && finalTotal > 3000000) {
             const sched = this.buildInstallmentsSchedule(finalTotal, durMonths, 1);
             this.step2State.finance.upfront = sched.upfront;
             this.step2State.finance.installments = sched.installments;
@@ -627,6 +645,7 @@ const StoreModule = {
         }
 
         try {
+            const targetNid = UI.toEngDigits(Storage.get('temp_reg_nid') || AppState.userId);
             const dVal = this.step2State.durationVal;
             const durStr = dVal === 'konkur' ? `تا کنکور (${this.step2State.durationMonths} ماهه)` : `${this.step2State.durationMonths} ماهه`;
 
@@ -636,7 +655,7 @@ const StoreModule = {
             }
             invoiceText += `مبلغ نهایی فاکتور: ${UI.formatMoney(this.step2State.finance.final)} تومان\n`;
 
-            const { data: res, error } = await supabaseClient.rpc('process_instant_checkout', {
+            const { error } = await supabaseClient.rpc('process_instant_checkout', {
                 p_invoice_type: 'ثبت‌نام جدید',
                 p_consult_tier: this.step2State.consultType,
                 p_con_duration: Number(this.step2State.durationMonths) || 1,
@@ -655,6 +674,9 @@ const StoreModule = {
             });
 
             if (error) throw new Error(error.message);
+
+            // ارسال تصویر فیش به بله ادمین
+            this.sendReceiptToBale(targetNid, 'خرید اشتراک جدید', this.step2State.consultType, durStr, this.step2State.finance.upfront, this.step2State.receiptBase64);
 
             Storage.remove('temp_reg_nid');
             Storage.remove('temp_referral_code');
@@ -676,7 +698,7 @@ const StoreModule = {
 
 
     // ======================================================================
-    // 🔵 بخش ۲: تمدید سریع اشتراک فعلی (با فعال‌سازی آنی)
+    // 🔵 بخش ۲: تمدید سریع اشتراک فعلی (بستن تمدید در صورت داشتن طرح تا کنکور)
     // ======================================================================
     async initRenewView() {
         const container = document.getElementById('storeRenewContainer');
@@ -709,13 +731,12 @@ const StoreModule = {
             ? Math.max(...allInst.map(i => parseInt(i.installment_number) || 0), 0)
             : 0;
 
-        // اگر کاربر هنوز اشتراک پلاس یا مشاوره ندارد -> هدایت به ویترین اصلی خرید اشتراک
         if (activeSubs.length === 0) {
             container.innerHTML = `
                 <div class="card-box center-card">
                     <div class="modal-icon-ring"><i data-lucide="sparkles" class="icon-lg"></i></div>
-                    <h3>خرید اشتراک قطب‌نما پلاس یا مشاوره</h3>
-                    <p class="muted-desc">شما در حال استفاده از نسخه رایگان هستید. برای مشاهده بسته‌های پلاس (۳۹۰ت ماهانه / ۸۹۰ت سه‌ماهه / ۱۴۹۰ت شش‌ماهه) و طرح‌های مشاوره، روی دکمه زیر بزنید.</p>
+                    <h3>خرید اشتراک قطب‌نما پرو یا مشاوره</h3>
+                    <p class="muted-desc">شما در حال استفاده از نسخه رایگان هستید. برای مشاهده اشتراک پرو (۳۹۰ت ماهانه) و طرح‌های مشاوره (پلاس و VIP)، روی دکمه زیر بزنید.</p>
                     <button type="button" class="btn-primary-full" onclick="AuthModule.goToBuySubscription()">
                         <i data-lucide="shopping-bag" class="icon"></i>
                         <span>مشاهده تعرفه‌ها و فعال‌سازی آنی اشتراک</span>
@@ -729,35 +750,54 @@ const StoreModule = {
         const latestSub = activeSubs[0];
         this.renewState.activeSub = latestSub;
         this.renewState.startDate = latestSub.end_date;
-        this.renewState.isPlusPlan = this.isPlusType(latestSub.service_type);
+        this.renewState.isProPlan = this.isProType(latestSub.service_type);
 
-        if (this.renewState.isPlusPlan) {
-            this.renewState.serviceObj = { title: 'اشتراک قطب‌نما پلاس', type: 'پلاس', base_price: 390000 };
+        if (this.renewState.isProPlan) {
+            this.renewState.serviceObj = { title: 'اشتراک قطب‌نما پرو (PRO)', type: 'pro', base_price: 390000 };
         } else {
             const srv = (AppState.services || []).find(s =>
                 s.category === 'consult' &&
-                s.type.toLowerCase() === String(latestSub.service_type).toLowerCase() &&
+                String(s.type).toLowerCase() === String(latestSub.service_type).toLowerCase() &&
                 (s.target_grade === AppState.studentGrade || s.target_grade === 'all') &&
                 (s.target_major === AppState.studentMajor || s.target_major === 'all')
-            ) || (AppState.services || []).find(s => s.category === 'consult' && s.type.toLowerCase() === String(latestSub.service_type).toLowerCase());
+            ) || (AppState.services || []).find(s => s.category === 'consult' && String(s.type).toLowerCase() === String(latestSub.service_type).toLowerCase());
 
-            this.renewState.serviceObj = srv || { title: `طرح مشاوره ${latestSub.service_type}`, type: latestSub.service_type, base_price: 2500000 };
+            this.renewState.serviceObj = srv || { title: `طرح مشاوره ${latestSub.service_type}`, type: latestSub.service_type, base_price: 1200000 };
         }
 
         const startD = latestSub.end_date ? new Date(latestSub.end_date) : new Date();
         const kDate = AppState.konkurDateObj || new Date('2027-07-01');
         const diffDays = Math.ceil((kDate - startD) / (1000 * 3600 * 24));
-        const maxMonths = Math.max(1, Math.round((diffDays / 30.41) * 10) / 10);
+        const maxMonths = Math.max(0, Math.round((diffDays / 30.41) * 10) / 10);
         this.renewState.maxMonths = maxMonths;
 
         const shamsiEndCurrent = startD.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
         const shamsiKonkur = kDate.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-        this.renewState.durationVal = '1';
+        // 🛑 مورد ۲: اگر دانش‌آموز طرح تا روز کنکور دارد، اجازه تمدید مجدد نده!
+        if (maxMonths <= 0.5) {
+            container.innerHTML = `
+                <div class="card-box center-card" style="padding:32px 20px;">
+                    <div class="modal-icon-ring success"><i data-lucide="trophy" class="icon-lg"></i></div>
+                    <h3 class="success-text" style="font-size:17px;">این دیگه تهشه! اشتراک شما تا روز کنکور فعاله 🚀</h3>
+                    <p class="muted-desc" style="margin-top:8px;">
+                        شما بالاترین بازه زمانی ممکن رو دارید و اعتبار <strong>${this.renewState.serviceObj.title}</strong> شما تا تاریخ <strong>${shamsiEndCurrent}</strong> (روز کنکور) کاملاً فعاله و نیازی به تمدید نداره!
+                    </p>
+                    <button type="button" class="btn-outline-full" style="max-width:260px; margin:0 auto;" onclick="Router.openSubPage('store-swap')">
+                        <i data-lucide="arrow-left-right" class="icon-sm"></i>
+                        <span>می‌خوام نوع طرحم رو ارتقا بدم</span>
+                    </button>
+                </div>
+            `;
+            UI.refreshIcons();
+            return;
+        }
+
+        this.renewState.durationVal = maxMonths >= 1 ? '1' : 'konkur';
         this.renewState.promoRate = 0;
         this.renewState.receiptBase64 = null;
 
-        const durationCardsHtml = this.renewState.isPlusPlan ? `
+        const durationCardsHtml = this.renewState.isProPlan ? `
             <div class="duration-card active" onclick="StoreModule.selectRenewDuration('1', this)">
                 <div class="dur-title">۱ ماهه</div>
                 <div class="dur-sub">۳۹۰,۰۰۰ تومان</div>
@@ -773,16 +813,20 @@ const StoreModule = {
                 <div class="dur-sub">۱,۴۹۰,۰۰۰ تومان</div>
             </div>
         ` : `
-            <div class="duration-card active" onclick="StoreModule.selectRenewDuration('1', this)">
-                <div class="dur-title">۱ ماهه</div>
-                <div class="dur-sub">تمدید یک ماهه</div>
-            </div>
-            <div class="duration-card" onclick="StoreModule.selectRenewDuration('3', this)">
-                <span class="dur-badge">۵٪ تخفیف</span>
-                <div class="dur-title">۳ ماهه</div>
-                <div class="dur-sub">تمدید فصلی</div>
-            </div>
-            <div class="duration-card" onclick="StoreModule.selectRenewDuration('konkur', this)">
+            ${maxMonths >= 1 ? `
+                <div class="duration-card active" onclick="StoreModule.selectRenewDuration('1', this)">
+                    <div class="dur-title">۱ ماهه</div>
+                    <div class="dur-sub">تمدید یک ماهه</div>
+                </div>
+            ` : ''}
+            ${maxMonths >= 3 ? `
+                <div class="duration-card" onclick="StoreModule.selectRenewDuration('3', this)">
+                    <span class="dur-badge">۵٪ تخفیف</span>
+                    <div class="dur-title">۳ ماهه</div>
+                    <div class="dur-sub">تمدید فصلی</div>
+                </div>
+            ` : ''}
+            <div class="duration-card ${maxMonths < 1 ? 'active' : ''}" onclick="StoreModule.selectRenewDuration('konkur', this)">
                 <span class="dur-badge gold">تخفیف ویژه</span>
                 <div class="dur-title">تا روز کنکور</div>
                 <div class="dur-sub">تا ${shamsiKonkur} (${maxMonths} ماه)</div>
@@ -817,7 +861,7 @@ const StoreModule = {
                 </div>
                 <div id="renewPromoMsg" class="promo-feedback"></div>
 
-                <div class="segmented-pills" id="renewPaySwitch" style="${this.renewState.isPlusPlan ? 'display:none;' : ''}">
+                <div class="segmented-pills" id="renewPaySwitch" style="display:none;">
                     <button type="button" class="pill-btn active" id="btnRenewCash" onclick="StoreModule.setRenewPayMethod('cash')">
                         <i data-lucide="credit-card" class="icon-sm"></i> پرداخت نقدی
                     </button>
@@ -923,8 +967,8 @@ const StoreModule = {
         let totalBase = 0;
         let diamondDisc = 0;
 
-        if (this.renewState.isPlusPlan) {
-            totalBase = this.plusPricing[dVal] || 390000;
+        if (this.renewState.isProPlan) {
+            totalBase = this.proPricing[dVal] || 390000;
         } else {
             const monthlyPrice = parseInt(this.renewState.serviceObj?.base_price) || 0;
             totalBase = Math.round(monthlyPrice * durMonths);
@@ -937,12 +981,24 @@ const StoreModule = {
         const promoDisc = Math.round(afterDiamond * this.renewState.promoRate);
         const netAfterPromo = Math.max(0, afterDiamond - promoDisc);
 
-        const timeRate = this.getTimeDiscountRate(dVal, durMonths, this.renewState.paymentMethod, this.renewState.isPlusPlan);
+        const curWallet = Number(AppState.studentData?.wallet_balance) || 0;
+        const approxPayable = Math.max(0, netAfterPromo - curWallet);
+        const canUseInstallments = !this.renewState.isProPlan && approxPayable > 3000000;
+
+        const paySwitch = document.getElementById('renewPaySwitch');
+        if (paySwitch) {
+            paySwitch.style.display = canUseInstallments ? 'flex' : 'none';
+        }
+        if (!canUseInstallments && this.renewState.paymentMethod === 'installments') {
+            this.renewState.paymentMethod = 'cash';
+            document.getElementById('btnRenewCash')?.classList.add('active');
+            document.getElementById('btnRenewInst')?.classList.remove('active');
+        }
+
+        const timeRate = this.getTimeDiscountRate(dVal, durMonths, this.renewState.paymentMethod, this.renewState.isProPlan);
         const timeDisc = Math.round(netAfterPromo * timeRate);
 
         let subTotal = Math.max(0, netAfterPromo - timeDisc);
-
-        const curWallet = Number(AppState.studentData?.wallet_balance) || 0;
         const walletUsed = Math.min(curWallet, subTotal);
         subTotal -= walletUsed;
 
@@ -969,7 +1025,7 @@ const StoreModule = {
         document.getElementById('renewInvTotal').innerText = `${UI.formatMoney(subTotal)} تومان`;
 
         const instEl = document.getElementById('renewInstDetails');
-        if (!this.renewState.isPlusPlan && this.renewState.paymentMethod === 'installments' && subTotal > 0) {
+        if (canUseInstallments && this.renewState.paymentMethod === 'installments' && subTotal > 3000000) {
             const sched = this.buildInstallmentsSchedule(subTotal, durMonths, this.renewState.lastInstNum + 1);
             this.renewState.finance.upfront = sched.upfront;
             this.renewState.finance.installments = sched.installments;
@@ -997,6 +1053,7 @@ const StoreModule = {
         if (btn) { btn.disabled = true; btn.innerHTML = '<span>در حال ثبت و تمدید آنی...</span>'; }
 
         try {
+            const uid = String(AppState.userId);
             const dVal = this.renewState.durationVal;
             const durTxt = dVal === 'konkur' ? `تا روز کنکور (${this.renewState.durationMonths} ماه)` : `${this.renewState.durationMonths} ماهه`;
             const invoiceText = `تمدید فوری اشتراک: طرح ${this.renewState.serviceObj.type} (${durTxt})`;
@@ -1020,6 +1077,8 @@ const StoreModule = {
             });
 
             if (error) throw new Error(error.message);
+
+            this.sendReceiptToBale(uid, 'تمدید اشتراک', this.renewState.serviceObj.type, durTxt, this.renewState.finance.upfront, this.renewState.receiptBase64);
 
             await AppCore.bootstrapLoggedInUser();
             Router.openSubPage('profile');
@@ -1074,7 +1133,7 @@ const StoreModule = {
                 <div class="card-box center-card">
                     <div class="modal-icon-ring"><i data-lucide="arrow-left-right" class="icon-lg"></i></div>
                     <h3>شما هنوز اشتراک فعالی برای تعویض ندارید</h3>
-                    <p class="muted-desc">ابتدا می‌توانید از بخش فروشگاه، اشتراک پلاس یا طرح مشاوره مد نظر خود را تهیه فرمایید.</p>
+                    <p class="muted-desc">ابتدا می‌توانید از بخش فروشگاه، اشتراک پرو یا طرح مشاوره مد نظر خود را تهیه فرمایید.</p>
                     <button type="button" class="btn-primary-full" onclick="AuthModule.goToBuySubscription()">
                         <i data-lucide="sparkles" class="icon"></i>
                         <span>مشاهده و خرید اشتراک</span>
@@ -1085,7 +1144,6 @@ const StoreModule = {
             return;
         }
 
-        // تجمیع تمام قراردادهای فعال
         let minStartDate = new Date(activeConsultSubs[0].start_date);
         let maxEndDate = new Date(activeConsultSubs[0].end_date);
         let sumActualPaid = 0;
@@ -1160,7 +1218,7 @@ const StoreModule = {
                 </div>
                 <div id="swapPromoMsg" class="promo-feedback"></div>
 
-                <div class="segmented-pills" id="swapPaySwitch">
+                <div class="segmented-pills" id="swapPaySwitch" style="display:none;">
                     <button type="button" class="pill-btn active" id="btnSwapCash" onclick="StoreModule.setSwapPayMethod('cash')">
                         <i data-lucide="credit-card" class="icon-sm"></i> پرداخت نقدی مابه‌التفاوت
                     </button>
@@ -1251,15 +1309,14 @@ const StoreModule = {
             </div>
         `;
 
-        // اگر طرح فعلی پلاس نیست، امکان تغییر به پلاس را هم نشان بده
-        if (!this.isPlusType(currType)) {
+        if (!this.isProType(currType)) {
             html += `
-                <div class="option-card ${this.swapState.selectedPlanId === 'plus_plan' ? 'selected' : ''}"
-                     onclick="StoreModule.selectSwapPlan('plus_plan', 'پلاس')">
+                <div class="option-card ${this.swapState.selectedPlanId === 'pro_plan' ? 'selected' : ''}"
+                     onclick="StoreModule.selectSwapPlan('pro_plan', 'pro')">
                     <div>
-                        <div class="opt-title">🚀 اشتراک قطب‌نما پلاس (بدون مشاور)</div>
+                        <div class="opt-title">🚀 اشتراک قطب‌نما پرو (بدون مشاور)</div>
                         <div class="opt-desc">تغییر به اشتراک هوشمند خودخوان</div>
-                        <div class="opt-price">${UI.formatMoney(this.plusPricing['1'])} <small style="font-size:11px;color:var(--text-muted);">تومان / ماه</small></div>
+                        <div class="opt-price">${UI.formatMoney(this.proPricing['1'])} <small style="font-size:11px;color:var(--text-muted);">تومان / ماه</small></div>
                     </div>
                 </div>
             `;
@@ -1267,9 +1324,8 @@ const StoreModule = {
 
         const allowedPlans = (AppState.services || []).filter(x =>
             x.category === 'consult' &&
-            !this.isPlusType(x.type) &&
             Number(x.base_price) > 0 &&
-            x.type.toLowerCase() !== currType &&
+            String(x.type).toLowerCase() !== currType &&
             (x.target_grade === AppState.studentGrade || x.target_grade === 'all') &&
             (x.target_major === AppState.studentMajor || x.target_major === 'all')
         );
@@ -1300,14 +1356,12 @@ const StoreModule = {
         this.renderSwapCards();
 
         const isNewPlan = planId !== 'no_change' && planId !== 'none';
-        const isPlus = this.isPlusType(planType);
+        const isPro = this.isProType(planType);
         const durGrid = document.getElementById('swapDurationGrid');
-        const paySwitch = document.getElementById('swapPaySwitch');
 
         if (isNewPlan && durGrid) {
-            if (isPlus) {
+            if (isPro) {
                 this.swapState.paymentMethod = 'cash';
-                if (paySwitch) paySwitch.style.display = 'none';
                 durGrid.innerHTML = `
                     <div class="duration-card active" onclick="StoreModule.selectSwapDuration('1', this)">
                         <div class="dur-title">۱ ماهه</div>
@@ -1323,7 +1377,6 @@ const StoreModule = {
                     </div>
                 `;
             } else {
-                if (paySwitch) paySwitch.style.display = 'flex';
                 durGrid.innerHTML = `
                     <div class="duration-card active" onclick="StoreModule.selectSwapDuration('1', this)">
                         <div class="dur-title">۱ ماهه</div>
@@ -1393,7 +1446,7 @@ const StoreModule = {
         const agg = this.swapState.aggregatedSub;
         if (!agg || this.swapState.selectedPlanId === 'no_change') return;
 
-        const isPlus = this.isPlusType(this.swapState.selectedPlanType);
+        const isPro = this.isProType(this.swapState.selectedPlanType);
         const dVal = String(this.swapState.durationVal);
         const conDur = dVal === 'konkur' ? AppState.konkurDurationMonths : (parseFloat(dVal) || 1);
         this.swapState.durationMonths = conDur;
@@ -1411,12 +1464,12 @@ const StoreModule = {
         const monthlyBaseValue = baseValue / totalMonths;
 
         const newSrv = (AppState.services || []).find(s => String(s.id) === String(this.swapState.selectedPlanId));
-        const newBaseMonthly = isPlus ? 390000 : (newSrv ? parseInt(newSrv.base_price) : 0);
+        const newBaseMonthly = isPro ? 390000 : (newSrv ? parseInt(newSrv.base_price) : 0);
 
         const oldSrv = (AppState.services || []).find(s =>
-            s.category === 'consult' && s.type.toLowerCase() === String(agg.service_type).toLowerCase()
+            s.category === 'consult' && String(s.type).toLowerCase() === String(agg.service_type).toLowerCase()
         );
-        const oldBaseMonthly = this.isPlusType(agg.service_type) ? 390000 : (oldSrv ? parseInt(oldSrv.base_price) : 0);
+        const oldBaseMonthly = this.isProType(agg.service_type) ? 390000 : (oldSrv ? parseInt(oldSrv.base_price) : 0);
 
         let valueConsumed = 0;
         if (this.swapState.selectedPlanId === 'none') {
@@ -1450,15 +1503,30 @@ const StoreModule = {
         let newCharge = 0;
         let diamondDisc = 0;
         if (this.swapState.selectedPlanId !== 'none') {
-            newCharge = isPlus ? (this.plusPricing[dVal] || 390000) : Math.round(newBaseMonthly * conDur);
-            if (!isPlus && AppState.hasPansionActive) {
+            newCharge = isPro ? (this.proPricing[dVal] || 390000) : Math.round(newBaseMonthly * conDur);
+            if (!isPro && AppState.hasPansionActive) {
                 diamondDisc = Math.round(newCharge * 0.30);
             }
         }
 
         const afterDiamond = Math.max(0, newCharge - diamondDisc);
         const promoDisc = Math.round(afterDiamond * this.swapState.promoRate);
-        const timeRate = this.getTimeDiscountRate(dVal, conDur, this.swapState.paymentMethod, isPlus);
+
+        const curWallet = Number(AppState.studentData?.wallet_balance) || 0;
+        const approxDiff = Math.max(0, afterDiamond - promoDisc + debtFromOldPlan - netRefund - curWallet);
+        const canUseInstallments = !isPro && this.swapState.selectedPlanId !== 'none' && approxDiff > 3000000;
+
+        const paySwitch = document.getElementById('swapPaySwitch');
+        if (paySwitch) {
+            paySwitch.style.display = canUseInstallments ? 'flex' : 'none';
+        }
+        if (!canUseInstallments && this.swapState.paymentMethod === 'installments') {
+            this.swapState.paymentMethod = 'cash';
+            document.getElementById('btnSwapCash')?.classList.add('active');
+            document.getElementById('btnSwapInst')?.classList.remove('active');
+        }
+
+        const timeRate = this.getTimeDiscountRate(dVal, conDur, this.swapState.paymentMethod, isPro);
         const timeDisc = Math.round(Math.max(0, afterDiamond - promoDisc) * timeRate);
         const otherDiscount = promoDisc + timeDisc;
 
@@ -1474,7 +1542,6 @@ const StoreModule = {
             }
         }
 
-        const curWallet = Number(AppState.studentData?.wallet_balance) || 0;
         let newWalletBalance = curWallet + transferredToWallet;
         let walletUsed = 0;
         if (subTotal > 0 && newWalletBalance > 0) {
@@ -1534,7 +1601,7 @@ const StoreModule = {
             bankBox.style.display = 'block';
             recBox.style.display = 'flex';
 
-            if (!isPlus && this.swapState.paymentMethod === 'installments' && conDur > 1) {
+            if (canUseInstallments && this.swapState.paymentMethod === 'installments' && this.swapState.finance.final > 3000000) {
                 const sched = this.buildInstallmentsSchedule(this.swapState.finance.final, conDur, this.swapState.lastInstNum + 1);
                 this.swapState.finance.upfront = sched.upfront;
                 this.swapState.finance.installments = sched.installments;
@@ -1562,6 +1629,7 @@ const StoreModule = {
         if (btn) { btn.disabled = true; btn.innerHTML = '<span>در حال اعمال فوری تغییرات...</span>'; }
 
         try {
+            const uid = String(AppState.userId);
             const invoiceText = `تعویض/لغو فوری طرح به: ${this.swapState.selectedPlanType}`;
 
             const { error } = await supabaseClient.rpc('process_instant_checkout', {
@@ -1583,6 +1651,10 @@ const StoreModule = {
             });
 
             if (error) throw new Error(error.message);
+
+            if (this.swapState.receiptBase64) {
+                this.sendReceiptToBale(uid, 'تعویض و ارتقای طرح', this.swapState.selectedPlanType, `${this.swapState.durationMonths} ماهه`, this.swapState.finance.upfront, this.swapState.receiptBase64);
+            }
 
             await AppCore.bootstrapLoggedInUser();
             Router.openSubPage('profile');
