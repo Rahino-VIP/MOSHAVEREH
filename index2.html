@@ -59,7 +59,7 @@
                 <div id="loginAlert" class="alert-box"></div>
 
                 <div class="form-group">
-                    <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل (یا کد ملی)</label>
+                    <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل</label>
                     <input type="tel" id="loginUsername" class="modern-input ltr-input" placeholder="0912..." maxlength="11" autocomplete="username">
                 </div>
 
@@ -87,25 +87,13 @@
         </section>
 
         <!-- ----------------------------------------------------------------------
-             📝 نما ۲: ثبت‌نام مرحله اول - تشکیل پرونده سریع (Register Step 1)
+             📝 نما ۲: ثبت‌نام سریع و ورود رایگان به قطب‌نما (Register Step 1)
              ---------------------------------------------------------------------- -->
         <section id="view-register-step1" class="auth-view">
             <div class="auth-box wide">
-                <div class="stepper-bar">
-                    <div class="step-item active">
-                        <span class="step-num">۱</span>
-                        <span class="step-label">تشکیل پرونده</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step-item">
-                        <span class="step-num">۲</span>
-                        <span class="step-label">انتخاب طرح و فعال‌سازی</span>
-                    </div>
-                </div>
-
                 <div class="auth-header">
-                    <h2>تشکیل پرونده در قطب‌نما</h2>
-                    <p>اطلاعات پایه خود را وارد کنید؛ سایر مشخصات را می‌توانید بعداً در پروفایل تکمیل نمایید.</p>
+                    <h2>ثبت‌نام سریع در قطب‌نمای راهینو</h2>
+                    <p>اطلاعات پایه خود را وارد کنید و بلافاصله وارد میز کار هوشمند خود شوید.</p>
                 </div>
 
                 <div id="regStep1Alert" class="alert-box"></div>
@@ -117,11 +105,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل دانش‌آموز (نام کاربری)</label>
+                        <label><i data-lucide="smartphone" class="icon-sm"></i> شماره موبایل دانش‌آموز</label>
                         <input type="tel" id="regPhone" class="modern-input ltr-input" placeholder="09..." maxlength="11">
                     </div>
 
-                    <!-- انتخاب پایه تحصیلی با دکمه‌های درون‌برنامه‌ای (بدون select مرورگر) -->
                     <div class="form-group full-col">
                         <label><i data-lucide="graduation-cap" class="icon-sm"></i> پایه تحصیلی</label>
                         <input type="hidden" id="regGrade" value="">
@@ -133,7 +120,6 @@
                         </div>
                     </div>
 
-                    <!-- انتخاب رشته تحصیلی با دکمه‌های درون‌برنامه‌ای -->
                     <div class="form-group full-col">
                         <label><i data-lucide="book-open" class="icon-sm"></i> رشته تحصیلی</label>
                         <input type="hidden" id="regMajor" value="">
@@ -154,7 +140,6 @@
                         <input type="password" id="regPassword" class="modern-input ltr-input" placeholder="حداقل ۶ حرف یا عدد">
                     </div>
 
-                    <!-- سوال امنیتی با دراپ‌داون اختصاصی درون‌برنامه‌ای -->
                     <div class="form-group full-col security-card">
                         <label><i data-lucide="shield-check" class="icon-sm"></i> سوال امنیتی (جهت بازیابی رمز عبور در آینده)</label>
                         <div class="custom-select-wrap" id="regSecQuestionWrap">
@@ -176,7 +161,7 @@
 
                 <div class="action-row">
                     <button class="btn-primary-full" id="btnRegStep1Submit" onclick="AuthModule.submitStep1()">
-                        <span>تایید و ادامه به مرحله بعد</span>
+                        <span>تایید و ورود رایگان به قطب‌نما</span>
                         <i data-lucide="arrow-left" class="icon"></i>
                     </button>
                     <button class="btn-outline-full" onclick="Router.goToAuthView('login')">
@@ -191,17 +176,6 @@
              ---------------------------------------------------------------------- -->
         <section id="view-register-step2" class="auth-view">
             <div class="auth-box wide">
-                <div class="stepper-bar">
-                    <div class="step-item done">
-                        <span class="step-num"><i data-lucide="check" class="icon-sm"></i></span>
-                        <span class="step-label">تشکیل پرونده</span>
-                    </div>
-                    <div class="step-line active"></div>
-                    <div class="step-item active">
-                        <span class="step-num">۲</span>
-                        <span class="step-label">انتخاب طرح و فعال‌سازی</span>
-                    </div>
-                </div>
 
                 <div class="auth-header">
                     <h2>انتخاب طرح مشاوره و برنامه‌ریزی قطب‌نما</h2>
@@ -262,6 +236,7 @@
                     <div class="invoice-rows">
                         <div class="inv-row"><span>هزینه پایه طرح مشاوره:</span><span id="step2InvBase">۰ تومان</span></div>
                         <div class="inv-row discount" id="step2RowPromoDisc" style="display:none;"><span>کد تخفیف:</span><span id="step2InvPromoDisc">- ۰ تومان</span></div>
+                        <div class="inv-row discount" id="step2RowDiamondDisc" style="display:none;"><span>💎 تخفیف ۳۰٪ طرح الماس (اعضای پانسیون):</span><span id="step2InvDiamondDisc">- ۰ تومان</span></div>
                         <div class="inv-row discount" id="step2RowTimeDisc" style="display:none;"><span>تخفیف زمانی طرح:</span><span id="step2InvTimeDisc">- ۰ تومان</span></div>
                         <div class="inv-row discount" id="step2RowRefDisc" style="display:none;"><span>هدیه کد معرف دوستان:</span><span id="step2InvRefDisc">- ۱۰۰,۰۰۰ تومان</span></div>
                         <div class="inv-total"><span>مبلغ کل فاکتور:</span><span id="step2InvTotal">۰ تومان</span></div>
@@ -314,7 +289,7 @@
                             <i data-lucide="check-circle-2" class="icon"></i>
                             <span>تایید نهایی و ثبت فاکتور</span>
                         </button>
-                        <button class="btn-outline-full" onclick="Router.goToAuthView('login')">انصراف و بازگشت</button>
+                        <button class="btn-outline-full" onclick="StoreModule.CancelStep2Checkout()">انصراف و بازگشت</button>
                     </div>
                 </div>
             </div>
@@ -1405,7 +1380,7 @@
 
             <!-- گام ۱: دریافت شماره موبایل -->
             <div id="forgotStep1Box">
-                <p>شماره موبایل (یا کد ملی) خود را وارد کنید تا سوال امنیتی شما نمایش داده شود.</p>
+                <p>شماره موبایل خود را وارد کنید تا سوال امنیتی شما نمایش داده شود.</p>
                 <input type="tel" id="forgotIdentityInput" class="modern-input ltr-input" placeholder="09..." style="margin-bottom:12px;">
                 <button type="button" class="btn-modal" id="btnForgotFetchQ" onclick="AuthModule.fetchSecurityQuestion()">دریافت سوال امنیتی</button>
             </div>
