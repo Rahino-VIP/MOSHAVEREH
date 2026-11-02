@@ -1070,3 +1070,98 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
     .eclipse-ring-stage { width: 195px; height: 195px; }
     .flip-card-unit { font-size: 46px; padding: 14px 18px; min-width: 95px; }
 }
+
+/* ==========================================================================
+   📱 ۱۳. بهینه‌سازی و ظریف‌سازی ابعاد و فونت‌ها برای صفحه موبایل (Compact Mobile UI)
+   ========================================================================== */
+.diamond-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(99, 102, 241, 0.18));
+    color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.45);
+    padding: 3px 9px; border-radius: 99px; font-size: 10.5px; font-weight: 900;
+}
+
+@media (max-width: 600px) {
+    body { font-size: 13px; padding-bottom: 84px; }
+    .app-shell { padding: 10px 10px; }
+
+    /* جمع‌وجور کردن آیکون‌ها */
+    .icon { width: 17px; height: 17px; }
+    .icon-sm { width: 14px; height: 14px; }
+    .icon-lg { width: 20px; height: 20px; }
+    .icon-xl { width: 26px; height: 26px; }
+
+    /* ظریف‌سازی صفحه ورود و ثبت‌نام */
+    .shell-container { padding: 14px 10px; }
+    .auth-box { padding: 22px 16px; border-radius: 22px; }
+    .logo-container { width: 76px; height: 76px; margin-bottom: 12px; }
+    .auth-title { font-size: 18px; }
+    .auth-subtitle { font-size: 11.5px; margin-bottom: 16px; }
+    .auth-header { margin-bottom: 16px; }
+    .auth-header h2 { font-size: 16.5px; }
+
+    /* ظریف‌سازی هدر خانه و نوار بالای تب‌ها */
+    .home-top-navbar { padding: 9px 12px; border-radius: 16px; margin-bottom: 12px; }
+    .avatar-ring { width: 38px; height: 38px; border-radius: 12px; }
+    .avatar-inner { font-size: 15px; border-radius: 10px; }
+    .greeting-col h1 { font-size: 13.5px; }
+    .greeting-meta { font-size: 10px; }
+    .nav-icon-btn { width: 36px; height: 36px; border-radius: 11px; }
+
+    .module-top-bar { padding: 10px 13px; border-radius: 16px; margin-bottom: 12px; }
+    .module-icon-badge { width: 34px; height: 34px; border-radius: 10px; }
+    .module-title-group h2, .module-title-group h3 { font-size: 13.5px; }
+    .module-title-group p { font-size: 10.5px; }
+
+    /* ظریف‌سازی کارت‌ها، فرم‌ها و دکمه‌ها */
+    .card-box, .course-card { padding: 13px 12px; border-radius: 16px; margin-bottom: 10px; }
+    .section-title { font-size: 13px; margin: 14px 0 9px 0; }
+    .section-inline-title { font-size: 12.5px; }
+
+    .modern-input, .custom-select-trigger { padding: 9px 12px; font-size: 12px; border-radius: 11px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { font-size: 11px; margin-bottom: 4px; }
+    .pill-btn { padding: 7px 9px; font-size: 11px; min-width: 72px; border-radius: 9px; }
+    .subtab-btn { padding: 8px 10px; font-size: 11px; border-radius: 10px; }
+
+    .btn-primary-full, .btn-outline-full, .btn-action { padding: 11px 14px; font-size: 13px; border-radius: 13px; }
+    .btn-dashed-add, .btn-danger-soft { padding: 10px; font-size: 12px; border-radius: 12px; }
+
+    /* کوچک‌تر کردن کارت‌های آمار (KPI) و مأموریت‌ها */
+    .kpi-grid-4 { gap: 8px; margin-bottom: 12px; }
+    .kpi-card { padding: 10px 11px; border-radius: 14px; gap: 3px; }
+    .kpi-top { font-size: 10.5px; }
+    .kpi-val { font-size: 15.5px; }
+    .kpi-sub { font-size: 9.5px; }
+
+    .quest-card { padding: 12px 13px; border-radius: 15px; margin-bottom: 9px; }
+    .quest-title { font-size: 13.5px; }
+    .quest-desc { font-size: 11px; }
+    .action-circle { width: 32px; height: 32px; border-radius: 10px; }
+
+    /* گرید ابزارها و فروشگاه در موبایل */
+    .tools-square-grid { gap: 10px; }
+    .tool-square-card { padding: 14px 12px; border-radius: 18px; aspect-ratio: 1 / 0.88; }
+    .tool-square-icon { width: 40px; height: 40px; border-radius: 12px; }
+    .tool-square-title { font-size: 13px; }
+    .tool-square-desc { font-size: 10.5px; }
+
+    .option-card { padding: 13px; border-radius: 16px; }
+    .opt-title { font-size: 14px; }
+    .opt-price { font-size: 15.5px; }
+    .duration-card { padding: 11px 10px; border-radius: 14px; }
+    .dur-title { font-size: 13.5px; }
+    .pay-now-amount { font-size: 20px; }
+
+    /* نوار ناوبری پایین جمع‌وجورتر */
+    .bottom-nav-wrap { bottom: 8px; width: calc(100% - 16px); padding: 4px 6px; border-radius: 18px; }
+    .bnav-item { padding: 5px 2px; gap: 2px; }
+    .bnav-item .bnav-icon-box { width: 32px; height: 24px; border-radius: 9px; }
+    .bnav-item span { font-size: 10px; }
+
+    /* مودال‌ها در موبایل */
+    .modal { padding: 18px 15px; border-radius: 20px; }
+    .modal-icon-ring { width: 46px; height: 46px; border-radius: 14px; margin-bottom: 10px; }
+    .modal h3 { font-size: 15.5px; }
+    .modal p { font-size: 12px; margin-bottom: 14px; }
+}
