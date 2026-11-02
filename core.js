@@ -8,6 +8,8 @@ const SUPABASE_URL = 'https://etlutqwwqeahevsskjih.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0bHV0cXd3cWVhaGV2c3NramloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYwNjIsImV4cCI6MjA5NzE5MjA2Mn0.kXvSQtGM7w28IffQ4JOtv_xtHenyDV0tC70bOd7N7nQ'; 
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// در خط ۹ فایل core.js (زیر SUPABASE_KEY) این خط را اضافه کنید:
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyUy08rtBxcRePHokg_FT0s_8e6Qj5Y1CcQXE5F_H0oX5VTvO7VhCs_KTfRp6xlKtynbA/exec';
 
 // ==========================================================================
 // 💾 ۱. مدیریت ایمن حافظه مرورگر (Storage Helpers)
@@ -437,7 +439,7 @@ const AppCore = {
                 }
             }
 
-            // تشخیص دقیق ۴ سطح اشتراک (Free, Plus, VIP, ProMax) و عضویت پانسیون
+            // تشخیص دقیق ۴ سطح اشتراک: 'free' | 'pro' (بدون مشاور) | 'plus' (مشاوره استاندارد) | 'vip' (مشاوره ویژه)
             AppState.subscriptions = conSubRes.data || [];
             const panSubs = panSubRes.data || [];
             AppState.hasPansionActive = panSubs.length > 0;
@@ -448,26 +450,29 @@ const AppCore = {
                 AppState.planType = stype;
                 AppState.isPlusOrHigher = true;
 
-                if (stype.includes('پلاس') || stype.includes('plus')) {
-                    AppState.accessTier = 'plus';
+                if (stype === 'pro' || stype.includes('پرو') || stype.includes('خودخوان')) {
+                    // اشتراک پرو (هوشمند بدون مشاور)
+                    AppState.accessTier = 'pro';
                     AppState.isConsultant = false;
-                    if (tierBadge) tierBadge.innerText = 'اشتراک قطب‌نما پلاس';
-                } else if (stype.includes('مکس') || stype.includes('max') || stype.includes('ویژه')) {
-                    AppState.accessTier = 'promax';
-                    AppState.isConsultant = true;
-                    if (tierBadge) tierBadge.innerText = `طرح مشاوره ${AppState.subscriptions[0].service_type}`;
-                } else {
+                    if (tierBadge) tierBadge.innerText = 'اشتراک قطب‌نما پرو';
+                } else if (stype.includes('vip') || stype.includes('مکس')) {
+                    // طرح مشاوره VIP
                     AppState.accessTier = 'vip';
                     AppState.isConsultant = true;
-                    if (tierBadge) tierBadge.innerText = `طرح مشاوره ${AppState.subscriptions[0].service_type}`;
+                    if (tierBadge) tierBadge.innerText = 'طرح مشاوره VIP';
+                } else {
+                    // طرح مشاوره پلاس (PLUS)
+                    AppState.accessTier = 'plus';
+                    AppState.isConsultant = true;
+                    if (tierBadge) tierBadge.innerText = 'طرح مشاوره پلاس';
                 }
             } else if (AppState.hasPansionActive) {
-                // اعضای ماهانه پانسیون به صورت خودکار سطح پلاس دارند
-                AppState.accessTier = 'plus';
+                // اعضای ماهانه پانسیون به صورت خودکار اشتراک پرو (بدون مشاور) دارند
+                AppState.accessTier = 'pro';
                 AppState.isPlusOrHigher = true;
                 AppState.isConsultant = false;
-                AppState.planType = 'plus';
-                if (tierBadge) tierBadge.innerText = 'قطب‌نما پلاس (هدیه پانسیون)';
+                AppState.planType = 'pro';
+                if (tierBadge) tierBadge.innerText = 'قطب‌نما پرو (هدیه پانسیون)';
             } else {
                 AppState.accessTier = 'free';
                 AppState.isPlusOrHigher = false;
@@ -475,7 +480,7 @@ const AppCore = {
                 AppState.planType = 'free';
                 if (tierBadge) tierBadge.innerText = 'نسخه رایگان (۱ بار تست هدیه)';
             }
-
+           
             AppState.dailyReports = repRes.data || [];
             AppState.completedDates = AppState.dailyReports.map(r => r.report_date);
             AppState.allSchedules = schRes.data || [];
