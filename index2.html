@@ -28,9 +28,26 @@
     <!-- ==========================================================================
          🔔 ۱. المان‌های سراسری: لودر اولیه و نوتیفیکیشن درون‌برنامه‌ای (Toast)
          ========================================================================== -->
+    <!-- 🔔 ۱. اسکلتون اسکرین سراسری (جایگزین دایره چرخان قدیمی برای حس سرعت بالا) -->
     <div id="globalLoader" class="page-loader">
-        <div class="spinner"></div>
-        <p class="loader-text">در حال همگام‌سازی قطب‌نما...</p>
+        <div class="skeleton-screen-wrap">
+            <div class="sk-header-card">
+                <div class="sk-avatar sk-shimmer"></div>
+                <div class="sk-lines">
+                    <div class="sk-line w-60 sk-shimmer"></div>
+                    <div class="sk-line w-40 sk-shimmer"></div>
+                </div>
+            </div>
+            <div class="sk-hero-box sk-shimmer"></div>
+            <div class="sk-grid-4">
+                <div class="sk-kpi sk-shimmer"></div>
+                <div class="sk-kpi sk-shimmer"></div>
+                <div class="sk-kpi sk-shimmer"></div>
+                <div class="sk-kpi sk-shimmer"></div>
+            </div>
+            <div class="sk-list-box sk-shimmer"></div>
+            <p class="loader-text" style="margin-top:14px;">در حال آماده‌سازی میز کار قطب‌نما...</p>
+        </div>
     </div>
 
     <div id="appToast" class="app-toast" role="status" aria-live="polite">
