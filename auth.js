@@ -143,8 +143,16 @@ const AuthModule = {
 
     async ensureStudentRecordExists(identity, password, loggedInDomain) {
         try {
-            await supabaseClient.rpc('resolve_and_sync_student_login', { p_identity: identity });
-        } catch (_) {}
+            const { data: syncedStudent, error: rpcErr } = await supabaseClient.rpc('sync_pansion_user_to_students', {
+                p_identity: String(identity),
+                p_password: String(password || '123456')
+            });
+            if (!rpcErr && syncedStudent && syncedStudent.national_id) {
+                return syncedStudent;
+            }
+        } catch (e) {
+            console.warn("RPC sync warning:", e);
+        }
 
         const { data: existingStudents } = await supabaseClient
             .from('students')
@@ -152,50 +160,18 @@ const AuthModule = {
             .or(`national_id.eq.${identity},phone_number.eq.${identity}`)
             .limit(1);
 
-        if (existingStudents && existingStudents.length > 0 && existingStudents[0].national_id === identity) {
+        if (existingStudents && existingStudents.length > 0) {
             return existingStudents[0];
         }
 
-        let pansionUser = null;
-        const { data: uData } = await supabaseClient
-            .from('users')
-            .select('*')
-            .or(`phone_number.eq.${identity},national_id.eq.${identity}`)
-            .limit(1);
-
-        if (uData && uData.length > 0) {
-            pansionUser = uData[0];
-        }
-
-        const randomRef = 'RH-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-        const normalizedGrade = pansionUser?.grade && ['دهم', 'یازدهم', 'دوازدهم', 'پشت کنکوری'].includes(pansionUser.grade)
-            ? pansionUser.grade
-            : 'دوازدهم';
-        const normalizedMajor = pansionUser?.major && pansionUser.major.includes('ریاضی')
-            ? 'ریاضی'
-            : (pansionUser?.major && pansionUser.major.includes('انسانی') ? 'انسانی' : 'تجربی');
-
-        const newStudentPayload = {
-            full_name: pansionUser?.full_name || 'دانش‌آموز راهینو',
+        return {
+            full_name: 'دانش‌آموز راهینو',
             national_id: identity,
-            phone_number: pansionUser?.phone_number || (identity.length === 11 ? identity : '09000000000'),
-            grade: normalizedGrade,
-            major: normalizedMajor,
-            password: password || pansionUser?.password || '123456',
-            security_question: pansionUser?.security_question || 'نام بهترین دوست دوران کودکی شما چیست؟',
-            security_answer: pansionUser?.security_answer || 'راهینو',
-            referral_code: pansionUser?.referral_code || randomRef,
-            wallet_balance: Number(pansionUser?.wallet_balance) || 0,
+            phone_number: identity,
+            grade: 'دوازدهم',
+            major: 'تجربی',
             status: 'active'
         };
-
-        const { data: insertedStudent } = await supabaseClient
-            .from('students')
-            .upsert([newStudentPayload], { onConflict: 'national_id' })
-            .select('*')
-            .single();
-
-        return insertedStudent || newStudentPayload;
     },
 
     async tryLegacyMigrationLogin(identity, password) {
@@ -295,7 +271,7 @@ const AuthModule = {
                 security_answer: secAnswer,
                 referral_code: randomRef,
                 invited_by: referralInput || null,
-                status: 'active' // ورود فوری با سطح دسترسی رایگان
+                status: 'active'
             };
 
             const { error: upsertErr } = await supabaseClient
@@ -303,6 +279,19 @@ const AuthModule = {
                 .upsert([studentPayload], { onConflict: 'national_id' });
 
             if (upsertErr) throw new Error('خطا در ذخیره پرونده: ' + upsertErr.message);
+
+            // ارسال پیام اطلاع‌رسانی ثبت‌نام دانش‌آموز جدید به بله
+            try {
+                if (typeof GAS_WEBAPP_URL !== 'undefined') {
+                    fetch(GAS_WEBAPP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'send_bale_message',
+                            text: `🎉 ثبت‌نام دانش‌آموز جدید در قطب‌نما\n👤 نام: ${fullName}\n📱 موبایل: ${phone}\n🎓 پایه و رشته: ${grade} - ${major}${referralInput ? `\n🎁 کد معرف: ${referralInput}` : ''}`
+                        })
+                    }).catch(() => {});
+                }
+            } catch (_) {}
 
             Storage.set('qotbnama_user_id', phone);
             Storage.set('national_id', phone);
@@ -323,12 +312,12 @@ const AuthModule = {
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>تایید و ورود به برنامه</span><i data-lucide="arrow-left" class="icon"></i>';
+                btn.innerHTML = '<span>تایید و ورود رایگان به قطب‌نما</span><i data-lucide="arrow-left" class="icon"></i>';
                 UI.refreshIcons();
             }
         }
     },
-
+   
     // هدایت به فروشگاه برای خرید یا ارتقای اشتراک (پلاس / مشاوره)
     goToBuySubscription() {
         const currentIdentity = AppState.userId || Storage.get('qotbnama_user_id');
