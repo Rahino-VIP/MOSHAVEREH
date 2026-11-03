@@ -1255,3 +1255,84 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   🗂️ ۱۵. استایل‌های صفحه کامل فلش‌کارت و استودیو لایتنر (#view-flashcards)
+   ========================================================================== */
+.fc-hero-launch {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--primary-fade) 100%);
+    border: 2px solid var(--primary); border-radius: 22px;
+    padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+}
+.fc-launch-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin: 14px 0; background: var(--surface); padding: 12px;
+    border-radius: 16px; border: 1px solid var(--border); text-align: center;
+}
+.fc-launch-stat-item small { display: block; font-size: 10.5px; color: var(--text-muted); font-weight: 800; margin-bottom: 3px; }
+.fc-launch-stat-item strong { font-size: 17px; font-weight: 900; color: var(--text-main); }
+
+.leitner-pipeline-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 14px;
+}
+@media (max-width: 520px) { .leitner-pipeline-grid { grid-template-columns: repeat(3, 1fr); } }
+.leitner-pipe-box {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px 6px; text-align: center; position: relative;
+}
+.leitner-pipe-box.new-pool { border-style: dashed; border-color: var(--indigo); background: var(--indigo-fade); }
+.leitner-pipe-box.mastered { border-color: var(--success); background: var(--success-fade); }
+.leitner-pipe-box .box-title { font-size: 11px; font-weight: 900; color: var(--text-main); display: block; }
+.leitner-pipe-box .box-sub { font-size: 9.5px; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px; }
+.leitner-pipe-box .box-count { font-size: 16px; font-weight: 900; color: var(--primary); }
+
+/* نمودار ۷ روز گذشته مرور فلش‌کارت */
+.fc-history-bars {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    align-items: end; height: 120px; padding: 14px 8px 6px 8px;
+    background: var(--surface-2); border-radius: 16px; border: 1px solid var(--border);
+}
+.fc-hist-col { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.fc-hist-bar-wrap { width: 100%; max-width: 26px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 6px; overflow: hidden; background: var(--surface); }
+.fc-hist-bar-fill { width: 100%; background: linear-gradient(180deg, var(--primary), var(--success)); border-radius: 6px; transition: height 0.4s ease; min-height: 4px; }
+.fc-hist-val { font-size: 10px; font-weight: 900; color: var(--primary); }
+.fc-hist-day { font-size: 9.5px; font-weight: 800; color: var(--text-muted); }
+
+/* پخش‌کننده متمرکز مرور تک‌به‌تک (Focus Review Session) */
+.fc-review-session-box {
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 24px; padding: 20px 18px; box-shadow: var(--shadow);
+}
+.fc-session-stage {
+    perspective: 1100px; width: 100%; min-height: 240px; margin: 16px 0; cursor: pointer;
+}
+.fc-session-inner {
+    position: relative; width: 100%; min-height: 240px;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+.fc-session-stage.flipped .fc-session-inner { transform: rotateY(180deg); }
+.fc-session-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 22px; padding: 24px 20px;
+    display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+    border: 2px solid var(--primary); background: linear-gradient(145deg, var(--surface-2), var(--primary-fade));
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.05); overflow-y: auto;
+}
+.fc-session-face.back {
+    transform: rotateY(180deg); border-color: var(--accent);
+    background: linear-gradient(145deg, var(--surface-2), var(--accent-fade));
+}
+.fc-face-content {
+    font-size: 16px; font-weight: 900; color: var(--text-main);
+    line-height: 1.9; text-align: center; my: auto; width: 100%;
+}
+
+/* دستیار فرمول‌ساز پرکردنی (بدون کدنویسی) */
+.formula-builder-Assistant {
+    background: var(--surface); border: 1.5px solid var(--primary);
+    border-radius: 14px; padding: 12px; margin-bottom: 10px; display: none;
+}
+.formula-builder-Assistant.open { display: block; animation: fadeSlideUp 0.2s ease-out; }
+.fb-inputs-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+.fb-inputs-row input { flex: 1; min-width: 90px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-main); font-weight: 800; text-align: center; direction: ltr; }
