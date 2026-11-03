@@ -11,73 +11,28 @@
    ========================================================================== */
 
 const ToolsModule = {
-    // ۱. داده‌های ردیاب عادت‌ها
     habitsList: [],
     habitsLogs: {},
     habitViewMode: 'weekly',
     habitAdherenceChart: null,
 
-    // ۲. داده‌های سیستم جامع فلش‌کارت و لایتنر
     flashcards: [],
     publicDecks: [],
-    chaptersBySubject: {}, // { "حسابان ۲": ["فصل ۱: ...", "فصل ۲: ..."] }
+    chaptersBySubject: {},
     leitnerSettings: {
-        daily_new_limit: 10,
-        new_filter_subject: 'all',
-        review_history: {} // { "1405/08/13": { reviewed: 12, correct: 10, wrong: 2 } }
+        daily_new_limit: 8,
+        imported_decks: [],
+        review_history: {}
     },
-    fcPageTab: 'dashboard', // 'dashboard' | 'create' | 'library'
+    fcPageTab: 'dashboard',
     inReviewSession: false,
+    isFreePractice: false, // تفکیک مرور رسمی لایتنر از مرور آزاد
     dueQueue: [],
     currentDueIndex: 0,
     sessionStats: { total: 0, done: 0, correct: 0, wrong: 0 },
     activeLatexTarget: 'inpFcFront',
     activeBuilderType: null,
 
-    // دیکشنری امن فرمول‌های ریاضی، فیزیک و شیمی (بدون باگ اسکیپ در HTML)
-    latexSnippets: {
-        frac: String.raw`$\frac{a}{b}$`,
-        sqrt: String.raw`$\sqrt{x}$`,
-        nthroot: String.raw`$\sqrt[n]{x}$`,
-        pow: String.raw`$x^{2}$`,
-        sub: String.raw`$x_{1}$`,
-        lim: String.raw`$\lim_{x \to 0} f(x)$`,
-        int: String.raw`$\int_{a}^{b} f(x)\,dx$`,
-        deriv: String.raw`$\left(\frac{u}{v}\right)' = \frac{u'v - v'u}{v^2}$`,
-        log: String.raw`$\log_{a}(b)$`,
-        sin: String.raw`$\sin(\theta)$`,
-        cos: String.raw`$\cos(\theta)$`,
-        vec: String.raw`$\vec{F} = m\vec{a}$`,
-        Delta: String.raw`$\Delta x$`,
-        eq_arrow: String.raw`$\rightleftharpoons$`,
-        heat_arrow: String.raw`$\xrightarrow{\Delta}$`,
-        h3o: String.raw`$[\text{H}_3\text{O}^+]$`,
-        ph: String.raw`$\text{pH} = -\log[\text{H}^+]$`,
-        neq: String.raw`$\neq$`,
-        leq: String.raw`$\leq$`,
-        geq: String.raw`$\geq$`,
-        implies: String.raw`$\Rightarrow$`
-    },
-
-    // فصل‌های استاندارد پیش‌فرض (در کنار فصل‌های جدول knowledge_graph)
-    defaultChaptersMap: {
-        'حسابان ۲': ['فصل ۱: تابع', 'فصل ۲: مثلثات', 'فصل ۳: حد و پیوستگی', 'فصل ۴: مشتق', 'فصل ۵: کاربرد مشتق'],
-        'حسابان ۱': ['فصل ۱: جبر و معادله', 'فصل ۲: تابع', 'فصل ۳: توابع نمایی و لگاریتمی', 'فصل ۴: مثلثات', 'فصل ۵: حد و پیوستگی'],
-        'ریاضی ۳': ['فصل ۱: تابع', 'فصل ۲: مثلثات', 'فصل ۳: حد بی‌نهایت', 'فصل ۴: مشتق', 'فصل ۵: کاربرد مشتق', 'فصل ۶: هندسه', 'فصل ۷: احتمال'],
-        'ریاضیات گسسته': ['فصل ۱: آشنایی با نظریه اعداد', 'فصل ۲: گراف و مدل‌سازی', 'فصل ۳: ترکیبیات (شمارش)'],
-        'هندسه ۳': ['فصل ۱: ماتریس و کاربردها', 'فصل ۲: مقاطع مخروطی', 'فصل ۳: بردارها'],
-        'فیزیک ۳': ['فصل ۱: حرکت بر خط راست', 'فصل ۲: دینامیک', 'فصل ۳: نوسان و امواج', 'فصل ۴: فیزیک اتمی و هسته‌ای'],
-        'فیزیک ۲': ['فصل ۱: الکتریسیته ساکن', 'فصل ۲: جریان الکتریکی و مدارها', 'فصل ۳: مغناطیس و القای الکترومغناطیسی'],
-        'فیزیک ۱': ['فصل ۱: فیزیک و اندازه‌گیری', 'فصل ۲: ویژگی‌های فیزیکی مواد (فشار)', 'فصل ۳: کار، انرژی و توان', 'فصل ۴: دما و گرما'],
-        'شیمی ۳': ['فصل ۱: مولکول‌ها در خدمت تندرستی', 'فصل ۲: آسایش و رفاه در سایه شیمی', 'فصل ۳: شیمی جلوه‌ای از هنر و زیبایی', 'فصل ۴: شیمی راهی به سوی آینده‌ای روشن‌تر'],
-        'شیمی ۲': ['فصل ۱: قدر هدایای زمینی را بدانیم', 'فصل ۲: در پی غذای سالم', 'فصل ۳: پوشاک نیازی پایان‌ناپذیر'],
-        'شیمی ۱': ['فصل ۱: کیهان زادگاه عنصرها', 'فصل ۲: ردپای گازها در زندگی', 'فصل ۳: آب، آهنگ زندگی'],
-        'زیست‌شناسی ۳': ['فصل ۱: مولکول‌های اطلاعاتی', 'فصل ۲: جریان اطلاعات در یاخته', 'فصل ۳: انتقال اطلاعات در نسل‌ها', 'فصل ۴: تغییر در اطلاعات وراثتی', 'فصل ۵: از ماده به انرژی', 'فصل ۶: از انرژی به ماده', 'فصل ۷: فناوری‌های نوین زیستی', 'فصل ۸: رفتارهای جانوران'],
-        'زیست‌شناسی ۲': ['فصل ۱: تنظیم عصبی', 'فصل ۲: حواس', 'فصل ۳: دستگاه حرکتی', 'فصل ۴: تنظیم شیمیایی', 'فصل ۵: ایمنی', 'فصل ۶: تقسیم یاخته', 'فصل ۷: تولیدمثل', 'فصل ۸: تولیدمثل نهاندانگان', 'فصل ۹: پاسخ گیاهان به محرک‌ها'],
-        'زیست‌شناسی ۱': ['فصل ۱: دنیای زنده', 'فصل ۲: گوارش و جذب مواد', 'فصل ۳: تبادلات گازی', 'فصل ۴: گردش مواد در بدن', 'فصل ۵: تنظیم اسمزی و دفع', 'فصل ۶: از یاخته تا گیاه', 'فصل ۷: جذب و انتقال مواد در گیاهان']
-    },
-
-    // ۳. وضعیت تایمر تمام‌صفحه سینماتیک
     pomoConfig: { studyMins: 45, breakMins: 10, totalRounds: 3, theme: 'eclipse' },
     pomoRuntime: {
         isRunning: false,
@@ -94,9 +49,6 @@ const ToolsModule = {
     activeQuestBlockId: null,
     gameTimerInterval: null,
 
-    // ======================================================================
-    // 🚀 ۱. راه‌اندازی اولیه و بارگذاری داده‌های ابزارها و فصل‌های دروس
-    // ======================================================================
     async init() {
         this.ensureFullFlashcardViewInjected();
         this.injectEnhancedToolModals();
@@ -106,7 +58,7 @@ const ToolsModule = {
         UI.refreshIcons();
     },
 
-    // رندر فرمول‌های ریاضی و شیمی با KaTeX (پشتیبانی از $...$ و $$...$$)
+    // ✅ رفع باگ خراب شدن SVG رادیکال در KaTeX (جایگزینی \n قبل از رندر KaTeX)
     renderMathInHtml(rawText) {
         if (!rawText) return '';
         let safe = String(rawText)
@@ -114,19 +66,27 @@ const ToolsModule = {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
+        const mathBlocks = [];
         if (window.katex) {
             safe = safe.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
                 try {
-                    return window.katex.renderToString(tex.trim(), { displayMode: true, throwOnError: false });
+                    const html = window.katex.renderToString(tex.trim(), { displayMode: true, throwOnError: false });
+                    mathBlocks.push(html);
+                    return `@@MATH_${mathBlocks.length - 1}@@`;
                 } catch (_) { return `$$${tex}$$`; }
             });
             safe = safe.replace(/\$([^$\n]+?)\$/g, (_, tex) => {
                 try {
-                    return window.katex.renderToString(tex.trim(), { displayMode: false, throwOnError: false });
+                    const html = window.katex.renderToString(tex.trim(), { displayMode: false, throwOnError: false });
+                    mathBlocks.push(html);
+                    return `@@MATH_${mathBlocks.length - 1}@@`;
                 } catch (_) { return `$${tex}$`; }
             });
         }
-        return safe.replace(/\n/g, '<br>');
+
+        safe = safe.replace(/\n/g, '<br>');
+        safe = safe.replace(/@@MATH_(\d+)@@/g, (_, idx) => mathBlocks[Number(idx)] || '');
+        return safe;
     },
 
     getShamsiDateStr(daysOffset = 0) {
@@ -153,42 +113,18 @@ const ToolsModule = {
             { id: 'h_phone', title: 'کنترل گوشی زیر ۱.۵ ساعت', icon: 'shield-check' },
             { id: 'h_report', title: 'ثبت گزارش عملکرد شبانه', icon: 'check-square' }
         ];
-        const todayStr = this.getShamsiDateStr(0);
-        const defaultCards = [
-            {
-                id: 'fc_1',
-                subject: 'حسابان ۲',
-                chapter: 'فصل ۴: مشتق',
-                front: String.raw`مشتق تابع کسری $\frac{u}{v}$ برابر است با:`,
-                back: String.raw`$$\left(\frac{u}{v}\right)' = \frac{u'v - v'u}{v^2}$$`,
-                box: 1,
-                nextReview: todayStr,
-                streak: 0
-            },
-            {
-                id: 'fc_2',
-                subject: 'شیمی ۳',
-                chapter: 'فصل ۱: مولکول‌ها در خدمت تندرستی',
-                front: String.raw`فرمول محاسبه $\text{pH}$ محلول اسیدی چیست؟`,
-                back: String.raw`$$\text{pH} = -\log[\text{H}_3\text{O}^+]$$`,
-                box: 1,
-                nextReview: todayStr,
-                streak: 0
-            }
-        ];
 
         this.habitsList = JSON.parse(Storage.get(localHabitsKey, 'null')) || defaultHabits;
         this.habitsLogs = JSON.parse(Storage.get(localLogsKey, 'null')) || {};
-        this.flashcards = JSON.parse(Storage.get(localFcKey, 'null')) || defaultCards;
+        this.flashcards = JSON.parse(Storage.get(localFcKey, 'null')) || [];
         const savedCfg = JSON.parse(Storage.get(localSetKey, 'null')) || {};
         this.leitnerSettings = {
-            daily_new_limit: parseInt(savedCfg.daily_new_limit, 10) || 10,
-            new_filter_subject: savedCfg.new_filter_subject || 'all',
+            daily_new_limit: Math.min(15, parseInt(savedCfg.daily_new_limit, 10) || 8),
+            imported_decks: Array.isArray(savedCfg.imported_decks) ? savedCfg.imported_decks : [],
             review_history: savedCfg.review_history || {}
         };
 
-        this.chaptersBySubject = { ...this.defaultChaptersMap };
-
+        this.chaptersBySubject = {};
         if (!uid) return;
 
         try {
@@ -198,25 +134,35 @@ const ToolsModule = {
             const [userToolsRes, decksRes, kgRes] = await Promise.all([
                 supabaseClient.from('student_tools_data').select('*').eq('national_id', uid).maybeSingle(),
                 supabaseClient.from('public_flashcard_decks').select('*').eq('is_active', true),
-                supabaseClient.from('knowledge_graph').select('book_name, chapter_num, chapter_name').eq('grade', grade).eq('major', major)
+                supabaseClient.from('knowledge_graph').select('book_name, chapter_num, chapter_name').eq('grade', grade).eq('major', major).eq('plan_type', 'micro').order('id', { ascending: true })
             ]);
 
             if (decksRes.data) {
                 this.publicDecks = decksRes.data;
             }
 
-            // استخراج دقیق نام فصل‌های هر کتاب از جدول knowledge_graph
+            // ✅ استخراج تمیز و بدون تکرار فصل‌های هر کتاب بر اساس شماره فصل (chapter_num)
             if (kgRes.data && kgRes.data.length > 0) {
+                const seenChapNums = {};
                 kgRes.data.forEach(row => {
                     const bName = window.normalizeSubjectName ? window.normalizeSubjectName(row.book_name) : row.book_name;
-                    const chTitle = row.chapter_name
-                        ? (String(row.chapter_name).startsWith('فصل') ? row.chapter_name : `فصل ${row.chapter_num || ''}: ${row.chapter_name}`)
-                        : null;
-                    if (bName && chTitle) {
-                        if (!this.chaptersBySubject[bName]) this.chaptersBySubject[bName] = [];
-                        if (!this.chaptersBySubject[bName].includes(chTitle)) {
-                            this.chaptersBySubject[bName].push(chTitle);
-                        }
+                    const cNum = String(row.chapter_num ?? '').trim();
+                    const rawName = String(row.chapter_name || '').trim();
+                    if (!bName || !rawName || cNum === '0') return;
+
+                    if (!seenChapNums[bName]) seenChapNums[bName] = new Set();
+                    if (seenChapNums[bName].has(cNum)) return; // جلوگیری از تکرار یک فصل
+                    seenChapNums[bName].add(cNum);
+
+                    // اگر نام فصل خودش کلمه «فصل» یا «درس» یا «بخش» دارد، دوباره «فصل» اضافه نشود
+                    let cleanTitle = rawName;
+                    if (!/^(فصل|بخش|درس|الدَّرس)/i.test(rawName) && cNum) {
+                        cleanTitle = `فصل ${UI.toEngDigits(cNum).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d])}: ${rawName}`;
+                    }
+
+                    if (!this.chaptersBySubject[bName]) this.chaptersBySubject[bName] = [];
+                    if (!this.chaptersBySubject[bName].includes(cleanTitle)) {
+                        this.chaptersBySubject[bName].push(cleanTitle);
                     }
                 });
             }
@@ -225,11 +171,11 @@ const ToolsModule = {
                 const d = userToolsRes.data;
                 if (Array.isArray(d.habits_list) && d.habits_list.length > 0) this.habitsList = d.habits_list;
                 if (d.habits_logs && typeof d.habits_logs === 'object') this.habitsLogs = d.habits_logs;
-                if (Array.isArray(d.flashcards) && d.flashcards.length > 0) this.flashcards = d.flashcards;
+                if (Array.isArray(d.flashcards)) this.flashcards = d.flashcards;
                 if (d.leitner_settings && typeof d.leitner_settings === 'object') {
                     this.leitnerSettings = {
-                        daily_new_limit: parseInt(d.leitner_settings.daily_new_limit, 10) || 10,
-                        new_filter_subject: d.leitner_settings.new_filter_subject || 'all',
+                        daily_new_limit: Math.min(15, parseInt(d.leitner_settings.daily_new_limit, 10) || 8),
+                        imported_decks: Array.isArray(d.leitner_settings.imported_decks) ? d.leitner_settings.imported_decks : [],
                         review_history: d.leitner_settings.review_history || {}
                     };
                 }
@@ -265,7 +211,7 @@ const ToolsModule = {
     },
 
     // ======================================================================
-    // 🗂️ ۲. ساخت صفحه کامل و اختصاصی فلش‌کارت و لایتنر (#view-flashcards)
+    // 🗂️ ۲. رابط کاربری مینیمال و جمع‌وجور صفحه فلش‌کارت (#view-flashcards)
     // ======================================================================
     ensureFullFlashcardViewInjected() {
         const appShell = document.getElementById('shell-app');
@@ -275,372 +221,276 @@ const ToolsModule = {
         section.id = 'view-flashcards';
         section.className = 'spa-view';
         section.innerHTML = `
-            <!-- هدر بالای صفحه کامل فلش‌کارت -->
             <div class="module-top-bar">
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
                     <button type="button" class="nav-icon-btn" onclick="ToolsModule.closeFlashcardsPage()" title="بازگشت">
                         <i data-lucide="arrow-right" class="icon"></i>
                     </button>
                     <div class="module-title-group">
-                        <h2>جعبه لایتنر و فلش‌کارت هوشمند</h2>
-                        <p>مرور زمان‌بندی‌شده به تفکیک درس و فصل با پشتیبانی فرمول</p>
+                        <h2>لایتنر و فلش‌کارت</h2>
+                        <p>مرور علمی با سقف استاندارد روزانه</p>
                     </div>
                 </div>
-                <span class="konkur-pill" id="fcPageTopBadge">۰ کارت کل</span>
+                <span class="konkur-pill" id="fcPageTopBadge">۰ کارت</span>
             </div>
 
-            <!-- نوار ۳ تایی تب‌های صفحه فلش‌کارت -->
             <div class="subtabs-bar" id="fcMainSubtabsBar">
                 <button type="button" class="subtab-btn active" id="btnFcPageDash" onclick="ToolsModule.switchFcPageTab('dashboard')">
-                    <i data-lucide="layout-dashboard" class="icon-sm"></i>
-                    <span>۱. میز کار و مرور امروز</span>
+                    <i data-lucide="play-circle" class="icon-sm"></i><span>مرور و آمار</span>
                 </button>
                 <button type="button" class="subtab-btn" id="btnFcPageCreate" onclick="ToolsModule.switchFcPageTab('create')">
-                    <i data-lucide="plus-circle" class="icon-sm"></i>
-                    <span>۲. ساخت کارت جدید</span>
+                    <i data-lucide="plus-circle" class="icon-sm"></i><span>کارت جدید</span>
                 </button>
                 <button type="button" class="subtab-btn" id="btnFcPageLib" onclick="ToolsModule.switchFcPageTab('library')">
-                    <i data-lucide="book-copy" class="icon-sm"></i>
-                    <span>۳. بانک راهینو و کارت‌های من</span>
+                    <i data-lucide="book-copy" class="icon-sm"></i><span>بسته‌ها و آرشیو</span>
                 </button>
             </div>
 
-            <!-- ==============================================================
-                 تب ۱: میز کار لایتنر، آمار روزهای گذشته و شروع جلسه مرور امروز
-                 ============================================================== -->
+            <!-- تب ۱: داشبورد و مرور -->
             <div id="fcPageTabDashboard">
-                
-                <!-- الف) نمای داشبورد (وقتی هنوز دکمه شروع مرور زده نشده) -->
                 <div id="fcDashboardOverview">
-                    <div class="fc-hero-launch">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
-                            <div>
-                                <h3 style="font-size:16px; font-weight:900; color:var(--primary); display:flex; align-items:center; gap:6px;">
-                                    <i data-lucide="Flame" class="icon-sm gold-text"></i>
-                                    <span>مأموریت مرور امروز شما</span>
-                                </h3>
-                                <p style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
-                                    هر روز کارت‌های موعد مرور + سهمیه کارت‌های جدید شما آماده پاسخ‌گویی می‌شوند.
-                                </p>
-                            </div>
-                            <span class="status-pill" id="fcTodayReviewedPill">امروز: ۰ مرور انجام‌شده</span>
+                    <div class="fc-hero-launch" style="padding:15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <strong style="font-size:14px; color:var(--primary);">برنامه مرور امروز</strong>
+                            <span class="status-pill" id="fcTodayReviewedPill">امروز: ۰ مرور</span>
                         </div>
 
-                        <div class="fc-launch-stats">
+                        <div class="fc-launch-stats" style="margin:10px 0; padding:10px;">
                             <div class="fc-launch-stat-item">
-                                <small>مرورهای موعد امروز</small>
+                                <small>تکرارهای امروز</small>
                                 <strong class="primary-text" id="fcDueOldCount">۰</strong>
                             </div>
                             <div class="fc-launch-stat-item">
-                                <small>کارت جدید آماده ورود</small>
+                                <small>ورودی جدید</small>
                                 <strong class="indigo-text" id="fcDueNewCount">۰</strong>
                             </div>
                             <div class="fc-launch-stat-item">
-                                <small>مجموع مرور امروز</small>
-                                <strong class="gold-text" id="fcDueTotalCount">۰ کارت</strong>
+                                <small>مجموع امروز</small>
+                                <strong class="gold-text" id="fcDueTotalCount">۰</strong>
                             </div>
                         </div>
 
-                        <!-- تنظیم شفاف سهمیه روزانه و فیلتر درس/فصل -->
-                        <div class="form-grid-2" style="margin-bottom:12px;">
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;"><i data-lucide="sliders" class="icon-sm"></i> روزی چند کارت جدید وارد چرخه شود؟</label>
-                                <select id="selFcDailyLimit" class="modern-input" style="padding:8px 10px;" onchange="ToolsModule.updateLeitnerConfig()">
-                                    <option value="5">روزی ۵ کارت جدید</option>
-                                    <option value="10">روزی ۱۰ کارت جدید (پیشنهادی)</option>
-                                    <option value="15">روزی ۱۵ کارت جدید</option>
-                                    <option value="20">روزی ۲۰ کارت جدید</option>
-                                    <option value="30">روزی ۳۰ کارت جدید</option>
-                                    <option value="50">روزی ۵۰ کارت جدید</option>
+                        <div class="form-grid-2" style="gap:8px; margin-bottom:10px;">
+                            <div>
+                                <label style="font-size:10.5px; color:var(--text-muted); display:block; margin-bottom:3px;">ورودی جدید روزانه (سقف کل: ۹۰ کارت):</label>
+                                <select id="selFcDailyLimit" class="modern-input" style="padding:7px 10px; font-size:12px;" onchange="ToolsModule.updateLeitnerConfig()">
+                                    <option value="3">روزی ۳ کارت جدید (~۲۵ مرور روزانه)</option>
+                                    <option value="5">روزی ۵ کارت جدید (~۴۰ مرور روزانه)</option>
+                                    <option value="8">روزی ۸ کارت جدید (~۶۰ مرور روزانه)</option>
+                                    <option value="10">روزی ۱۰ کارت جدید (~۷۵ مرور روزانه)</option>
+                                    <option value="12">روزی ۱۲ کارت جدید (~۹۰ مرور روزانه)</option>
+                                    <option value="15">روزی ۱۵ کارت جدید (حداکثر فشار)</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;"><i data-lucide="filter" class="icon-sm"></i> فیلتر درس برای مرور الان:</label>
-                                <select id="selFcReviewFilterSubj" class="modern-input" style="padding:8px 10px;" onchange="ToolsModule.onReviewFilterSubjectChange()">
-                                    <option value="all">همه دروس (مرور استاندارد روزانه)</option>
+                            <div>
+                                <label style="font-size:10.5px; color:var(--text-muted); display:block; margin-bottom:3px;">فیلتر درس:</label>
+                                <select id="selFcReviewFilterSubj" class="modern-input" style="padding:7px 10px; font-size:12px;" onchange="ToolsModule.onReviewFilterSubjectChange()">
+                                    <option value="all">همه دروس</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="form-group" id="wrapFcReviewFilterChap" style="display:none; margin-bottom:12px;">
-                            <label style="font-size:11px;"><i data-lucide="bookmark" class="icon-sm"></i> فیلتر فصل خاص برای مرور:</label>
-                            <select id="selFcReviewFilterChap" class="modern-input" style="padding:8px 10px;" onchange="ToolsModule.refreshFlashcardDashboard()">
+                        <div id="wrapFcReviewFilterChap" style="display:none; margin-bottom:10px;">
+                            <select id="selFcReviewFilterChap" class="modern-input" style="padding:7px 10px; font-size:12px;" onchange="ToolsModule.refreshFlashcardDashboard()">
                                 <option value="all">همه فصل‌های این درس</option>
                             </select>
                         </div>
 
                         <button type="button" class="btn-primary-full" id="btnStartReviewSession" onclick="ToolsModule.startReviewSession()">
-                            <i data-lucide="play" class="icon"></i>
-                            <span id="btnStartReviewLabel">شروع جلسه مرور امروز</span>
+                            <i data-lucide="play" class="icon-sm"></i>
+                            <span id="btnStartReviewLabel">شروع مرور امروز</span>
                         </button>
                     </div>
 
-                    <!-- قفسه ۵ خانه لایتنر + مخزن کارت‌های جدید -->
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="boxes" class="icon-sm"></i>
-                        <span>وضعیت کارت‌های شما در ۵ خانه لایتنر</span>
+                    <div class="section-title" style="margin:14px 0 8px 0;">
+                        <span class="bar"></span><span>وضعیت ۵ خانه لایتنر</span>
                     </div>
                     <div class="leitner-pipeline-grid" id="fcPipelineBoxes"></div>
 
-                    <!-- آمار عملکرد ۷ روز گذشته دانش‌آموز -->
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="bar-chart-3" class="icon-sm"></i>
-                        <span>آمار عملکرد و پیوستگی مرور شما (۷ روز اخیر)</span>
+                    <div class="section-title" style="margin:14px 0 8px 0;">
+                        <span class="bar"></span><span>عملکرد ۷ روز گذشته</span>
                     </div>
-                    <div class="card-box">
-                        <div class="habit-kpi-row">
+                    <div class="card-box" style="padding:12px;">
+                        <div class="habit-kpi-row" style="margin-bottom:8px;">
                             <div class="habit-kpi-box">
-                                <small>مرور ۷ روز اخیر</small>
-                                <strong id="fcStat7DaysTotal">۰ کارت</strong>
+                                <small>مرور ۷ روز</small>
+                                <strong id="fcStat7DaysTotal">۰</strong>
                             </div>
                             <div class="habit-kpi-box">
-                                <small>نرخ یادآوری موفق</small>
+                                <small>یادآوری موفق</small>
                                 <strong class="success-text" id="fcStatAccuracyPct">۰٪</strong>
                             </div>
                             <div class="habit-kpi-box">
-                                <small>تثبیت‌شده (خانه ۵)</small>
-                                <strong class="gold-text" id="fcStatMasteredCount">۰ کارت</strong>
+                                <small>تثبیت‌شده</small>
+                                <strong class="gold-text" id="fcStatMasteredCount">۰</strong>
                             </div>
                         </div>
-                        <div class="fc-history-bars" id="fcHistory7DaysBars"></div>
+                        <div class="fc-history-bars" id="fcHistory7DaysBars" style="height:100px;"></div>
                     </div>
                 </div>
 
-                <!-- ب) پخش‌کننده متمرکز مرور تک‌به‌تک (وقتی دانش‌آموز دکمه شروع مرور را می‌زند) -->
+                <!-- پخش‌کننده تک‌به‌تک و مینیمال کارت‌ها -->
                 <div id="fcReviewSessionPlayer" style="display:none;">
-                    <div class="fc-review-session-box">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
-                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <div class="fc-review-session-box" style="padding:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:8px;">
+                            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                                 <span class="konkur-pill" id="fcPlayerSubjBadge">درس</span>
                                 <span class="status-pill" id="fcPlayerChapBadge">فصل</span>
                                 <span class="dur-badge gold" id="fcPlayerBoxBadge" style="margin:0;">خانه ۱</span>
                             </div>
-                            <button type="button" class="btn-copy-inline" onclick="ToolsModule.exitReviewSession()">
+                            <button type="button" class="del-icon-btn" style="width:30px;height:30px;" onclick="ToolsModule.exitReviewSession()" title="خروج از مرور">
                                 <i data-lucide="x" class="icon-sm"></i>
-                                <span>پایان و بازگشت به میز کار</span>
                             </button>
                         </div>
 
-                        <!-- نوار پیشرفت جلسه مرور -->
-                        <div class="progress-header" style="margin-bottom:6px; font-size:11.5px;">
-                            <span id="fcPlayerProgressLabel">کارت ۱ از ۱۰</span>
-                            <span class="success-text" id="fcPlayerScoreLabel">۰ درست • ۰ مرور مجدد</span>
+                        <div class="progress-header" style="margin-bottom:4px; font-size:11px;">
+                            <span id="fcPlayerProgressLabel">۱ / ۱۰</span>
+                            <span class="success-text" id="fcPlayerScoreLabel">۰ درست • ۰ غلط</span>
                         </div>
-                        <div class="progress-bar-bg" style="height:7px; margin-bottom:14px;">
+                        <div class="progress-bar-bg" style="height:6px; margin-bottom:10px;">
                             <div class="progress-bar-fill" id="fcPlayerProgressBar" style="width:0%;"></div>
                         </div>
 
-                        <!-- کارت سه‌بعدی بزرگ -->
-                        <div class="fc-session-stage" id="fcSessionStage" onclick="ToolsModule.flipSessionCard()">
-                            <div class="fc-session-inner">
-                                <div class="fc-session-face front">
-                                    <span class="fc-hint">سوال / روی کارت (برای چرخش روی کارت بزنید)</span>
-                                    <div class="fc-face-content" id="fcSessionFrontText">...</div>
-                                    <small style="font-size:10.5px; color:var(--text-muted);">ابتدا پاسخ را در ذهن خود مرور کنید</small>
+                        <div class="fc-session-stage" id="fcSessionStage" style="min-height:205px; margin:10px 0;" onclick="ToolsModule.flipSessionCard()">
+                            <div class="fc-session-inner" style="min-height:205px;">
+                                <div class="fc-session-face front" style="padding:18px 14px;">
+                                    <span class="fc-hint">سوال (لمس برای مشاهده پاسخ)</span>
+                                    <div class="fc-face-content" id="fcSessionFrontText" style="font-size:14.5px;">...</div>
+                                    <span></span>
                                 </div>
-                                <div class="fc-session-face back">
-                                    <span class="fc-hint accent">پاسخ تشریحی / پشت کارت</span>
-                                    <div class="fc-face-content" id="fcSessionBackText">...</div>
-                                    <small style="font-size:10.5px; color:var(--accent);">آیا پاسخ را به درستی به یاد آوردید؟</small>
+                                <div class="fc-session-face back" style="padding:18px 14px;">
+                                    <span class="fc-hint accent">پاسخ کارت</span>
+                                    <div class="fc-face-content" id="fcSessionBackText" style="font-size:14.5px;">...</div>
+                                    <span></span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- دکمه قبل از چرخش کارت -->
                         <div id="fcBeforeFlipActions">
-                            <button type="button" class="btn-primary-full" onclick="ToolsModule.flipSessionCard()">
-                                <i data-lucide="eye" class="icon-sm"></i>
-                                <span>مشاهده پاسخ کارت</span>
+                            <button type="button" class="btn-primary-full" style="padding:11px;" onclick="ToolsModule.flipSessionCard()">
+                                <i data-lucide="eye" class="icon-sm"></i><span>مشاهده پاسخ</span>
                             </button>
                         </div>
 
-                        <!-- دکمه‌های ثبت نتیجه بعد از چرخش کارت -->
                         <div id="fcAfterFlipActions" style="display:none;">
-                            <div class="leitner-binary-btns">
-                                <button type="button" class="btn-leitner-bin wrong" onclick="ToolsModule.submitSessionCardAnswer(false)">
-                                    <i data-lucide="rotate-ccw" class="icon-sm"></i>
-                                    <div style="text-align:right;">
-                                        <div>یادم نبود / اشتباه</div>
-                                        <small style="font-size:10px; font-weight:700; opacity:0.85; display:block;">بازگشت به خانه ۱ (مرور فردا)</small>
-                                    </div>
+                            <div class="leitner-binary-btns" style="margin-bottom:6px;">
+                                <button type="button" class="btn-leitner-bin wrong" style="padding:11px 8px;" onclick="ToolsModule.submitSessionCardAnswer(false)">
+                                    <i data-lucide="x" class="icon-sm"></i>
+                                    <span>یادم نبود</span>
                                 </button>
-                                <button type="button" class="btn-leitner-bin right" onclick="ToolsModule.submitSessionCardAnswer(true)">
-                                    <i data-lucide="check-circle-2" class="icon-sm"></i>
-                                    <div style="text-align:right;">
-                                        <div>بلد بودم!</div>
-                                        <small id="fcNextIntervalLabel" style="font-size:10px; font-weight:700; opacity:0.85; display:block;">ارتقا به خانه بعدی</small>
-                                    </div>
+                                <button type="button" class="btn-leitner-bin right" style="padding:11px 8px;" onclick="ToolsModule.submitSessionCardAnswer(true)">
+                                    <i data-lucide="check" class="icon-sm"></i>
+                                    <span id="fcNextIntervalLabel">بلد بودم!</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- ابزارهای جانبی کارت فعلی -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px dashed var(--border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
                             <button type="button" class="link-btn" onclick="ToolsModule.prevSessionCard()">
-                                <i data-lucide="chevron-right" class="icon-sm"></i><span>کارت قبلی</span>
+                                <i data-lucide="chevron-right" class="icon-sm"></i><span>قبلی</span>
                             </button>
                             <button type="button" class="link-btn danger-text" onclick="ToolsModule.deleteCurrentSessionCard()">
-                                <i data-lucide="trash-2" class="icon-sm"></i><span>حذف این کارت</span>
+                                <i data-lucide="trash-2" class="icon-sm"></i><span>حذف کارت</span>
                             </button>
                             <button type="button" class="link-btn" onclick="ToolsModule.nextSessionCard()">
-                                <span>رد کردن (بعدی)</span><i data-lucide="chevron-left" class="icon-sm"></i>
+                                <span>بعدی</span><i data-lucide="chevron-left" class="icon-sm"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ==============================================================
-                 تب ۲: ساخت راحت و سریع فلش‌کارت جدید (با درس، فصل و فرمول‌ساز)
-                 ============================================================== -->
+            <!-- تب ۲: ساخت کارت جدید (مینیمال و خلوت) -->
             <div id="fcPageTabCreate" style="display:none;">
                 <div class="card-box">
-                    <div class="section-title" style="margin-top:0;">
-                        <span class="bar"></span>
-                        <i data-lucide="book-open" class="icon-sm"></i>
-                        <span>۱. انتخاب درس و فصل فلش‌کارت</span>
-                    </div>
-
-                    <div class="form-grid-2">
-                        <div class="form-group">
-                            <label><i data-lucide="book" class="icon-sm"></i> نام درس:</label>
+                    <div class="form-grid-2" style="gap:10px; margin-bottom:10px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label><i data-lucide="book" class="icon-sm"></i> درس:</label>
                             <select id="inpFcSubject" class="modern-input" onchange="ToolsModule.onCreateSubjectChange()"></select>
                         </div>
-                        <div class="form-group">
-                            <label><i data-lucide="bookmark" class="icon-sm"></i> نام فصل یا مبحث:</label>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label><i data-lucide="bookmark" class="icon-sm"></i> فصل:</label>
                             <select id="inpFcChapterSelect" class="modern-input" onchange="ToolsModule.onCreateChapterSelectChange()"></select>
                         </div>
                     </div>
 
                     <div class="form-group" id="wrapCustomChapterInput" style="display:none;">
-                        <label>عنوان فصل یا مبحث دلخواه را بنویسید:</label>
-                        <input type="text" id="inpFcCustomChapter" class="modern-input" placeholder="مثلاً: فصل ۲ - معادلات مثلثاتی">
+                        <input type="text" id="inpFcCustomChapter" class="modern-input" placeholder="عنوان فصل یا مبحث دلخواه...">
                     </div>
 
-                    <div class="section-title">
-                        <span class="bar"></span>
-                        <i data-lucide="calculator" class="icon-sm"></i>
-                        <span>۲. دستیار هوشمند درج فرمول ریاضی، فیزیک و شیمی</span>
-                    </div>
-
-                    <div class="latex-helper-box">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-                            <span style="font-size:11.5px; font-weight:900; color:var(--primary);">
-                                ابتدا روی کادر «سوال» یا «پاسخ» کلیک کنید، سپس روی دکمه فرمول دلخواه بزنید:
-                            </span>
-                            <button type="button" class="btn-copy-inline" style="padding:4px 9px; font-size:10.5px;" onclick="ToolsModule.copyAiLatexPrompt(this)">
-                                <i data-lucide="sparkles" class="icon-sm"></i>
-                                <span>کپی دستور آماده برای ChatGPT/جمینای</span>
+                    <!-- فرمول‌ساز ساده (فقط ۴ دکمه پرکردنی + پرامپت هوش مصنوعی) -->
+                    <div class="latex-helper-box" style="padding:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+                            <span style="font-size:11px; font-weight:800; color:var(--text-muted);">فرمول‌ساز سریع:</span>
+                            <button type="button" class="btn-copy-inline" style="padding:3px 8px; font-size:10px;" onclick="ToolsModule.copyAiLatexPrompt(this)">
+                                <i data-lucide="sparkles" class="icon-sm"></i><span>کپی پرامپت فرمول هوش مصنوعی</span>
                             </button>
                         </div>
 
-                        <!-- ردیف ۱: فرمول‌سازهای پرکردنی آسان (بدون نیاز به کدنویسی!) -->
-                        <div class="latex-toolbar">
-                            <button type="button" class="latex-btn" style="border-color:var(--primary); color:var(--primary);" onclick="ToolsModule.openFormulaBuilder('frac')">
-                                <span>➕ کسر (صورت و مخرج)</span>
-                            </button>
-                            <button type="button" class="latex-btn" style="border-color:var(--primary); color:var(--primary);" onclick="ToolsModule.openFormulaBuilder('sqrt')">
-                                <span>➕ رادیکال √</span>
-                            </button>
-                            <button type="button" class="latex-btn" style="border-color:var(--primary); color:var(--primary);" onclick="ToolsModule.openFormulaBuilder('pow')">
-                                <span>➕ توان و اندیس</span>
-                            </button>
-                            <button type="button" class="latex-btn" style="border-color:var(--primary); color:var(--primary);" onclick="ToolsModule.openFormulaBuilder('lim')">
-                                <span>➕ حد (lim)</span>
-                            </button>
-                        </div>
-
-                        <!-- ویجت پرکردنی خودکار فرمول -->
-                        <div id="fcFormulaBuilderBox" class="formula-builder-Assistant"></div>
-
-                        <!-- ردیف ۲: نمادهای تک‌کلیکی آماده و ۱۰۰٪ تست‌شده -->
                         <div class="latex-toolbar" style="margin-bottom:0;">
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('int')">انتگرال ∫</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('deriv')">مشتق کسر</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('sin')">sin(θ)</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('cos')">cos(θ)</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('log')">لگاریتم log</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('Delta')">Δ تغییرات</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('vec')">بردار نیرو</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('eq_arrow')">واکنش تعادلی ⇌</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('heat_arrow')">واکنش با گرما →</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('h3o')">غلظت [H₃O⁺]</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('ph')">فرمول pH</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('implies')">نتیجه می‌دهد ⇒</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('leq')">≤</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('geq')">≥</button>
-                            <button type="button" class="latex-btn" onclick="ToolsModule.insertFormulaKey('neq')">≠</button>
+                            <button type="button" class="latex-btn" onclick="ToolsModule.openFormulaBuilder('frac')">➕ کسر</button>
+                            <button type="button" class="latex-btn" onclick="ToolsModule.openFormulaBuilder('sqrt')">➕ رادیکال</button>
+                            <button type="button" class="latex-btn" onclick="ToolsModule.openFormulaBuilder('pow')">➕ توان/اندیس</button>
+                            <button type="button" class="latex-btn" onclick="ToolsModule.openFormulaBuilder('lim')">➕ حد (lim)</button>
                         </div>
+
+                        <div id="fcFormulaBuilderBox" class="formula-builder-Assistant" style="margin-top:8px; margin-bottom:0;"></div>
                     </div>
 
                     <div class="form-group">
-                        <label><i data-lucide="help-circle" class="icon-sm"></i> روی کارت (سوال، نکته یا عبارت):</label>
-                        <textarea class="modern-input" id="inpFcFront" rows="3" placeholder="سوال را بنویسید..."
+                        <label>روی کارت (سوال یا نکته):</label>
+                        <textarea class="modern-input" id="inpFcFront" rows="2" placeholder="سوال را بنویسید..."
                                   onfocus="ToolsModule.activeLatexTarget='inpFcFront'"
                                   oninput="ToolsModule.updateLatexPreview()"></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label><i data-lucide="check-circle" class="icon-sm"></i> پشت کارت (پاسخ، فرمول یا توضیح):</label>
-                        <textarea class="modern-input" id="inpFcBack" rows="3" placeholder="پاسخ را بنویسید..."
+                        <label>پشت کارت (پاسخ یا فرمول):</label>
+                        <textarea class="modern-input" id="inpFcBack" rows="2" placeholder="پاسخ را بنویسید..."
                                   onfocus="ToolsModule.activeLatexTarget='inpFcBack'"
                                   oninput="ToolsModule.updateLatexPreview()"></textarea>
                     </div>
 
-                    <div style="margin-bottom:14px;">
-                        <span style="font-size:11.5px; font-weight:900; color:var(--primary); display:block; margin-bottom:5px;">پیش‌نمایش زنده کارت شما (با رندر فرمول):</span>
-                        <div class="latex-preview-card" id="fcLatexLivePreview">در کادر بالا بنویسید تا شکل نهایی فرمول و کارت اینجا نمایش داده شود...</div>
-                    </div>
+                    <div class="latex-preview-card" id="fcLatexLivePreview" style="font-size:12px;">پیش‌نمایش کارت اینجا نمایش داده می‌شود...</div>
 
                     <button type="button" class="btn-primary-full" onclick="ToolsModule.addFlashcard()">
-                        <i data-lucide="plus-circle" class="icon"></i>
-                        <span>ذخیره و افزودن به جعبه لایتنر</span>
+                        <i data-lucide="plus-circle" class="icon-sm"></i><span>افزودن به لایتنر</span>
                     </button>
                 </div>
             </div>
 
-            <!-- ==============================================================
-                 تب ۳: بانک بسته‌های آماده راهینو + لیست کارت‌های من (به تفکیک درس و فصل)
-                 ============================================================== -->
+            <!-- تب ۳: بسته‌های آماده راهینو و آرشیو کارت‌های من -->
             <div id="fcPageTabLibrary" style="display:none;">
                 <div class="section-title" style="margin-top:0;">
-                    <span class="bar"></span>
-                    <i data-lucide="package-check" class="icon-sm"></i>
-                    <span>بسته‌های فلش‌کارت آماده راهینو (به تفکیک درس و فصل)</span>
+                    <span class="bar"></span><span>بسته‌های آماده راهینو</span>
                 </div>
-                <p class="field-hint">هر بسته را که می‌خواهید با یک کلیک به مخزن لایتنر خود اضافه کنید تا روزانه طبق سهمیه شما وارد مرور شوند:</p>
                 <div id="fcPublicDecksList"></div>
 
                 <div class="section-title">
-                    <span class="bar"></span>
-                    <i data-lucide="folder-kanban" class="icon-sm"></i>
-                    <span>آرشیو کارت‌های من (فیلتر بر اساس درس و فصل)</span>
+                    <span class="bar"></span><span>کارت‌های من</span>
                 </div>
-                <div class="card-box">
-                    <div class="form-grid-2" style="margin-bottom:12px;">
+                <div class="card-box" style="padding:12px;">
+                    <div class="form-grid-2" style="gap:8px; margin-bottom:10px;">
                         <select id="selMyCardsFilterSubj" class="modern-input" onchange="ToolsModule.renderMyCardsArchive()">
-                            <option value="all">همه دروس من</option>
+                            <option value="all">همه دروس</option>
                         </select>
                         <select id="selMyCardsFilterBox" class="modern-input" onchange="ToolsModule.renderMyCardsArchive()">
-                            <option value="all">همه خانه‌های لایتنر</option>
-                            <option value="0">مخزن جدید (در نوبت ورود)</option>
-                            <option value="1">خانه ۱ (مرور روزانه)</option>
-                            <option value="2">خانه ۲ (۳ روزه)</option>
-                            <option value="3">خانه ۳ (۷ روزه)</option>
-                            <option value="4">خانه ۴ (۱۵ روزه)</option>
-                            <option value="5">خانه ۵ (تثبیت‌شده)</option>
+                            <option value="all">همه خانه‌ها</option>
+                            <option value="0">مخزن جدید</option>
+                            <option value="1">خانه ۱</option>
+                            <option value="2">خانه ۲</option>
+                            <option value="3">خانه ۳</option>
+                            <option value="4">خانه ۴</option>
+                            <option value="5">خانه ۵</option>
                         </select>
                     </div>
-                    <div id="fcMyCardsArchiveList" style="max-height:380px; overflow-y:auto;"></div>
+                    <div id="fcMyCardsArchiveList" style="max-height:360px; overflow-y:auto;"></div>
                 </div>
             </div>
         `;
         appShell.appendChild(section);
     },
 
-    // باز کردن صفحه کامل فلش‌کارت
     openFlashcardsPage() {
         UI.closeModals();
         this.ensureFullFlashcardViewInjected();
@@ -678,7 +528,7 @@ const ToolsModule = {
     },
 
     // ======================================================================
-    // 📊 ۳. منطق انتخاب کارت‌های مرور امروز، سهمیه روزانه و آمار ۷ روز اخیر
+    // 📊 ۳. ساخت صف مرور روزانه با سقف علمی حداکثر ۹۰ کارت در روز
     // ======================================================================
     updateToolsSquareBadges() {
         this.buildTodayDueQueue('all', 'all');
@@ -690,18 +540,18 @@ const ToolsModule = {
         const topBadge = document.getElementById('fcPageTopBadge');
 
         if (homeFcEl) homeFcEl.innerText = `${dueCount.toLocaleString('fa-IR')} مرور امروز`;
-        if (toolFcEl) toolFcEl.innerText = `${dueCount.toLocaleString('fa-IR')} کارت آماده مرور (از ${totalCount.toLocaleString('fa-IR')} کارت)`;
-        if (topBadge) topBadge.innerText = `${totalCount.toLocaleString('fa-IR')} کارت کل`;
+        if (toolFcEl) toolFcEl.innerText = `${dueCount.toLocaleString('fa-IR')} مرور امروز (از ${totalCount.toLocaleString('fa-IR')} کارت)`;
+        if (topBadge) topBadge.innerText = `${totalCount.toLocaleString('fa-IR')} کارت`;
     },
 
     buildTodayDueQueue(filterSubj = 'all', filterChap = 'all') {
+        const MAX_DAILY_TOTAL_CAP = 90; // سقف علمی ۹۰ کارت در روز (حداکثر ۱۵ دقیقه)
         const todayStr = this.getShamsiDateStr(0);
-        const dailyNewLimit = parseInt(this.leitnerSettings?.daily_new_limit, 10) || 10;
+        const dailyNewLimit = Math.min(15, parseInt(this.leitnerSettings?.daily_new_limit, 10) || 8);
         const todayHist = this.leitnerSettings?.review_history?.[todayStr] || { reviewed: 0, correct: 0, wrong: 0, newEntered: 0 };
-        const remainingNewQuotaToday = Math.max(0, dailyNewLimit - (parseInt(todayHist.newEntered, 10) || 0));
 
         let dueOldCards = [];
-        let dueNewCards = [];
+        let candidateNewCards = [];
 
         this.flashcards.forEach(card => {
             if (filterSubj !== 'all' && card.subject !== filterSubj) return;
@@ -712,15 +562,23 @@ const ToolsModule = {
             const isBrandNew = (box === 0) || (box === 1 && (parseInt(card.streak, 10) || 0) === 0 && !card.lastReviewed);
 
             if (isBrandNew) {
-                if (dueNewCards.length < remainingNewQuotaToday) {
-                    dueNewCards.push(card);
-                }
+                candidateNewCards.push(card);
             } else if (nextRev <= todayStr) {
                 dueOldCards.push(card);
             }
         });
 
+        // ۱. اولویت اول با تکرار کارت‌های قبلی است (تا سقف ۹۰ کارت)
+        dueOldCards = dueOldCards.slice(0, MAX_DAILY_TOTAL_CAP);
+
+        // ۲. کارت جدید فقط به اندازه‌ای وارد می‌شود که مجموع امروز از ۹۰ کارت بیشتر نشود
+        const remainingNewQuotaToday = Math.max(0, dailyNewLimit - (parseInt(todayHist.newEntered, 10) || 0));
+        const remainingCapForToday = Math.max(0, MAX_DAILY_TOTAL_CAP - dueOldCards.length);
+        const allowedNewCount = Math.min(remainingNewQuotaToday, remainingCapForToday);
+
+        const dueNewCards = candidateNewCards.slice(0, allowedNewCount);
         this.dueQueue = [...dueOldCards, ...dueNewCards];
+
         return { oldCount: dueOldCards.length, newCount: dueNewCards.length, total: this.dueQueue.length };
     },
 
@@ -729,7 +587,7 @@ const ToolsModule = {
         if (!selSubj) return;
         const currVal = selSubj.value || 'all';
         const uniqueSubjects = [...new Set(this.flashcards.map(c => c.subject).filter(Boolean))];
-        selSubj.innerHTML = `<option value="all">همه دروس (مرور استاندارد روزانه)</option>` +
+        selSubj.innerHTML = `<option value="all">همه دروس</option>` +
             uniqueSubjects.map(s => `<option value="${s}">${s}</option>`).join('');
         if (uniqueSubjects.includes(currVal)) selSubj.value = currVal;
     },
@@ -753,12 +611,12 @@ const ToolsModule = {
     },
 
     updateLeitnerConfig() {
-        const val = parseInt(document.getElementById('selFcDailyLimit')?.value, 10) || 10;
+        const val = Math.min(15, parseInt(document.getElementById('selFcDailyLimit')?.value, 10) || 8);
         this.leitnerSettings.daily_new_limit = val;
         this.syncToolsToSupabase();
         this.refreshFlashcardDashboard();
         this.updateToolsSquareBadges();
-        UI.showToast(`سهمیه ورود کارت جدید روزانه روی ${val.toLocaleString('fa-IR')} کارت تنظیم شد.`, 'success');
+        UI.showToast(`ورودی کارت جدید روی روزی ${val.toLocaleString('fa-IR')} کارت تنظیم شد.`, 'success');
     },
 
     refreshFlashcardDashboard() {
@@ -770,35 +628,29 @@ const ToolsModule = {
         playerEl.style.display = this.inReviewSession ? 'block' : 'none';
 
         const selLimit = document.getElementById('selFcDailyLimit');
-        if (selLimit) selLimit.value = String(this.leitnerSettings.daily_new_limit || 10);
+        if (selLimit) selLimit.value = String(this.leitnerSettings.daily_new_limit || 8);
 
         const filterSubj = document.getElementById('selFcReviewFilterSubj')?.value || 'all';
         const filterChap = filterSubj === 'all' ? 'all' : (document.getElementById('selFcReviewFilterChap')?.value || 'all');
 
         const counts = this.buildTodayDueQueue(filterSubj, filterChap);
 
-        document.getElementById('fcDueOldCount').innerText = `${counts.oldCount.toLocaleString('fa-IR')} کارت`;
-        document.getElementById('fcDueNewCount').innerText = `${counts.newCount.toLocaleString('fa-IR')} کارت`;
+        document.getElementById('fcDueOldCount').innerText = counts.oldCount.toLocaleString('fa-IR');
+        document.getElementById('fcDueNewCount').innerText = counts.newCount.toLocaleString('fa-IR');
         document.getElementById('fcDueTotalCount').innerText = `${counts.total.toLocaleString('fa-IR')} کارت`;
 
         const todayStr = this.getShamsiDateStr(0);
         const todayHist = this.leitnerSettings.review_history?.[todayStr] || { reviewed: 0 };
         const revPill = document.getElementById('fcTodayReviewedPill');
-        if (revPill) revPill.innerText = `امروز: ${(todayHist.reviewed || 0).toLocaleString('fa-IR')} مرور انجام‌شده`;
+        if (revPill) revPill.innerText = `امروز: ${(todayHist.reviewed || 0).toLocaleString('fa-IR')} مرور`;
 
-        const btnStart = document.getElementById('btnStartReviewSession');
         const btnLbl = document.getElementById('btnStartReviewLabel');
-        if (btnStart && btnLbl) {
-            if (counts.total > 0) {
-                btnStart.disabled = false;
-                btnLbl.innerText = `شروع جلسه مرور (${counts.total.toLocaleString('fa-IR')} کارت آماده)`;
-            } else {
-                btnStart.disabled = false;
-                btnLbl.innerText = 'مرور امروز تکمیل شده! (تمرین آزاد همه کارت‌ها)';
-            }
+        if (btnLbl) {
+            btnLbl.innerText = counts.total > 0
+                ? `شروع مرور امروز (${counts.total.toLocaleString('fa-IR')} کارت)`
+                : 'مرور امروز تکمیل شد! (شروع مرور آزاد بدون تغییر خانه‌ها)';
         }
 
-        // رندر قفسه ۵ خانه لایتنر + مخزن جدید
         const boxCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         this.flashcards.forEach(c => {
             const b = parseInt(c.box, 10) ?? 1;
@@ -810,12 +662,12 @@ const ToolsModule = {
         const pipeEl = document.getElementById('fcPipelineBoxes');
         if (pipeEl) {
             const pipeMeta = [
-                { key: 0, title: 'مخزن جدید', sub: 'در نوبت ورود', cls: 'new-pool' },
-                { key: 1, title: 'خانه ۱', sub: 'مرور ۱ روزه', cls: '' },
-                { key: 2, title: 'خانه ۲', sub: 'مرور ۳ روزه', cls: '' },
-                { key: 3, title: 'خانه ۳', sub: 'مرور ۷ روزه', cls: '' },
-                { key: 4, title: 'خانه ۴', sub: 'مرور ۱۵ روزه', cls: '' },
-                { key: 5, title: 'خانه ۵', sub: 'تثبیت ۳۰ روزه', cls: 'mastered' }
+                { key: 0, title: 'مخزن جدید', sub: 'در نوبت', cls: 'new-pool' },
+                { key: 1, title: 'خانه ۱', sub: '۱ روزه', cls: '' },
+                { key: 2, title: 'خانه ۲', sub: '۳ روزه', cls: '' },
+                { key: 3, title: 'خانه ۳', sub: '۷ روزه', cls: '' },
+                { key: 4, title: 'خانه ۴', sub: '۱۵ روزه', cls: '' },
+                { key: 5, title: 'خانه ۵', sub: '۳۰ روزه', cls: 'mastered' }
             ];
             pipeEl.innerHTML = pipeMeta.map(m => `
                 <div class="leitner-pipe-box ${m.cls}">
@@ -826,7 +678,6 @@ const ToolsModule = {
             `).join('');
         }
 
-        // رندر نمودار عملکرد ۷ روز گذشته دانش‌آموز
         const histMap = this.leitnerSettings.review_history || {};
         let sum7Reviewed = 0;
         let sum7Correct = 0;
@@ -838,7 +689,7 @@ const ToolsModule = {
             const rec = histMap[dStr] || { reviewed: 0, correct: 0, wrong: 0 };
             sum7Reviewed += (parseInt(rec.reviewed, 10) || 0);
             sum7Correct += (parseInt(rec.correct, 10) || 0);
-            last7Arr.push({ dStr, label: i === 0 ? 'امروز' : `${dayNum.toLocaleString('fa-IR')}ام`, count: parseInt(rec.reviewed, 10) || 0 });
+            last7Arr.push({ label: i === 0 ? 'امروز' : `${dayNum.toLocaleString('fa-IR')}ام`, count: parseInt(rec.reviewed, 10) || 0 });
         }
 
         const maxDayCount = Math.max(10, ...last7Arr.map(x => x.count));
@@ -868,26 +719,28 @@ const ToolsModule = {
     },
 
     // ======================================================================
-    // 🎯 ۴. جلسه مرور تک‌به‌تک و خلوت (Focus Review Player)
+    // 🎯 ۴. پخش‌کننده مرور (با تفکیک مرور رسمی لایتنر از مرور آزاد)
     // ======================================================================
     startReviewSession() {
         const filterSubj = document.getElementById('selFcReviewFilterSubj')?.value || 'all';
         const filterChap = filterSubj === 'all' ? 'all' : (document.getElementById('selFcReviewFilterChap')?.value || 'all');
 
         this.buildTodayDueQueue(filterSubj, filterChap);
+        this.isFreePractice = false;
 
-        // اگر کارت موعدی نمانده بود، اجازه تمرین آزاد روی کارت‌های آن درس/فصل را بده
+        // ✅ اگر کارت موعدی نبود، وارد «حالت مرور آزاد» شود (بدون تغییر خانه یا تاریخ کارت‌ها)
         if (this.dueQueue.length === 0) {
             const fallbackPool = this.flashcards.filter(c =>
                 (filterSubj === 'all' || c.subject === filterSubj) &&
                 (filterChap === 'all' || (c.chapter || 'عمومی') === filterChap)
             );
             if (fallbackPool.length === 0) {
-                UI.showToast('هنوز کارتی در این بخش ندارید! از تب «ساخت کارت» یا «بانک راهینو» کارت اضافه کنید.', 'info');
+                UI.showToast('هنوز کارتی در این بخش ندارید! از تب «کارت جدید» یا «بسته‌ها» کارت اضافه کنید.', 'info');
                 return;
             }
-            this.dueQueue = [...fallbackPool].slice(0, 15);
-            UI.showToast('مرورهای موعد امروز تمام شده بود؛ جلسه تمرین آزاد آغاز شد!', 'info');
+            this.dueQueue = [...fallbackPool];
+            this.isFreePractice = true;
+            UI.showToast('حالت مرور آزاد: تمام کارت‌ها بدون تغییر خانه لایتنر مرور می‌شوند.', 'info');
         }
 
         this.inReviewSession = true;
@@ -902,6 +755,7 @@ const ToolsModule = {
 
     exitReviewSession() {
         this.inReviewSession = false;
+        this.isFreePractice = false;
         this.refreshFlashcardDashboard();
         UI.refreshIcons();
     },
@@ -915,8 +769,9 @@ const ToolsModule = {
 
         if (this.dueQueue.length === 0) {
             this.inReviewSession = false;
-            if (window.confetti) confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
-            UI.showToast(`🎉 آفرین! جلسه مرور امروز با ${this.sessionStats.correct.toLocaleString('fa-IR')} پاسخ درست تکمیل شد.`, 'success');
+            this.isFreePractice = false;
+            if (window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            UI.showToast(`🎉 مرور تمام شد! (${this.sessionStats.correct.toLocaleString('fa-IR')} یادآوری موفق)`, 'success');
             this.refreshFlashcardDashboard();
             return;
         }
@@ -929,28 +784,31 @@ const ToolsModule = {
 
         document.getElementById('fcPlayerSubjBadge').innerText = card.subject || 'عمومی';
         document.getElementById('fcPlayerChapBadge').innerText = card.chapter || 'فصل عمومی';
-        document.getElementById('fcPlayerBoxBadge').innerText = `خانه ${boxNum.toLocaleString('fa-IR')} لایتنر`;
+        document.getElementById('fcPlayerBoxBadge').innerText = this.isFreePractice
+            ? `مرور آزاد (خانه ${boxNum.toLocaleString('fa-IR')})`
+            : `خانه ${boxNum.toLocaleString('fa-IR')}`;
 
         const doneCount = this.sessionStats.done;
         const totalCount = Math.max(1, this.sessionStats.total);
         const pct = Math.min(100, Math.round((doneCount / totalCount) * 100));
 
         document.getElementById('fcPlayerProgressLabel').innerText = `کارت ${(doneCount + 1).toLocaleString('fa-IR')} از ${totalCount.toLocaleString('fa-IR')}`;
-        document.getElementById('fcPlayerScoreLabel').innerText = `${this.sessionStats.correct.toLocaleString('fa-IR')} یادآوری موفق • ${this.sessionStats.wrong.toLocaleString('fa-IR')} مرور مجدد`;
+        document.getElementById('fcPlayerScoreLabel').innerText = `${this.sessionStats.correct.toLocaleString('fa-IR')} درست • ${this.sessionStats.wrong.toLocaleString('fa-IR')} غلط`;
         document.getElementById('fcPlayerProgressBar').style.width = `${pct}%`;
 
         document.getElementById('fcSessionFrontText').innerHTML = this.renderMathInHtml(card.front);
         document.getElementById('fcSessionBackText').innerHTML = this.renderMathInHtml(card.back);
 
-        // محاسبه فاصله مرور بعدی در صورت پاسخ درست
-        const nextBox = Math.min(5, boxNum + 1);
-        const intervals = { 1: 1, 2: 3, 3: 7, 4: 15, 5: 30 };
-        const nextDays = (boxNum === 1 && (parseInt(card.streak, 10) || 0) < 2) ? 1 : intervals[nextBox];
         const nextLbl = document.getElementById('fcNextIntervalLabel');
         if (nextLbl) {
-            nextLbl.innerText = nextDays === 1
-                ? 'تثبیت اولیه (مرور بعدی: فردا)'
-                : `ارتقا به خانه ${nextBox.toLocaleString('fa-IR')} (مرور: ${nextDays.toLocaleString('fa-IR')} روز دیگر)`;
+            if (this.isFreePractice) {
+                nextLbl.innerText = 'بلد بودم (کارت بعدی)';
+            } else {
+                const nextBox = Math.min(5, boxNum + 1);
+                const intervals = { 1: 1, 2: 3, 3: 7, 4: 15, 5: 30 };
+                const nextDays = (boxNum === 1 && (parseInt(card.streak, 10) || 0) < 2) ? 1 : intervals[nextBox];
+                nextLbl.innerText = nextDays === 1 ? 'بلد بودم (مرور: فردا)' : `بلد بودم (خانه ${nextBox.toLocaleString('fa-IR')})`;
+            }
         }
     },
 
@@ -967,35 +825,10 @@ const ToolsModule = {
         const card = this.dueQueue[this.currentDueIndex];
         const todayStr = this.getShamsiDateStr(0);
 
-        const wasBrandNew = (parseInt(card.box, 10) === 0) || (parseInt(card.box, 10) === 1 && (parseInt(card.streak, 10) || 0) === 0 && !card.lastReviewed);
-        let box = Math.max(1, parseInt(card.box, 10) || 1);
-        let streak = parseInt(card.streak, 10) || 0;
-        let offsetDays = 1;
+        if (isCorrect) this.sessionStats.correct++;
+        else this.sessionStats.wrong++;
 
-        if (!isCorrect) {
-            box = 1;
-            streak = 0;
-            offsetDays = 1;
-            this.sessionStats.wrong++;
-        } else {
-            streak++;
-            this.sessionStats.correct++;
-            if (box === 1 && streak < 2) {
-                box = 1;
-                offsetDays = 1;
-            } else {
-                box = Math.min(5, box + 1);
-                const boxIntervals = { 1: 1, 2: 3, 3: 7, 4: 15, 5: 30 };
-                offsetDays = boxIntervals[box] || 3;
-            }
-        }
-
-        card.box = box;
-        card.streak = streak;
-        card.lastReviewed = todayStr;
-        card.nextReview = this.getShamsiDateStr(offsetDays);
-
-        // ثبت در تاریخچه عملکرد روزانه برای رسم نمودار ۷ روز اخیر
+        // ۱. ثبت در آمار تعداد کارت‌های مرورشده امروز (هم در مرور رسمی و هم در مرور آزاد)
         if (!this.leitnerSettings.review_history) this.leitnerSettings.review_history = {};
         if (!this.leitnerSettings.review_history[todayStr]) {
             this.leitnerSettings.review_history[todayStr] = { reviewed: 0, correct: 0, wrong: 0, newEntered: 0 };
@@ -1004,7 +837,39 @@ const ToolsModule = {
         dayLog.reviewed = (parseInt(dayLog.reviewed, 10) || 0) + 1;
         if (isCorrect) dayLog.correct = (parseInt(dayLog.correct, 10) || 0) + 1;
         else dayLog.wrong = (parseInt(dayLog.wrong, 10) || 0) + 1;
-        if (wasBrandNew) dayLog.newEntered = (parseInt(dayLog.newEntered, 10) || 0) + 1;
+
+        // ۲. تغییر خانه لایتنر و تاریخ مرور بعدی (فقط در صورتی که در حالت مرور آزاد نباشیم!)
+        if (!this.isFreePractice) {
+            const wasBrandNew = (parseInt(card.box, 10) === 0) || (parseInt(card.box, 10) === 1 && (parseInt(card.streak, 10) || 0) === 0 && !card.lastReviewed);
+            let box = Math.max(1, parseInt(card.box, 10) || 1);
+            let streak = parseInt(card.streak, 10) || 0;
+            let offsetDays = 1;
+
+            if (!isCorrect) {
+                box = 1;
+                streak = 0;
+                offsetDays = 1;
+            } else {
+                streak++;
+                if (box === 1 && streak < 2) {
+                    box = 1;
+                    offsetDays = 1;
+                } else {
+                    box = Math.min(5, box + 1);
+                    const boxIntervals = { 1: 1, 2: 3, 3: 7, 4: 15, 5: 30 };
+                    offsetDays = boxIntervals[box] || 3;
+                }
+            }
+
+            card.box = box;
+            card.streak = streak;
+            card.lastReviewed = todayStr;
+            card.nextReview = this.getShamsiDateStr(offsetDays);
+
+            if (wasBrandNew) {
+                dayLog.newEntered = (parseInt(dayLog.newEntered, 10) || 0) + 1;
+            }
+        }
 
         this.sessionStats.done++;
         this.dueQueue.splice(this.currentDueIndex, 1);
@@ -1032,11 +897,11 @@ const ToolsModule = {
         this.syncToolsToSupabase();
         this.renderCurrentSessionCard();
         this.updateToolsSquareBadges();
-        UI.showToast('کارت از جعبه لایتنر حذف شد.', 'info');
+        UI.showToast('کارت حذف شد.', 'info');
     },
 
     // ======================================================================
-    // ➕ ۵. ساخت کارت جدید با انتخاب «درس و فصل» و «فرمول‌ساز ۱۰۰٪ سالم»
+    // ➕ ۵. ساخت کارت جدید با فصل‌های دقیق و فرمول‌ساز پرکردنی
     // ======================================================================
     populateCreateSubjectAndChapters() {
         const selSubj = document.getElementById('inpFcSubject');
@@ -1057,11 +922,11 @@ const ToolsModule = {
 
         const normSubj = window.normalizeSubjectName ? window.normalizeSubjectName(subj) : subj;
         const knownChapters = this.chaptersBySubject[normSubj] || this.chaptersBySubject[subj] || [
-            'فصل ۱', 'فصل ۲', 'فصل ۳', 'فصل ۴', 'فصل ۵', 'نکات ترکیبی و جامع'
+            'فصل ۱', 'فصل ۲', 'فصل ۳', 'فصل ۴', 'نکات جامع'
         ];
 
         selChap.innerHTML = knownChapters.map(ch => `<option value="${ch}">${ch}</option>`).join('') +
-            `<option value="__custom__">✍️ سایر / تایپ نام فصل یا مبحث دلخواه...</option>`;
+            `<option value="__custom__">✍️ سایر (تایپ نام مبحث دلخواه)...</option>`;
 
         this.onCreateChapterSelectChange();
     },
@@ -1074,13 +939,6 @@ const ToolsModule = {
         }
     },
 
-    // درج ۱۰۰٪ سالم نمادها و فرمول‌ها از دیکشنری امن (بدون باگ کاراکترهای اسکیپ)
-    insertFormulaKey(key) {
-        const snippet = this.latexSnippets[key];
-        if (!snippet) return;
-        this.insertRawTextAtCursor(snippet);
-    },
-
     insertRawTextAtCursor(snippet) {
         const targetId = this.activeLatexTarget || 'inpFcFront';
         const el = document.getElementById(targetId);
@@ -1088,17 +946,13 @@ const ToolsModule = {
 
         const start = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
         const end = typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length;
-        const before = el.value.substring(0, start);
-        const after = el.value.substring(end);
-
-        el.value = before + snippet + after;
+        el.value = el.value.substring(0, start) + snippet + el.value.substring(end);
         el.focus();
         const newPos = start + snippet.length;
         try { el.setSelectionRange(newPos, newPos); } catch (_) {}
         this.updateLatexPreview();
     },
 
-    // باز کردن ویجت فرمول‌ساز پرکردنی (برای دانش‌آموزانی که کد LaTeX بلد نیستند)
     openFormulaBuilder(type) {
         const box = document.getElementById('fcFormulaBuilderBox');
         if (!box) return;
@@ -1113,40 +967,36 @@ const ToolsModule = {
 
         if (type === 'frac') {
             box.innerHTML = `
-                <div style="font-size:11.5px; font-weight:900; color:var(--primary);">ساخت سریع کسر ریاضی/فیزیک:</div>
                 <div class="fb-inputs-row">
-                    <input type="text" id="fbInp1" placeholder="صورت کسر (مثلاً x+1)">
-                    <span style="font-weight:900; font-size:16px;">÷</span>
-                    <input type="text" id="fbInp2" placeholder="مخرج کسر (مثلاً 2)">
-                    <button type="button" class="btn-modal auto-width" style="padding:7px 14px; font-size:12px;" onclick="ToolsModule.applyFormulaBuilder('frac')">درج در کارت</button>
+                    <input type="text" id="fbInp1" placeholder="صورت کسر">
+                    <span>÷</span>
+                    <input type="text" id="fbInp2" placeholder="مخرج کسر">
+                    <button type="button" class="btn-modal auto-width" style="padding:7px 12px; font-size:11.5px;" onclick="ToolsModule.applyFormulaBuilder('frac')">درج</button>
                 </div>
             `;
         } else if (type === 'sqrt') {
             box.innerHTML = `
-                <div style="font-size:11.5px; font-weight:900; color:var(--primary);">ساخت سریع رادیکال:</div>
                 <div class="fb-inputs-row">
-                    <input type="text" id="fbInp1" placeholder="عبارت زیر رادیکال (مثلاً x^2 + 1)">
-                    <input type="text" id="fbInp2" placeholder="فرجه (اختیاری، مثلاً 3)" style="max-width:130px;">
-                    <button type="button" class="btn-modal auto-width" style="padding:7px 14px; font-size:12px;" onclick="ToolsModule.applyFormulaBuilder('sqrt')">درج در کارت</button>
+                    <input type="text" id="fbInp1" placeholder="زیر رادیکال">
+                    <input type="text" id="fbInp2" placeholder="فرجه (اختیاری)" style="max-width:110px;">
+                    <button type="button" class="btn-modal auto-width" style="padding:7px 12px; font-size:11.5px;" onclick="ToolsModule.applyFormulaBuilder('sqrt')">درج</button>
                 </div>
             `;
         } else if (type === 'pow') {
             box.innerHTML = `
-                <div style="font-size:11.5px; font-weight:900; color:var(--primary);">ساخت توان یا اندیس (پایه و توان):</div>
                 <div class="fb-inputs-row">
-                    <input type="text" id="fbInp1" placeholder="پایه (مثلاً x یا H)">
-                    <input type="text" id="fbInp2" placeholder="توان بالا (مثلاً 2)">
-                    <input type="text" id="fbInp3" placeholder="اندیس پایین (مثلاً 1)">
-                    <button type="button" class="btn-modal auto-width" style="padding:7px 14px; font-size:12px;" onclick="ToolsModule.applyFormulaBuilder('pow')">درج در کارت</button>
+                    <input type="text" id="fbInp1" placeholder="پایه (x)">
+                    <input type="text" id="fbInp2" placeholder="توان بالا">
+                    <input type="text" id="fbInp3" placeholder="اندیس پایین">
+                    <button type="button" class="btn-modal auto-width" style="padding:7px 12px; font-size:11.5px;" onclick="ToolsModule.applyFormulaBuilder('pow')">درج</button>
                 </div>
             `;
         } else if (type === 'lim') {
             box.innerHTML = `
-                <div style="font-size:11.5px; font-weight:900; color:var(--primary);">ساخت سریع حد (Limit):</div>
                 <div class="fb-inputs-row">
-                    <input type="text" id="fbInp1" placeholder="متغیر به سمت چه عددی؟ (مثلاً 0 یا \\infty)" value="0">
-                    <input type="text" id="fbInp2" placeholder="عبارت جلوی حد (مثلاً f(x))">
-                    <button type="button" class="btn-modal auto-width" style="padding:7px 14px; font-size:12px;" onclick="ToolsModule.applyFormulaBuilder('lim')">درج در کارت</button>
+                    <input type="text" id="fbInp1" placeholder="x به سمت؟ (0)" value="0">
+                    <input type="text" id="fbInp2" placeholder="عبارت جلوی حد">
+                    <button type="button" class="btn-modal auto-width" style="padding:7px 12px; font-size:11.5px;" onclick="ToolsModule.applyFormulaBuilder('lim')">درج</button>
                 </div>
             `;
         }
@@ -1159,15 +1009,10 @@ const ToolsModule = {
         const v3 = document.getElementById('fbInp3')?.value.trim() || '';
         let latex = '';
 
-        if (type === 'frac') {
-            latex = `$\\frac{${v1}}{${v2 || '2'}}$`;
-        } else if (type === 'sqrt') {
-            latex = v2 ? `$\\sqrt[${v2}]{${v1}}$` : `$\\sqrt{${v1}}$`;
-        } else if (type === 'pow') {
-            latex = `$${v1}${v3 ? `_{${v3}}` : ''}${v2 ? `^{${v2}}` : ''}$`;
-        } else if (type === 'lim') {
-            latex = `$\\lim_{x \\to ${v1 || '0'}} ${v2 || 'f(x)'}$`;
-        }
+        if (type === 'frac') latex = `$\\frac{${v1}}{${v2 || '2'}}$`;
+        else if (type === 'sqrt') latex = v2 ? `$\\sqrt[${v2}]{${v1}}$` : `$\\sqrt{${v1}}$`;
+        else if (type === 'pow') latex = `$${v1}${v3 ? `_{${v3}}` : ''}${v2 ? `^{${v2}}` : ''}$`;
+        else if (type === 'lim') latex = `$\\lim_{x \\to ${v1 || '0'}} ${v2 || 'f(x)'}$`;
 
         this.insertRawTextAtCursor(latex);
         document.getElementById('fcFormulaBuilderBox')?.classList.remove('open');
@@ -1181,17 +1026,17 @@ const ToolsModule = {
         if (!prev) return;
 
         if (!f && !b) {
-            prev.innerHTML = 'در کادر بالا بنویسید تا شکل نهایی فرمول و کارت اینجا نمایش داده شود...';
+            prev.innerHTML = 'پیش‌نمایش کارت اینجا نمایش داده می‌شود...';
             return;
         }
         prev.innerHTML = `
-            <div style="margin-bottom:6px;"><strong style="color:var(--primary);">روی کارت (سوال):</strong> ${this.renderMathInHtml(f)}</div>
-            <div><strong style="color:var(--accent);">پشت کارت (پاسخ):</strong> ${this.renderMathInHtml(b)}</div>
+            <div style="margin-bottom:4px;"><strong style="color:var(--primary);">سوال:</strong> ${this.renderMathInHtml(f)}</div>
+            <div><strong style="color:var(--accent);">پاسخ:</strong> ${this.renderMathInHtml(b)}</div>
         `;
     },
 
     copyAiLatexPrompt(btnEl) {
-        const promptText = `لطفاً نکات یا سوالات زیر را به فلش‌کارت تبدیل کن. تمام فرمول‌های ریاضی، فیزیک و شیمی را حتماً داخل علامت $...$ به صورت کد استاندارد LaTeX بنویس تا مستقیم در برنامه قطب‌نما کپی کنم:\n\n[سوال یا مبحث خود را اینجا بنویسید]`;
+        const promptText = `لطفاً فرمول یا نکته زیر را داخل علامت $...$ به کد استاندارد LaTeX تبدیل کن تا مستقیم در فلش‌کارت قطب‌نما کپی کنم:\n\n[سوال یا فرمول خود را اینجا بنویسید]`;
         UI.copyText(promptText, btnEl);
     },
 
@@ -1205,62 +1050,72 @@ const ToolsModule = {
         const b = document.getElementById('inpFcBack')?.value.trim();
 
         if (!f || !b) {
-            return UI.showToast('لطفاً هم روی کارت (سوال) و هم پشت کارت (پاسخ) را وارد کنید.', 'error');
+            return UI.showToast('لطفاً سوال و پاسخ کارت را وارد کنید.', 'error');
         }
 
-        const newCard = {
+        this.flashcards.push({
             id: 'fc_' + Date.now(),
             subject: subj,
             chapter: chapter,
             front: f,
             back: b,
-            box: 0, // ورود به مخزن جدید تا طبق سهمیه روزانه وارد مرور شود
+            box: 0,
             streak: 0,
             nextReview: this.getShamsiDateStr(0)
-        };
+        });
 
-        this.flashcards.push(newCard);
         document.getElementById('inpFcFront').value = '';
         document.getElementById('inpFcBack').value = '';
         this.updateLatexPreview();
 
         this.syncToolsToSupabase();
         this.updateToolsSquareBadges();
-        UI.showToast(`فلش‌کارت جدید در درس «${subj} (${chapter})» ذخیره شد!`, 'success');
+        UI.showToast('فلش‌کارت جدید به مخزن لایتنر اضافه شد!', 'success');
     },
 
     // ======================================================================
-    // 📦 ۶. بانک بسته‌های آماده راهینو و آرشیو کارت‌های من (به تفکیک درس و فصل)
+    // 📦 ۶. بسته‌های آماده راهینو (حذف خودکار بسته‌های دانلودشده از لیست)
     // ======================================================================
     renderPublicDecksLibrary() {
         const libContainer = document.getElementById('fcPublicDecksList');
         if (!libContainer) return;
 
-        if (!this.publicDecks || this.publicDecks.length === 0) {
-            libContainer.innerHTML = '<div class="card-box center-card">بسته‌های فلش‌کارت آماده راهینو به‌زودی بارگذاری می‌شوند.</div>';
+        const importedIds = this.leitnerSettings.imported_decks || [];
+
+        // فیلتر کردن بسته‌هایی که قبلاً توسط دانش‌آموز دانلود نشده‌اند
+        const availableDecks = (this.publicDecks || []).filter(deck => {
+            if (importedIds.includes(deck.id)) return false;
+            const cardsArr = Array.isArray(deck.cards) ? deck.cards : [];
+            if (cardsArr.length > 0 && this.flashcards.some(fc => fc.front === cardsArr[0].front)) {
+                return false;
+            }
+            return true;
+        });
+
+        if (availableDecks.length === 0) {
+            libContainer.innerHTML = `
+                <div class="card-box center-card" style="padding:16px;">
+                    <span style="font-size:12px; color:var(--success); font-weight:800;">✅ تمام بسته‌های آماده فعلی به جعبه لایتنر شما اضافه شده‌اند.</span>
+                </div>`;
             return;
         }
 
-        libContainer.innerHTML = this.publicDecks.map(deck => {
+        libContainer.innerHTML = availableDecks.map(deck => {
             const cardsArr = Array.isArray(deck.cards) ? deck.cards : [];
-            const chapterLabel = deck.chapter || 'مباحث منتخب';
             return `
-                <div class="card-box" style="padding:14px; margin-bottom:10px; background:var(--surface-2);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="card-box" style="padding:12px; margin-bottom:8px; background:var(--surface-2);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
                         <div>
-                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
-                                <strong style="font-size:14px; color:var(--text-main);">${deck.title}</strong>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:3px;">
+                                <strong style="font-size:13px; color:var(--text-main);">${deck.title}</strong>
                                 <span class="konkur-pill">${deck.subject}</span>
-                                <span class="status-pill">${chapterLabel}</span>
+                                <span class="status-pill">${deck.chapter || 'مباحث منتخب'}</span>
                             </div>
-                            <div style="font-size:11.5px; color:var(--text-muted);">
-                                شامل ${cardsArr.length.toLocaleString('fa-IR')} فلش‌کارت استاندارد فرمول‌دار
-                            </div>
+                            <small style="font-size:11px; color:var(--text-muted);">${cardsArr.length.toLocaleString('fa-IR')} کارت آماده</small>
                         </div>
-                        <button type="button" class="btn-modal auto-width" style="padding:9px 14px; font-size:12px;"
+                        <button type="button" class="btn-modal auto-width" style="padding:7px 12px; font-size:11.5px;"
                                 onclick="ToolsModule.importPublicDeck('${deck.id}')">
-                            <i data-lucide="download" class="icon-sm"></i>
-                            <span>افزودن بسته به لایتنر من</span>
+                            <i data-lucide="download" class="icon-sm"></i><span>افزودن</span>
                         </button>
                     </div>
                 </div>
@@ -1292,17 +1147,26 @@ const ToolsModule = {
             }
         });
 
+        if (!Array.isArray(this.leitnerSettings.imported_decks)) {
+            this.leitnerSettings.imported_decks = [];
+        }
+        if (!this.leitnerSettings.imported_decks.includes(deckId)) {
+            this.leitnerSettings.imported_decks.push(deckId);
+        }
+
         this.syncToolsToSupabase();
         this.updateToolsSquareBadges();
+        this.renderPublicDecksLibrary();
+        this.populateMyCardsFilterDropdown();
         this.renderMyCardsArchive();
-        UI.showToast(`${added.toLocaleString('fa-IR')} کارت از بسته «${deck.title}» به مخزن لایتنر شما اضافه شد.`, 'success');
+        UI.showToast(`${added.toLocaleString('fa-IR')} کارت از «${deck.title}» به مخزن شما اضافه شد.`, 'success');
     },
 
     populateMyCardsFilterDropdown() {
         const sel = document.getElementById('selMyCardsFilterSubj');
         if (!sel) return;
         const uniqueSubjects = [...new Set(this.flashcards.map(c => c.subject).filter(Boolean))];
-        sel.innerHTML = `<option value="all">همه دروس من (${this.flashcards.length.toLocaleString('fa-IR')} کارت)</option>` +
+        sel.innerHTML = `<option value="all">همه دروس (${this.flashcards.length.toLocaleString('fa-IR')})</option>` +
             uniqueSubjects.map(s => `<option value="${s}">${s}</option>`).join('');
     },
 
@@ -1324,7 +1188,7 @@ const ToolsModule = {
         });
 
         if (filtered.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:12px;">کارتی با این فیلتر یافت نشد.</div>';
+            container.innerHTML = '<div style="text-align:center; padding:18px; color:var(--text-muted); font-size:12px;">کارتی یافت نشد.</div>';
             return;
         }
 
@@ -1334,19 +1198,19 @@ const ToolsModule = {
             const boxLabel = isBrandNew ? 'مخزن جدید' : `خانه ${b.toLocaleString('fa-IR')}`;
 
             return `
-                <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
-                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:7px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+                        <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap;">
                             <span class="konkur-pill">${c.subject || 'عمومی'}</span>
-                            <span class="status-pill">${c.chapter || 'فصل عمومی'}</span>
+                            <span class="status-pill">${c.chapter || 'عمومی'}</span>
                             <span class="dur-badge" style="margin:0;">${boxLabel}</span>
                         </div>
-                        <button type="button" class="del-icon-btn" style="width:28px;height:28px;" onclick="ToolsModule.deleteCardById('${c.id}')" title="حذف کارت">
-                            <i data-lucide="trash-2" class="icon-sm" style="width:13px;height:13px;"></i>
+                        <button type="button" class="del-icon-btn" style="width:26px;height:26px;" onclick="ToolsModule.deleteCardById('${c.id}')">
+                            <i data-lucide="trash-2" class="icon-sm" style="width:12px;height:12px;"></i>
                         </button>
                     </div>
-                    <div style="font-size:12.5px; font-weight:800; color:var(--text-main); margin-bottom:4px;">${this.renderMathInHtml(c.front)}</div>
-                    <div style="font-size:12px; color:var(--text-muted); border-top:1px dashed var(--border); padding-top:4px;">${this.renderMathInHtml(c.back)}</div>
+                    <div style="font-size:12px; font-weight:800; color:var(--text-main); margin-bottom:3px;">${this.renderMathInHtml(c.front)}</div>
+                    <div style="font-size:11.5px; color:var(--text-muted); border-top:1px dashed var(--border); padding-top:3px;">${this.renderMathInHtml(c.back)}</div>
                 </div>
             `;
         }).join('');
