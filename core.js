@@ -390,7 +390,7 @@ const AppCore = {
         try {
             const [stRes, conSubRes, panSubRes, sysRes, repRes, schRes, vipRes, msgRes, exRes, aiRes] = await Promise.all([
                 supabaseClient.from('students').select('*').eq('national_id', uid).maybeSingle(),
-                supabaseClient.from('subscriptions').select('*').or(`student_nid.eq.${uid},user_phone.eq.${uphone}`).eq('service_category', 'consult').eq('status', 'active').order('created_at', { ascending: false }),
+                supabaseClient.from('subscriptions').select('*').or(`student_nid.eq.${uid},user_phone.eq.${uphone}`).eq('service_category', 'consult').eq('status', 'active').order('end_date', { ascending: false }),
                 supabaseClient.from('pan_monthly_subs').select('*').eq('phone_number', uphone).eq('status', 'active'),
                 supabaseClient.from('system_settings').select('konkur_date').limit(1),
                 supabaseClient.from('daily_reports').select('*').eq('chat_id', uid).order('report_date', { ascending: false }),
