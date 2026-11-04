@@ -1,34 +1,26 @@
 /* ==========================================================================
    🔥 ماژول مستقل مهندسی عادت‌ها و تحلیلگر رفتار (habits.js)
-   شامل:
-   ۱. صفحه کامل و اختصاصی ردیاب عادت‌ها (#view-habits)
-   ۲. ماتریس ۷ روزه با قابلیت ورق زدن به هفته‌های قبل + نوار مدار عصبی ۲۱/۶۶ روزه
-   ۳. آزمایشگاه نمودارها:
-      - نمودار ترکیبی روند هفتگی و ماهانه (۷ روزه / ۳۰ روزه)
-      - نمودار الگوی نظم در روزهای هفته (شنبه تا جمعه)
-      - نمودار مقایسه قدرت ت ک‌تک عادت‌ها + هیت‌مپ ۳۰ روزه
-      - مشاور هوشمند تحلیل رفتار (مقایسه با هفته قبل و کشف نقاط ضعف/قوت)
-   ۴. بانک عادت‌های پیشنهادی رتبه‌برترها + ساخت عادت با انتخاب آیکون
+   نسخه بهینه‌سازی‌شده برای موبایل:
+   ۱. تقویم هفتگی استاندارد ایرانی (شروع از شنبه تا جمعه)
+   ۲. محاسبه هوشمند پایبندی «ماه جاری شمسی» + تقویم حرارتی ماه شمسی
+   ۳. نمودارهای تمام‌عرض موبایل + ترازوی قدرت عادت‌ها بدون بریدگی متن
    ========================================================================== */
 
 const HabitsModule = {
     habitsList: [],
-    habitsLogs: {}, // { habitId: ["1405/08/10", "1405/08/11"] }
+    habitsLogs: {},
     localUpdatedAt: 0,
 
     activeSubtab: 'matrix', // 'matrix' | 'analytics' | 'manage'
-    weekOffset: 0,          // 0 = هفته جاری، -1 = هفته قبل، ...
-    trendPeriod: '7d',      // '7d' | '30d'
+    weekOffset: 0,          // 0 = هفته جاری (شنبه تا جمعه)، -1 = هفته قبل
+    trendPeriod: 'shamsi_month', // 'week' | 'shamsi_month' | '30d'
     selectedNewIcon: 'check-circle-2',
 
-    // رفرنس نمودارهای Chart.js برای جلوگیری از تداخل حافظه
     trendChartInstance: null,
     weekdayChartInstance: null,
-    strengthChartInstance: null,
 
-    // بانک عادت‌های آماده کنکوری
     presetHabitsBank: [
-        { title: 'ممنوعیت گوشی در پارت‌های مطالعه', icon: 'smartphone-off', desc: 'گذاشتن گوشی در اتاق دیگر هنگام مطالعه' },
+        { title: 'ممنوعیت گوشی در پارت‌های مطالعه', icon: 'phone-off', desc: 'گذاشتن گوشی در اتاق دیگر هنگام مطالعه' },
         { title: '۱۵ دقیقه مرور لایتنر قبل از خواب', icon: 'layers', desc: 'تثبیت فرمول‌ها در حافظه بلندمدت در پایان شب' },
         { title: 'تحلیل تست‌های غلط و نزده همان روز', icon: 'file-check-2', desc: 'یادداشت علت اشتباهات بلافاصله بعد از تست‌زنی' },
         { title: 'شروع پارت اول صبح قبل از ساعت ۸', icon: 'sun', desc: 'خوردن قورباغه طلایی در ابتدای صبح' },
@@ -37,7 +29,7 @@ const HabitsModule = {
     ],
 
     // ======================================================================
-    // 🚀 ۱. راه‌اندازی، بارگذاری ایمن و همگام‌سازی با سوپابیس
+    // 🚀 ۱. راه‌اندازی و همگام‌سازی ایمن با سوپابیس
     // ======================================================================
     async init() {
         this.ensureFullHabitsViewInjected();
@@ -56,6 +48,18 @@ const HabitsModule = {
             day: '2-digit'
         }).format(d);
         return UI.toEngDigits(shamsi);
+    },
+
+    getCurrentShamsiMonthInfo() {
+        const todayStr = this.getShamsiDateStr(0); // مثلاً "1405/08/14"
+        const parts = todayStr.split('/');
+        const year = parts[0];
+        const month = parts[1];
+        const todayDayNum = parseInt(parts[2], 10) || 1;
+        const monthName = new Intl.DateTimeFormat('fa-IR', { month: 'long' }).format(new Date());
+        const maxDaysInMonth = parseInt(month, 10) <= 6 ? 31 : (parseInt(month, 10) <= 11 ? 30 : 29);
+
+        return { year, month, todayDayNum, monthName, maxDaysInMonth, prefix: `${year}/${month}/` };
     },
 
     async loadHabitsData() {
@@ -140,10 +144,10 @@ const HabitsModule = {
     },
 
     // ======================================================================
-    // 🧠 ۲. محاسبات علمی زنجیره (Streak)، مرحله عادت‌سازی و درجه نظم
+    // 🧠 ۲. محاسبات هوشمند زنجیره (Streak) و پایبندی ماه شمسی
     // ======================================================================
     getHabitStats(habitId) {
-        const logs = Array.isArray(this.habitsLogs[habitId]) ? this.habitsLogs[habitId] : [];
+        const logs = Array.isArray(this.habitsLogs[habitId]) ? [...this.habitsLogs[habitId]].sort() : [];
         const totalDays = logs.length;
 
         // ۱. محاسبه زنجیره فعلی (Current Streak)
@@ -164,33 +168,52 @@ const HabitsModule = {
             }
         }
 
-        // ۲. محاسبه نرخ انجام در ۳۰ روز اخیر
-        let last30Done = 0;
-        for (let i = -29; i <= 0; i++) {
-            if (logs.includes(this.getShamsiDateStr(i))) last30Done++;
-        }
-        const rate30 = Math.round((last30Done / 30) * 100);
+        // ۲. محاسبه هوشمند پایبندی در «ماه جاری شمسی»
+        // اگر دانش‌آموز تازه چند روز است شروع کرده، مخرج کسر از اولین روز فعالیتش در این ماه حساب می‌شود تا درصد کاذب پایین نگیرد!
+        const mInfo = this.getCurrentShamsiMonthInfo();
+        const logsThisMonth = logs.filter(d => d.startsWith(mInfo.prefix));
+        const doneThisMonth = logsThisMonth.length;
 
-        // ۳. مرحله عصبی شکل‌گیری عادت (بر اساس استاندارد ۲۱ و ۶۶ روز)
-        let stageTitle = '🌱 فاز جوانه‌زنی';
+        let activeDaysDenominator = mInfo.todayDayNum;
+        if (logsThisMonth.length > 0) {
+            const firstLogDayNum = parseInt(logsThisMonth[0].split('/')[2], 10) || 1;
+            const daysSinceFirstLog = Math.max(1, mInfo.todayDayNum - firstLogDayNum + 1);
+            // اگر کل سابقه عادت کمتر از روزهای ماه است، از روز شروع عادت حساب کن
+            if (totalDays <= daysSinceFirstLog) {
+                activeDaysDenominator = daysSinceFirstLog;
+            }
+        }
+        const shamsiMonthRate = Math.min(100, Math.round((doneThisMonth / Math.max(1, activeDaysDenominator)) * 100));
+
+        // ۳. مرحله عصبی شکل‌گیری عادت (۲۱ و ۶۶ روز)
+        let stageTitle = '🌱 جوانه‌زنی';
         let stageClass = 'stage-1';
         let targetDays = 21;
         if (totalDays >= 66) {
-            stageTitle = '💎 عادت خودکار (تثبیت کامل)';
+            stageTitle = '💎 عادت خودکار';
             stageClass = 'stage-4';
             targetDays = 66;
         } else if (totalDays >= 21) {
-            stageTitle = '🔥 فاز تثبیت عمیق (۲۱+ روز)';
+            stageTitle = '🔥 تثبیت عمیق';
             stageClass = 'stage-3';
             targetDays = 66;
         } else if (totalDays >= 7) {
-            stageTitle = '⚡ سیم‌کشی عصبی (۷+ روز)';
+            stageTitle = '⚡ سیم‌کشی عصبی';
             stageClass = 'stage-2';
             targetDays = 21;
         }
         const neuroProgressPct = Math.min(100, Math.round((totalDays / targetDays) * 100));
 
-        return { totalDays, currentStreak, last30Done, rate30, stageTitle, stageClass, targetDays, neuroProgressPct };
+        return {
+            totalDays,
+            currentStreak,
+            doneThisMonth,
+            shamsiMonthRate,
+            stageTitle,
+            stageClass,
+            targetDays,
+            neuroProgressPct
+        };
     },
 
     getOverallDisciplineRank() {
@@ -203,7 +226,7 @@ const HabitsModule = {
             { min: 0, max: 15, title: '🌱 نوآموز نظم', next: 'متعهد کنکوری' },
             { min: 15, max: 45, title: '⚡ متعهد کنکوری', next: 'معمار عادت‌ها' },
             { min: 45, max: 100, title: '🔥 معمار عادت‌ها', next: 'استاد پیوستگی' },
-            { min: 100, max: 220, title: '👑 استاد پیوستگی', next: 'افسانه اراده راهینو' },
+            { min: 100, max: 220, title: '👑 استاد پیوستگی', next: 'افسانه اراده' },
             { min: 220, max: 9999, title: '💎 افسانه اراده راهینو', next: 'سقف افتخار' }
         ];
 
@@ -227,14 +250,14 @@ const HabitsModule = {
             const isDone = logs.includes(todayStr);
             if (isDone) doneToday++;
             return `
-                <div class="toggle-row" onclick="HabitsModule.toggleHabitOnDate('${h.id}', '${todayStr}')"
+                <div class="toggle-row" onclick="HabitsModule.toggleHabitOnDate('${h.id}', '${todayStr}', false)"
                      style="margin-bottom:0; border-color:${isDone ? 'var(--primary)' : 'var(--border)'}; background:${isDone ? 'var(--primary-fade)' : 'var(--surface-2)'};">
-                    <div style="display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:800;">
+                    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800;">
                         <i data-lucide="${h.icon || 'check-circle'}" class="icon-sm primary-text"></i>
                         <span style="${isDone ? 'text-decoration:line-through; opacity:0.75;' : ''}">${h.title}</span>
                     </div>
-                    <div style="width:22px; height:22px; border-radius:7px; border:2px solid var(--primary); background:${isDone ? 'var(--primary)' : 'transparent'}; color:#fff; display:flex; align-items:center; justify-content:center;">
-                        ${isDone ? '<i data-lucide="check" class="icon-sm" style="width:14px;height:14px;"></i>' : ''}
+                    <div style="width:20px; height:20px; border-radius:6px; border:2px solid var(--primary); background:${isDone ? 'var(--primary)' : 'transparent'}; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        ${isDone ? '<i data-lucide="check" class="icon-sm" style="width:13px;height:13px;"></i>' : ''}
                     </div>
                 </div>
             `;
@@ -260,12 +283,12 @@ const HabitsModule = {
         }
         const topBadge = document.getElementById('hbPageTopBadge');
         if (topBadge) {
-            topBadge.innerText = `${this.habitsList.length.toLocaleString('fa-IR')} عادت فعال`;
+            topBadge.innerText = `${this.habitsList.length.toLocaleString('fa-IR')} عادت`;
         }
     },
 
     // ======================================================================
-    // 🗂️ ۴. تزریق صفحه کامل و اختصاصی عادت‌ها (#view-habits)
+    // 🗂️ ۴. تزریق صفحه کامل و مینیمال عادت‌ها (#view-habits)
     // ======================================================================
     ensureFullHabitsViewInjected() {
         const appShell = document.getElementById('shell-app');
@@ -279,175 +302,172 @@ const HabitsModule = {
             appShell.appendChild(section);
         }
 
+        const mInfo = this.getCurrentShamsiMonthInfo();
+
         section.innerHTML = `
+            <!-- هدر اصلاح‌شده (عنوان و زیرعنوان در یک ستون عمودی) -->
             <div class="module-top-bar">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <button type="button" class="nav-icon-btn" onclick="HabitsModule.closeHabitsPage()" title="بازگشت">
                         <i data-lucide="arrow-right" class="icon"></i>
                     </button>
                     <div class="module-title-group">
-                        <h2>مهندسی عادت‌ها و نظم روزانه</h2>
-                        <p>سیم‌کشی عصبی عادت‌های رتبه برتر و پایش نموداری</p>
+                        <div>
+                            <h2>مهندسی عادت‌ها و نظم</h2>
+                            <p>تقویم شنبه تا جمعه و پایش مدار عادت‌سازی</p>
+                        </div>
                     </div>
                 </div>
-                <span class="konkur-pill" id="hbPageTopBadge">۴ عادت فعال</span>
+                <span class="konkur-pill" id="hbPageTopBadge">۴ عادت</span>
             </div>
 
-            <!-- نوار ۳ تایی تب‌های صفحه کامل عادت‌ها -->
+            <!-- نوار ۳ تایی تب‌ها (کوتاه و کاملاً جا شده در یک خط موبایل) -->
             <div class="subtabs-bar">
                 <button type="button" class="subtab-btn active" id="btnHbTabMatrix" onclick="HabitsModule.switchSubtab('matrix')">
                     <i data-lucide="calendar-check" class="icon-sm"></i>
-                    <span>۱. میز عادت و جدول هفتگی</span>
+                    <span>۱. جدول هفتگی</span>
                 </button>
                 <button type="button" class="subtab-btn" id="btnHbTabAnalytics" onclick="HabitsModule.switchSubtab('analytics')">
                     <i data-lucide="bar-chart-3" class="icon-sm"></i>
-                    <span>۲. نمودارها و تحلیل رفتار</span>
+                    <span>۲. آمار و نمودار</span>
                 </button>
                 <button type="button" class="subtab-btn" id="btnHbTabManage" onclick="HabitsModule.switchSubtab('manage')">
                     <i data-lucide="plus-circle" class="icon-sm"></i>
-                    <span>۳. ساخت و بانک عادت‌ها</span>
+                    <span>۳. مدیریت عادت</span>
                 </button>
             </div>
 
             <!-- ==============================================================
-                 تب ۱: میز عادت، درجه نظم و ماتریس ۷ روزه قابل ورق زدن
+                 تب ۱: جدول هفتگی (از شنبه تا جمعه)
                  ============================================================== -->
             <div id="hbTabMatrix">
-                <!-- کارت درجه نظم و امتیاز کل عادت‌سازی -->
                 <div class="hb-level-hero">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <div class="module-icon-badge" style="width:38px;height:38px;"><i data-lucide="award" class="icon"></i></div>
+                            <div class="module-icon-badge" style="width:34px;height:34px;"><i data-lucide="award" class="icon-sm"></i></div>
                             <div>
-                                <div style="font-size:11px; color:var(--text-muted); font-weight:800;">درجه اراده و پیوستگی شما:</div>
-                                <div style="font-size:15px; font-weight:900; color:var(--primary);" id="hbRankTitle">⚡ متعهد کنکوری</div>
+                                <div style="font-size:10px; color:var(--text-muted); font-weight:800;">درجه پیوستگی شما:</div>
+                                <div style="font-size:13.5px; font-weight:900; color:var(--primary);" id="hbRankTitle">⚡ متعهد کنکوری</div>
                             </div>
                         </div>
                         <div style="text-align:left;">
-                            <strong style="font-size:16px; color:var(--success);" id="hbTotalChecksCount">۰ تیک موفق</strong>
-                            <small style="display:block; font-size:10px; color:var(--text-muted);" id="hbNextRankLabel">هدف بعدی</small>
+                            <strong style="font-size:14px; color:var(--success);" id="hbTotalChecksCount">۰ تیک</strong>
+                            <small style="display:block; font-size:9.5px; color:var(--text-muted);" id="hbNextRankLabel">هدف بعدی</small>
                         </div>
                     </div>
-                    <div class="progress-bar-bg" style="height:7px;">
+                    <div class="progress-bar-bg" style="height:6px;">
                         <div class="progress-bar-fill" id="hbRankProgressBar" style="width:0%;"></div>
                     </div>
                 </div>
 
-                <!-- نوار ورق زدن بین هفته‌ها -->
+                <!-- نوار ورق زدن هفته (شنبه تا جمعه) -->
                 <div class="habit-week-nav">
                     <button type="button" class="link-btn" onclick="HabitsModule.changeWeekOffset(-1)">
                         <i data-lucide="chevron-right" class="icon-sm"></i><span>هفته قبل</span>
                     </button>
-                    <span id="hbWeekRangeLabel" style="color:var(--primary);">هفته جاری (۷ روز اخیر)</span>
+                    <span id="hbWeekRangeLabel" style="color:var(--primary); font-size:11.5px;">هفته جاری (شنبه تا جمعه)</span>
                     <button type="button" class="link-btn" id="btnHbNextWeek" onclick="HabitsModule.changeWeekOffset(1)">
                         <span>هفته بعد</span><i data-lucide="chevron-left" class="icon-sm"></i>
                     </button>
                 </div>
 
-                <!-- لیست کارت‌های ماتریس عادت‌ها -->
                 <div id="hbWeeklyCardsContainer"></div>
             </div>
 
             <!-- ==============================================================
-                 تب ۲: آزمایشگاه نمودارها، رادار روزهای هفته و هیت‌مپ ماهانه
+                 تب ۲: آمار، نمودارهای تمام‌عرض و تقویم حرارتی ماه شمسی
                  ============================================================== -->
             <div id="hbTabAnalytics" style="display:none;">
-                
-                <!-- باکس تحلیلگر هوشمند رفتار -->
-                <div class="hb-insight-box" id="hbSmartInsightBox">
-                    در حال تحلیل الگوی رفتاری شما...
-                </div>
+                <div class="hb-insight-box" id="hbSmartInsightBox">در حال تحلیل الگوی رفتاری شما...</div>
 
-                <!-- ۴ شاخص کلیدی عملکرد عادت‌ها -->
                 <div class="kpi-grid-4">
                     <div class="kpi-card">
-                        <div class="kpi-top"><span>پایبندی ۷ روز اخیر</span><i data-lucide="zap" class="icon-sm primary-text"></i></div>
-                        <div class="kpi-val primary-text" id="hbKpi7dRate">۰٪</div>
-                        <div class="kpi-sub">عملکرد این هفته</div>
+                        <div class="kpi-top"><span>این هفته (ش تا ج)</span><i data-lucide="zap" class="icon-sm primary-text"></i></div>
+                        <div class="kpi-val primary-text" id="hbKpiWeekRate">۰٪</div>
+                        <div class="kpi-sub">روزهای سپری‌شده هفته</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-top"><span>پایبندی ۳۰ روزه</span><i data-lucide="calendar" class="icon-sm indigo-text"></i></div>
-                        <div class="kpi-val indigo-text" id="hbKpi30dRate">۰٪</div>
-                        <div class="kpi-sub">میانگین یک ماه اخیر</div>
+                        <div class="kpi-top"><span>پایبندی ${mInfo.monthName}</span><i data-lucide="calendar" class="icon-sm indigo-text"></i></div>
+                        <div class="kpi-val indigo-text" id="hbKpiMonthRate">۰٪</div>
+                        <div class="kpi-sub">از ۱ ${mInfo.monthName} تا امروز</div>
                     </div>
                     <div class="kpi-card highlight-record">
-                        <div class="kpi-top"><span>بهترین زنجیره فعال</span><i data-lucide="flame" class="icon-sm gold-text"></i></div>
+                        <div class="kpi-top"><span>بهترین زنجیره</span><i data-lucide="flame" class="icon-sm gold-text"></i></div>
                         <div class="kpi-val gold-text" id="hbKpiBestStreak">۰ روز</div>
-                        <div class="kpi-sub">بیشترین پیوستگی</div>
+                        <div class="kpi-sub">بیشترین پیوستگی فعال</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-top"><span>روزهای ۱۰۰٪ کامل</span><i data-lucide="trophy" class="icon-sm success-text"></i></div>
                         <div class="kpi-val success-text" id="hbKpiPerfectDays">۰ روز</div>
-                        <div class="kpi-sub">در ۳۰ روز گذشته</div>
+                        <div class="kpi-sub">در ${mInfo.monthName} ماه</div>
                     </div>
                 </div>
 
-                <!-- نمودار ۱: روند پایبندی روزانه (قابل سوییچ بین ۷ روزه و ۳۰ روزه) -->
+                <!-- نمودار ۱: روند پایبندی روزانه (با دکمه‌های یک‌خطی) -->
                 <div class="card-box">
-                    <div class="chart-header-Controls">
-                        <div class="section-inline-title">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                        <div class="section-inline-title" style="font-size:12.5px;">
                             <i data-lucide="trending-up" class="icon-sm primary-text"></i>
-                            <span id="hbTrendChartTitle">روند پایبندی روزانه (۷ روز اخیر)</span>
+                            <span id="hbTrendChartTitle">روند پایبندی (${mInfo.monthName} ماه)</span>
                         </div>
                         <div class="segmented-pills compact-pills">
-                            <button type="button" class="pill-btn active" id="btnHbTrend7d" onclick="HabitsModule.setTrendPeriod('7d')">هفتگی (۷ روز)</button>
-                            <button type="button" class="pill-btn" id="btnHbTrend30d" onclick="HabitsModule.setTrendPeriod('30d')">ماهانه (۳۰ روز)</button>
+                            <button type="button" class="pill-btn" id="btnHbTrendWeek" onclick="HabitsModule.setTrendPeriod('week')">این هفته</button>
+                            <button type="button" class="pill-btn active" id="btnHbTrendShamsi" onclick="HabitsModule.setTrendPeriod('shamsi_month')">${mInfo.monthName}</button>
+                            <button type="button" class="pill-btn" id="btnHbTrend30d" onclick="HabitsModule.setTrendPeriod('30d')">۳۰ روزه</button>
                         </div>
                     </div>
-                    <div class="chart-container-fixed" style="height:220px;">
+                    <div class="chart-container-fixed" style="height:195px;">
                         <canvas id="hbTrendChartCanvas"></canvas>
                     </div>
                 </div>
 
-                <!-- نمودار ۲: الگوی نظم در روزهای هفته (کشف روزهای طلایی و روزهای افت) -->
+                <!-- نمودار ۲: کالبدشکافی روزهای هفته (شنبه تا جمعه) -->
                 <div class="card-box">
-                    <div class="section-inline-title" style="margin-bottom:4px;">
+                    <div class="section-inline-title" style="font-size:12.5px; margin-bottom:3px;">
                         <i data-lucide="compass" class="icon-sm gold-text"></i>
-                        <span>کالبدشکافی روزهای هفته (در کدام روزها منظم‌تری؟)</span>
+                        <span>کالبدشکافی روزهای هفته (شنبه تا جمعه)</span>
                     </div>
-                    <p class="field-hint" style="margin-top:0;">میانگین درصد انجام عادت‌ها به تفکیک روزهای هفته (شنبه تا جمعه)</p>
-                    <div class="chart-container-fixed small" style="height:200px;">
+                    <p class="field-hint" style="margin-top:0; font-size:10.5px;">میانگین درصد انجام عادت‌ها در هر روز هفته</p>
+                    <div class="chart-container-fixed small" style="height:185px;">
                         <canvas id="hbWeekdayChartCanvas"></canvas>
                     </div>
                 </div>
 
-                <!-- نمودار ۳: مقایسه قدرت تک‌تک عادت‌ها -->
+                <!-- بخش ۳: ترازوی قدرت عادت‌ها (با نوارهای پیشرفت بومی و خوانا بدون بریده شدن متن) -->
                 <div class="card-box">
-                    <div class="section-inline-title" style="margin-bottom:4px;">
-                        <i data-lucide="bar-chart-horizontal" class="icon-sm accent-text"></i>
-                        <span>ترازوی قدرت عادت‌ها (۳۰ روز اخیر)</span>
+                    <div class="section-inline-title" style="font-size:12.5px; margin-bottom:3px;">
+                        <i data-lucide="award" class="icon-sm accent-text"></i>
+                        <span>ترازوی قدرت عادت‌های شما (در ${mInfo.monthName} ماه)</span>
                     </div>
-                    <p class="field-hint" style="margin-top:0;">کدام عادت به بخشی از وجودت تبدیل شده و کدام عادت نیاز به توجه بیشتری دارد؟</p>
-                    <div class="chart-container-fixed small" style="height:210px;">
-                        <canvas id="hbStrengthChartCanvas"></canvas>
-                    </div>
+                    <p class="field-hint" style="margin-top:0; font-size:10.5px;">رتبه‌بندی عادت‌ها بر اساس درصد پایبندی و زنجیره فعلی</p>
+                    <div class="hb-strength-list" id="hbStrengthNativeList"></div>
                 </div>
 
-                <!-- هیت‌مپ ۳۰ روزه -->
-                <div class="section-title">
+                <!-- تقویم حرارتی ماه جاری شمسی -->
+                <div class="section-title" style="margin:14px 0 8px 0;">
                     <span class="bar"></span>
                     <i data-lucide="grid" class="icon-sm"></i>
-                    <span>نقشه حرارتی پیوستگی ماهانه (۳۰ روز گذشته)</span>
+                    <span>تقویم حرارتی ${mInfo.monthName} ماه (روز ۱ تا ${mInfo.maxDaysInMonth.toLocaleString('fa-IR')})</span>
                 </div>
                 <div class="heatmap-grid" id="hbMonthlyHeatmapGrid"></div>
             </div>
 
             <!-- ==============================================================
-                 تب ۳: ساخت عادت شخصی + بانک عادت‌های پیشنهادی رتبه‌برترها
+                 تب ۳: مدیریت، ساخت عادت و بانک عادت‌های آماده
                  ============================================================== -->
             <div id="hbTabManage" style="display:none;">
                 <div class="card-box">
                     <div class="section-title" style="margin-top:0;">
                         <span class="bar"></span>
                         <i data-lucide="plus-circle" class="icon-sm"></i>
-                        <span>تعریف عادت جدید</span>
+                        <span>تعریف عادت شخصی جدید</span>
                     </div>
                     <div class="form-group">
                         <label>عنوان عادت روزانه:</label>
                         <input type="text" id="inpNewCustomHabitTitle" class="modern-input" placeholder="مثلاً: حل ۱۵ تست قرابت معنایی هر شب">
                     </div>
                     <div class="form-group">
-                        <label>انتخاب آیکون عادت:</label>
+                        <label>انتخاب آیکون:</label>
                         <div class="hb-icon-picker" id="hbIconPickerRow">
                             ${['check-circle-2', 'sunrise', 'book-open-check', 'shield-check', 'flame', 'brain', 'timer', 'layers', 'droplets', 'activity'].map(ic => `
                                 <div class="hb-icon-opt ${ic === 'check-circle-2' ? 'active' : ''}" onclick="HabitsModule.selectNewHabitIcon('${ic}', this)">
@@ -465,7 +485,7 @@ const HabitsModule = {
                 <div class="section-title">
                     <span class="bar"></span>
                     <i data-lucide="sparkles" class="icon-sm"></i>
-                    <span>بانک عادت‌های طلایی رتبه‌برترها (افزودن با یک کلیک)</span>
+                    <span>بانک عادت‌های طلایی رتبه‌برترها</span>
                 </div>
                 <div id="hbPresetsBankContainer"></div>
             </div>
@@ -506,43 +526,60 @@ const HabitsModule = {
 
     changeWeekOffset(delta) {
         const nextOff = this.weekOffset + delta;
-        if (nextOff > 0) return; // هفته آینده هنوز نرسیده است
+        if (nextOff > 0) return;
         this.weekOffset = nextOff;
         this.renderMatrixTab();
     },
 
     // ======================================================================
-    // 📅 ۵. رندر تب ۱: ماتریس ۷ روزه + نوار مدار عصبی شکل‌گیری عادت
+    // 📅 ۵. رندر جدول هفتگی با شروع استاندارد از «شنبه تا جمعه»
     // ======================================================================
+    getSaturdayToFridayWindow(weekOffset = 0) {
+        const now = new Date();
+        const todayJsDay = now.getDay(); // شنبه = 6، یکشنبه = 0، دوشنبه = 1، ...، جمعه = 5
+        const daysSinceSaturday = (todayJsDay + 1) % 7; // شنبه = 0، یکشنبه = 1، ...، چهارشنبه = 4، جمعه = 6
+
+        const startOffset = (weekOffset * 7) - daysSinceSaturday;
+        const faShortDays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+        const faFullDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+
+        const daysWindow = [];
+        for (let idx = 0; idx < 7; idx++) {
+            const offset = startOffset + idx;
+            const dateStr = this.getShamsiDateStr(offset);
+            const dayNum = parseInt(dateStr.split('/')[2], 10);
+            daysWindow.push({
+                dateStr,
+                dayNum,
+                wName: faShortDays[idx],
+                fullDayName: faFullDays[idx],
+                isToday: offset === 0,
+                isFuture: offset > 0
+            });
+        }
+        return { daysWindow, daysSinceSaturday };
+    },
+
     renderMatrixTab() {
         const rankInfo = this.getOverallDisciplineRank();
         document.getElementById('hbRankTitle').innerText = rankInfo.title;
-        document.getElementById('hbTotalChecksCount').innerText = `${rankInfo.totalChecks.toLocaleString('fa-IR')} تیک موفق`;
-        document.getElementById('hbNextRankLabel').innerText = `درجه بعدی: ${rankInfo.next}`;
+        document.getElementById('hbTotalChecksCount').innerText = `${rankInfo.totalChecks.toLocaleString('fa-IR')} تیک`;
+        document.getElementById('hbNextRankLabel').innerText = `بعدی: ${rankInfo.next}`;
         document.getElementById('hbRankProgressBar').style.width = `${rankInfo.pct}%`;
 
-        const startOffset = (this.weekOffset * 7) - 6;
-        const endOffset = this.weekOffset * 7;
+        const { daysWindow } = this.getSaturdayToFridayWindow(this.weekOffset);
+        const mInfo = this.getCurrentShamsiMonthInfo();
 
         const nextBtn = document.getElementById('btnHbNextWeek');
         if (nextBtn) nextBtn.style.opacity = this.weekOffset === 0 ? '0.35' : '1';
 
         const rangeLbl = document.getElementById('hbWeekRangeLabel');
         if (rangeLbl) {
+            const firstD = daysWindow[0].dayNum.toLocaleString('fa-IR');
+            const lastD = daysWindow[6].dayNum.toLocaleString('fa-IR');
             rangeLbl.innerText = this.weekOffset === 0
-                ? 'هفته جاری (۷ روز اخیر)'
-                : `${Math.abs(this.weekOffset).toLocaleString('fa-IR')} هفته قبل (${this.getShamsiDateStr(startOffset)} تا ${this.getShamsiDateStr(endOffset)})`;
-        }
-
-        const shortWeekdays = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
-        const daysWindow = [];
-        for (let i = startOffset; i <= endOffset; i++) {
-            const dObj = new Date();
-            dObj.setDate(dObj.getDate() + i);
-            const dateStr = this.getShamsiDateStr(i);
-            const dayNum = parseInt(dateStr.split('/')[2], 10);
-            const wName = shortWeekdays[dObj.getDay()];
-            daysWindow.push({ dateStr, dayNum, wName, isToday: i === 0 });
+                ? `هفته جاری (شنبه ${firstD} تا جمعه ${lastD} ${mInfo.monthName})`
+                : `${Math.abs(this.weekOffset).toLocaleString('fa-IR')} هفته قبل (شنبه ${firstD} تا جمعه ${lastD})`;
         }
 
         const container = document.getElementById('hbWeeklyCardsContainer');
@@ -555,12 +592,12 @@ const HabitsModule = {
             const cellsHtml = daysWindow.map(day => {
                 const isDone = logs.includes(day.dateStr);
                 return `
-                    <div class="habit-day-cell ${isDone ? 'done' : ''} ${day.isToday ? 'is-today' : ''}"
-                         onclick="HabitsModule.toggleHabitOnDate('${h.id}', '${day.dateStr}')">
+                    <div class="habit-day-cell ${isDone ? 'done' : ''} ${day.isToday ? 'is-today' : ''} ${day.isFuture ? 'is-future' : ''}"
+                         onclick="HabitsModule.toggleHabitOnDate('${h.id}', '${day.dateStr}', ${day.isFuture})">
                         <small>${day.isToday ? 'امروز' : day.wName}</small>
                         <span class="day-num">${day.dayNum.toLocaleString('fa-IR')}</span>
                         <div class="check-dot">
-                            ${isDone ? '<i data-lucide="check" class="icon-sm" style="width:11px;height:11px;"></i>' : ''}
+                            ${isDone ? '<i data-lucide="check" class="icon-sm" style="width:10px;height:10px;"></i>' : ''}
                         </div>
                     </div>
                 `;
@@ -573,21 +610,20 @@ const HabitsModule = {
                             <i data-lucide="${h.icon || 'flame'}" class="icon-sm primary-text"></i>
                             <span>${h.title}</span>
                         </div>
-                        <div style="display:flex; align-items:center; gap:5px;">
+                        <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                            ${st.currentStreak > 0 ? `<span class="dur-badge gold" style="margin:0; padding:2px 6px;">🔥 ${st.currentStreak.toLocaleString('fa-IR')}</span>` : ''}
                             <span class="hb-neuro-badge ${st.stageClass}">${st.stageTitle}</span>
-                            ${st.currentStreak > 0 ? `<span class="dur-badge gold" style="margin:0;">🔥 ${st.currentStreak.toLocaleString('fa-IR')} روز پیاپی</span>` : ''}
                             ${this.habitsList.length > 1 ? `
-                                <button type="button" class="del-icon-btn" style="width:26px;height:26px;border-radius:8px;" onclick="HabitsModule.deleteHabit('${h.id}')" title="حذف عادت">
-                                    <i data-lucide="trash-2" class="icon-sm" style="width:12px;height:12px;"></i>
+                                <button type="button" class="del-icon-btn" style="width:24px;height:24px;border-radius:7px;" onclick="HabitsModule.deleteHabit('${h.id}')" title="حذف">
+                                    <i data-lucide="trash-2" class="icon-sm" style="width:11px;height:11px;"></i>
                                 </button>
                             ` : ''}
                         </div>
                     </div>
 
-                    <!-- نوار مدار عصبی تبدیل رفتار به عادت خودکار -->
-                    <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:3px; font-weight:700;">
-                        <span>مدار عادت‌سازی (${st.totalDays.toLocaleString('fa-IR')} از ${st.targetDays.toLocaleString('fa-IR')} روز)</span>
-                        <span>پایبندی ماهانه: ${st.rate30.toLocaleString('fa-IR')}٪</span>
+                    <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--text-muted); margin-bottom:3px; font-weight:700;">
+                        <span>مدار عادت (${st.totalDays.toLocaleString('fa-IR')} از ${st.targetDays.toLocaleString('fa-IR')} روز)</span>
+                        <span>پایبندی ${mInfo.monthName}: <strong class="primary-text">${st.shamsiMonthRate.toLocaleString('fa-IR')}٪</strong></span>
                     </div>
                     <div class="habit-mini-prog">
                         <div class="habit-mini-prog-fill" style="width:${st.neuroProgressPct}%;"></div>
@@ -601,7 +637,11 @@ const HabitsModule = {
         UI.refreshIcons();
     },
 
-    toggleHabitOnDate(habitId, dateStr) {
+    toggleHabitOnDate(habitId, dateStr, isFuture = false) {
+        if (isFuture) {
+            return UI.showToast('این روز از هفته هنوز نرسیده است!', 'info');
+        }
+
         if (!Array.isArray(this.habitsLogs[habitId])) {
             this.habitsLogs[habitId] = [];
         }
@@ -621,148 +661,179 @@ const HabitsModule = {
             this.renderAnalyticsTab();
         }
 
-        // اگر تمام عادت‌های امروز کامل شد، جشن کوچک نشان بده
         const todayStr = this.getShamsiDateStr(0);
         if (wasAdded && dateStr === todayStr) {
             const allDoneToday = this.habitsList.every(h => (this.habitsLogs[h.id] || []).includes(todayStr));
             if (allDoneToday && window.confetti) {
                 confetti({ particleCount: 90, spread: 65, origin: { y: 0.65 } });
-                UI.showToast('🔥 فوق‌العاده! تمام عادت‌های امروزت رو ۱۰۰٪ تکمیل کردی!', 'success');
+                UI.showToast('🔥 عالی بود! تمام عادت‌های امروزت رو کامل کردی!', 'success');
             }
         }
     },
 
     // ======================================================================
-    // 📊 ۶. رندر تب ۲: نمودارهای هفتگی/ماهانه، رادار روزهای هفته و تحلیل هوشمند
+    // 📊 ۶. رندر تب ۲: آمار ماه شمسی، نمودارهای تمام‌عرض و تقویم حرارتی
     // ======================================================================
     setTrendPeriod(period) {
         this.trendPeriod = period;
-        document.getElementById('btnHbTrend7d')?.classList.toggle('active', period === '7d');
+        const mInfo = this.getCurrentShamsiMonthInfo();
+        document.getElementById('btnHbTrendWeek')?.classList.toggle('active', period === 'week');
+        document.getElementById('btnHbTrendShamsi')?.classList.toggle('active', period === 'shamsi_month');
         document.getElementById('btnHbTrend30d')?.classList.toggle('active', period === '30d');
+
         const titleEl = document.getElementById('hbTrendChartTitle');
         if (titleEl) {
-            titleEl.innerText = period === '7d' ? 'روند پایبندی روزانه (۷ روز اخیر)' : 'روند پایبندی ماهانه (۳۰ روز اخیر)';
+            titleEl.innerText = period === 'week'
+                ? 'روند این هفته (شنبه تا امروز)'
+                : (period === 'shamsi_month' ? `روند ${mInfo.monthName} ماه (از ۱ ${mInfo.monthName})` : 'روند ۳۰ روز اخیر');
         }
         this.renderTrendChart();
     },
 
     renderAnalyticsTab() {
         const numHabits = Math.max(1, this.habitsList.length);
+        const mInfo = this.getCurrentShamsiMonthInfo();
+        const { daysWindow, daysSinceSaturday } = this.getSaturdayToFridayWindow(0);
 
-        // ۱. محاسبه آمار ۷ روز اخیر، هفته قبل و ۳۰ روز اخیر
-        let done7 = 0, donePrev7 = 0, done30 = 0, perfectDays30 = 0;
+        // ۱. محاسبه پایبندی این هفته (از شنبه تا امروز)
+        let doneThisWeek = 0;
+        const elapsedDaysInWeek = daysSinceSaturday + 1;
+        for (let i = 0; i < elapsedDaysInWeek; i++) {
+            const dStr = daysWindow[i].dateStr;
+            this.habitsList.forEach(h => {
+                if ((this.habitsLogs[h.id] || []).includes(dStr)) doneThisWeek++;
+            });
+        }
+        const weekRate = Math.min(100, Math.round((doneThisWeek / (numHabits * elapsedDaysInWeek)) * 100));
+
+        // ۲. محاسبه تقویم حرارتی ماه جاری شمسی (از ۱ ماه تا پایان ماه)
         const heatmapGrid = document.getElementById('hbMonthlyHeatmapGrid');
         let heatmapHtml = '';
+        let perfectDaysInMonth = 0;
 
-        // آمار روزهای هفته: شنبه (6) تا جمعه (5)
-        const weekdayTotals = { 6: { sum: 0, count: 0 }, 0: { sum: 0, count: 0 }, 1: { sum: 0, count: 0 }, 2: { sum: 0, count: 0 }, 3: { sum: 0, count: 0 }, 4: { sum: 0, count: 0 }, 5: { sum: 0, count: 0 } };
-
-        for (let i = -29; i <= 0; i++) {
-            const dObj = new Date();
-            dObj.setDate(dObj.getDate() + i);
-            const dStr = this.getShamsiDateStr(i);
-            const dayNum = parseInt(dStr.split('/')[2], 10);
-
+        for (let day = 1; day <= mInfo.maxDaysInMonth; day++) {
+            const dStr = `${mInfo.prefix}${String(day).padStart(2, '0')}`;
+            const isFutureDay = day > mInfo.todayDayNum;
             let doneOnDay = 0;
-            this.habitsList.forEach(h => {
-                if ((this.habitsLogs[h.id] || []).includes(dStr)) doneOnDay++;
-            });
 
-            done30 += doneOnDay;
-            if (doneOnDay === numHabits) perfectDays30++;
-            if (i >= -6) done7 += doneOnDay;
-            if (i >= -13 && i <= -7) donePrev7 += doneOnDay;
+            if (!isFutureDay) {
+                this.habitsList.forEach(h => {
+                    if ((this.habitsLogs[h.id] || []).includes(dStr)) doneOnDay++;
+                });
+                if (doneOnDay === numHabits) perfectDaysInMonth++;
+            }
 
-            const dayPct = Math.round((doneOnDay / numHabits) * 100);
-            const wDay = dObj.getDay();
-            weekdayTotals[wDay].sum += dayPct;
-            weekdayTotals[wDay].count++;
-
-            const ratio = doneOnDay / numHabits;
+            const ratio = isFutureDay ? 0 : (doneOnDay / numHabits);
             let lvlClass = '';
             if (ratio >= 0.85) lvlClass = 'lvl-3';
             else if (ratio >= 0.45) lvlClass = 'lvl-2';
             else if (ratio > 0) lvlClass = 'lvl-1';
 
-            heatmapHtml += `<div class="heatmap-cell ${lvlClass}" title="${dStr}: ${dayPct}%">${dayNum.toLocaleString('fa-IR')}</div>`;
+            heatmapHtml += `<div class="heatmap-cell ${lvlClass}" style="${isFutureDay ? 'opacity:0.32;border-style:dashed;' : ''}" title="${day} ${mInfo.monthName}">${day.toLocaleString('fa-IR')}</div>`;
         }
-
         if (heatmapGrid) heatmapGrid.innerHTML = heatmapHtml;
 
-        const rate7 = Math.min(100, Math.round((done7 / (numHabits * 7)) * 100));
-        const ratePrev7 = Math.min(100, Math.round((donePrev7 / (numHabits * 7)) * 100));
-        const rate30 = Math.min(100, Math.round((done30 / (numHabits * 30)) * 100));
-
+        // ۳. آمار کلی عادت‌ها و میانگین ماه جاری شمسی
         const habitStatsList = this.habitsList.map(h => ({ habit: h, ...this.getHabitStats(h.id) }));
+        const avgShamsiMonthRate = Math.round(habitStatsList.reduce((s, x) => s + x.shamsiMonthRate, 0) / numHabits);
         const bestStreak = habitStatsList.reduce((max, x) => Math.max(max, x.currentStreak), 0);
 
-        document.getElementById('hbKpi7dRate').innerText = `${rate7.toLocaleString('fa-IR')}٪`;
-        document.getElementById('hbKpi30dRate').innerText = `${rate30.toLocaleString('fa-IR')}٪`;
+        document.getElementById('hbKpiWeekRate').innerText = `${weekRate.toLocaleString('fa-IR')}٪`;
+        document.getElementById('hbKpiMonthRate').innerText = `${avgShamsiMonthRate.toLocaleString('fa-IR')}٪`;
         document.getElementById('hbKpiBestStreak').innerText = `${bestStreak.toLocaleString('fa-IR')} روز`;
-        document.getElementById('hbKpiPerfectDays').innerText = `${perfectDays30.toLocaleString('fa-IR')} روز`;
+        document.getElementById('hbKpiPerfectDays').innerText = `${perfectDaysInMonth.toLocaleString('fa-IR')} روز`;
 
-        // ۲. تولید متن مشاور هوشمند تحلیل رفتار
-        const sortedByStrength = [...habitStatsList].sort((a, b) => b.rate30 - a.rate30);
-        const strongestHabit = sortedByStrength[0];
-        const weakestHabit = sortedByStrength[sortedByStrength.length - 1];
+        // ۴. محاسبه میانگین روزهای هفته (از شنبه تا جمعه در ۳۰ روز اخیر)
+        const weekdayTotals = { 6: { sum: 0, count: 0 }, 0: { sum: 0, count: 0 }, 1: { sum: 0, count: 0 }, 2: { sum: 0, count: 0 }, 3: { sum: 0, count: 0 }, 4: { sum: 0, count: 0 }, 5: { sum: 0, count: 0 } };
+        for (let i = -29; i <= 0; i++) {
+            const dObj = new Date();
+            dObj.setDate(dObj.getDate() + i);
+            const dStr = this.getShamsiDateStr(i);
+            let doneOnDay = 0;
+            this.habitsList.forEach(h => {
+                if ((this.habitsLogs[h.id] || []).includes(dStr)) doneOnDay++;
+            });
+            const dayPct = Math.round((doneOnDay / numHabits) * 100);
+            weekdayTotals[dObj.getDay()].sum += dayPct;
+            weekdayTotals[dObj.getDay()].count++;
+        }
 
         const faDaysOrder = [
-            { jsDay: 6, name: 'شنبه‌ها' },
-            { jsDay: 0, name: 'یکشنبه‌ها' },
-            { jsDay: 1, name: 'دوشنبه‌ها' },
-            { jsDay: 2, name: 'سه‌شنبه‌ها' },
-            { jsDay: 3, name: 'چهارشنبه‌ها' },
-            { jsDay: 4, name: 'پنجشنبه‌ها' },
-            { jsDay: 5, name: 'جمعه‌ها' }
+            { jsDay: 6, name: 'شنبه' },
+            { jsDay: 0, name: 'یکشنبه' },
+            { jsDay: 1, name: 'دوشنبه' },
+            { jsDay: 2, name: 'سه‌شنبه' },
+            { jsDay: 3, name: 'چهارشنبه' },
+            { jsDay: 4, name: 'پنجشنبه' },
+            { jsDay: 5, name: 'جمعه' }
         ];
         const weekdayAvgs = faDaysOrder.map(d => ({
             name: d.name,
             avg: weekdayTotals[d.jsDay].count > 0 ? Math.round(weekdayTotals[d.jsDay].sum / weekdayTotals[d.jsDay].count) : 0
         }));
-        const weakestWeekday = [...weekdayAvgs].sort((a, b) => a.avg - b.avg)[0];
 
-        const diffWeek = rate7 - ratePrev7;
-        const trendSentence = diffWeek > 0
-            ? `📈 <strong>روند صعودی عالی:</strong> پایبندی تو در ۷ روز اخیر <strong>${diffWeek.toLocaleString('fa-IR')}٪ بیشتر</strong> از هفته گذشته شده است!`
-            : (diffWeek < 0
-                ? `⚠️ <strong>هشدار افت خفیف:</strong> نظم این هفته‌ات نسبت به هفته قبل ${Math.abs(diffWeek).toLocaleString('fa-IR')}٪ کمتر شده؛ از همین امروز زنجیره رو دوباره ببند.`
-                : `⚡ <strong>ثبات قدم:</strong> پایبندی این هفته‌ات روی ${rate7.toLocaleString('fa-IR')}٪ ثابت مانده است.`);
+        const sortedByStrength = [...habitStatsList].sort((a, b) => b.shamsiMonthRate - a.shamsiMonthRate);
+        const strongestHabit = sortedByStrength[0];
+        const weakestHabit = sortedByStrength[sortedByStrength.length - 1];
+        const bestWeekday = [...weekdayAvgs].sort((a, b) => b.avg - a.avg)[0];
 
         const insightBox = document.getElementById('hbSmartInsightBox');
         if (insightBox) {
             insightBox.innerHTML = `
-                <div>${trendSentence}</div>
-                ${strongestHabit ? `<div>💎 <strong>قوی‌ترین عادت تو:</strong> «${strongestHabit.habit.title}» با ${strongestHabit.rate30.toLocaleString('fa-IR')}٪ پایبندی ماهانه در حال تبدیل شدن به یک رفتار کاملاً خودکار است.</div>` : ''}
-                ${weakestHabit && weakestHabit.habit.id !== strongestHabit?.habit.id ? `<div>🎯 <strong>نقطه تمرکز:</strong> عادت «${weakestHabit.habit.title}» بیشترین جا افتادگی را دارد؛ سعی کن آن را به یک عادت قوی‌تر گره بزنی.</div>` : ''}
-                <div>📅 <strong>الگوی روزهای هفته:</strong> آمار نشان می‌دهد در <strong>${weakestWeekday.name}</strong> بیشترین افت نظم را داری؛ حواست به این روز باشد!</div>
+                <div>📊 <strong>تراز ${mInfo.monthName} ماه:</strong> میانگین پایبندی فعال تو در این ماه <strong>${avgShamsiMonthRate.toLocaleString('fa-IR')}٪</strong> و در هفته جاری <strong>${weekRate.toLocaleString('fa-IR')}٪</strong> است.</div>
+                ${strongestHabit ? `<div>💎 <strong>نقطه قوت:</strong> عادت «${strongestHabit.habit.title}» با ${strongestHabit.shamsiMonthRate.toLocaleString('fa-IR')}٪ پایبندی، پایدارترین روتین توست.</div>` : ''}
+                ${weakestHabit && weakestHabit.habit.id !== strongestHabit?.habit.id ? `<div>🎯 <strong>نیازمند توجه:</strong> عادت «${weakestHabit.habit.title}» (${weakestHabit.shamsiMonthRate.toLocaleString('fa-IR')}٪) بیشترین جا افتادگی را دارد.</div>` : ''}
+                ${bestWeekday && bestWeekday.avg > 0 ? `<div>⚡ <strong>منظم‌ترین روز هفته:</strong> بیشترین تمرکز و نظم تو در روزهای <strong>${bestWeekday.name}</strong> ثبت شده است.</div>` : ''}
             `;
         }
 
-        // ۳. رسم ۳ نمودار تحلیلی
         this.renderTrendChart();
         this.renderWeekdayPatternChart(weekdayAvgs);
-        this.renderHabitStrengthChart(sortedByStrength);
+        this.renderNativeStrengthBars(sortedByStrength);
+        UI.refreshIcons();
     },
 
     renderTrendChart() {
         const canvas = document.getElementById('hbTrendChartCanvas');
         if (!canvas || !window.Chart) return;
 
-        const daysCount = this.trendPeriod === '7d' ? 7 : 30;
         const numHabits = Math.max(1, this.habitsList.length);
+        const mInfo = this.getCurrentShamsiMonthInfo();
         const labels = [];
         const dataPct = [];
 
-        for (let i = -(daysCount - 1); i <= 0; i++) {
-            const dStr = this.getShamsiDateStr(i);
-            const parts = dStr.split('/');
-            labels.push(i === 0 ? 'امروز' : `${parseInt(parts[2], 10).toLocaleString('fa-IR')}/${parseInt(parts[1], 10).toLocaleString('fa-IR')}`);
-
-            let done = 0;
-            this.habitsList.forEach(h => {
-                if ((this.habitsLogs[h.id] || []).includes(dStr)) done++;
-            });
-            dataPct.push(Math.round((done / numHabits) * 100));
+        if (this.trendPeriod === 'week') {
+            const { daysWindow, daysSinceSaturday } = this.getSaturdayToFridayWindow(0);
+            for (let i = 0; i <= daysSinceSaturday; i++) {
+                const d = daysWindow[i];
+                labels.push(d.isToday ? 'امروز' : d.fullDayName);
+                let done = 0;
+                this.habitsList.forEach(h => {
+                    if ((this.habitsLogs[h.id] || []).includes(d.dateStr)) done++;
+                });
+                dataPct.push(Math.round((done / numHabits) * 100));
+            }
+        } else if (this.trendPeriod === 'shamsi_month') {
+            for (let day = 1; day <= mInfo.todayDayNum; day++) {
+                const dStr = `${mInfo.prefix}${String(day).padStart(2, '0')}`;
+                labels.push(day === mInfo.todayDayNum ? 'امروز' : day.toLocaleString('fa-IR'));
+                let done = 0;
+                this.habitsList.forEach(h => {
+                    if ((this.habitsLogs[h.id] || []).includes(dStr)) done++;
+                });
+                dataPct.push(Math.round((done / numHabits) * 100));
+            }
+        } else {
+            for (let i = -29; i <= 0; i++) {
+                const dStr = this.getShamsiDateStr(i);
+                const dayNum = parseInt(dStr.split('/')[2], 10);
+                labels.push(i === 0 ? 'امروز' : dayNum.toLocaleString('fa-IR'));
+                let done = 0;
+                this.habitsList.forEach(h => {
+                    if ((this.habitsLogs[h.id] || []).includes(dStr)) done++;
+                });
+                dataPct.push(Math.round((done / numHabits) * 100));
+            }
         }
 
         if (this.trendChartInstance) this.trendChartInstance.destroy();
@@ -775,28 +846,35 @@ const HabitsModule = {
                         type: 'line',
                         label: 'خط روند',
                         data: dataPct,
-                        borderColor: '#f59e0b',
+                        borderColor: '#fbbf24',
                         borderWidth: 2,
-                        pointRadius: this.trendPeriod === '7d' ? 3 : 0,
-                        tension: 0.35,
-                        fill: false
+                        pointRadius: labels.length <= 10 ? 3 : 1.5,
+                        tension: 0.35
                     },
                     {
                         type: 'bar',
-                        label: 'درصد تحقق عادت‌ها',
+                        label: 'تحقق روزانه',
                         data: dataPct,
                         backgroundColor: 'rgba(119, 187, 169, 0.55)',
                         borderColor: '#77bba9',
                         borderWidth: 1,
-                        borderRadius: 6
+                        borderRadius: 5,
+                        maxBarThickness: 22
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: { padding: { left: 0, right: 0, top: 4, bottom: 0 } },
                 scales: {
-                    y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+                    x: { ticks: { font: { family: 'Vazirmatn', size: 9.5 }, maxRotation: 0 } },
+                    y: {
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { font: { size: 9.5 }, stepSize: 25, callback: v => v + '%' }
+                    }
                 },
                 plugins: { legend: { display: false } }
             }
@@ -815,49 +893,54 @@ const HabitsModule = {
                 datasets: [{
                     label: 'میانگین نظم',
                     data: weekdayAvgs.map(x => x.avg),
-                    backgroundColor: weekdayAvgs.map(x => x.avg >= 75 ? '#10b981' : (x.avg >= 45 ? '#77bba9' : '#e59ea3')),
-                    borderRadius: 8
+                    backgroundColor: weekdayAvgs.map(x => x.avg >= 70 ? '#10b981' : (x.avg >= 40 ? '#77bba9' : '#e59ea3')),
+                    borderRadius: 6,
+                    maxBarThickness: 26
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: { padding: { left: 0, right: 0, top: 4, bottom: 0 } },
                 scales: {
-                    y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+                    x: { ticks: { font: { family: 'Vazirmatn', size: 10 }, maxRotation: 0 } },
+                    y: {
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { font: { size: 9.5 }, stepSize: 25, callback: v => v + '%' }
+                    }
                 },
                 plugins: { legend: { display: false } }
             }
         });
     },
 
-    renderHabitStrengthChart(sortedStats) {
-        const canvas = document.getElementById('hbStrengthChartCanvas');
-        if (!canvas || !window.Chart) return;
+    // ✅ رندر ترازوی قدرت عادت‌ها با نوار پیشرفت بومی (بدون بریده شدن متن در موبایل)
+    renderNativeStrengthBars(sortedStats) {
+        const listEl = document.getElementById('hbStrengthNativeList');
+        if (!listEl) return;
 
-        if (this.strengthChartInstance) this.strengthChartInstance.destroy();
-        this.strengthChartInstance = new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: sortedStats.map(x => x.habit.title.slice(0, 22)),
-                datasets: [{
-                    label: 'پایبندی ۳۰ روزه',
-                    data: sortedStats.map(x => x.rate30),
-                    backgroundColor: 'rgba(129, 140, 248, 0.65)',
-                    borderColor: '#818cf8',
-                    borderWidth: 1,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
+        listEl.innerHTML = sortedStats.map(item => {
+            const pct = item.shamsiMonthRate;
+            const barColor = pct >= 75 ? 'var(--success)' : (pct >= 40 ? 'var(--primary)' : 'var(--accent)');
+            return `
+                <div class="hb-strength-item">
+                    <div class="hb-strength-top">
+                        <span style="display:flex; align-items:center; gap:6px; color:var(--text-main);">
+                            <i data-lucide="${item.habit.icon || 'check-circle'}" class="icon-sm primary-text"></i>
+                            <span>${item.habit.title}</span>
+                        </span>
+                        <span style="color:${barColor}; font-weight:900; white-space:nowrap;">
+                            ${pct.toLocaleString('fa-IR')}٪ (${item.doneThisMonth.toLocaleString('fa-IR')} روز)
+                        </span>
+                    </div>
+                    <div class="progress-bar-bg" style="height:7px;">
+                        <div class="progress-bar-fill" style="width:${pct}%; background:${barColor};"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     },
 
     // ======================================================================
@@ -903,16 +986,16 @@ const HabitsModule = {
         }
 
         container.innerHTML = availablePresets.map((p, idx) => `
-            <div class="card-box" style="padding:12px 14px; margin-bottom:8px; background:var(--surface-2);">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div class="module-icon-badge" style="width:36px;height:36px;"><i data-lucide="${p.icon}" class="icon-sm"></i></div>
+            <div class="card-box" style="padding:11px 12px; margin-bottom:8px; background:var(--surface-2);">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:9px;">
+                        <div class="module-icon-badge" style="width:34px;height:34px;"><i data-lucide="${p.icon}" class="icon-sm"></i></div>
                         <div>
-                            <strong style="font-size:13px; color:var(--text-main); display:block;">${p.title}</strong>
-                            <small style="font-size:11px; color:var(--text-muted);">${p.desc}</small>
+                            <strong style="font-size:12px; color:var(--text-main); display:block;">${p.title}</strong>
+                            <small style="font-size:10.5px; color:var(--text-muted);">${p.desc}</small>
                         </div>
                     </div>
-                    <button type="button" class="btn-modal auto-width" style="padding:7px 12px; font-size:11.5px;" onclick="HabitsModule.addPresetHabit(${idx})">
+                    <button type="button" class="btn-modal auto-width" style="padding:6px 11px; font-size:11px; flex-shrink:0;" onclick="HabitsModule.addPresetHabit(${idx})">
                         <i data-lucide="plus" class="icon-sm"></i><span>افزودن</span>
                     </button>
                 </div>
@@ -937,7 +1020,7 @@ const HabitsModule = {
         this.syncHabitsToSupabase();
         this.renderHomeHabitsSummary();
         this.renderPresetsBank();
-        UI.showToast(`عادت «${target.title}» به میز عادت‌های شما اضافه شد!`, 'success');
+        UI.showToast(`عادت «${target.title}» اضافه شد!`, 'success');
     },
 
     deleteHabit(habitId) {
