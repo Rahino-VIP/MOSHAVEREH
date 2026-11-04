@@ -1344,3 +1344,40 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
 .formula-builder-Assistant.open { display: block; animation: fadeSlideUp 0.2s ease-out; }
 .fb-inputs-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
 .fb-inputs-row input { flex: 1; min-width: 90px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-main); font-weight: 800; text-align: center; direction: ltr; }
+
+/* ==========================================================================
+   🔥 ۱۶. استایل‌های صفحه کامل ردیاب عادت‌ها و آزمایشگاه رفتار (#view-habits)
+   ========================================================================== */
+.hb-level-hero {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--accent-fade) 100%);
+    border: 2px solid var(--primary); border-radius: 22px;
+    padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.hb-neuro-badge {
+    font-size: 10px; font-weight: 800; padding: 2px 8px;
+    border-radius: 99px; display: inline-flex; align-items: center; gap: 4px;
+    background: var(--primary-fade); color: var(--primary);
+}
+.hb-neuro-badge.stage-2 { background: var(--gold-fade); color: var(--gold); }
+.hb-neuro-badge.stage-3 { background: var(--indigo-fade); color: var(--indigo); }
+.hb-neuro-badge.stage-4 { background: var(--success-fade); color: var(--success); }
+
+.hb-insight-box {
+    background: linear-gradient(135deg, var(--surface-2), var(--primary-fade));
+    border: 1px solid var(--primary); border-right: 4px solid var(--primary);
+    border-radius: 16px; padding: 12px 14px; margin-bottom: 14px;
+    font-size: 12px; line-height: 1.8; color: var(--text-main);
+}
+.hb-icon-picker {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px; scrollbar-width: none;
+}
+.hb-icon-picker::-webkit-scrollbar { display: none; }
+.hb-icon-opt {
+    width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+    background: var(--surface-2); border: 1.5px solid var(--border);
+    color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.hb-icon-opt.active {
+    background: var(--primary-fade); border-color: var(--primary); color: var(--primary); transform: translateY(-2px);
+}
