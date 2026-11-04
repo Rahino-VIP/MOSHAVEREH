@@ -27,13 +27,8 @@ const ToolsModule = {
 
     async init() {
         this.injectEnhancedToolModals();
-        await this.loadHabitsDataFromSupabase();
-        this.renderHomeHabitsSummary();
-
-        // راه‌اندازی ماژول مستقل فلش‌کارت (flashcards.js)
-        if (window.FlashcardsModule) {
-            await window.FlashcardsModule.init();
-        }
+        if (window.HabitsModule) await window.HabitsModule.init();
+        if (window.FlashcardsModule) await window.FlashcardsModule.init();
         UI.refreshIcons();
     },
 
@@ -242,10 +237,11 @@ const ToolsModule = {
                 if (window.FlashcardsModule) window.FlashcardsModule.openFlashcardsPage();
                 return;
             }
-            origOpenModal(modalId);
             if (modalId === 'habitModal') {
-                this.renderHabitModalContent();
+                if (window.HabitsModule) window.HabitsModule.openHabitsPage();
+                return;
             }
+            origOpenModal(modalId);
         };
     },
 
