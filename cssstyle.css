@@ -1346,17 +1346,17 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
 .fb-inputs-row input { flex: 1; min-width: 90px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-main); font-weight: 800; text-align: center; direction: ltr; }
 
 /* ==========================================================================
-   🔥 ۱۶. استایل‌های صفحه کامل ردیاب عادت‌ها و آزمایشگاه رفتار (#view-habits)
+   🔥 ۱۶. استایل‌های ظریف و موبایل‌پسند صفحه ردیاب عادت‌ها (#view-habits)
    ========================================================================== */
 .hb-level-hero {
-    background: linear-gradient(135deg, var(--surface) 0%, var(--accent-fade) 100%);
-    border: 2px solid var(--primary); border-radius: 22px;
-    padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--primary-fade) 100%);
+    border: 1.5px solid var(--primary); border-radius: 18px;
+    padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow);
 }
 .hb-neuro-badge {
-    font-size: 10px; font-weight: 800; padding: 2px 8px;
-    border-radius: 99px; display: inline-flex; align-items: center; gap: 4px;
-    background: var(--primary-fade); color: var(--primary);
+    font-size: 9.5px; font-weight: 800; padding: 2px 7px;
+    border-radius: 99px; display: inline-flex; align-items: center; gap: 3px;
+    background: var(--primary-fade); color: var(--primary); white-space: nowrap;
 }
 .hb-neuro-badge.stage-2 { background: var(--gold-fade); color: var(--gold); }
 .hb-neuro-badge.stage-3 { background: var(--indigo-fade); color: var(--indigo); }
@@ -1365,19 +1365,51 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
 .hb-insight-box {
     background: linear-gradient(135deg, var(--surface-2), var(--primary-fade));
     border: 1px solid var(--primary); border-right: 4px solid var(--primary);
-    border-radius: 16px; padding: 12px 14px; margin-bottom: 14px;
-    font-size: 12px; line-height: 1.8; color: var(--text-main);
+    border-radius: 14px; padding: 10px 12px; margin-bottom: 12px;
+    font-size: 11.5px; line-height: 1.75; color: var(--text-main);
 }
 .hb-icon-picker {
-    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px; scrollbar-width: none;
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none;
 }
 .hb-icon-picker::-webkit-scrollbar { display: none; }
 .hb-icon-opt {
-    width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
     background: var(--surface-2); border: 1.5px solid var(--border);
     color: var(--text-muted); display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: 0.2s;
 }
 .hb-icon-opt.active {
-    background: var(--primary-fade); border-color: var(--primary); color: var(--primary); transform: translateY(-2px);
+    background: var(--primary-fade); border-color: var(--primary); color: var(--primary);
+}
+
+/* روزهای آینده هفته (هنوز نرسیده) */
+.habit-day-cell.is-future {
+    opacity: 0.38; border-style: dashed;
+}
+
+/* نوارهای مقایسه قدرت عادت‌ها (جایگزین نمودار فشرده افقی در موبایل) */
+.hb-strength-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.hb-strength-item {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 9px 12px;
+}
+.hb-strength-top {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11.5px; font-weight: 800; margin-bottom: 5px; gap: 8px;
+}
+
+@media (max-width: 600px) {
+    #view-habits .subtabs-bar { gap: 3px; padding: 4px; }
+    #view-habits .subtab-btn {
+        min-width: 0 !important; flex: 1 !important;
+        padding: 7px 4px !important; font-size: 10.5px !important;
+        gap: 4px !important; white-space: nowrap;
+    }
+    #view-habits .habit-matrix-card { padding: 10px 10px; margin-bottom: 8px; border-radius: 14px; }
+    #view-habits .habit-card-title { font-size: 12px; }
+    #view-habits .habit-day-cell { padding: 4px 1px; border-radius: 9px; gap: 2px; }
+    #view-habits .habit-day-cell small { font-size: 8.5px; }
+    #view-habits .habit-day-cell .day-num { font-size: 10px; }
+    #view-habits .habit-day-cell .check-dot { width: 16px; height: 16px; }
+    #view-habits .compact-pills .pill-btn { padding: 5px 8px !important; font-size: 10.5px !important; white-space: nowrap; }
 }
