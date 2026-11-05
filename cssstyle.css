@@ -1623,3 +1623,49 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
 .sound-mix-row.active {
     border-color: #10b981; background: rgba(16, 185, 129, 0.16);
 }
+
+/* ==========================================================================
+   🗓️ ۱۹. بهینه‌سازی و ظریف‌سازی تب برنامه‌ریزی برای موبایل (#tab-planning)
+   ========================================================================== */
+.core-setup-banner {
+    padding: 11px 13px !important;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; background: linear-gradient(135deg, var(--surface), var(--primary-fade)) !important;
+}
+.week-export-btns {
+    display: flex; gap: 6px; align-items: center;
+}
+.consultant-warn-note {
+    background: var(--danger-fade); border: 1px solid rgba(239, 68, 68, 0.35);
+    color: var(--text-main); border-radius: 12px; padding: 9px 11px;
+    font-size: 11px; line-height: 1.7; margin-bottom: 10px;
+    display: flex; align-items: flex-start; gap: 7px;
+}
+.consultant-warn-note svg { color: var(--danger); margin-top: 3px; }
+
+.busy-slot-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px; margin-bottom: 8px;
+}
+.busy-slot-top {
+    display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 6px;
+    align-items: center; margin-bottom: 7px;
+}
+@media (max-width: 600px) {
+    #tab-planning .subtabs-bar { gap: 4px; padding: 4px; }
+    #tab-planning .subtab-btn {
+        min-width: 0 !important; flex: 1 !important;
+        padding: 8px 4px !important; font-size: 11px !important;
+        white-space: nowrap;
+    }
+    #tab-planning .week-selector-bar {
+        flex-direction: column; align-items: stretch; gap: 8px; padding: 11px 12px;
+    }
+    #tab-planning .week-dropdown-holder { width: 100%; max-width: none; }
+    #tab-planning .week-export-btns { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+    #tab-planning .week-export-btns button { justify-content: center; padding: 8px; }
+
+    .busy-slot-top {
+        grid-template-columns: 1fr 1fr;
+    }
+}
