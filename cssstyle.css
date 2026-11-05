@@ -1458,80 +1458,187 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
 }
 
 /* ==========================================================================
-   ⏱️ ۱۸. استایل‌های استودیو تایمر تمرکز سینماتیک (timer.js)
+   🚂 ۱۸. استایل‌های اختصاصی تایمر «اکسپرس شبانه راهینو» (timer.js)
    ========================================================================== */
+.immersive-timer-overlay {
+    position: fixed; inset: 0; z-index: 6000;
+    background: #070b12; color: #f8fafc;
+    display: none; flex-direction: column; justify-content: space-between;
+    align-items: center; padding: 14px 12px; overflow: hidden;
+    user-select: none;
+}
+.immersive-timer-overlay.active { display: flex; }
+
+/* ۱. قاب پنجره پانوراما و میز کوپه قطار */
+.train-cabin-stage {
+    position: relative; width: 100%; max-width: 460px;
+    display: flex; flex-direction: column; align-items: center;
+    z-index: 5; margin: auto 0;
+}
+/* تکان بسیار ملایم و طبیعی قطار در حال حرکت */
+.immersive-timer-overlay.running:not(.break-phase) .train-cabin-stage {
+    animation: trainGentleSway 4.5s ease-in-out infinite;
+}
+@keyframes trainGentleSway {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(2px) rotate(0.25deg); }
+}
+
+.train-window-frame {
+    position: relative; width: 100%; height: 255px;
+    border-radius: 28px 28px 12px 12px;
+    border: 6px solid #1e293b;
+    box-shadow: inset 0 0 35px rgba(0,0,0,0.85), 0 12px 35px rgba(0,0,0,0.65);
+    overflow: hidden;
+    background: linear-gradient(180deg, #060913 0%, #0f172a 65%, #1e293b 100%);
+    transition: background 2s ease;
+}
+
+/* شفق قطبی فیروزه‌ای راهینو در آسمان پنجره */
+.window-aurora {
+    position: absolute; top: 12%; left: -20%; right: -20%; height: 85px;
+    background: radial-gradient(ellipse at center, rgba(119, 187, 169, 0.38) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 75%);
+    filter: blur(14px); opacity: 0; transition: opacity 2s ease;
+    animation: auroraWave 9s ease-in-out infinite alternate; pointer-events: none;
+}
+@keyframes auroraWave {
+    0% { transform: translateX(-8%) scaleY(0.9); }
+    100% { transform: translateX(8%) scaleY(1.15); }
+}
+
+/* خورشید طلوع در دقایق پایانی پارت ۹۰ دقیقه‌ای */
+.window-sunrise-glow {
+    position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+    width: 180px; height: 90px; border-radius: 99px;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.65) 0%, rgba(245, 158, 11, 0.2) 55%, transparent 75%);
+    opacity: 0; transition: opacity 2s ease; pointer-events: none;
+}
+
+/* لایه‌های متحرک بیرون پنجره (کوه‌ها، جنگل کاج و تیرهای چراغ برق) */
+.parallax-layer {
+    position: absolute; bottom: 0; left: 0; width: 200%;
+    display: flex; pointer-events: none;
+}
+.parallax-mountains { bottom: 26px; height: 85px; opacity: 0.75; }
+.parallax-trees { bottom: 0; height: 52px; z-index: 3; }
+.parallax-poles { bottom: 0; height: 150px; z-index: 4; opacity: 0.55; }
+
+.immersive-timer-overlay.running:not(.break-phase) .parallax-mountains {
+    animation: slideParallax 55s linear infinite;
+}
+.immersive-timer-overlay.running:not(.break-phase) .parallax-trees {
+    animation: slideParallax 14s linear infinite;
+}
+.immersive-timer-overlay.running:not(.break-phase) .parallax-poles {
+    animation: slideParallax 4.5s linear infinite;
+}
+@keyframes slideParallax {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ساعت هولوگرافیک داخل آسمان پنجره */
+.window-hud-clock {
+    position: absolute; top: 14px; left: 0; right: 0;
+    text-align: center; z-index: 6; pointer-events: none;
+}
+.hud-time-digits {
+    font-size: 48px; font-weight: 900; color: #ffffff;
+    letter-spacing: 2px; line-height: 1.05;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.85), 0 0 18px rgba(119, 187, 169, 0.45);
+}
+.hud-sub-status {
+    font-size: 11px; font-weight: 800; color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px);
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 11px; border-radius: 99px; margin-top: 4px;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* ۲. میز چوبی کوپه، چراغ مطالعه، دفتر و استکان چای */
+.cabin-desk-surface {
+    position: relative; width: 104%; height: 74px;
+    background: linear-gradient(180deg, #2a1b12 0%, #1a100a 100%);
+    border-top: 3px solid #452c1e; border-radius: 10px 10px 18px 18px;
+    margin-top: -4px; z-index: 7;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.8);
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding: 0 18px 10px 18px;
+}
+
+/* مخروط نور گرم چراغ مطالعه روی میز */
+.lamp-light-cone {
+    position: absolute; bottom: 10px; right: 18px;
+    width: 170px; height: 150px;
+    background: radial-gradient(circle at 75% 20%, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.08) 55%, transparent 75%);
+    pointer-events: none; transition: opacity 0.8s ease; z-index: 6;
+}
+.immersive-timer-overlay.break-phase .lamp-light-cone { opacity: 0.15; }
+
+/* بخار متحرک استکان چای در تایم استراحت */
+.tea-steam-path {
+    stroke-dasharray: 24; stroke-dashoffset: 24;
+    animation: steamRise 2.6s ease-in-out infinite;
+}
+@keyframes steamRise {
+    0% { stroke-dashoffset: 24; opacity: 0; transform: translateY(4px); }
+    50% { opacity: 0.75; }
+    100% { stroke-dashoffset: 0; opacity: 0; transform: translateY(-8px); }
+}
+
+/* ۳. بلیت طلایی سفر و نوار انتخاب سریع */
+.train-ticket-bar {
+    width: 100%; max-width: 460px;
+    background: rgba(22, 32, 30, 0.85); backdrop-filter: blur(12px);
+    border: 1px dashed rgba(119, 187, 169, 0.45); border-radius: 16px;
+    padding: 9px 12px; margin-top: 8px; z-index: 10;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    font-size: 11px;
+}
 .pomo-preset-bar {
-    display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
-    z-index: 10; margin: 10px 0;
+    display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;
+    z-index: 10; margin-bottom: 8px; width: 100%; max-width: 460px;
 }
 .pomo-preset-chip {
     background: rgba(255, 255, 255, 0.06);
-    border: 1.5px solid rgba(255, 255, 255, 0.14);
-    color: #cbd5e1; padding: 6px 12px; border-radius: 99px;
-    font-size: 11.5px; font-weight: 800; cursor: pointer; transition: 0.22s;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #cbd5e1; padding: 5px 10px; border-radius: 99px;
+    font-size: 10.5px; font-weight: 800; cursor: pointer; transition: 0.2s;
 }
-.pomo-preset-chip.active, .pomo-preset-chip:hover {
-    background: rgba(119, 187, 169, 0.22);
+.pomo-preset-chip.active {
+    background: rgba(119, 187, 169, 0.24);
     border-color: #77bba9; color: #ffffff;
-    box-shadow: 0 0 16px rgba(119, 187, 169, 0.3);
 }
 
-/* پنل میکسر صدای محیطی */
-.pomo-sound-mixer {
-    position: absolute; bottom: 82px; z-index: 30;
-    background: rgba(12, 20, 24, 0.96); backdrop-filter: blur(18px);
-    border: 1px solid rgba(119, 187, 169, 0.4); border-radius: 20px;
-    padding: 14px; width: calc(100% - 32px); max-width: 380px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.75); display: none;
+/* ۴. پنل میکسر صدای هم‌زمان و نقشه ریلی */
+.pomo-popup-sheet {
+    position: absolute; bottom: 74px; z-index: 35;
+    background: rgba(13, 21, 24, 0.97); backdrop-filter: blur(18px);
+    border: 1.5px solid rgba(119, 187, 169, 0.45); border-radius: 20px;
+    padding: 14px; width: calc(100% - 24px); max-width: 420px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.85); display: none;
+    max-height: 72vh; overflow-y: auto;
 }
-.pomo-sound-mixer.open { display: block; animation: fadeSlideUp 0.22s ease-out; }
-.sound-grid-4 {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 10px;
+.pomo-popup-sheet.open { display: block; animation: fadeSlideUp 0.22s ease-out; }
+
+.sound-mix-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 11px; border-radius: 12px; margin-bottom: 7px; gap: 10px;
 }
-.sound-opt-btn {
-    background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.12);
-    color: #cbd5e1; padding: 9px 8px; border-radius: 12px;
-    font-size: 11.5px; font-weight: 800; cursor: pointer;
-    display: flex; align-items: center; gap: 6px; transition: 0.2s;
-}
-.sound-opt-btn.active {
-    background: rgba(119, 187, 169, 0.22); border-color: #77bba9; color: #fff;
+.sound-mix-row.active {
+    border-color: #77bba9; background: rgba(119, 187, 169, 0.14);
 }
 
-/* نشانگر سپر تمرکز و بانک دقیقه امروز */
-.pomo-purity-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35);
-    color: #34d399; padding: 4px 11px; border-radius: 99px;
-    font-size: 11px; font-weight: 800; margin-top: 6px;
+.railway-station-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 11px; border-radius: 12px; margin-bottom: 7px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    text-align: right;
 }
-.pomo-purity-pill.warn {
-    background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;
+.railway-station-item.reached {
+    border-color: #10b981; background: rgba(16, 185, 129, 0.12);
 }
-
-/* دایره تنفس ۱۵ ثانیه‌ای قبل از مطالعه */
-.pomo-breath-modal {
-    position: absolute; inset: 0; z-index: 40;
-    background: rgba(7, 11, 14, 0.94); backdrop-filter: blur(12px);
-    display: none; flex-direction: column; align-items: center; justify-content: center;
-    gap: 18px; text-align: center; padding: 20px;
-}
-.pomo-breath-modal.active { display: flex; }
-.pomo-breath-orb {
-    width: 130px; height: 130px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(119,187,169,0.85), rgba(99,152,137,0.15));
-    box-shadow: 0 0 45px rgba(119,187,169,0.5);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 900; color: #fff;
-    transition: transform 3.8s ease-in-out;
-}
-
-/* حالت Zen (خلوت شدن صفحه هنگام مطالعه) */
-.immersive-timer-overlay.zen-idle .pomo-top-bar,
-.immersive-timer-overlay.zen-idle .pomo-preset-bar {
-    opacity: 0.18; transition: opacity 0.6s ease;
-}
-.immersive-timer-overlay.zen-idle:hover .pomo-top-bar,
-.immersive-timer-overlay.zen-idle:hover .pomo-preset-bar {
-    opacity: 1;
+.railway-station-item.current {
+    border-color: #fbbf24; background: rgba(251, 191, 36, 0.14);
 }
