@@ -1,13 +1,10 @@
 /* ==========================================================================
    📊 ماژول جامع تحلیل عملکرد، رادار آزمون و کلینیک هوشمند (js/analytics.js)
-   شامل:
-   ۱. شاخص‌های کلیدی (KPIs) با رکورد ساعت و رکورد تست روزانه + سیستم درجات (Rank)
-   ۲. نمودار روند مطالعه و تست با ۳ حالت تقویمی دقیق (کل هفته‌ها / همین هفته / هفته گذشته)
-   ۳. نمودار سهم دروس + درس محبوب و رادار لایف‌استایل (تیپ‌شناسی خواب، باتری تمرکز، نوار روحیه)
-   ۴. رادار آزمون‌های ProMax (متصل به exam_results: روند تراز، مدیریت زمان، ترازوی عدالت)
-   ۵. دفترچه گزارش‌های ۱۴ روز اخیر (با نمودار دونات روزانه و گراف کمانی خواب و بیداری)
-   ۶. کلینیک هوشمند متصل به week_status_calendar با پشتیبانی از آپلود هم‌زمان ۲ فایل کارنامه
-      و تفکیک هوشمند دسترسی کاربران اشتراکی و غیر اشتراکی
+   نسخه بهینه‌سازی‌شده موبایل:
+   ۱. تبدیل ۱۰۰٪ تمامی اعداد، تاریخ‌ها، درصدها و محورهای نمودار به ارقام فارسی
+   ۲. رفع فشردگی نمودارها در موبایل و تنظیم مقیاس استاندارد محورها
+   ۳. حذف کامل باکس‌های خالی نمودار در هفته‌های غیرآزمون (فاز پیشروی)
+   ۴. اعمال قانون اشتراک: ۱ بار تحلیل رایگان برای کاربران بدون اشتراک + نامحدود برای همه اشتراک‌ها
    ========================================================================== */
 
 const AnalyticsModule = {
@@ -21,11 +18,17 @@ const AnalyticsModule = {
     dossierChartInstances: {},
 
     weekCalendars: [],
-    uploadedExamFiles: {}, // { [weekId]: { file1: {base64, mime, name}, file2: {base64, mime, name} } }
+    uploadedExamFiles: {},
 
     monthNames: ["", "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"],
     dayNamesFa: ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"],
     chartColors: ['#639889', '#d9858a', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#14b8a6', '#3b82f6'],
+
+    // تبدیل قطعی هر رشته یا عدد به ارقام فارسی
+    toFa(val) {
+        if (val === null || val === undefined) return '';
+        return String(val).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    },
 
     // ======================================================================
     // 🗓️ ۱. توابع دقیق تبدیل تاریخ جلالی (JDN) برای محاسبه شنبه‌تا‌جمعه تقویمی
@@ -57,9 +60,11 @@ const AnalyticsModule = {
 
     getShortPersianDate(dateStr) {
         if (!dateStr) return '';
-        const parts = String(dateStr).split('/');
-        if (parts.length < 3) return dateStr;
-        return `${parseInt(parts[2], 10)} ${this.monthNames[parseInt(parts[1], 10)] || ''}`;
+        const parts = UI.toEngDigits(String(dateStr)).split('/');
+        if (parts.length < 3) return this.toFa(dateStr);
+        const dayNum = parseInt(parts[2], 10);
+        const monthName = this.monthNames[parseInt(parts[1], 10)] || '';
+        return `${this.toFa(dayNum)} ${monthName}`;
     },
 
     getTodayShamsiStr() {
@@ -69,6 +74,27 @@ const AnalyticsModule = {
         const m = (parts.find(p => p.type === 'month')?.value || '01').padStart(2, '0');
         const d = (parts.find(p => p.type === 'day')?.value || '01').padStart(2, '0');
         return UI.toEngDigits(`${y}/${m}/${d}`);
+    },
+
+    // بررسی اینکه آیا کاربر سهمیه درخواست تحلیل دارد یا خیر
+    // کاربران دارای هر نوع اشتراک (پرو، پلاس، VIP): نامحدود | کاربران رایگان: فقط ۱ بار
+    canUserRequestAnalysis() {
+        if (AppState.isPlusOrHigher) return true;
+        const usedCount = (AppState.examResults || []).length + (AppState.aiAnalyses || []).length;
+        return usedCount < 1;
+    },
+
+    // استخراج ایمن آرایه دروس کارنامه (برای جلوگیری از رسم نمودار خالی وقتی آرایه [] است)
+    parseValidExamLessons(rawExtracted) {
+        if (!rawExtracted) return [];
+        let arr = [];
+        try {
+            arr = typeof rawExtracted === 'string' ? JSON.parse(rawExtracted) : rawExtracted;
+        } catch (_) {
+            arr = [];
+        }
+        if (!Array.isArray(arr) || arr.length === 0) return [];
+        return arr.filter(item => item && item.name);
     },
 
     // ======================================================================
@@ -95,9 +121,9 @@ const AnalyticsModule = {
 
         const titleEl = document.getElementById('trendChartTitle');
         if (titleEl) {
-            if (mode === 'all_weeks') titleEl.innerText = 'روند پیشرفت (عملکرد هفتگی کل)';
-            else if (mode === 'this_week') titleEl.innerText = 'عملکرد روزانه (همین هفته: شنبه تا جمعه)';
-            else titleEl.innerText = 'عملکرد روزانه (هفته گذشته: شنبه تا جمعه)';
+            if (mode === 'all_weeks') titleEl.innerText = 'روند پیشرفت (عملکرد هفتگی)';
+            else if (mode === 'this_week') titleEl.innerText = 'عملکرد روزانه (همین هفته)';
+            else titleEl.innerText = 'عملکرد روزانه (هفته گذشته)';
         }
         this.renderTrendChart();
     },
@@ -139,7 +165,7 @@ const AnalyticsModule = {
     },
 
     // ======================================================================
-    // 📊 ۴. محاسبه آمار کلی، رکورد تست روزانه، مقام و رادار لایف‌استایل
+    // 📊 ۴. محاسبه آمار کلی، رکورد تست روزانه، مقام و رادار لایف‌استایل (با ارقام فارسی)
     // ======================================================================
     processDashboardMetrics() {
         const reports = AppState.dailyReports || [];
@@ -172,8 +198,8 @@ const AnalyticsModule = {
             if (dayTests > maxTestsDay) maxTestsDay = dayTests;
 
             if (r.lifestyle) {
-                const wStr = r.lifestyle.wakeToday || "07:00";
-                const sStr = r.lifestyle.sleepLast || "23:00";
+                const wStr = UI.toEngDigits(r.lifestyle.wakeToday || "07:00");
+                const sStr = UI.toEngDigits(r.lifestyle.sleepLast || "23:00");
                 const nap = parseFloat(r.lifestyle.nap) || 0;
 
                 const wParts = String(wStr).split(':');
@@ -197,7 +223,6 @@ const AnalyticsModule = {
             }
         });
 
-        // ۱. مقداردهی ۴ کارت KPI (شامل رکورد تست روزانه)
         const elTotalStudy = document.getElementById('kpiTotalStudy');
         const elTotalTests = document.getElementById('kpiTotalTests');
         const elMaxTime = document.getElementById('kpiMaxDaily');
@@ -212,7 +237,6 @@ const AnalyticsModule = {
         if (elHeroHours) elHeroHours.innerText = `${Number(totalTime.toFixed(1)).toLocaleString('fa-IR')} ساعت`;
         if (elHomeHours) elHomeHours.innerText = `${Math.round(totalTime).toLocaleString('fa-IR')} ساعت`;
 
-        // ۲. محاسبه مقام در سیستم (دقیقاً مطابق dashboard.html)
         const ranksList = [
             { max: 50, title: "مسافرِ مسیر" },
             { max: 150, title: "جستجوگر قطب‌نما" },
@@ -251,10 +275,10 @@ const AnalyticsModule = {
             rankProgEl.style.width = `${pct}%`;
         }
         if (rankSubEl) {
-            rankSubEl.innerText = `هدف بعدی: ${(targetHours - totalTime).toFixed(1)} ساعت مانده`;
+            const remHours = Number((targetHours - totalTime).toFixed(1)).toLocaleString('fa-IR');
+            rankSubEl.innerText = `هدف بعدی: ${remHours} ساعت مانده`;
         }
 
-        // ۳. رادار لایف‌استایل و ریکاوری (مشابه dashboard.html)
         const daysCount = reports.length;
         const sleepNameEl = document.getElementById('sleepProfileName');
         const sleepDescEl = document.getElementById('sleepProfileDesc');
@@ -280,12 +304,12 @@ const AnalyticsModule = {
         const avgSleepDuration = totalSleepDuration / daysCount;
         if (avgBedtime >= 24) avgBedtime -= 24;
 
-        const formatClock = (timeNum) => {
+        const formatClockFa = (timeNum) => {
             let h = Math.floor(timeNum);
             let m = Math.round((timeNum - h) * 60);
             if (m === 60) { h++; m = 0; }
             if (h >= 24) h -= 24;
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            return this.toFa(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
         };
 
         let sleepTitle = "سحرخیز و پرانرژی";
@@ -312,16 +336,15 @@ const AnalyticsModule = {
         }
         if (sleepDescEl) {
             sleepDescEl.innerHTML = `
-                میانگین ساعت خواب : <strong style="color:var(--text-main)">${formatClock(avgBedtime)}</strong><br>
-                میانگین ساعت بیداری : <strong style="color:var(--text-main)">${formatClock(avgWake)}</strong><br>
-                طول کل خواب (با چرت روزانه) : <strong style="color:var(--text-main)">${formatClock(avgSleepDuration)}</strong>
+                میانگین ساعت خواب : <strong style="color:var(--text-main)">${formatClockFa(avgBedtime)}</strong><br>
+                میانگین ساعت بیداری : <strong style="color:var(--text-main)">${formatClockFa(avgWake)}</strong><br>
+                طول کل خواب (با چرت روزانه) : <strong style="color:var(--text-main)">${formatClockFa(avgSleepDuration)}</strong>
             `;
         }
         if (sleepSvgBox) {
             sleepSvgBox.innerHTML = `<i data-lucide="${sleepIcon}" class="icon-xl" style="color:${sleepColor};"></i>`;
         }
 
-        // باتری تمرکز (گوشی)
         const avgPhone = totalPhone / daysCount;
         let batteryColor = "var(--success)";
         let batteryFill = 82;
@@ -341,7 +364,7 @@ const AnalyticsModule = {
             batteryNameEl.style.color = batteryColor;
         }
         if (batteryDescEl) {
-            batteryDescEl.innerText = `میانگین استفاده از گوشی: ${avgPhone.toFixed(1)} ساعت در روز`;
+            batteryDescEl.innerText = `میانگین استفاده از گوشی: ${Number(avgPhone.toFixed(1)).toLocaleString('fa-IR')} ساعت در روز`;
         }
         if (batterySvgBox) {
             batterySvgBox.innerHTML = `
@@ -352,21 +375,20 @@ const AnalyticsModule = {
                 </svg>`;
         }
 
-        // نوار حال روحی
         if (moodDaysEl) moodDaysEl.innerText = `بر اساس ${daysCount.toLocaleString('fa-IR')} روز`;
         const goodPct = ((moodCounts['عالی'] + moodCounts['خوب']) / daysCount) * 100;
         const neutralPct = (moodCounts['معمولی'] / daysCount) * 100;
         const badPct = (moodCounts['بد'] / daysCount) * 100;
 
         let moodHtml = "";
-        if (goodPct > 0) moodHtml += `<div class="mood-segment" style="width:${goodPct}%; background:var(--success);">${Math.round(goodPct)}%</div>`;
-        if (neutralPct > 0) moodHtml += `<div class="mood-segment" style="width:${neutralPct}%; background:var(--gold);">${Math.round(neutralPct)}%</div>`;
-        if (badPct > 0) moodHtml += `<div class="mood-segment" style="width:${badPct}%; background:var(--danger);">${Math.round(badPct)}%</div>`;
+        if (goodPct > 0) moodHtml += `<div class="mood-segment" style="width:${goodPct}%; background:var(--success);">${this.toFa(Math.round(goodPct))}٪</div>`;
+        if (neutralPct > 0) moodHtml += `<div class="mood-segment" style="width:${neutralPct}%; background:var(--gold);">${this.toFa(Math.round(neutralPct))}٪</div>`;
+        if (badPct > 0) moodHtml += `<div class="mood-segment" style="width:${badPct}%; background:var(--danger);">${this.toFa(Math.round(badPct))}٪</div>`;
         if (moodBarEl) moodBarEl.innerHTML = moodHtml;
     },
 
     // ======================================================================
-    // 📈 ۵. رسم نمودارهای سه‌گانه روند مطالعه و سهم دروس
+    // 📈 ۵. رسم نمودارهای تمام‌عرض موبایل (بدون فشردگی محورها)
     // ======================================================================
     renderCharts() {
         if (!window.Chart) return;
@@ -386,18 +408,16 @@ const AnalyticsModule = {
         let studyData = [];
         let testData = [];
 
-        // الف) حالت اول: روند کل هفته به هفته (دقیقاً مشابه dashboard.html)
         if (this.trendMode === 'all_weeks') {
             const weeklyData = {};
-            // مرتب‌سازی صعودی بر اساس تاریخ
             const sortedAsc = [...reports].sort((a, b) => String(a.report_date).localeCompare(String(b.report_date)));
 
             sortedAsc.forEach(r => {
                 if (!r.report_date) return;
-                const parts = String(r.report_date).split('/');
+                const parts = UI.toEngDigits(String(r.report_date)).split('/');
                 if (parts.length < 3) return;
                 const jdn = this.jalaliToJdn(parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10));
-                const dayOfWeek = (jdn + 1) % 7; // 0 = شنبه ... 6 = جمعه
+                const dayOfWeek = (jdn + 1) % 7;
                 const saturdayJdn = jdn - dayOfWeek;
                 const fridayJdn = saturdayJdn + 6;
 
@@ -426,21 +446,18 @@ const AnalyticsModule = {
             });
 
             if (labels.length === 0) {
-                labels = ['هفته ۱'];
+                labels = ['هفته جاری'];
                 studyData = [0];
                 testData = [0];
             }
-        }
-        // ب) حالت دوم و سوم: همین هفته یا هفته گذشته (بر اساس تاریخ تقویمی شنبه تا جمعه، روزهای ثبت‌نشده = ۰)
-        else {
+        } else {
             const todayStr = this.getTodayShamsiStr();
             const tParts = todayStr.split('/');
             const todayJdn = this.jalaliToJdn(parseInt(tParts[0], 10), parseInt(tParts[1], 10), parseInt(tParts[2], 10));
-            const todayDayOfWeek = (todayJdn + 1) % 7; // 0 = شنبه
+            const todayDayOfWeek = (todayJdn + 1) % 7;
             const thisSaturdayJdn = todayJdn - todayDayOfWeek;
             const baseSaturdayJdn = this.trendMode === 'this_week' ? thisSaturdayJdn : (thisSaturdayJdn - 7);
 
-            // ساخت مپ سریع از گزارش‌های موجود بر اساس تاریخ
             const reportMap = {};
             reports.forEach(r => {
                 if (r.report_date) {
@@ -451,8 +468,7 @@ const AnalyticsModule = {
             for (let i = 0; i < 7; i++) {
                 const targetJdn = baseSaturdayJdn + i;
                 const targetDateStr = this.jdnToJalali(targetJdn);
-                const shortDate = this.getShortPersianDate(targetDateStr);
-                labels.push(`${this.dayNamesFa[i]} (${shortDate})`);
+                labels.push(this.dayNamesFa[i]);
 
                 const rep = reportMap[targetDateStr];
                 if (rep && Array.isArray(rep.courses)) {
@@ -465,7 +481,6 @@ const AnalyticsModule = {
                     studyData.push(Number(dStudy.toFixed(1)));
                     testData.push(dTests);
                 } else {
-                    // اگر دانش‌آموز در آن تاریخ گزارشی ثبت نکرده باشد، دقیقاً ۰ منظور می‌شود
                     studyData.push(0);
                     testData.push(0);
                 }
@@ -485,16 +500,19 @@ const AnalyticsModule = {
                         borderColor: '#d9858a',
                         backgroundColor: '#d9858a',
                         yAxisID: 'y1',
-                        tension: 0.38,
-                        borderWidth: 3,
-                        pointRadius: 4
+                        tension: 0.35,
+                        borderWidth: 2.5,
+                        pointRadius: 3.5
                     },
                     {
                         type: 'bar',
                         label: 'ساعت مطالعه',
                         data: studyData,
-                        backgroundColor: '#639889',
-                        borderRadius: 7,
+                        backgroundColor: 'rgba(119, 187, 169, 0.7)',
+                        borderColor: '#77bba9',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        maxBarThickness: 28,
                         yAxisID: 'y'
                     }
                 ]
@@ -502,24 +520,39 @@ const AnalyticsModule = {
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
+                layout: { padding: { left: 0, right: 0, top: 4, bottom: 0 } },
                 scales: {
                     y: {
                         type: 'linear',
                         position: 'right',
                         beginAtZero: true,
-                        title: { display: true, text: 'ساعت مطالعه', font: { family: 'Vazirmatn', size: 11 } }
+                        suggestedMax: 10,
+                        ticks: {
+                            font: { family: 'Vazirmatn', size: 9.5 },
+                            callback: v => this.toFa(v) + ' س'
+                        }
                     },
                     y1: {
                         type: 'linear',
                         position: 'left',
                         beginAtZero: true,
+                        suggestedMax: 50,
                         grid: { drawOnChartArea: false },
-                        title: { display: true, text: 'تعداد تست', font: { family: 'Vazirmatn', size: 11 } }
+                        ticks: {
+                            font: { family: 'Vazirmatn', size: 9.5 },
+                            callback: v => this.toFa(v)
+                        }
                     },
-                    x: { grid: { display: false } }
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Vazirmatn', size: 10 }, maxRotation: 0 }
+                    }
                 },
                 plugins: {
-                    legend: { labels: { font: { family: 'Vazirmatn' } } }
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, font: { family: 'Vazirmatn', size: 11 } }
+                    }
                 }
             }
         });
@@ -534,7 +567,8 @@ const AnalyticsModule = {
             (r.courses || []).forEach(c => {
                 const cTime = (parseFloat(c.edu) || 0) + (parseFloat(c.study) || 0);
                 if (cTime > 0) {
-                    subjectAgg[c.name] = (subjectAgg[c.name] || 0) + cTime;
+                    const normName = window.normalizeSubjectName ? window.normalizeSubjectName(c.name) : c.name;
+                    subjectAgg[normName] = (subjectAgg[normName] || 0) + cTime;
                 }
             });
         });
@@ -545,7 +579,7 @@ const AnalyticsModule = {
             favEl.innerText = sortedSubjects.length > 0 ? sortedSubjects[0] : 'هنوز درسی ثبت نشده';
         }
 
-        const pieLabels = sortedSubjects.length > 0 ? sortedSubjects.slice(0, 5) : ['بدون دیتا'];
+        const pieLabels = sortedSubjects.length > 0 ? sortedSubjects.slice(0, 6) : ['بدون دیتا'];
         const pieData = sortedSubjects.length > 0 ? pieLabels.map(s => Number(subjectAgg[s].toFixed(1))) : [1];
 
         if (this.dashSubjectChartInstance) this.dashSubjectChartInstance.destroy();
@@ -562,11 +596,11 @@ const AnalyticsModule = {
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
-                cutout: '65%',
+                cutout: '64%',
                 plugins: {
                     legend: {
-                        position: 'right',
-                        labels: { font: { family: 'Vazirmatn', size: 11 } }
+                        position: 'bottom',
+                        labels: { boxWidth: 11, padding: 10, font: { family: 'Vazirmatn', size: 10.5 } }
                     }
                 }
             }
@@ -574,7 +608,7 @@ const AnalyticsModule = {
     },
 
     // ======================================================================
-    // 🎯 ۶. رادار آزمون‌های ProMax (متصل به جدول exam_results)
+    // 🎯 ۶. رادار آزمون‌ها (ProMax Radar - فعال برای تمام کاربران دارای اشتراک)
     // ======================================================================
     processPromaxRadar() {
         const contentBox = document.getElementById('promaxRadarContent');
@@ -582,23 +616,18 @@ const AnalyticsModule = {
         const emptyDesc = document.getElementById('promaxRadarEmptyDesc');
         if (!contentBox || !emptyBox) return;
 
-        // فیلتر کردن کارنامه‌های تاییدشده‌ای که مربوط به هفته آزمون هستند یا تراز دارند
-        const approvedExams = (AppState.examResults || []).filter(ex =>
-            ex.status === 'approved' && (ex.is_exam_week === true || Number(ex.total_taraz) > 0)
-        );
-
-        if (!AppState.isConsultant) {
-            contentBox.style.display = 'none';
-            emptyBox.style.display = 'block';
-            if (emptyDesc) {
-                emptyDesc.innerHTML = 'رادار تراز آزمون، مدیریت زمان و ترازوی عدالت ویژه دانش‌آموزان <strong>طرح مشاوره قطب‌نما</strong> است.';
-            }
-            return;
-        }
+        // فقط کارنامه‌های تاییدشده‌ای که واقعاً دیتای آزمون یا تراز دارند
+        const approvedExams = (AppState.examResults || []).filter(ex => {
+            const lessons = this.parseValidExamLessons(ex.extracted_data);
+            return ex.status === 'approved' && (Number(ex.total_taraz) > 0 || lessons.length > 0);
+        });
 
         if (approvedExams.length === 0) {
             contentBox.style.display = 'none';
             emptyBox.style.display = 'block';
+            if (emptyDesc) {
+                emptyDesc.innerHTML = 'پس از ثبت و تحلیل اولین کارنامه آزمون در بخش «کلینیک هوشمند»، نمودارهای روند تراز و مدیریت زمان در این بخش فعال می‌شوند.';
+            }
             return;
         }
 
@@ -613,14 +642,8 @@ const AnalyticsModule = {
             const t = Number(ex.total_taraz || 0);
             if (t > 0) tarazTrend.push(t);
 
-            let parsedLessons = [];
-            try {
-                parsedLessons = typeof ex.extracted_data === 'string'
-                    ? JSON.parse(ex.extracted_data || "[]")
-                    : (ex.extracted_data || []);
-            } catch (_) {}
-
-            (parsedLessons || []).forEach(lesson => {
+            const parsedLessons = this.parseValidExamLessons(ex.extracted_data);
+            parsedLessons.forEach(lesson => {
                 const lName = lesson.name;
                 const lTaraz = Number(lesson.taraz || 0);
                 if (lName && lTaraz > 0) {
@@ -651,10 +674,11 @@ const AnalyticsModule = {
     },
 
     renderPromaxRadarCharts() {
-        const approvedExams = (AppState.examResults || []).filter(ex =>
-            ex.status === 'approved' && (ex.is_exam_week === true || Number(ex.total_taraz) > 0)
-        );
-        if (!AppState.isConsultant || approvedExams.length === 0 || !window.Chart) return;
+        const approvedExams = (AppState.examResults || []).filter(ex => {
+            const lessons = this.parseValidExamLessons(ex.extracted_data);
+            return ex.status === 'approved' && (Number(ex.total_taraz) > 0 || lessons.length > 0);
+        });
+        if (approvedExams.length === 0 || !window.Chart) return;
 
         const labels = [];
         const tarazTrend = [];
@@ -664,18 +688,12 @@ const AnalyticsModule = {
         const totalTestsData = [];
 
         approvedExams.forEach((ex, index) => {
-            labels.push(ex.period_end ? `آزمون ${this.getShortPersianDate(ex.period_end)}` : `آزمون ${index + 1}`);
+            labels.push(ex.period_end ? `آزمون ${this.getShortPersianDate(ex.period_end)}` : `آزمون ${this.toFa(index + 1)}`);
             tarazTrend.push(Number(ex.total_taraz || 0));
 
-            let parsedLessons = [];
-            try {
-                parsedLessons = typeof ex.extracted_data === 'string'
-                    ? JSON.parse(ex.extracted_data || "[]")
-                    : (ex.extracted_data || []);
-            } catch (_) {}
-
+            const parsedLessons = this.parseValidExamLessons(ex.extracted_data);
             let sumC = 0, sumI = 0, sumU = 0;
-            (parsedLessons || []).forEach(lesson => {
+            parsedLessons.forEach(lesson => {
                 sumC += Number(lesson.correct || 0);
                 sumI += Number(lesson.incorrect || 0);
                 sumU += Number(lesson.unattempted || 0);
@@ -693,7 +711,6 @@ const AnalyticsModule = {
             totalTestsData.push(Number(snap.total_tests || 0));
         });
 
-        // ۱. نمودار روند تراز کل
         const ctx1 = document.getElementById('radarTarazChart');
         if (ctx1) {
             if (this.radarTarazChartInstance) this.radarTarazChartInstance.destroy();
@@ -706,22 +723,24 @@ const AnalyticsModule = {
                         data: tarazTrend,
                         borderColor: '#639889',
                         backgroundColor: 'rgba(99, 152, 137, 0.15)',
-                        borderWidth: 3,
-                        tension: 0.38,
+                        borderWidth: 2.5,
+                        tension: 0.35,
                         fill: true,
-                        pointRadius: 5
+                        pointRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { x: { grid: { display: false } } }
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { position: 'right', ticks: { font: { size: 9.5 }, callback: v => this.toFa(v) } }
+                    }
                 }
             });
         }
 
-        // ۲. نمودار تکامل مدیریت زمان (درست / غلط / نزده)
         const ctx2 = document.getElementById('radarTimeMgmtChart');
         if (ctx2) {
             if (this.radarTimeMgmtChartInstance) this.radarTimeMgmtChartInstance.destroy();
@@ -739,15 +758,14 @@ const AnalyticsModule = {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { stacked: true, grid: { display: false } },
-                        y: { stacked: true }
+                        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { stacked: true, position: 'right', ticks: { font: { size: 9.5 }, callback: v => this.toFa(v) } }
                     },
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
                 }
             });
         }
 
-        // ۳. نمودار ترازوی عدالت (تست در برابر تراز)
         const ctx3 = document.getElementById('radarRoiChart');
         if (ctx3) {
             if (this.radarRoiChartInstance) this.radarRoiChartInstance.destroy();
@@ -762,8 +780,8 @@ const AnalyticsModule = {
                             data: tarazTrend,
                             borderColor: '#d9858a',
                             backgroundColor: '#d9858a',
-                            borderWidth: 3,
-                            pointRadius: 5,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
                             tension: 0.35,
                             yAxisID: 'y1'
                         },
@@ -773,6 +791,7 @@ const AnalyticsModule = {
                             data: totalTestsData,
                             backgroundColor: '#639889',
                             borderRadius: 6,
+                            maxBarThickness: 28,
                             yAxisID: 'y'
                         }
                     ]
@@ -781,18 +800,18 @@ const AnalyticsModule = {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { type: 'linear', position: 'right', grid: { display: false } },
-                        y1: { type: 'linear', position: 'left' },
-                        x: { grid: { display: false } }
+                        y: { type: 'linear', position: 'right', grid: { display: false }, ticks: { font: { size: 9.5 }, callback: v => this.toFa(v) } },
+                        y1: { type: 'linear', position: 'left', ticks: { font: { size: 9.5 }, callback: v => this.toFa(v) } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
                     },
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
                 }
             });
         }
     },
 
     // ======================================================================
-    // 📖 ۷. دفترچه گزارش‌های ۱۴ روز اخیر (دقیقاً مشابه history.html)
+    // 📖 ۷. دفترچه گزارش‌های ۱۴ روز اخیر (با ارقام ۱۰۰٪ فارسی)
     // ======================================================================
     renderHistory(recentReports) {
         const container = document.getElementById('historyAccordionContainer');
@@ -827,9 +846,9 @@ const AnalyticsModule = {
                     <div class="history-course-item">
                         <span class="history-course-name">${c.name}</span>
                         <div class="history-course-badges">
-                            <span class="h-badge-edu">آموزش: ${c.edu || 0} ساعت</span>
-                            <span class="h-badge-std">مطالعه: ${c.study || 0} ساعت</span>
-                            <span class="h-badge-tst">تست: ${c.tests || 0}</span>
+                            <span class="h-badge-edu">آموزش: ${this.toFa(c.edu || 0)} ساعت</span>
+                            <span class="h-badge-std">مطالعه: ${this.toFa(c.study || 0)} ساعت</span>
+                            <span class="h-badge-tst">تست: ${this.toFa(c.tests || 0)}</span>
                         </div>
                     </div>
                 `;
@@ -858,8 +877,8 @@ const AnalyticsModule = {
                         <circle cx="170" cy="78" r="14" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
                         <text x="30" y="82" font-size="11" fill="var(--primary)" text-anchor="middle" font-weight="bold">شب</text>
                         <text x="170" y="82" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="bold">صبح</text>
-                        <text x="30" y="110" font-size="13" fill="var(--text-main)" text-anchor="middle" font-weight="900" font-family="Vazirmatn">${life.sleepLast || '23:00'}</text>
-                        <text x="170" y="110" font-size="13" fill="var(--text-main)" text-anchor="middle" font-weight="900" font-family="Vazirmatn">${life.wakeToday || '07:00'}</text>
+                        <text x="30" y="110" font-size="13" fill="var(--text-main)" text-anchor="middle" font-weight="900" font-family="Vazirmatn">${this.toFa(life.sleepLast || '23:00')}</text>
+                        <text x="170" y="110" font-size="13" fill="var(--text-main)" text-anchor="middle" font-weight="900" font-family="Vazirmatn">${this.toFa(life.wakeToday || '07:00')}</text>
                     </svg>
                 </div>
             `;
@@ -870,10 +889,10 @@ const AnalyticsModule = {
             return `
                 <div class="history-accordion-item" id="histCard_${index}" data-labels="${safeLabelsAttr}" data-values="${safeDataAttr}">
                     <div class="history-acc-header" onclick="AnalyticsModule.toggleHistoryCard(${index})">
-                        <div class="history-date-badge">${report.report_date}</div>
+                        <div class="history-date-badge">${this.toFa(report.report_date)}</div>
                         <div class="history-summary-pills">
-                            <span><i data-lucide="clock" class="icon-sm primary-text"></i> ${Number(totalStudy.toFixed(1))} ساعت</span>
-                            <span><i data-lucide="target" class="icon-sm accent-text"></i> ${totalTests} تست</span>
+                            <span><i data-lucide="clock" class="icon-sm primary-text"></i> ${this.toFa(Number(totalStudy.toFixed(1)))} ساعت</span>
+                            <span><i data-lucide="target" class="icon-sm accent-text"></i> ${this.toFa(totalTests)} تست</span>
                             <span><i data-lucide="${moodIcon}" class="icon-sm gold-text"></i></span>
                             <i data-lucide="chevron-down" class="icon-sm"></i>
                         </div>
@@ -906,11 +925,11 @@ const AnalyticsModule = {
                         <div class="history-life-grid">
                             <div class="history-life-widget">
                                 <span style="font-size:11.5px; color:var(--text-muted); font-weight:800;">فضای مجازی و گوشی</span>
-                                <span style="font-size:15px; font-weight:900;" class="${phoneClass}">${life.phone || 0} ساعت</span>
+                                <span style="font-size:15px; font-weight:900;" class="${phoneClass}">${this.toFa(life.phone || 0)} ساعت</span>
                             </div>
                             <div class="history-life-widget">
                                 <span style="font-size:11.5px; color:var(--text-muted); font-weight:800;">چرت و استراحت روزانه</span>
-                                <span style="font-size:15px; font-weight:900; color:var(--primary);">${life.nap || 0} ساعت</span>
+                                <span style="font-size:15px; font-weight:900; color:var(--primary);">${this.toFa(life.nap || 0)} ساعت</span>
                             </div>
                         </div>
 
@@ -963,7 +982,7 @@ const AnalyticsModule = {
     },
 
     // ======================================================================
-    // 🧠 ۸. کلینیک هوشمند و اسپرینت آزمون (بر اساس جدول week_status_calendar)
+    // 🧠 ۸. کلینیک هوشمند و اسپرینت آزمون (طراحی موبایل‌پسند + حذف نمودار خالی + سهمیه اشتراک)
     // ======================================================================
     renderClinicDossiers() {
         const container = document.getElementById('clinicDossiersContainer');
@@ -973,7 +992,6 @@ const AnalyticsModule = {
         const studentGrade = AppState.studentGrade || 'دوازدهم';
         const rawGrade = AppState.studentData?.grade || studentGrade;
 
-        // فیلتر کردن هفته‌های جدول week_status_calendar که شروع آن‌ها تا امروز بوده و شامل پایه دانش‌آموز است
         let weeks = (this.weekCalendars || []).filter(w => {
             const gradeArr = Array.isArray(w.target_grade) ? w.target_grade : [];
             const gradeMatch = gradeArr.length === 0 ||
@@ -998,21 +1016,19 @@ const AnalyticsModule = {
             const startStr = UI.toEngDigits(w.start_date);
             const endStr = UI.toEngDigits(w.end_date);
 
-            // تشخیص نوع هفته از جدول week_status_calendar یا جدول برنامه دانش‌آموز (ai_schedules)
             const matchedSchedule = (AppState.allSchedules || []).find(s =>
                 (s.week_label && s.week_label.includes(w.title))
             );
             const isExamWeek = String(w.week_type).toLowerCase() === 'exam' ||
                 (matchedSchedule && String(matchedSchedule.week_type).toLowerCase() === 'exam');
 
-            // شمارش گزارش‌های ثبت‌شده دانش‌آموز در بازه تاریخی این هفته
             const weekReports = (AppState.dailyReports || []).filter(r => {
                 const rDate = UI.toEngDigits(r.report_date);
                 return rDate >= startStr && rDate <= endStr;
             });
             const reportCount = weekReports.length;
+            const faRepCount = this.toFa(reportCount);
 
-            // بررسی وجود تحلیل قبلی در exam_results یا ai_analyses
             const existingExamResult = (AppState.examResults || []).find(ex =>
                 UI.toEngDigits(ex.period_start) === startStr && UI.toEngDigits(ex.period_end) === endStr
             );
@@ -1022,32 +1038,32 @@ const AnalyticsModule = {
 
             let statusPillHtml = '';
             if ((existingExamResult && existingExamResult.status === 'approved') || (existingAiAnalysis && existingAiAnalysis.status === 'completed')) {
-                statusPillHtml = `<span class="status-pill" style="background:var(--success-fade);color:var(--success);">مشاهده تحلیل آماده</span>`;
+                statusPillHtml = `<span class="status-pill" style="background:var(--success-fade);color:var(--success);">مشاهده تحلیل</span>`;
             } else if ((existingExamResult && existingExamResult.status === 'pending') || (existingAiAnalysis && existingAiAnalysis.status === 'pending')) {
                 statusPillHtml = `<span class="status-pill" style="background:var(--gold-fade);color:var(--gold);">در صف پردازش</span>`;
             } else if (reportCount >= 6) {
-                statusPillHtml = `<span class="status-pill" style="background:var(--primary-fade);color:var(--primary);">آماده درخواست تحلیل (${reportCount}/۷)</span>`;
+                statusPillHtml = `<span class="status-pill" style="background:var(--primary-fade);color:var(--primary);">آماده تحلیل (${faRepCount}/۷)</span>`;
             } else {
-                statusPillHtml = `<span class="status-pill" style="background:var(--surface-2);color:var(--text-muted);">دیتای ناکافی (${reportCount}/۶ گزارش)</span>`;
+                statusPillHtml = `<span class="status-pill" style="background:var(--surface-2);color:var(--text-muted);">${faRepCount} از ۶ گزارش</span>`;
             }
 
             const weekBadge = isExamWeek
                 ? `<span class="konkur-pill" style="background:var(--accent-fade);color:var(--accent);"><i data-lucide="file-spreadsheet" class="icon-sm"></i> هفته آزمون</span>`
-                : `<span class="konkur-pill"><i data-lucide="Trending-up" class="icon-sm"></i> فاز پیشروی</span>`;
+                : `<span class="konkur-pill"><i data-lucide="trending-up" class="icon-sm"></i> پیشروی</span>`;
 
             return `
                 <div class="clinic-dossier-card" id="dossierCard_${wId}">
                     <div class="clinic-dossier-header" onclick="AnalyticsModule.toggleClinicDossier('${wId}', '${startStr}', '${endStr}', ${isExamWeek}, '${w.title}')">
                         <div>
-                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                                <strong style="font-size:14.5px; color:var(--text-main);">${w.title}</strong>
+                            <div class="dossier-title-row">
+                                <strong style="font-size:14px; color:var(--text-main);">${this.toFa(w.title)}</strong>
                                 ${weekBadge}
                             </div>
-                            <div style="font-size:11.5px; color:var(--text-muted); font-weight:700;">
-                                ${this.getShortPersianDate(startStr)} الی ${this.getShortPersianDate(endStr)}
+                            <div style="font-size:11px; color:var(--text-muted); font-weight:700;">
+                                ${this.getShortPersianDate(startStr)} تا ${this.getShortPersianDate(endStr)}
                             </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="dossier-meta-left">
                             ${statusPillHtml}
                             <i data-lucide="chevron-down" class="icon-sm"></i>
                         </div>
@@ -1071,7 +1087,6 @@ const AnalyticsModule = {
 
         card.classList.add('open');
 
-        // ۱. بررسی تحلیل موجود
         const existingExam = (AppState.examResults || []).find(ex =>
             UI.toEngDigits(ex.period_start) === startStr && UI.toEngDigits(ex.period_end) === endStr
         );
@@ -1080,7 +1095,7 @@ const AnalyticsModule = {
             ai.request_date === weekTitle || ai.request_date === shortRangeLabel
         );
 
-        // الف) اگر تحلیل تاییدشده / تکمیل‌شده وجود دارد -> نمایش نتیجه و نمودارهای پرونده
+        // الف) اگر تحلیل آماده وجود دارد -> نمایش متن تحلیل (و رسم نمودار کارنامه فقط اگر هفته آزمون باشد و کارنامه واقعی داشته باشد!)
         if ((existingExam && existingExam.status === 'approved') || (existingAi && existingAi.status === 'completed')) {
             const rawText = existingExam?.consultant_analysis || existingAi?.ai_response || '';
             const formattedText = String(rawText)
@@ -1089,34 +1104,37 @@ const AnalyticsModule = {
                 .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent);">$1</strong>')
                 .replace(/\n/g, '<br>');
 
-            const hasExamCharts = existingExam && existingExam.extracted_data && AppState.isConsultant;
+            // ✅ شرط دقیق: فقط اگر هفته آزمون باشد و آرایه دروس کارنامه واقعاً پر باشد باکس‌های نمودار ساخته شوند!
+            const parsedExamLessons = existingExam ? this.parseValidExamLessons(existingExam.extracted_data) : [];
+            const hasValidExamCharts = isExamWeek && parsedExamLessons.length > 0;
+
             body.innerHTML = `
-                <div style="display:flex; align-items:center; gap:6px; color:var(--success); font-weight:900; font-size:13.5px; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:6px; color:var(--success); font-weight:900; font-size:13px; margin-bottom:10px;">
                     <i data-lucide="check-circle-2" class="icon-sm"></i>
                     <span>نتیجه کالبدشکافی و تحلیل هوشمند این هفته:</span>
                 </div>
-                <div class="ai-result-formatted">${formattedText}</div>
-                ${hasExamCharts ? `
-                    <div id="dossierChartsWrap_${wId}" style="display:grid; grid-template-columns:1fr; gap:14px;">
+                <div class="ai-result-formatted">${this.toFa(formattedText)}</div>
+                ${hasValidExamCharts ? `
+                    <div id="dossierChartsWrap_${wId}" style="display:grid; grid-template-columns:1fr; gap:12px;">
                         <div class="card-box" style="margin:0;">
-                            <div style="font-size:12.5px; font-weight:900; color:var(--accent); text-align:center; margin-bottom:8px;">ترازوی عدالت (ساعت مطالعه در برابر تراز کارنامه)</div>
-                            <div style="position:relative; height:260px;"><canvas id="dossierRadar_${wId}"></canvas></div>
+                            <div style="font-size:12px; font-weight:900; color:var(--accent); text-align:center; margin-bottom:8px;">ترازوی عدالت (ساعت مطالعه در برابر تراز کارنامه)</div>
+                            <div style="position:relative; height:240px;"><canvas id="dossierRadar_${wId}"></canvas></div>
                         </div>
                         <div class="card-box" style="margin:0;">
-                            <div style="font-size:12.5px; font-weight:900; color:var(--primary); text-align:center; margin-bottom:8px;">مدیریت زمان به تفکیک هر درس (درست / غلط / نزده)</div>
-                            <div style="position:relative; height:240px;"><canvas id="dossierBar_${wId}"></canvas></div>
+                            <div style="font-size:12px; font-weight:900; color:var(--primary); text-align:center; margin-bottom:8px;">مدیریت زمان به تفکیک هر درس (درست / غلط / نزده)</div>
+                            <div style="position:relative; height:220px;"><canvas id="dossierBar_${wId}"></canvas></div>
                         </div>
                     </div>
                 ` : ''}
             `;
             UI.refreshIcons();
-            if (hasExamCharts) {
-                this.renderDossierExamCharts(wId, existingExam.extracted_data, existingExam.lifestyle_snapshot);
+            if (hasValidExamCharts) {
+                this.renderDossierExamCharts(wId, parsedExamLessons, existingExam.lifestyle_snapshot);
             }
             return;
         }
 
-        // ب) اگر درخواست در وضعیت pending است
+        // ب) اگر درخواست در صف انتظار است
         if ((existingExam && existingExam.status === 'pending') || (existingAi && existingAi.status === 'pending')) {
             body.innerHTML = `
                 <div class="card-box center-card" style="margin:0;">
@@ -1129,7 +1147,26 @@ const AnalyticsModule = {
             return;
         }
 
-        // ج) شمارش گزارش‌های هفته برای بررسی شرط حداقل ۶ گزارش
+        // ج) بررسی قانون اشتراک: اگر کاربر بدون اشتراک (Free) است و ۱ بار سهمیه رایگانش را قبلاً استفاده کرده است
+        if (!this.canUserRequestAnalysis()) {
+            body.innerHTML = `
+                <div class="card-box center-card" style="margin:0; border:1.5px solid var(--gold);">
+                    <div class="modal-icon-ring gold"><i data-lucide="crown" class="icon-lg"></i></div>
+                    <h4>سهمیه ۱ بار تحلیل رایگان شما به پایان رسیده است</h4>
+                    <p class="muted-desc">
+                        شما از ۱ بار تحلیل هدیه نسخه رایگان استفاده کرده‌اید. برای دریافت نامحدود تحلیل‌های هفتگی و کالبدشکافی کارنامه آزمون‌ها، یکی از اشتراک‌های قطب‌نما (پرو، پلاس یا VIP) را فعال فرمایید.
+                    </p>
+                    <button type="button" class="btn-primary-full" style="max-width:250px; margin:0 auto;" onclick="Router.openSubPage('store-renew')">
+                        <i data-lucide="sparkles" class="icon-sm"></i>
+                        <span>مشاهده و تهیه اشتراک</span>
+                    </button>
+                </div>
+            `;
+            UI.refreshIcons();
+            return;
+        }
+
+        // د) بررسی شرط حداقل ۶ گزارش در بازه هفته
         const weekReports = (AppState.dailyReports || []).filter(r => {
             const rDate = UI.toEngDigits(r.report_date);
             return rDate >= startStr && rDate <= endStr;
@@ -1139,9 +1176,9 @@ const AnalyticsModule = {
             body.innerHTML = `
                 <div class="card-box center-card" style="margin:0; border-color:var(--danger);">
                     <div class="modal-icon-ring danger"><i data-lucide="lock" class="icon-lg"></i></div>
-                    <h4 class="danger-text">دیتای این هفته هنوز کامل نیست (${weekReports.length} از ۶ گزارش)</h4>
+                    <h4 class="danger-text">دیتای این هفته هنوز کامل نیست (${this.toFa(weekReports.length)} از ۶ گزارش)</h4>
                     <p class="muted-desc">برای دریافت تحلیل دقیق، باید حداقل ۶ روز از این هفته (${this.getShortPersianDate(startStr)} تا ${this.getShortPersianDate(endStr)}) گزارش ثبت کرده باشید.</p>
-                    <button type="button" class="btn-outline-full" onclick="Router.switchMainTab('report')" style="max-width:240px; margin:0 auto;">
+                    <button type="button" class="btn-outline-full" onclick="Router.switchMainTab('report')" style="max-width:230px; margin:0 auto;">
                         <i data-lucide="file-pen-line" class="icon-sm"></i>
                         <span>رفتن به بخش ثبت گزارش</span>
                     </button>
@@ -1151,88 +1188,71 @@ const AnalyticsModule = {
             return;
         }
 
-        // د) فرم آماده ارسال درخواست تحلیل (با تفکیک هفته آزمون/پیشروی و تفکیک کاربر اشتراکی/رایگان)
+        // هـ) فرم ارسال درخواست تحلیل
         this.uploadedExamFiles[wId] = { file1: null, file2: null };
+        const freeTrialBanner = !AppState.isPlusOrHigher
+            ? `<div style="background:var(--gold-fade); border:1px dashed var(--gold); padding:9px 12px; border-radius:12px; margin-bottom:10px; font-size:11.5px; font-weight:800; color:var(--gold);">🎁 هدیه نسخه رایگان: شما می‌توانید ۱ بار تحلیل هوشمند هفته را به صورت رایگان دریافت کنید.</div>`
+            : '';
 
         let examSectionHtml = '';
         if (isExamWeek) {
-            if (AppState.isConsultant) {
-                // دانش‌آموز دارای اشتراک مشاوره -> امکان آپلود هم‌زمان تا ۲ فایل کارنامه
-                examSectionHtml = `
-                    <div style="background:var(--gold-fade); border:1px solid rgba(245,158,11,0.4); padding:12px 14px; border-radius:14px; margin-bottom:14px; font-size:12px; font-weight:800; color:var(--gold);">
-                        <i data-lucide="award" class="icon-sm"></i>
-                        <span>فاز آزمون جامع: می‌توانید تصویر یا PDF کارنامه خود را (تا ۲ فایل هم‌زمان) بارگذاری کنید تا علاوه بر عملکرد ۱۴ روزه، تراز و تله‌های تستی شما کالبدشکافی شود.</span>
+            examSectionHtml = `
+                <div style="background:var(--primary-fade); border:1px solid var(--primary); padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:11.5px; font-weight:800; color:var(--primary);">
+                    <i data-lucide="award" class="icon-sm"></i>
+                    <span>هفته آزمون: تصویر یا PDF کارنامه خود را (تا ۲ فایل) بارگذاری کنید تا علاوه بر عملکرد مطالعاتی، تراز و مدیریت زمان شما هم کالبدشکافی شود.</span>
+                </div>
+                <div class="dual-upload-grid">
+                    <div class="exam-upload-slot" id="slot1_${wId}" onclick="document.getElementById('fileInp1_${wId}').click()">
+                        <i data-lucide="file-up" class="icon-lg primary-text"></i>
+                        <div style="font-size:12px; font-weight:900; color:var(--text-main);" id="slot1Lbl_${wId}">فایل اول کارنامه (الزامی)</div>
+                        <small style="font-size:10px; color:var(--text-muted);">تصویر یا PDF کارنامه</small>
+                        <input type="file" id="fileInp1_${wId}" accept="image/*,application/pdf" multiple style="display:none;"
+                               onchange="AnalyticsModule.handleExamFilesSelect(this, '${wId}', 1)">
                     </div>
-                    <div class="dual-upload-grid">
-                        <div class="exam-upload-slot" id="slot1_${wId}" onclick="document.getElementById('fileInp1_${wId}').click()">
-                            <i data-lucide="file-up" class="icon-lg primary-text"></i>
-                            <div style="font-size:12px; font-weight:900; color:var(--text-main);" id="slot1Lbl_${wId}">فایل اول کارنامه (الزامی)</div>
-                            <small style="font-size:10.5px; color:var(--text-muted);">یا انتخاب ۲ فایل هم‌زمان</small>
-                            <input type="file" id="fileInp1_${wId}" accept="image/*,application/pdf" multiple style="display:none;"
-                                   onchange="AnalyticsModule.handleExamFilesSelect(this, '${wId}', 1)">
-                        </div>
-                        <div class="exam-upload-slot" id="slot2_${wId}" onclick="document.getElementById('fileInp2_${wId}').click()">
-                            <i data-lucide="file-plus-2" class="icon-lg accent-text"></i>
-                            <div style="font-size:12px; font-weight:900; color:var(--text-main);" id="slot2Lbl_${wId}">فایل دوم کارنامه (اختیاری)</div>
-                            <small style="font-size:10.5px; color:var(--text-muted);">صفحه دوم یا پاسخبرگ</small>
-                            <input type="file" id="fileInp2_${wId}" accept="image/*,application/pdf" style="display:none;"
-                                   onchange="AnalyticsModule.handleExamFilesSelect(this, '${wId}', 2)">
-                        </div>
+                    <div class="exam-upload-slot" id="slot2_${wId}" onclick="document.getElementById('fileInp2_${wId}').click()">
+                        <i data-lucide="file-plus-2" class="icon-lg accent-text"></i>
+                        <div style="font-size:12px; font-weight:900; color:var(--text-main);" id="slot2Lbl_${wId}">فایل دوم کارنامه (اختیاری)</div>
+                        <small style="font-size:10px; color:var(--text-muted);">صفحه دوم یا پاسخبرگ</small>
+                        <input type="file" id="fileInp2_${wId}" accept="image/*,application/pdf" style="display:none;"
+                               onchange="AnalyticsModule.handleExamFilesSelect(this, '${wId}', 2)">
                     </div>
-                `;
-            } else {
-                // دانش‌آموز بدون اشتراک مشاوره در هفته آزمون -> نمایش بنر ارتقا + اجازه دریافت تحلیل بدون کارنامه
-                examSectionHtml = `
-                    <div style="background:linear-gradient(135deg, var(--gold-fade), var(--surface)); border:1px dashed var(--gold); padding:16px; border-radius:16px; margin-bottom:14px;">
-                        <div style="display:flex; align-items:center; gap:8px; font-weight:900; font-size:13.5px; color:var(--gold); margin-bottom:6px;">
-                            <i data-lucide="crown" class="icon-sm"></i>
-                            <span>این هفته، هفته آزمون است! (تحلیل کارنامه مخصوص اشتراک مشاوره)</span>
-                        </div>
-                        <p style="font-size:12px; color:var(--text-main); line-height:1.75; margin-bottom:10px;">
-                            شما می‌توانید <strong>تحلیل عملکرد مطالعاتی و لایف‌استایل</strong> این هفته را در پایین همین کادر بدون کارنامه دریافت کنید؛ اما اگر می‌خواهید <strong>تصویر کارنامه آزمون</strong> خود را نیز ارسال کنید تا درصدها، تراز و مدیریت زمان شما موشکافی شود، اشتراک مشاوره تهیه فرمایید.
-                        </p>
-                        <button type="button" class="btn-modal" style="max-width:240px; padding:9px 14px; font-size:12px; margin:0;" onclick="Router.openSubPage('store-renew')">
-                            <i data-lucide="sparkles" class="icon-sm"></i>
-                            <span>تهیه اشتراک جهت تحلیل کارنامه</span>
-                        </button>
-                    </div>
-                `;
-            }
+                </div>
+            `;
         } else {
             examSectionHtml = `
-                <div style="background:var(--primary-fade); border:1px solid rgba(99,152,137,0.35); padding:12px 14px; border-radius:14px; margin-bottom:14px; font-size:12px; font-weight:800; color:var(--primary);">
+                <div style="background:var(--primary-fade); border:1px solid rgba(99,152,137,0.35); padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:11.5px; font-weight:800; color:var(--primary);">
                     <i data-lucide="check-circle" class="icon-sm"></i>
-                    <span>فاز پیشروی و روتین: کیفیت ساعت مطالعه، تعادل تستی و لایف‌استایل ۷ روز شما در این هفته کالبدشکافی می‌شود.</span>
+                    <span>فاز پیشروی: کیفیت ساعت مطالعه، تعادل تستی و لایف‌استایل ۷ روز شما در این هفته کالبدشکافی می‌شود.</span>
                 </div>
             `;
         }
 
         body.innerHTML = `
+            ${freeTrialBanner}
             ${examSectionHtml}
 
             <div class="slider-group" style="background:var(--surface);">
                 <div class="slider-header">
                     <span class="slider-label">نمره خودارزیابی شما به عملکرد این هفته (از ۱ تا ۱۰):</span>
-                    <span class="slider-val" id="scoreVal_${wId}">7</span>
+                    <span class="slider-val" id="scoreVal_${wId}">۷</span>
                 </div>
                 <input type="range" id="selfScore_${wId}" min="1" max="10" value="7"
-                       oninput="document.getElementById('scoreVal_${wId}').innerText = this.value">
+                       oninput="document.getElementById('scoreVal_${wId}').innerText = AnalyticsModule.toFa(this.value)">
             </div>
 
             <textarea class="modern-input" id="reflection_${wId}" rows="3" style="background:var(--surface); margin-bottom:12px;"
-                      placeholder="یادداشت و اعترافات شما: در این هفته چه چالش یا نقطه قوتی داشتید؟"></textarea>
+                      placeholder="یادداشت شما: در این هفته چه چالش یا نقطه قوتی داشتید؟"></textarea>
 
             <button type="button" class="btn-primary-full" id="btnSubmitClinic_${wId}"
                     onclick="AnalyticsModule.submitClinicAnalysis('${wId}', '${startStr}', '${endStr}', ${isExamWeek}, '${weekTitle}')">
                 <i data-lucide="send" class="icon-sm"></i>
-                <span>${isExamWeek && AppState.isConsultant ? 'ارسال کارنامه و دریافت کالبدشکافی جامع' : 'ارسال پرونده برای تحلیل عملکرد هفته'}</span>
+                <span>${isExamWeek ? 'ارسال کارنامه و دریافت کالبدشکافی جامع' : 'ارسال پرونده برای تحلیل عملکرد هفته'}</span>
             </button>
         `;
 
         UI.refreshIcons();
     },
 
-    // مدیریت انتخاب ۱ یا ۲ فایل هم‌زمان کارنامه آزمون
     handleExamFilesSelect(inputEl, wId, slotNum) {
         if (!inputEl.files || inputEl.files.length === 0) return;
         if (!this.uploadedExamFiles[wId]) {
@@ -1255,12 +1275,11 @@ const AnalyticsModule = {
                 const slotBox = document.getElementById(`slot${targetSlot}_${wId}`);
                 const slotLbl = document.getElementById(`slot${targetSlot}Lbl_${wId}`);
                 if (slotBox) slotBox.classList.add('has-file');
-                if (slotLbl) slotLbl.innerText = `فایل ${targetSlot}: ${file.name}`;
+                if (slotLbl) slotLbl.innerText = `فایل ${this.toFa(targetSlot)}: ${file.name}`;
             };
             reader.readAsDataURL(file);
         };
 
-        // اگر کاربر در باکس اول به صورت هم‌زمان ۲ فایل را انتخاب کرده باشد، هر دو باکس پر می‌شوند!
         if (slotNum === 1 && inputEl.files.length >= 2) {
             readFileAsBase64(inputEl.files[0], 1);
             readFileAsBase64(inputEl.files[1], 2);
@@ -1270,13 +1289,17 @@ const AnalyticsModule = {
     },
 
     async submitClinicAnalysis(wId, startStr, endStr, isExamWeek, weekTitle) {
+        if (!this.canUserRequestAnalysis()) {
+            UI.openModal('upsellModal');
+            return;
+        }
+
         const reflection = document.getElementById(`reflection_${wId}`)?.value.trim() || '';
         const selfScore = parseInt(document.getElementById(`selfScore_${wId}`)?.value, 10) || 7;
-        const canUploadExam = isExamWeek && AppState.isConsultant;
         const filesObj = this.uploadedExamFiles[wId] || {};
 
-        if (canUploadExam && !filesObj.file1) {
-            return UI.showToast('لطفاً حداقل فایل اول کارنامه آزمون خود را بارگذاری کنید.', 'error');
+        if (isExamWeek && !filesObj.file1) {
+            return UI.showToast('لطفاً تصویر یا فایل کارنامه آزمون خود را بارگذاری کنید.', 'error');
         }
         if (reflection.length < 5) {
             return UI.showToast('لطفاً یک توضیح کوتاه درباره عملکرد یا چالش‌های این هفته خود بنویسید.', 'error');
@@ -1291,7 +1314,6 @@ const AnalyticsModule = {
         const uid = String(AppState.userId);
 
         try {
-            // ارسال به موتور تحلیل گوگل اسکریپت (پشتیبانی از ۱ یا ۲ فایل هم‌زمان)
             const response = await fetch(GAS_WEBAPP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1300,13 +1322,13 @@ const AnalyticsModule = {
                     student_id: uid,
                     start_date: startStr,
                     end_date: endStr,
-                    has_exam: canUploadExam,
+                    has_exam: isExamWeek,
                     student_score: selfScore,
                     reflection: reflection,
-                    mime_type: canUploadExam && filesObj.file1 ? filesObj.file1.mime : null,
-                    file_base64: canUploadExam && filesObj.file1 ? filesObj.file1.base64 : null,
-                    mime_type_2: canUploadExam && filesObj.file2 ? filesObj.file2.mime : null,
-                    file_base64_2: canUploadExam && filesObj.file2 ? filesObj.file2.base64 : null
+                    mime_type: isExamWeek && filesObj.file1 ? filesObj.file1.mime : null,
+                    file_base64: isExamWeek && filesObj.file1 ? filesObj.file1.base64 : null,
+                    mime_type_2: isExamWeek && filesObj.file2 ? filesObj.file2.mime : null,
+                    file_base64_2: isExamWeek && filesObj.file2 ? filesObj.file2.base64 : null
                 })
             });
 
@@ -1315,12 +1337,11 @@ const AnalyticsModule = {
                 throw new Error(result.error || 'خطا در ثبت تحلیل');
             }
 
-            // افزودن موقت به حافظه محلی تا بلافاصله وضعیت در صف پردازش نمایش داده شود
             AppState.examResults.push({
                 chat_id: uid,
                 period_start: startStr,
                 period_end: endStr,
-                is_exam_week: canUploadExam,
+                is_exam_week: isExamWeek,
                 status: 'pending'
             });
 
@@ -1336,17 +1357,13 @@ const AnalyticsModule = {
         }
     },
 
-    // رسم نمودارهای رادار و مدیریت زمان داخل هر پرونده آزمون تاییدشده
-    renderDossierExamCharts(wId, extractedData, lifestyleSnapshot) {
-        if (!window.Chart) return;
-        let examData = [];
+    renderDossierExamCharts(wId, examData, lifestyleSnapshot) {
+        if (!window.Chart || !Array.isArray(examData) || examData.length === 0) return;
+
         let lifestyle = {};
         try {
-            examData = typeof extractedData === 'string' ? JSON.parse(extractedData || "[]") : (extractedData || []);
             lifestyle = typeof lifestyleSnapshot === 'string' ? JSON.parse(lifestyleSnapshot || "{}") : (lifestyleSnapshot || {});
         } catch (_) {}
-
-        if (!Array.isArray(examData) || examData.length === 0) return;
 
         const labels = examData.map(l => l.name);
         const corrects = examData.map(l => Number(l.correct || 0));
@@ -1414,8 +1431,8 @@ const AnalyticsModule = {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { stacked: true, grid: { display: false } },
-                        y: { stacked: true }
+                        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                        y: { stacked: true, position: 'right', ticks: { font: { size: 9.5 }, callback: v => this.toFa(v) } }
                     }
                 }
             });
