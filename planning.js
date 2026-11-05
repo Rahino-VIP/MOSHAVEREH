@@ -1,7 +1,13 @@
 /* ==========================================================================
-   🗓️ ماژول جامع برنامه‌ریزی هوشمند و موتور بودجه‌بندی آزمون (js/planning.js)
-   متصل به تب ۳ اپلیکیشن (#tab-planning) و هماهنگ با جداول:
-   ai_schedules | vip_settings | exam_budgets | knowledge_graph | fixed_schedule_events | week_status_calendar
+   🗓️ ماژول جامع برنامه‌ریزی هوشمند (js/planning.js) - نسخه فرانت‌اند امن و مینیمال
+   شامل:
+   ۱. پشتیبانی از ۳ سطح اشتراک:
+      - رایگان (free_trial): امکان دریافت ۱ بار برنامه هوشمند رایگان
+      - پرو بدون مشاور (pro_auto): باز بودن در طول هفته برای رسیدن به بودجه آزمون + قفل ضدتکرار هفتگی
+      - با مشاور (consultant): باز شدن در پنجره آخر هفته + ارسال به میز مشاور
+   ۲. سیستم ثبت معذوریت‌های زمانی با روز، ساعت و «عنوان و علت معذوریت» + هشدار عدم تایید دلایل غیرموجه
+   ۳. اتصال مستقیم پارت‌های عملیات امروز به تایمر سینماتیک کوپه قطار (TimerModule)
+   ۴. حذف کامل الگوریتم از فرانت‌اند و فراخوانی امن از بک‌اند (generate_smart_schedule_rpc)
    ========================================================================== */
 
 const PlanningModule = {
@@ -11,29 +17,27 @@ const PlanningModule = {
     isInitialScheduleLoad: true,
     hasCelebratedToday: false,
 
-    // متغیرهای پیکربندی هسته (VIP Setup) و محدودیت‌های هفتگی
     classCount: 0,
     busySlotCount: 0,
     selectedStartSubjects: [],
     selectedEndSubjects: [],
     selectedStrengths: [],
     selectedWeaknesses: [],
-    studyStartHour: 7.0,   // پیش‌فرض شروع روز: ۰۷:۰۰ صبح
-    studyEndHour: 23.5,    // پیش‌فرض پایان شب: ۲۳:۳۰ شب (قابل افزایش تا ۲۶ = ۰۲:۰۰ بامداد)
+    studyStartHour: 7.0,
+    studyEndHour: 23.5,
 
-    // تشخیص دروس عمومی از اختصاصی برای اجرای قانون ۳۰٪ تمرکز عمیق
-    generalBooksList: [
-        'فارسی ۱', 'فارسی ۲', 'فارسی ۳', 'فارسی',
-        'عربی ۱', 'عربی ۲', 'عربی ۳', 'عربی',
-        'دین و زندگی ۱', 'دین و زندگی ۲', 'دین و زندگی ۳', 'دینی',
-        'انگلیسی ۱', 'انگلیسی ۲', 'زبان انگلیسی ۳', 'زبان',
-        'سلامت و بهداشت', 'هویت اجتماعی', 'تاریخ معاصر ایران'
-    ],
+    allUserSchedulesHistory: [], // شاملទាំង برنامه‌های approved و pending برای کنترل سهمیه و جلوگیری از تکرار
+    activeCalendarWeek: null,
+
+    toFa(val) {
+        if (val === null || val === undefined) return '';
+        return String(val).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    },
 
     // ======================================================================
-    // 🧭 ۱. راه‌اندازی، بررسی سطح دسترسی اشتراک و سوییچ تب‌ها
+    // 🧭 ۱. راه‌اندازی، بارگذاری تاریخچه درخواست‌ها و بررسی سطح اشتراک
     // ======================================================================
-    init() {
+    async init() {
         try {
             this.todayNameFa = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
             if (this.daysArr.includes(this.todayNameFa)) {
@@ -43,20 +47,8 @@ const PlanningModule = {
             this.todayNameFa = 'شنبه';
         }
 
-        // بررسی سطح دسترسی کاربر به برنامه‌ریزی
-        const accessMode = this.getUserPlanningAccessMode();
-        const lockView = document.getElementById('planningLockedView');
-        const mainContent = document.getElementById('planningMainContent');
-
-        if (accessMode === 'locked') {
-            if (lockView) lockView.style.display = 'block';
-            if (mainContent) mainContent.style.display = 'none';
-            UI.refreshIcons();
-            return;
-        }
-
-        if (lockView) lockView.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'block';
+        await this.loadPlanningMetaFromDB();
+        this.updateTopTierBadge();
 
         if (AppState.currentScheduleObj) {
             this.determineRenderDay();
@@ -68,37 +60,54 @@ const PlanningModule = {
             const container = document.getElementById('questsContainer');
             if (container) {
                 container.innerHTML = `
-                    <div class="card-box center-card" style="padding: 34px 20px;">
-                        <i data-lucide="calendar-plus" class="icon-xl primary-text" style="margin-bottom:10px;"></i>
-                        <h3 style="font-size:15px; font-weight:900; margin-bottom:6px;">هنوز برنامه‌ای برای این هفته شما ثبت نشده است</h3>
-                        <p class="muted-desc">از تب «اتاق فکر و درخواست برنامه» می‌توانید برنامه هفتگی خود را دریافت کنید.</p>
-                        <button type="button" class="btn-primary-full" style="max-width:250px; margin:0 auto;" onclick="PlanningModule.switchSubtab('request', document.querySelectorAll('#tab-planning .subtab-btn')[2])">
+                    <div class="card-box center-card" style="padding: 28px 16px;">
+                        <i data-lucide="calendar-plus" class="icon-xl primary-text" style="margin-bottom:8px;"></i>
+                        <h3 style="font-size:14px; font-weight:900; margin-bottom:6px;">هنوز برنامه‌ای برای این هفته شما ثبت نشده است</h3>
+                        <p class="muted-desc" style="font-size:11.5px;">از تب «۳. اتاق فکر» می‌توانید برنامه هفتگی هوشمند خود را دریافت کنید.</p>
+                        <button type="button" class="btn-primary-full" style="max-width:230px; margin:0 auto;" onclick="PlanningModule.switchSubtab('request', document.querySelectorAll('#tab-planning .subtab-btn')[2])">
                             <i data-lucide="sparkles" class="icon-sm"></i>
-                            <span>رفتن به اتاق فکر و دریافت برنامه</span>
+                            <span>رفتن به اتاق فکر</span>
                         </button>
                     </div>`;
             }
-            this.showWeekEmptyState("هنوز هیچ برنامه‌ای برای شما ثبت نشده است.");
+            this.showWeekEmptyState("هنوز برنامه‌ای برای نمایش در تقویم ثبت نشده است.");
         }
 
         this.populateVipSetupUI();
-        this.initRequestSubtab();
+        await this.initRequestSubtab();
         UI.refreshIcons();
     },
 
-    // تعیین نوع دسترسی کاربر: 'locked' (بدون اشتراک) | 'self_auto' (اشتراک بدون مشاور) | 'consultant' (اشتراک با مشاور)
-    getUserPlanningAccessMode() {
-        const subs = AppState.subscriptions || [];
-        if (subs.length > 0) {
-            const stype = String(subs[0].service_type || '').toLowerCase();
-            // اگر طرح از نوع خودخوان / پلاس / بدون مشاور باشد -> تحویل آنی توسط الگوریتم
-            if (stype.includes('خودخوان') || stype.includes('ابزار') || stype.includes('auto') || stype.includes('plus') || stype.includes('پلاس')) {
-                return 'self_auto';
+    async loadPlanningMetaFromDB() {
+        const uid = String(AppState.userId || '');
+        if (!uid) return;
+        try {
+            const [schRes, calRes] = await Promise.all([
+                supabaseClient.from('ai_schedules').select('id, week_label, status, target_start_date, created_at').eq('national_id', uid).order('created_at', { ascending: false }),
+                supabaseClient.from('week_status_calendar').select('*').order('start_date', { ascending: false }).limit(2)
+            ]);
+            this.allUserSchedulesHistory = schRes.data || [];
+            if (calRes.data && calRes.data.length > 0) {
+                this.activeCalendarWeek = calRes.data[0];
             }
-            return 'consultant';
-        }
-        // اگر اشتراک مشاوره ندارد، قفل است
-        return 'locked';
+        } catch (_) {}
+    },
+
+    // تعیین حالت دسترسی کاربر:
+    // 'consultant' (اشتراک پلاس یا VIP با مشاور) | 'pro_auto' (اشتراک پرو بدون مشاور) | 'free_trial' (نسخه رایگان با ۱ بار سهمیه تست)
+    getUserPlanningAccessMode() {
+        if (AppState.isConsultant) return 'consultant';
+        if (AppState.isPlusOrHigher || AppState.accessTier === 'pro') return 'pro_auto';
+        return 'free_trial';
+    },
+
+    updateTopTierBadge() {
+        const bdg = document.getElementById('planningTierBadge');
+        if (!bdg) return;
+        const mode = this.getUserPlanningAccessMode();
+        if (mode === 'consultant') bdg.innerText = 'با نظارت مشاور';
+        else if (mode === 'pro_auto') bdg.innerText = 'اشتراک پرو (هوشمند)';
+        else bdg.innerText = 'نسخه رایگان (۱ تست هدیه)';
     },
 
     switchSubtab(subId, btnEl) {
@@ -121,17 +130,17 @@ const PlanningModule = {
         if (!panel) return;
         const isHidden = panel.style.display === 'none';
         panel.style.display = isHidden ? 'block' : 'none';
-        if (lbl) lbl.innerText = isHidden ? 'بستن پیکربندی' : 'ویرایش پیکربندی هسته';
+        if (lbl) lbl.innerText = isHidden ? 'بستن' : 'ویرایش هسته';
         UI.refreshIcons();
     },
 
-    // تبدیل ساعت متنی (با پشتیبانی از ساعت‌های بامداد 00:00 تا 03:00 به عنوان ادامه شب 24:00 تا 27:00)
     timeStrToMins(timeStr) {
         if (!timeStr) return 0;
-        const parts = String(timeStr).split(':');
+        const clean = UI.toEngDigits(String(timeStr));
+        const parts = clean.split(':');
         let h = parseInt(parts[0], 10) || 0;
         const m = parseInt(parts[1], 10) || 0;
-        if (h < 5) h += 24; // ساعت ۰۰:۰۰ تا ۰۴:۳۰ بامداد در امتداد شب محاسبه می‌شوند
+        if (h < 5) h += 24;
         return (h * 60) + m;
     },
 
@@ -147,7 +156,7 @@ const PlanningModule = {
         let h = Math.floor(num);
         const m = (num - h) * 60;
         if (h >= 24) h -= 24;
-        return `${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}`;
+        return this.toFa(`${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}`);
     },
 
     formatExtendedTimeDisplay(val) {
@@ -156,18 +165,11 @@ const PlanningModule = {
         const m = (num - h) * 60;
         const suffix = h >= 24 ? ' بامداد' : '';
         if (h >= 24) h -= 24;
-        return `${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}${suffix}`;
-    },
-
-    isGeneralSubject(subjName) {
-        const norm = window.normalizeSubjectName ? window.normalizeSubjectName(subjName) : String(subjName || '');
-        if (this.generalBooksList.includes(norm)) return true;
-        return norm.includes('فارسی') || norm.includes('عربی') || norm.includes('دین و زندگی') ||
-               norm.includes('انگلیسی') || norm.includes('سلامت') || norm.includes('هویت');
+        return this.toFa(`${h < 10 ? '0' + h : h}:${m === 0 ? '00' : '30'}${suffix}`);
     },
 
     // ======================================================================
-    // 🎯 ۲. عملیات امروز و اتصال مستقیم به تایمر تمام‌صفحه سینماتیک
+    // 🎯 ۲. عملیات امروز و اتصال مستقیم به تایمر سینماتیک کوپه قطار
     // ======================================================================
     determineRenderDay() {
         if (!AppState.currentScheduleObj || !AppState.currentScheduleObj.raw_plan) return;
@@ -184,6 +186,7 @@ const PlanningModule = {
                 p.day === this.daysArr[i] &&
                 p.status === 'pending' &&
                 p.subject !== 'بانک جبرانی' &&
+                p.type !== 'busy' &&
                 !String(p.subject).includes('ناهار') &&
                 !String(p.subject).includes('شام') &&
                 (p.type !== 'class' || p.topic === 'کلاس آنلاین')
@@ -202,7 +205,6 @@ const PlanningModule = {
         if (!container) return;
         container.innerHTML = '';
 
-        // پیام انگیزشی روزانه
         const motivationBox = document.getElementById('aiMotivationBox');
         const motivationText = document.getElementById('aiMotivationText');
         if (AppState.currentScheduleObj.ai_motivations && motivationBox && motivationText) {
@@ -213,7 +215,7 @@ const PlanningModule = {
             const todaysMessage = aiMotivations?.daily_motivations?.[this.renderDayFa];
             const uid = String(AppState.userId || '');
             if (todaysMessage && Storage.get(`dismissed_daily_${uid}`) !== todaysMessage) {
-                motivationText.innerText = todaysMessage;
+                motivationText.innerText = this.toFa(todaysMessage);
                 motivationBox.style.display = 'block';
             } else {
                 motivationBox.style.display = 'none';
@@ -223,6 +225,7 @@ const PlanningModule = {
         const todaysBlocks = planArr.filter(p =>
             p.day === this.renderDayFa &&
             p.subject !== 'بانک جبرانی' &&
+            p.type !== 'busy' &&
             !String(p.subject).includes('ناهار') &&
             !String(p.subject).includes('شام') &&
             (p.type !== 'class' || p.topic === 'کلاس آنلاین')
@@ -233,10 +236,10 @@ const PlanningModule = {
 
         if (todaysBlocks.length > 0 && pendingTasks.length === 0) {
             container.innerHTML = `
-                <div class="card-box" style="text-align:center; padding: 34px 20px; background: var(--success-fade); border-color: var(--success);">
-                    <i data-lucide="trophy" class="icon-xl" style="color:var(--success); margin-bottom:10px;"></i>
-                    <h3 style="color: var(--success); margin-bottom: 6px; font-weight:900;">آفرین قهرمان!</h3>
-                    <p style="color:var(--text-muted); font-size: 13px;">تمام مأموریت‌های ${this.renderDayFa} را تکمیل کردی.</p>
+                <div class="card-box" style="text-align:center; padding: 28px 18px; background: var(--success-fade); border-color: var(--success);">
+                    <i data-lucide="trophy" class="icon-xl" style="color:var(--success); margin-bottom:8px;"></i>
+                    <h3 style="color: var(--success); margin-bottom: 4px; font-weight:900; font-size:15px;">آفرین قهرمان!</h3>
+                    <p style="color:var(--text-muted); font-size: 12px;">تمام مأموریت‌های ${this.renderDayFa} را با موفقیت تکمیل کردی.</p>
                 </div>`;
             this.updateProgressBar();
             UI.refreshIcons();
@@ -244,7 +247,7 @@ const PlanningModule = {
         }
 
         if (todaysBlocks.length === 0) {
-            container.innerHTML = `<div class="card-box" style="text-align:center; color:var(--text-muted); padding:34px;">امروز مأموریتی در برنامه ثبت نشده است.</div>`;
+            container.innerHTML = `<div class="card-box" style="text-align:center; color:var(--text-muted); padding:28px;">امروز مأموریتی در برنامه ثبت نشده است.</div>`;
             this.updateProgressBar();
             return;
         }
@@ -254,20 +257,22 @@ const PlanningModule = {
             const cardClass = part.status === 'completed' ? 'completed' : '';
             const safeSubj = String(part.subject || '').replace(/'/g, "\\'");
             const safeTopic = String(part.topic || '').replace(/'/g, "\\'");
+            const startFa = this.toFa(part.start_time);
+            const endFa = this.toFa(part.end_time);
 
             container.innerHTML += `
                 <div class="quest-card ${cardClass}" id="card_${part.block_id}">
                     <div class="quest-info">
-                        <div class="quest-time"><i data-lucide="clock" class="icon-sm" style="width:13px;height:13px;"></i> ${part.start_time} - ${part.end_time}</div>
-                        <div class="quest-title">${part.subject}</div>
-                        <div class="quest-desc">${part.topic || ''}</div>
+                        <div class="quest-time"><i data-lucide="clock" class="icon-sm" style="width:12px;height:12px;"></i><span>از ${startFa} تا ${endFa}</span></div>
+                        <div class="quest-title">${this.toFa(part.subject)}</div>
+                        <div class="quest-desc">${this.toFa(part.topic || '')}</div>
                     </div>
                     <div class="quest-actions">
                         <button type="button" class="action-circle" onclick="PlanningModule.shiftQuest('${part.block_id}')" title="انتقال به بانک جبرانی">
                             <i data-lucide="refresh-cw" class="icon-sm"></i>
                         </button>
                         ${part.type !== 'class' ? `
-                            <button type="button" class="action-circle" onclick="PlanningModule.startQuestWithCinematicTimer('${part.block_id}', '${safeSubj}', '${safeTopic}', '${part.start_time}', '${part.end_time}')" title="تایمر تمرکز تمام‌صفحه">
+                            <button type="button" class="action-circle" onclick="PlanningModule.startQuestWithCinematicTimer('${part.block_id}', '${safeSubj}', '${safeTopic}', '${part.start_time}', '${part.end_time}')" title="شروع با تایمر کوپه قطار">
                                 <i data-lucide="play" class="icon-sm"></i>
                             </button>
                         ` : ''}
@@ -284,21 +289,18 @@ const PlanningModule = {
         UI.refreshIcons();
     },
 
-    // اتصال مستقیم هر پارت عملیات امروز به تایمر تمام‌صفحه سینماتیک ابزارها
+    // ✅ اتصال مستقیم به تایمر جدید کوپه قطار با پیش‌فرض ۹۰ دقیقه مطالعه و ۱۵ دقیقه استراحت
     startQuestWithCinematicTimer(blockId, subject, topic, startTime, endTime) {
         let durationMins = this.timeStrToMins(endTime) - this.timeStrToMins(startTime);
         if (durationMins <= 0 || durationMins > 180) durationMins = 90;
 
-        if (window.ToolsModule && typeof ToolsModule.openImmersiveTimer === 'function') {
-            const fullTitle = `${subject}${topic ? ' • ' + topic : ''}`;
-            // اگر باکس ۹۰ دقیقه‌ای است، به صورت پیش‌فرض ۲ پارت ۴۵ دقیقه‌ای تنظیم می‌شود
-            const studyPartMins = durationMins >= 80 ? Math.round(durationMins / 2) : durationMins;
-            const rounds = durationMins >= 80 ? 2 : 1;
-
-            ToolsModule.openImmersiveTimer(fullTitle, studyPartMins);
-            const roundsInp = document.getElementById('inpPomoRounds');
-            if (roundsInp) roundsInp.value = rounds;
-            ToolsModule.activeQuestBlockId = blockId;
+        const fullTitle = `${subject}${topic ? ' • ' + topic : ''}`;
+        if (window.TimerModule && typeof window.TimerModule.openImmersiveTimer === 'function') {
+            window.TimerModule.activeQuestBlockId = blockId;
+            window.TimerModule.openImmersiveTimer(fullTitle, durationMins);
+        } else if (window.ToolsModule && typeof window.ToolsModule.openImmersiveTimer === 'function') {
+            window.ToolsModule.activeQuestBlockId = blockId;
+            window.ToolsModule.openImmersiveTimer(fullTitle, durationMins);
         }
     },
 
@@ -353,12 +355,12 @@ const PlanningModule = {
                     benchClone.is_benched = true;
                     planArr.push(benchClone);
                     origBlock.status = 'shifted';
-                    UI.showToast('باکس جبرانی خالی نبود؛ این درس برای هفته آینده ذخیره شد.', 'info');
+                    UI.showToast('باکس جبرانی خالی نبود؛ این مبحث برای برنامه بعدی شما ذخیره شد.', 'info');
                 } else {
                     origBlock.status = 'shifted';
                     for (let i = 0; i < neededMakeups; i++) {
                         const mIdx = availableMakeups[i];
-                        planArr[mIdx].subject = origBlock.subject + (neededMakeups > 1 ? ` (بخش ${i + 1})` : " (جبرانی)");
+                        planArr[mIdx].subject = origBlock.subject + (neededMakeups > 1 ? ` (بخش ${this.toFa(i + 1)})` : " (جبرانی)");
                         planArr[mIdx].topic = origBlock.topic;
                         planArr[mIdx].type = origBlock.type;
                     }
@@ -390,6 +392,7 @@ const PlanningModule = {
         const activeToday = AppState.currentScheduleObj.raw_plan.filter(p =>
             p.day === this.renderDayFa &&
             p.subject !== 'بانک جبرانی' &&
+            p.type !== 'busy' &&
             !String(p.subject).includes('ناهار') &&
             !String(p.subject).includes('شام') &&
             (p.type !== 'class' || p.topic === 'کلاس آنلاین') &&
@@ -404,9 +407,9 @@ const PlanningModule = {
         const progressBar = document.getElementById('progressBar');
         const homeProg = document.getElementById('homeTodayProgress');
 
-        if (progressText) progressText.innerText = `${percent}%`;
+        if (progressText) progressText.innerText = `${this.toFa(percent)}٪`;
         if (progressBar) progressBar.style.width = `${percent}%`;
-        if (homeProg) homeProg.innerText = `${percent.toLocaleString('fa-IR')}٪`;
+        if (homeProg) homeProg.innerText = `${this.toFa(percent)}٪`;
 
         if (percent === 100 && activeToday.length > 0 && !this.isInitialScheduleLoad && !this.hasCelebratedToday) {
             this.hasCelebratedToday = true;
@@ -438,17 +441,17 @@ const PlanningModule = {
     },
 
     // ======================================================================
-    // 📅 ۳. تقویم گرافیکی هفته (تا ساعت ۰۲:۰۰ بامداد) + دانلود عکس و PDF برنامه
+    // 📅 ۳. تقویم گرافیکی هفته (بدون قابلیت ویرایش دستی) + دانلود عکس و PDF
     // ======================================================================
     setupWeekSelectorDropdown() {
         const container = document.getElementById('weekDropdownContainer');
         if (!container || !AppState.allSchedules || AppState.allSchedules.length === 0) return;
 
-        const currentLabel = AppState.currentScheduleObj?.week_label || 'هفته جاری';
+        const currentLabel = this.toFa(AppState.currentScheduleObj?.week_label || 'هفته جاری');
         const itemsHtml = AppState.allSchedules.map(sch => `
             <div class="custom-select-item ${sch.id === AppState.currentScheduleObj?.id ? 'selected' : ''}"
-                 onclick="PlanningModule.selectScheduleWeek('${sch.id}', '${sch.week_label || 'برنامه هفته'}', this)">
-                <span>${sch.week_label || 'برنامه هفته'}</span>
+                 onclick="PlanningModule.selectScheduleWeek('${sch.id}', '${this.toFa(sch.week_label || 'برنامه هفته')}')">
+                <span>${this.toFa(sch.week_label || 'برنامه هفته')}</span>
                 <i data-lucide="check" class="icon-sm"></i>
             </div>
         `).join('');
@@ -466,12 +469,11 @@ const PlanningModule = {
     },
 
     selectScheduleWeek(schId, label) {
-        AppState.currentScheduleObj = (AppState.allSchedules || []).find(s => s.id === schId) || AppState.currentScheduleObj;
+        AppState.currentScheduleObj = (AppState.allSchedules || []).find(s => String(s.id) === String(schId)) || AppState.currentScheduleObj;
         const lbl = document.getElementById('weekSelectLabel');
         if (lbl) lbl.innerText = label;
 
-        const wrap = document.getElementById('weekSelectWrap');
-        if (wrap) wrap.classList.remove('open');
+        document.getElementById('weekSelectWrap')?.classList.remove('open');
 
         this.updateWeeklyProgress();
         this.renderGCal();
@@ -493,6 +495,7 @@ const PlanningModule = {
 
         const taskBlocks = planArr.filter(p =>
             p.type !== 'break' &&
+            p.type !== 'busy' &&
             p.subject !== 'بانک جبرانی' &&
             !String(p.subject).includes('ناهار') &&
             !String(p.subject).includes('شام') &&
@@ -506,8 +509,8 @@ const PlanningModule = {
         const compPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
         const shiftPercent = total > 0 ? Math.round((shifted / total) * 100) : 0;
 
-        document.getElementById('successPercentText').innerText = `${compPercent}% انجام شده`;
-        document.getElementById('dangerPercentText').innerText = `${shiftPercent}% جبرانی`;
+        document.getElementById('successPercentText').innerText = `${this.toFa(compPercent)}٪ انجام شده`;
+        document.getElementById('dangerPercentText').innerText = `${this.toFa(shiftPercent)}٪ جبرانی`;
         document.getElementById('successBar').style.width = `${compPercent}%`;
         document.getElementById('dangerBar').style.width = `${shiftPercent}%`;
 
@@ -524,7 +527,6 @@ const PlanningModule = {
             ? JSON.parse(AppState.currentScheduleObj.raw_plan)
             : AppState.currentScheduleObj.raw_plan;
 
-        // تشخیص اینکه آیا در برنامه ساعت‌های بعد از نیمه‌شب (تا ۲ بامداد = ۱۵۶۰ دقیقه) وجود دارد یا خیر
         let maxEndHour = 23;
         planArr.forEach(p => {
             if (p.end_time) {
@@ -540,7 +542,7 @@ const PlanningModule = {
         let timeColHtml = `<div class="gcal-time-col"><div class="gcal-time-header">ساعت</div>`;
         for (let i = 6; i <= maxEndHour; i++) {
             const displayH = i >= 24 ? i - 24 : i;
-            timeColHtml += `<div class="gcal-time-slot">${String(displayH).padStart(2, '0')}:00</div>`;
+            timeColHtml += `<div class="gcal-time-slot">${this.toFa(String(displayH).padStart(2, '0'))}:۰۰</div>`;
         }
         container.innerHTML += timeColHtml + `</div>`;
 
@@ -557,19 +559,21 @@ const PlanningModule = {
 
                 let bgColor = "var(--primary)";
                 if (part.type === 'class') bgColor = "#334155";
+                else if (part.type === 'busy') bgColor = "#7c2d12"; // رنگ مشخص برای معذوریت‌های شخصی درج‌شده در برنامه
                 else if (part.subject === 'بانک جبرانی') bgColor = "#64748b";
                 else if (String(part.subject).includes("ناهار") || String(part.subject).includes("شام")) bgColor = "#475569";
-                if (part.status === 'completed') bgColor = "var(--success)";
+
+                if (part.status === 'completed' && part.type !== 'break' && part.type !== 'busy') bgColor = "var(--success)";
                 else if (part.status === 'shifted') bgColor = "var(--danger)";
 
                 const statusClass = part.status === 'completed' ? 'completed' : (part.status === 'shifted' ? 'shifted' : '');
-                const topicHtml = part.topic ? `<div class="event-topic">${part.topic}</div>` : '';
+                const topicHtml = part.topic ? `<div class="event-topic">${this.toFa(part.topic)}</div>` : '';
 
                 dayHtml += `
                     <div class="gcal-event ${statusClass}" style="top: ${topPx}px; height: ${heightPx}px; background: ${bgColor};">
-                        <div style="font-weight:900;font-size:10.5px;">${part.subject}</div>
+                        <div style="font-weight:900;font-size:10px;">${this.toFa(part.subject)}</div>
                         ${topicHtml}
-                        <div style="font-size:8.5px;font-family:monospace; margin-top:auto;">${part.start_time}-${part.end_time}</div>
+                        <div style="font-size:8.5px; margin-top:auto;">${this.toFa(part.start_time)} تا ${this.toFa(part.end_time)}</div>
                     </div>`;
             });
 
@@ -584,16 +588,15 @@ const PlanningModule = {
         const container = document.getElementById('gcalGrid');
         if (container) {
             container.innerHTML = `
-                <div style="padding: 50px 20px; text-align: center; width: 100%;">
-                    <i data-lucide="calendar-x" class="icon-xl" style="color:var(--text-muted); margin-bottom:10px;"></i>
-                    <h3 style="color: var(--text-muted); font-size: 13.5px;">${msg}</h3>
+                <div style="padding: 44px 18px; text-align: center; width: 100%;">
+                    <i data-lucide="calendar-x" class="icon-xl" style="color:var(--text-muted); margin-bottom:8px;"></i>
+                    <h3 style="color: var(--text-muted); font-size: 13px;">${msg}</h3>
                 </div>`;
         }
         const progBox = document.getElementById('weeklyProgressBox');
         if (progBox) progBox.style.display = 'none';
     },
 
-    // 📥 دانلود برنامه هفتگی به صورت پوستر تصویری باکیفیت (PNG)
     downloadWeeklyScheduleImage() {
         if (!AppState.currentScheduleObj || !AppState.currentScheduleObj.raw_plan) {
             return UI.showToast('هنوز برنامه‌ای برای دانلود وجود ندارد.', 'error');
@@ -608,11 +611,9 @@ const PlanningModule = {
         canvas.height = 1080;
         const ctx = canvas.getContext('2d');
 
-        // پس‌زمینه تیره استاندارد راهینو
         ctx.fillStyle = '#0e1514';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // هدر بالا
         ctx.fillStyle = '#16201e';
         ctx.fillRect(30, 25, 1540, 85);
         ctx.strokeStyle = '#77bba9';
@@ -626,9 +627,8 @@ const PlanningModule = {
 
         ctx.fillStyle = '#94a3b8';
         ctx.font = 'bold 18px Vazirmatn, sans-serif';
-        ctx.fillText(`${AppState.currentScheduleObj.week_label || 'برنامه هفتگی'} • پایه ${AppState.studentGrade} ${AppState.studentMajor}`, 1540, 95);
+        ctx.fillText(`${this.toFa(AppState.currentScheduleObj.week_label || 'برنامه هفتگی')} • پایه ${AppState.studentGrade} ${AppState.studentMajor}`, 1540, 95);
 
-        // رسم ۷ ردیف روزهای هفته (از شنبه تا جمعه)
         const startY = 130;
         const rowH = 130;
 
@@ -637,7 +637,6 @@ const PlanningModule = {
             ctx.fillStyle = dIdx % 2 === 0 ? '#16201e' : '#1b2725';
             ctx.fillRect(30, y, 1540, rowH - 10);
 
-            // ستون نام روز در سمت راست
             ctx.fillStyle = '#639889';
             ctx.fillRect(1450, y, 120, rowH - 10);
             ctx.fillStyle = '#ffffff';
@@ -645,7 +644,6 @@ const PlanningModule = {
             ctx.textAlign = 'center';
             ctx.fillText(day, 1510, y + 68);
 
-            // فیلتر و مرتب‌سازی باکس‌های مطالعه آن روز
             const blocks = planArr.filter(p =>
                 p.day === day &&
                 p.type !== 'break' &&
@@ -661,24 +659,24 @@ const PlanningModule = {
                 const bx = 1435 - ((bIdx + 1) * (boxW + 8));
                 if (bx < 35) return;
 
-                ctx.fillStyle = blk.type === 'class' ? '#334155' : (blk.subject === 'بانک جبرانی' ? '#475569' : '#243b35');
+                ctx.fillStyle = blk.type === 'class' ? '#334155' : (blk.type === 'busy' ? '#7c2d12' : (blk.subject === 'بانک جبرانی' ? '#475569' : '#243b35'));
                 ctx.fillRect(bx, y + 10, boxW, rowH - 30);
                 ctx.strokeStyle = blk.status === 'completed' ? '#10b981' : '#77bba9';
                 ctx.lineWidth = 1.5;
                 ctx.strokeRect(bx, y + 10, boxW, rowH - 30);
 
                 ctx.fillStyle = '#77bba9';
-                ctx.font = 'bold 13px monospace';
+                ctx.font = 'bold 13px Vazirmatn, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(`${blk.start_time} - ${blk.end_time}`, bx + boxW / 2, y + 34);
+                ctx.fillText(`از ${this.toFa(blk.start_time)} تا ${this.toFa(blk.end_time)}`, bx + boxW / 2, y + 34);
 
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 15px Vazirmatn, sans-serif';
-                ctx.fillText(String(blk.subject).slice(0, 22), bx + boxW / 2, y + 62);
+                ctx.fillText(this.toFa(String(blk.subject).slice(0, 22)), bx + boxW / 2, y + 62);
 
                 ctx.fillStyle = '#cbd5e1';
                 ctx.font = '12px Vazirmatn, sans-serif';
-                ctx.fillText(String(blk.topic || '').slice(0, 26), bx + boxW / 2, y + 86);
+                ctx.fillText(this.toFa(String(blk.topic || '').slice(0, 26)), bx + boxW / 2, y + 86);
             });
         });
 
@@ -689,7 +687,6 @@ const PlanningModule = {
         UI.showToast('تصویر باکیفیت برنامه هفتگی دانلود شد.', 'success');
     },
 
-    // 🖨️ چاپ یا ذخیره PDF استاندارد در قالب جدول افقی A4
     printWeeklySchedulePdf() {
         if (!AppState.currentScheduleObj || !AppState.currentScheduleObj.raw_plan) {
             return UI.showToast('هنوز برنامه‌ای برای چاپ وجود ندارد.', 'error');
@@ -708,9 +705,9 @@ const PlanningModule = {
 
             const cells = blocks.map(b => `
                 <td style="border:1px solid #cbd5e1; padding:8px; text-align:center; background:${b.type === 'class' ? '#f1f5f9' : '#ffffff'};">
-                    <div style="font-size:11px; color:#0f766e; font-weight:bold; direction:ltr;">${b.start_time} - ${b.end_time}</div>
-                    <div style="font-size:13px; font-weight:900; color:#1e293b; margin:3px 0;">${b.subject}</div>
-                    <div style="font-size:10.5px; color:#64748b;">${b.topic || ''}</div>
+                    <div style="font-size:11px; color:#0f766e; font-weight:bold;">از ${this.toFa(b.start_time)} تا ${this.toFa(b.end_time)}</div>
+                    <div style="font-size:13px; font-weight:900; color:#1e293b; margin:3px 0;">${this.toFa(b.subject)}</div>
+                    <div style="font-size:10.5px; color:#64748b;">${this.toFa(b.topic || '')}</div>
                 </td>
             `).join('');
 
@@ -732,10 +729,9 @@ const PlanningModule = {
             <head>
                 <meta charset="UTF-8">
                 <title>برنامه هفتگی قطب‌نمای راهینو - ${AppState.fullName}</title>
-                <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
                 <style>
                     @page { size: A4 landscape; margin: 10mm; }
-                    body { font-family: 'Vazirmatn', sans-serif; direction: rtl; color: #1e293b; }
+                    body { font-family: 'Vazirmatn', Tahoma, sans-serif; direction: rtl; color: #1e293b; }
                     .header { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #0f766e; padding-bottom:10px; margin-bottom:14px; }
                     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
                 </style>
@@ -744,7 +740,7 @@ const PlanningModule = {
                 <div class="header">
                     <div>
                         <h2 style="margin:0; color:#0f766e;">برنامه مطالعاتی هوشمند قطب‌نمای راهینو</h2>
-                        <small>${AppState.currentScheduleObj.week_label || 'برنامه هفتگی'}</small>
+                        <small>${this.toFa(AppState.currentScheduleObj.week_label || 'برنامه هفتگی')}</small>
                     </div>
                     <div style="text-align:left; font-size:13px; font-weight:bold;">
                         <div>دانش‌آموز: ${AppState.fullName}</div>
@@ -760,8 +756,31 @@ const PlanningModule = {
     },
 
     // ======================================================================
-    // 💡 ۴. اتاق فکر، محدودیت‌های هفتگی و موتور برنامه‌ریز هوشمند (با قانون ۳۰٪)
+    // 💡 ۴. اتاق فکر، سیستم ثبت معذوریت با «عنوان اجباری» و کنترل قوانین اشتراک
     // ======================================================================
+    buildHourOptionsHtml(defaultVal = 16, isEnd = false) {
+        let html = !isEnd ? `<option value="full_day">کل روز (عدم مطالعه در کل روز)</option>` : '';
+        const startH = isEnd ? 7 : 6;
+        const endH = isEnd ? 26 : 24;
+        for (let h = startH; h <= endH; h += 0.5) {
+            const label = this.formatExtendedTimeDisplay(h);
+            const sel = Number(h) === Number(defaultVal) ? 'selected' : '';
+            html += `<option value="${h}" ${sel}>${isEnd ? 'تا ' : 'از '}${label}</option>`;
+        }
+        return html;
+    },
+
+    onBusyStartSelectChange(selEl, rowId) {
+        const endSel = document.querySelector(`#busySlot_${rowId} .busy-end`);
+        if (!endSel) return;
+        if (selEl.value === 'full_day') {
+            endSel.style.display = 'none';
+        } else {
+            endSel.style.display = 'block';
+        }
+    },
+
+    // ✅ افزودن ردیف معذوریت شامل: روز هفته + بازه ساعت (یا کل روز) + عنوان و علت معذوریت
     addBusySlotRow() {
         this.busySlotCount++;
         const id = this.busySlotCount;
@@ -769,28 +788,53 @@ const PlanningModule = {
         if (!container) return;
 
         const row = document.createElement('div');
-        row.className = 'course-card';
+        row.className = 'busy-slot-item';
         row.id = `busySlot_${id}`;
-        row.style.padding = '12px';
-        row.style.marginBottom = '8px';
 
         const dayOpts = this.daysArr.map(d => `<option value="${d}">${d}</option>`).join('');
         row.innerHTML = `
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <select class="modern-input busy-day" style="flex:1; min-width:100px; padding:8px;">${dayOpts}</select>
-                <div style="display:flex; align-items:center; gap:6px; flex:2;">
-                    <span style="font-size:11.5px; font-weight:800;">از ساعت:</span>
-                    <input type="number" class="modern-input busy-start" min="6" max="24" step="0.5" value="16" style="padding:8px; text-align:center;">
-                    <span style="font-size:11.5px; font-weight:800;">تا:</span>
-                    <input type="number" class="modern-input busy-end" min="7" max="26" step="0.5" value="20" style="padding:8px; text-align:center;">
-                </div>
-                <button type="button" class="del-icon-btn" style="width:34px;height:34px;" onclick="document.getElementById('busySlot_${id}').remove()">
+            <div class="busy-slot-top">
+                <select class="modern-input busy-day" style="padding:7px 8px; font-size:11.5px;">${dayOpts}</select>
+                <select class="modern-input busy-start" style="padding:7px 8px; font-size:11.5px;" onchange="PlanningModule.onBusyStartSelectChange(this, ${id})">
+                    ${this.buildHourOptionsHtml(16, false)}
+                </select>
+                <select class="modern-input busy-end" style="padding:7px 8px; font-size:11.5px;">
+                    ${this.buildHourOptionsHtml(20, true)}
+                </select>
+                <button type="button" class="del-icon-btn" style="width:32px;height:32px;" onclick="document.getElementById('busySlot_${id}').remove()" title="حذف">
                     <i data-lucide="trash-2" class="icon-sm"></i>
                 </button>
             </div>
+            <input type="text" class="modern-input busy-reason" style="padding:8px 10px; font-size:11.5px;"
+                   placeholder="عنوان و علت دقیق معذوریت (الزامی - مثلاً: نوبت دندان‌پزشکی، مهمانی خانوادگی...)">
         `;
         container.appendChild(row);
         UI.refreshIcons();
+    },
+
+    // بررسی اینکه آیا دانش‌آموز قبلاً برای چرخه هفته فعلی برنامه گرفته است یا خیر (جلوگیری از ساخت چند برنامه در یک هفته)
+    hasScheduleForCurrentCycle(isThursdayFridayWindow) {
+        if (!this.allUserSchedulesHistory || this.allUserSchedulesHistory.length === 0) return false;
+
+        // ۱. اگر در پنجره پنجشنبه شب/جمعه هستیم، بررسی کن آیا در ۳۶ ساعت اخیر برنامه جدیدی برای هفته آینده گرفته است؟
+        const nowMs = Date.now();
+        const latestSch = this.allUserSchedulesHistory[0];
+        const latestCreatedMs = latestSch.created_at ? new Date(latestSch.created_at).getTime() : 0;
+
+        if (isThursdayFridayWindow) {
+            return (nowMs - latestCreatedMs) < (36 * 3600 * 1000);
+        }
+
+        // ۲. در طول هفته (شنبه تا پنجشنبه عصر): اگر برنامه فعالی دارد که مربوط به همین هفته است
+        if (this.activeCalendarWeek && latestSch.week_label && latestSch.week_label.includes(this.activeCalendarWeek.title)) {
+            return true;
+        }
+        // یا اگر در ۵ روز اخیر برنامه‌ای دریافت کرده است
+        if ((nowMs - latestCreatedMs) < (5 * 24 * 3600 * 1000)) {
+            return true;
+        }
+
+        return false;
     },
 
     async initRequestSubtab() {
@@ -798,37 +842,109 @@ const PlanningModule = {
         const iranTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" }));
         const currentDay = iranTime.getDay(); // 4 = پنجشنبه، 5 = جمعه
         const currentHour = iranTime.getHours();
-
-        const isThursdayFridayWindow = (currentDay === 4 && currentHour >= 20) || (currentDay === 5 && currentHour < 20);
-        const hasNoCurrentSchedule = !AppState.currentScheduleObj;
+        const isThursdayFridayWindow = (currentDay === 4 && currentHour >= 20) || (currentDay === 5 && currentHour <= 23);
 
         const lockMsg = document.getElementById('timeLockMessage');
         const formContent = document.getElementById('requestFormContent');
         const btnLabel = document.getElementById('btnRequestPlanLabel');
-        const subDesc = document.getElementById('requestBoxSubDesc');
+        const freeBanner = document.getElementById('freeTrialPlanBanner');
+        const warnNote = document.getElementById('consultantStrictnessNote');
 
-        // اگر کاربر اشتراک بدون مشاور دارد و برنامه فعالی ندارد، هر روزی از هفته می‌تواند برنامه بگیرد
-        const canRequestNow = isThursdayFridayWindow || (accessMode === 'self_auto' && hasNoCurrentSchedule);
-
-        if (accessMode === 'self_auto') {
-            if (btnLabel) btnLabel.innerText = 'ساخت و دریافت فوری برنامه هوشمند هفته';
-            if (subDesc) {
-                subDesc.innerText = hasNoCurrentSchedule && !isThursdayFridayWindow
-                    ? 'شما برای هفته جاری برنامه‌ای ندارید؛ سیستم بودجه آزمون پیش رو را بر اساس روزهای باقی‌مانده هفته برایتان تنظیم و درجا تحویل می‌دهد.'
-                    : 'با زدن دکمه زیر، برنامه هفته آینده شما منطبق با بودجه‌بندی آزمون چیده شده و بلافاصله فعال می‌شود.';
-            }
-        } else {
-            if (btnLabel) btnLabel.innerText = 'ارسال پرونده به اتاق مشاور';
+        if (freeBanner) freeBanner.style.display = accessMode === 'free_trial' ? 'block' : 'none';
+        if (warnNote) {
+            warnNote.innerHTML = accessMode === 'consultant'
+                ? `<i data-lucide="alert-triangle" class="icon-sm"></i><span><strong>تذکر بسیار مهم مشاور:</strong> روز، ساعت و <strong>عنوان دقیق معذوریت</strong> خود را بنویسید تا در برنامه‌تان ثبت شود. اگر به دلیل غیرموجهی اعلام معذوریت کنید، مشاور آن را تایید نکرده و در آن تایم نیز برایتان برنامه مطالعاتی می‌چیند!</span>`
+                : `<i data-lucide="info" class="icon-sm" style="color:var(--primary);"></i><span>روز، ساعت و <strong>عنوان معذوریت</strong> خود را وارد کنید تا عنوان آن در تقویم هفتگی شما ثبت شده و در آن ساعت برایتان پارت درسی چیده نشود.</span>`;
         }
 
-        if (!canRequestNow) {
-            if (lockMsg) lockMsg.style.display = 'block';
+        // الف) بررسی وضعیت کاربر رایگان (فقط ۱ بار سهمیه کل)
+        if (accessMode === 'free_trial') {
+            if (this.allUserSchedulesHistory.length >= 1) {
+                if (formContent) formContent.style.display = 'none';
+                if (lockMsg) {
+                    lockMsg.style.display = 'block';
+                    lockMsg.style.borderColor = 'var(--gold)';
+                    lockMsg.style.background = 'var(--gold-fade)';
+                    lockMsg.innerHTML = `
+                        <i data-lucide="crown" class="icon-xl gold-text"></i>
+                        <h4 class="gold-text">سهمیه ۱ بار برنامه رایگان شما استفاده شده است</h4>
+                        <p style="margin-bottom:12px;">شما ۱ بار برنامه هوشمند هدیه خود را دریافت کرده‌اید. برای دریافت مستمر برنامه در تمام هفته‌ها تا روز کنکور، اشتراک پرو یا مشاوره تهیه فرمایید.</p>
+                        <button type="button" class="btn-primary-full" style="max-width:240px; margin:0 auto;" onclick="Router.openSubPage('store-renew')">
+                            <i data-lucide="sparkles" class="icon-sm"></i><span>مشاهده و تهیه اشتراک</span>
+                        </button>
+                    `;
+                }
+                UI.refreshIcons();
+                return;
+            } else {
+                // کاربر رایگان که هنوز ۱ بار سهمیه‌اش را استفاده نکرده -> فرم برایش باز است
+                if (lockMsg) lockMsg.style.display = 'none';
+                if (formContent) formContent.style.display = 'block';
+                if (btnLabel) btnLabel.innerText = 'دریافت اولین برنامه هوشمند (هدیه رایگان)';
+                await this.loadDynamicSwitches();
+                UI.refreshIcons();
+                return;
+            }
+        }
+
+        // ب) بررسی وضعیت کاربر «پرو - بدون مشاور» (همیشه باز برای هفته بدون برنامه، اما قفل پس از دریافت برنامه همان هفته)
+        if (accessMode === 'pro_auto') {
+            const alreadyHasForThisCycle = this.hasScheduleForCurrentCycle(isThursdayFridayWindow);
+            if (alreadyHasForThisCycle) {
+                if (formContent) formContent.style.display = 'none';
+                if (lockMsg) {
+                    lockMsg.style.display = 'block';
+                    lockMsg.style.borderColor = 'var(--success)';
+                    lockMsg.style.background = 'var(--success-fade)';
+                    lockMsg.innerHTML = `
+                        <i data-lucide="check-circle-2" class="icon-xl success-text"></i>
+                        <h4 class="success-text">برنامه این هفته شما صادر و فعال شده است!</h4>
+                        <p>برنامه شما در تب «عملیات امروز» و «تقویم هفته» فعال است. جهت حفظ نظم مطالعاتی، امکان ساخت چند برنامه در یک هفته وجود ندارد. پنجره دریافت برنامه هفته آینده از <strong>پنجشنبه ساعت ۲۰:۰۰</strong> باز می‌شود.</p>
+                    `;
+                }
+            } else {
+                if (lockMsg) lockMsg.style.display = 'none';
+                if (formContent) formContent.style.display = 'block';
+                if (btnLabel) btnLabel.innerText = 'ساخت و دریافت فوری برنامه هوشمند';
+                await this.loadDynamicSwitches();
+            }
+            UI.refreshIcons();
+            return;
+        }
+
+        // ج) بررسی وضعیت شاگرد «با مشاور» (فقط پنجشنبه ۲۰:۰۰ تا جمعه شب + بررسی عدم ارسال تکراری)
+        const latestPending = this.allUserSchedulesHistory.find(s => s.status === 'pending');
+        if (latestPending) {
             if (formContent) formContent.style.display = 'none';
+            if (lockMsg) {
+                lockMsg.style.display = 'block';
+                lockMsg.style.borderColor = 'var(--gold)';
+                lockMsg.style.background = 'var(--gold-fade)';
+                lockMsg.innerHTML = `
+                    <i data-lucide="hourglass" class="icon-xl gold-text"></i>
+                    <h4 class="gold-text">درخواست شما روی میز مشاور قرار دارد</h4>
+                    <p>فرم استراتژی شما ثبت شده است و به محض بررسی و تایید توسط مشاور، برنامه هفته جدید در تقویم شما فعال خواهد شد.</p>
+                `;
+            }
+        } else if (!isThursdayFridayWindow) {
+            if (formContent) formContent.style.display = 'none';
+            if (lockMsg) {
+                lockMsg.style.display = 'block';
+                lockMsg.style.borderColor = 'var(--danger)';
+                lockMsg.style.background = 'var(--danger-fade)';
+                lockMsg.innerHTML = `
+                    <i data-lucide="lock" class="icon-xl danger-text"></i>
+                    <h4>پنجره درخواست برنامه هفتگی بسته است</h4>
+                    <p>فرم ثبت معذوریت‌ها و درخواست برنامه هفتگی، هر هفته از <strong>پنجشنبه ساعت ۲۰:۰۰</strong> تا <strong>جمعه شب</strong> باز می‌شود.</p>
+                `;
+            }
         } else {
             if (lockMsg) lockMsg.style.display = 'none';
             if (formContent) formContent.style.display = 'block';
+            if (btnLabel) btnLabel.innerText = 'ارسال استراتژی و معذوریت‌ها به میز مشاور';
             await this.loadDynamicSwitches();
         }
+        UI.refreshIcons();
     },
 
     async loadDynamicSwitches() {
@@ -842,7 +958,7 @@ const PlanningModule = {
                 data.forEach(sw => {
                     container.innerHTML += `
                         <label class="toggle-row">
-                            <span style="font-size:13px; font-weight:800;">${sw.title}</span>
+                            <span style="font-size:12px; font-weight:800;">${this.toFa(sw.title)}</span>
                             <div class="toggle-switch">
                                 <input type="checkbox" class="dynamic-toggle-input" data-key="${sw.action_key}" data-title="${sw.title}">
                                 <span class="toggle-slider"></span>
@@ -856,456 +972,135 @@ const PlanningModule = {
         }
     },
 
-    // جمع‌آوری روزها و ساعت‌های غیبت/مهمانی هفته که دانش‌آموز در اتاق فکر انتخاب کرده است
-    collectWeeklyOffConstraints() {
-        const fullOffDays = [];
-        document.querySelectorAll('#dayOffCirclesContainer .day-circle.active').forEach(c => {
-            fullOffDays.push(c.getAttribute('data-day'));
-        });
-
+    // جمع‌آوری و اعتبارسنجی معذوریت‌های زمانی دانش‌آموز (روز + ساعت + عنوان اجباری)
+    collectAndValidateBusyConstraints() {
         const busySlots = [];
-        document.querySelectorAll('#busySlotsListContainer .course-card').forEach(row => {
-            const d = row.querySelector('.busy-day')?.value;
-            const s = parseFloat(row.querySelector('.busy-start')?.value) || 16;
-            const e = parseFloat(row.querySelector('.busy-end')?.value) || 20;
-            if (d && e > s) {
-                busySlots.push({ day: d, startMins: s * 60, endMins: e * 60 });
+        const fullOffDays = [];
+        let hasMissingReason = false;
+
+        document.querySelectorAll('#busySlotsListContainer .busy-slot-item').forEach(row => {
+            const day = row.querySelector('.busy-day')?.value;
+            const startVal = row.querySelector('.busy-start')?.value;
+            const endVal = parseFloat(row.querySelector('.busy-end')?.value) || 20;
+            const reason = row.querySelector('.busy-reason')?.value.trim() || '';
+
+            if (!reason) {
+                hasMissingReason = true;
+                row.querySelector('.busy-reason')?.focus();
+                return;
+            }
+
+            if (startVal === 'full_day') {
+                if (!fullOffDays.includes(day)) fullOffDays.push(day);
+                busySlots.push({
+                    day: day,
+                    is_full_day: true,
+                    startMins: Math.round(this.studyStartHour * 60),
+                    endMins: Math.round(this.studyEndHour * 60),
+                    start_time: this.minsToTimeStr(Math.round(this.studyStartHour * 60)),
+                    end_time: this.minsToTimeStr(Math.round(this.studyEndHour * 60)),
+                    title: reason
+                });
+            } else {
+                const sNum = parseFloat(startVal) || 16;
+                const eNum = Math.max(sNum + 0.5, endVal);
+                busySlots.push({
+                    day: day,
+                    is_full_day: false,
+                    startMins: Math.round(sNum * 60),
+                    endMins: Math.round(eNum * 60),
+                    start_time: this.minsToTimeStr(Math.round(sNum * 60)),
+                    end_time: this.minsToTimeStr(Math.round(eNum * 60)),
+                    title: reason
+                });
             }
         });
 
-        return { fullOffDays, busySlots };
+        return { busySlots, fullOffDays, hasMissingReason };
     },
 
+    // 🔐 ارسال درخواست به تابع امن بک‌اند (بدون وجود هیچ‌گونه الگوریتم در فرانت‌اند)
     async sendScheduleRequest() {
         if (!AppState.vipSettings) {
-            UI.showToast('لطفاً ابتدا دکمه «ویرایش پیکربندی هسته» در بالای همین صفحه را بزنید و ساعت مطالعه و کلاس‌های خود را ذخیره کنید.', 'error');
+            UI.showToast('لطفاً ابتدا از دکمه بالای صفحه، «ویرایش هسته» (ساعت مطالعه و کلاس‌های ثابت) را ذخیره کنید.', 'error');
             this.toggleSetupPanel();
             return;
         }
 
+        const constraints = this.collectAndValidateBusyConstraints();
+        if (constraints.hasMissingReason) {
+            return UI.showToast('لطفاً برای تمامی معذوریت‌های زمانی که اضافه کرده‌اید، «عنوان و علت معذوریت» را بنویسید.', 'error');
+        }
+
         const accessMode = this.getUserPlanningAccessMode();
         const btn = document.getElementById('btnRequestPlan');
-        const note = document.getElementById('nextWeekNote')?.value || '';
-        const offConstraints = this.collectWeeklyOffConstraints();
+        const note = document.getElementById('nextWeekNote')?.value.trim() || '';
 
         const studentOptions = {
+            access_mode: accessMode,
             study_start_hour: this.studyStartHour,
             study_end_hour: this.studyEndHour,
-            full_off_days: offConstraints.fullOffDays,
-            busy_slots: offConstraints.busySlots
+            full_off_days: constraints.fullOffDays,
+            busy_slots: constraints.busySlots,
+            request_day_fa: this.todayNameFa
         };
-        const activeSwitchTitles = [];
 
         document.querySelectorAll('.dynamic-toggle-input').forEach(toggle => {
             const key = toggle.getAttribute('data-key');
-            const title = toggle.getAttribute('data-title');
-            studentOptions[key] = toggle.checked;
-            if (toggle.checked) activeSwitchTitles.push(title);
+            if (key) studentOptions[key] = toggle.checked;
         });
 
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<span>در حال چینش هوشمند برنامه طبق بودجه آزمون...</span>';
+            btn.innerHTML = '<span>در حال پردازش در هسته مرکزی...</span>';
         }
 
         try {
-            // الف) اگر کاربر دارای اشتراک «بدون مشاور» (خودکار) است -> ساخت برنامه با قانون ۳۰٪ و تحویل آنی (approved)
-            if (accessMode === 'self_auto') {
-                const generatedSchedule = await this.generateSmartScheduleClientSide(note, studentOptions);
-                AppState.allSchedules.unshift(generatedSchedule);
-                AppState.currentScheduleObj = generatedSchedule;
+            // فراخوانی تابع الگوریتم در بک‌اند دیتابیس
+            const { data: newSchedule, error } = await supabaseClient.rpc('generate_smart_schedule_rpc', {
+                p_student_note: note,
+                p_student_options: studentOptions
+            });
 
+            if (error) {
+                if (error.message && error.message.includes('TRIAL_LIMIT_REACHED')) {
+                    UI.openModal('upsellModal');
+                    return;
+                }
+                throw new Error(error.message);
+            }
+
+            await this.loadPlanningMetaFromDB();
+
+            if (newSchedule && newSchedule.status === 'approved') {
+                AppState.allSchedules.unshift(newSchedule);
+                AppState.currentScheduleObj = newSchedule;
                 this.determineRenderDay();
                 this.renderTodayTab();
                 this.setupWeekSelectorDropdown();
                 this.updateWeeklyProgress();
                 this.renderGCal();
+                await this.initRequestSubtab();
 
-                UI.showToast('برنامه هفتگی شما طبق بودجه آزمون و قانون تمرکز ۳۰٪ ساخته شد و هم‌اکنون فعال است!', 'success');
+                UI.showToast('🎉 برنامه هوشمند شما ساخته شد و هم‌اکنون فعال است!', 'success');
                 this.switchSubtab('week', document.querySelectorAll('#tab-planning .subtab-btn')[1]);
-                return;
-            }
-
-            // ب) اگر کاربر دارای اشتراک «با مشاور» است -> ارسال به میز مشاور (وضعیت pending)
-            let extraOffNote = '';
-            if (offConstraints.fullOffDays.length > 0) {
-                extraOffNote += ` | روزهای تعطیل درخواستی: ${offConstraints.fullOffDays.join('، ')}`;
-            }
-            if (offConstraints.busySlots.length > 0) {
-                const bsTxt = offConstraints.busySlots.map(b => `${b.day} (${this.minsToTimeStr(b.startMins)}-${this.minsToTimeStr(b.endMins)})`).join('، ');
-                extraOffNote += ` | ساعت‌های مشغله: ${bsTxt}`;
-            }
-
-            const response = await fetch(GAS_WEBAPP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    action: 'generate_schedule_auto',
-                    student_id: AppState.userId,
-                    student_note: note + extraOffNote,
-                    student_options: studentOptions,
-                    active_switch_titles: activeSwitchTitles,
-                    avg_study_hours: 0,
-                    avg_test_count: 0
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                UI.showToast('استراتژی شما با موفقیت ثبت شد و روی میز مشاور قرار گرفت.', 'success');
             } else {
-                throw new Error(result.error || 'خطا در ثبت درخواست');
+                await this.initRequestSubtab();
+                UI.showToast('✅ استراتژی و معذوریت‌های شما ثبت شد و برای بررسی و تایید به میز مشاور ارسال گردید.', 'success');
             }
         } catch (err) {
-            UI.showToast('خطا در ساخت برنامه: ' + err.message, 'error');
+            UI.showToast(err.message || 'خطا در ارتباط با هسته برنامه‌ریز', 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="sparkles" class="icon"></i><span>${accessMode === 'self_auto' ? 'ساخت و دریافت فوری برنامه هوشمند هفته' : 'ارسال پرونده به اتاق مشاور'}</span>`;
+                btn.innerHTML = '<i data-lucide="sparkles" class="icon-sm"></i><span>دریافت برنامه هوشمند</span>';
                 UI.refreshIcons();
             }
         }
     },
 
     // ======================================================================
-    // 🧠 ۵. موتور الگوریتم برنامه‌ریزی خودکار (منطبق با بودجه آزمون + قانون ۳۰٪ تمرکز عمیق)
-    // ======================================================================
-    async generateSmartScheduleClientSide(studentNote, studentOptions) {
-        const uid = String(AppState.userId);
-        const grade = AppState.studentGrade || 'دوازدهم';
-        const major = AppState.studentMajor || 'تجربی';
-        const vip = AppState.vipSettings || {};
-
-        // ۱. دریافت آخرین بودجه‌بندی آزمون، مباحث knowledge_graph و رویدادهای ثابت از سوپابیس
-        const [budgetRes, kgRes, fixedRes, calRes] = await Promise.all([
-            supabaseClient.from('exam_budgets').select('*').eq('grade', grade).eq('major', major).order('exam_date', { ascending: false }).limit(1),
-            supabaseClient.from('knowledge_graph').select('*').eq('grade', grade).eq('major', major),
-            supabaseClient.from('fixed_schedule_events').select('*'),
-            supabaseClient.from('week_status_calendar').select('*').order('start_date', { ascending: false }).limit(2)
-        ]);
-
-        const kgList = kgRes.data || [];
-        const latestBudgetRow = budgetRes.data?.[0] || null;
-        const latestWeekCal = calRes.data?.[0] || null;
-        const weekType = latestWeekCal?.week_type?.includes('exam') ? 'exam' : 'advance';
-        const weekLabel = latestWeekCal?.title ? `برنامه هوشمند (${latestWeekCal.title})` : 'برنامه هوشمند هفتگی';
-
-        // ۲. تشخیص اینکه آیا دانش‌آموز وسط هفته در حال دریافت برنامه برای روزهای باقی‌مانده همین هفته است یا برای کل هفته آینده
-        const iranNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" }));
-        const jsDay = iranNow.getDay(); // شنبه = 6، یکشنبه = 0، دوشنبه = 1، سه‌شنبه = 2، چهارشنبه = 3، پنجشنبه = 4، جمعه = 5
-        const isMidWeekImmediate = !AppState.currentScheduleObj && (jsDay === 6 || jsDay === 0 || jsDay === 1 || jsDay === 2);
-        const todayFaIdx = isMidWeekImmediate ? this.daysArr.indexOf(this.todayNameFa) : 0;
-
-        // ۳. ساخت صف مباحث از روی بودجه آزمون (exam_budgets) و نقاط قوت/ضعف دانش‌آموز
-        const skillMap = {};
-        (vip.subject_skills || []).forEach(s => {
-            skillMap[window.normalizeSubjectName(s.subject)] = Number(s.score) || 3;
-        });
-
-        let approvedTopics = [];
-        if (latestBudgetRow && Array.isArray(latestBudgetRow.budget_data)) {
-            const approvedIds = [];
-            latestBudgetRow.budget_data.forEach(item => {
-                if (Array.isArray(item.approved_topics)) {
-                    approvedIds.push(...item.approved_topics.map(Number));
-                }
-            });
-            approvedTopics = kgList.filter(k => approvedIds.includes(Number(k.id)));
-        }
-        if (approvedTopics.length === 0) {
-            approvedTopics = kgList.filter(k => k.plan_type === 'macro').slice(0, 14);
-        }
-
-        // تبدیل هر مبحث به خوشه‌های درسی (Cluster) شامل باکس مطالعه + باکس تست‌زنی
-        // اگر دانش‌آموز وسط هفته در هفته آزمون آمده، باکس‌های تکراری تست فشرده می‌شوند تا به بودجه آزمون برسد
-        const subjectQueues = {};
-        approvedTopics.forEach((topic, seqIdx) => {
-            const bookName = window.normalizeSubjectName(topic.book_name);
-            const isGen = this.isGeneralSubject(bookName);
-            const skillScore = skillMap[bookName] || 3;
-
-            let studyBoxesCount = Math.max(1, parseInt(topic.core_boxes, 10) || 1);
-            let testBoxesCount = isGen ? 1 : (skillScore === 1 ? 2 : 1);
-            if (isMidWeekImmediate && weekType === 'exam') {
-                studyBoxesCount = 1;
-                testBoxesCount = 1;
-            }
-
-            if (!subjectQueues[bookName]) {
-                subjectQueues[bookName] = { isGeneral: isGen, blocks: [] };
-            }
-
-            for (let i = 0; i < studyBoxesCount; i++) {
-                subjectQueues[bookName].blocks.push({
-                    seq: seqIdx,
-                    subject: bookName,
-                    topic: topic.topic_name,
-                    type: isGen ? 'general' : 'core',
-                    is_general: isGen,
-                    is_test_box: false,
-                    duration: 90,
-                    status: 'pending'
-                });
-            }
-            for (let j = 0; j < testBoxesCount; j++) {
-                subjectQueues[bookName].blocks.push({
-                    seq: seqIdx,
-                    subject: bookName,
-                    topic: `${topic.topic_name} (باکس تست‌زنی)`,
-                    type: isGen ? 'general' : 'core',
-                    is_general: isGen,
-                    is_test_box: true,
-                    duration: 90,
-                    status: 'pending'
-                });
-            }
-        });
-
-        // ۴. ساخت اسلات‌های زمانی هر روز بر اساس بازه بیداری دانش‌آموز (مثلاً ۱۰ صبح تا ۲ بامداد)
-        const rawPlan = [];
-        const wakeMins = Math.round((Number(studentOptions.study_start_hour) || this.studyStartHour || 7) * 60);
-        const sleepMins = Math.round((Number(studentOptions.study_end_hour) || this.studyEndHour || 23.5) * 60);
-
-        const startPref = (vip.start_subject || []).map(window.normalizeSubjectName);
-        const endPref = (vip.end_subject || []).map(window.normalizeSubjectName);
-
-        this.daysArr.forEach((dayName, dIdx) => {
-            // اگر وسط هفته ثبت‌نام کرده، روزهای گذشته خالی می‌مانند
-            if (dIdx < todayFaIdx || (studentOptions.full_off_days || []).includes(dayName)) {
-                return;
-            }
-
-            const occupiedIntervals = [];
-
-            // الف) افزودن کلاس‌های مدرسه و کلاس‌های ثابت دانش‌آموز از vip_settings
-            (vip.class_schedule || []).forEach(cls => {
-                if (Array.isArray(cls.days) && cls.days.includes(dayName)) {
-                    const sM = Math.round((parseFloat(cls.startNum) || 16) * 60);
-                    const eM = Math.round((parseFloat(cls.endNum) || 17.5) * 60);
-                    occupiedIntervals.push({ start: sM, end: eM });
-                    rawPlan.push({
-                        block_id: 'blk_cls_' + Math.random().toString(36).substr(2, 6),
-                        day: dayName,
-                        subject: cls.name,
-                        topic: cls.isOnline ? 'کلاس آنلاین' : 'کلاس حضوری',
-                        type: 'class',
-                        start_time: this.minsToTimeStr(sM),
-                        end_time: this.minsToTimeStr(eM),
-                        status: 'pending'
-                    });
-                }
-            });
-
-            // ب) افزودن ساعت‌های مشغله / مهمانی درخواستی در این هفته
-            (studentOptions.busy_slots || []).forEach(bs => {
-                if (bs.day === dayName) {
-                    occupiedIntervals.push({ start: bs.startMins, end: bs.endMins });
-                }
-            });
-
-            // ج) افزودن رویدادهای ثابت آزمون (مثل آزمون جمعه صبح در هفته آزمون)
-            if (weekType === 'exam') {
-                (fixedRes.data || []).forEach(fev => {
-                    if (fev.day_of_week === dayName) {
-                        const sM = (parseInt(fev.start_time, 10) || 8) * 60;
-                        const eM = (parseInt(fev.end_time, 10) || 12) * 60;
-                        occupiedIntervals.push({ start: sM, end: eM });
-                        rawPlan.push({
-                            block_id: 'blk_fix_' + Math.random().toString(36).substr(2, 6),
-                            day: dayName,
-                            subject: fev.title || 'آزمون آزمایشی',
-                            topic: 'برنامه ثابت آزمون',
-                            type: 'class',
-                            start_time: this.minsToTimeStr(sM),
-                            end_time: this.minsToTimeStr(eM),
-                            status: 'pending'
-                        });
-                    }
-                });
-            }
-
-            // د) افزودن باکس ناهار و شام متناسب با ساعت بیداری دانش‌آموز
-            const lunchStart = Math.max(wakeMins + 180, 13 * 60 + 45);
-            if (lunchStart + 60 < sleepMins) {
-                occupiedIntervals.push({ start: lunchStart, end: lunchStart + 60 });
-                rawPlan.push({
-                    block_id: 'blk_meal_' + Math.random().toString(36).substr(2, 5),
-                    day: dayName,
-                    subject: 'ناهار و استراحت',
-                    topic: '',
-                    type: 'break',
-                    start_time: this.minsToTimeStr(lunchStart),
-                    end_time: this.minsToTimeStr(lunchStart + 60),
-                    status: 'completed'
-                });
-            }
-
-            const dinnerStart = sleepMins > 24 * 60 ? 20 * 60 + 30 : 19 * 60 + 45;
-            if (dinnerStart > wakeMins && dinnerStart + 45 < sleepMins) {
-                occupiedIntervals.push({ start: dinnerStart, end: dinnerStart + 45 });
-                rawPlan.push({
-                    block_id: 'blk_meal_' + Math.random().toString(36).substr(2, 5),
-                    day: dayName,
-                    subject: 'شام و استراحت',
-                    topic: '',
-                    type: 'break',
-                    start_time: this.minsToTimeStr(dinnerStart),
-                    end_time: this.minsToTimeStr(dinnerStart + 45),
-                    status: 'completed'
-                });
-            }
-
-            // هـ) استخراج اسلات‌های ۹۰ دقیقه‌ای خالی در طول روز (با ۱۵ دقیقه استراحت بین هر پارت)
-            const freeSlots = [];
-            let cursor = wakeMins;
-            while (cursor + 90 <= sleepMins) {
-                const slotEnd = cursor + 90;
-                const conflict = occupiedIntervals.find(iv => !(slotEnd <= iv.start || cursor >= iv.end));
-                if (conflict) {
-                    cursor = Math.max(cursor + 15, conflict.end);
-                } else {
-                    freeSlots.push({ startMins: cursor, endMins: slotEnd });
-                    cursor = slotEnd + 15;
-                }
-            }
-
-            if (freeSlots.length === 0) return;
-
-            // اختصاص آخرین اسلات شب در ۳ روز هفته به «بانک جبرانی»
-            let studySlots = [...freeSlots];
-            if (['دوشنبه', 'چهارشنبه', 'جمعه'].includes(dayName) && studySlots.length >= 3) {
-                const mkpSlot = studySlots.pop();
-                rawPlan.push({
-                    block_id: 'blk_mkp_' + Math.random().toString(36).substr(2, 6),
-                    day: dayName,
-                    subject: 'بانک جبرانی',
-                    topic: 'جایگزینی دروس جا مانده',
-                    type: 'makeup',
-                    duration: 90,
-                    start_time: this.minsToTimeStr(mkpSlot.startMins),
-                    end_time: this.minsToTimeStr(mkpSlot.endMins),
-                    status: 'pending'
-                });
-            }
-
-            // 🎯 اجرای قانون طلایی «حداقل ۳۰٪ سهم روزانه برای هر درس اختصاصی»
-            const N = studySlots.length;
-            const minBlocksPerSpecSubject = Math.max(2, Math.ceil(0.30 * N));
-
-            let slotIdx = 0;
-            const usedSpecSubjectsToday = [];
-
-            while (slotIdx < studySlots.length) {
-                const remainingSlotsToday = studySlots.length - slotIdx;
-
-                // اگر آخرین اسلات شب است و درس عمومی یا درس آرام‌بخش آخر شب داریم
-                if (remainingSlotsToday === 1) {
-                    const endSubjCandidate = Object.keys(subjectQueues).find(k =>
-                        subjectQueues[k].blocks.length > 0 && (endPref.includes(k) || subjectQueues[k].isGeneral)
-                    ) || Object.keys(subjectQueues).find(k => subjectQueues[k].blocks.length > 0);
-
-                    if (endSubjCandidate) {
-                        const blk = subjectQueues[endSubjCandidate].blocks.shift();
-                        const sl = studySlots[slotIdx++];
-                        rawPlan.push({
-                            ...blk,
-                            block_id: 'blk_' + Math.random().toString(36).substr(2, 8),
-                            day: dayName,
-                            start_time: this.minsToTimeStr(sl.startMins),
-                            end_time: this.minsToTimeStr(sl.endMins)
-                        });
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-
-                // انتخاب درس اختصاصی بعدی (اولویت پارت اول صبح با قورباغه طلایی start_subject)
-                let chosenSpecSubj = null;
-                const availableSpecKeys = Object.keys(subjectQueues).filter(k =>
-                    !subjectQueues[k].isGeneral &&
-                    subjectQueues[k].blocks.length > 0 &&
-                    !usedSpecSubjectsToday.includes(k)
-                );
-
-                if (slotIdx === 0) {
-                    chosenSpecSubj = availableSpecKeys.find(k => startPref.includes(k)) || availableSpecKeys[0];
-                } else {
-                    chosenSpecSubj = availableSpecKeys[0];
-                }
-
-                if (!chosenSpecSubj) {
-                    // اگر درس اختصاصی جدید نمانده بود، از هر درسی که باکس دارد بردار
-                    chosenSpecSubj = Object.keys(subjectQueues).find(k => subjectQueues[k].blocks.length > 0);
-                }
-
-                if (!chosenSpecSubj) break;
-
-                usedSpecSubjectsToday.push(chosenSpecSubj);
-                const clusterSize = Math.min(remainingSlotsToday, minBlocksPerSpecSubject, subjectQueues[chosenSpecSubj].blocks.length);
-
-                for (let c = 0; c < clusterSize; c++) {
-                    const blk = subjectQueues[chosenSpecSubj].blocks.shift();
-                    const sl = studySlots[slotIdx++];
-                    rawPlan.push({
-                        ...blk,
-                        block_id: 'blk_' + Math.random().toString(36).substr(2, 8),
-                        day: dayName,
-                        start_time: this.minsToTimeStr(sl.startMins),
-                        end_time: this.minsToTimeStr(sl.endMins)
-                    });
-                }
-            }
-        });
-
-        // ۵. هر مبحثی که در روزهای هفته جا نشد، روی نیمکت ذخیره (bench) قرار می‌گیرد تا هفته بعد اولویت اول باشد
-        Object.keys(subjectQueues).forEach(k => {
-            subjectQueues[k].blocks.forEach(blk => {
-                rawPlan.push({
-                    ...blk,
-                    block_id: 'blk_bnch_' + Math.random().toString(36).substr(2, 7),
-                    day: 'bench',
-                    is_benched: true
-                });
-            });
-        });
-
-        // ۶. ذخیره مستقیم در جدول ai_schedules با وضعیت approved (تحویل در لحظه به دانش‌آموز)
-        const startIso = new Date().toISOString().split('T')[0];
-        const schedulePayload = {
-            national_id: uid,
-            week_label: weekLabel,
-            raw_plan: rawPlan,
-            student_note: studentNote,
-            status: 'approved',
-            target_start_date: startIso,
-            student_options: studentOptions,
-            week_type: weekType,
-            ai_motivations: {
-                weekly_motivation: `${AppState.fullName.split(' ')[0]} عزیز! برنامه این هفته‌ات با قانون تمرکز عمیق ۳۰٪ (حداکثر ۲ تا ۳ درس تخصصی در روز) چیده شده تا بیشترین بازدهی و تسلط رو برای آزمون داشته باشی.`,
-                daily_motivations: {
-                    'شنبه': 'شروع پرقدرت هفته با تمرکز عمیق روی مباحث اصلی!',
-                    'یکشنبه': 'استمرار امروز، تراز فردای تو رو می‌سازه.',
-                    'دوشنبه': 'هر باکس مطالعه + تست رو کامل ببند و جلو برو!',
-                    'سه‌شنبه': 'نیمه راه هفته‌ست؛ با انرژی ادامه بده قهرمان.',
-                    'چهارشنبه': 'وقت تثبیت نقاط قوت و بستن مباحث هفته است.',
-                    'پنجشنبه': 'مرور و جمع‌بندی نهایی قبل از آزمون!',
-                    'جمعه': 'خسته نباشی! ارزیابی، تحلیل و ریکاوری برای هفته جدید.'
-                }
-            }
-        };
-
-        const { data: insertedRows, error } = await supabaseClient
-            .from('ai_schedules')
-            .insert([schedulePayload])
-            .select('*');
-
-        if (error) throw error;
-        return insertedRows?.[0] || schedulePayload;
-    },
-
-    // ======================================================================
-    // ⚙️ ۶. پیکربندی هسته برنامه‌ریز (VIP Setup + ساعت مطالعه شناور تا ۲ بامداد)
+    // ⚙️ ۵. پیکربندی هسته برنامه‌ریز (VIP Setup) با اعداد ۱۰۰٪ فارسی
     // ======================================================================
     populateVipSetupUI() {
         const existing = AppState.vipSettings;
@@ -1360,7 +1155,8 @@ const PlanningModule = {
 
             const sumEl = document.getElementById('vipSetupSummaryText');
             if (sumEl) {
-                sumEl.innerText = `بازه مطالعه: ${this.formatTimeDisplay(this.studyStartHour)} تا ${this.formatExtendedTimeDisplay(this.studyEndHour)} • ${(existing.class_schedule || []).length} کلاس ثبت‌شده`;
+                const clsCountFa = this.toFa((existing.class_schedule || []).length);
+                sumEl.innerText = `مطالعه: ${this.formatTimeDisplay(this.studyStartHour)} تا ${this.formatExtendedTimeDisplay(this.studyEndHour)} • ${clsCountFa} کلاس ثبت‌شده`;
             }
         }
 
@@ -1380,16 +1176,16 @@ const PlanningModule = {
 
         subjects.forEach(subj => {
             if (startContainer) {
-                startContainer.innerHTML += `<div class="chip ${this.selectedStartSubjects.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleVipSubject(this, '${subj}', 'start')">${subj}</div>`;
+                startContainer.innerHTML += `<div class="chip ${this.selectedStartSubjects.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleVipSubject(this, '${subj}', 'start')">${this.toFa(subj)}</div>`;
             }
             if (endContainer) {
-                endContainer.innerHTML += `<div class="chip ${this.selectedEndSubjects.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleVipSubject(this, '${subj}', 'end')">${subj}</div>`;
+                endContainer.innerHTML += `<div class="chip ${this.selectedEndSubjects.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleVipSubject(this, '${subj}', 'end')">${this.toFa(subj)}</div>`;
             }
             if (strContainer) {
-                strContainer.innerHTML += `<div class="chip ${this.selectedStrengths.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleEvalSubject(this, '${subj}', 'strength')">${subj}</div>`;
+                strContainer.innerHTML += `<div class="chip ${this.selectedStrengths.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleEvalSubject(this, '${subj}', 'strength')">${this.toFa(subj)}</div>`;
             }
             if (weakContainer) {
-                weakContainer.innerHTML += `<div class="chip ${this.selectedWeaknesses.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleEvalSubject(this, '${subj}', 'weakness')">${subj}</div>`;
+                weakContainer.innerHTML += `<div class="chip ${this.selectedWeaknesses.includes(subj) ? 'active' : ''}" onclick="PlanningModule.toggleEvalSubject(this, '${subj}', 'weakness')">${this.toFa(subj)}</div>`;
             }
         });
 
@@ -1466,13 +1262,13 @@ const PlanningModule = {
         const isDayActive = (d) => days.includes(d) ? 'active' : '';
 
         card.innerHTML = `
-            <div style="display:flex; justify-content:space-between; gap: 10px; margin-bottom: 12px;">
+            <div style="display:flex; justify-content:space-between; gap: 8px; margin-bottom: 10px;">
                 <input type="text" class="modern-input c-name" placeholder="نام برنامه (مثلاً مدرسه، کلاس فیزیک...)" value="${nameVal}" style="flex:1;">
                 <button type="button" class="del-icon-btn" onclick="document.getElementById('class_${id}').remove()" title="حذف کلاس">
                     <i data-lucide="trash-2" class="icon-sm"></i>
                 </button>
             </div>
-            <div style="margin-bottom: 14px;">
+            <div style="margin-bottom: 12px;">
                 <div class="chips-container class-type-container" data-online="${isOnline}" style="margin-bottom:0;">
                     <div class="chip type-chip ${isOnline ? '' : 'active'}" style="flex:1; justify-content:center;" onclick="PlanningModule.selectClassType(this, 'false')">
                         <i data-lucide="building-2" class="icon-sm"></i><span>حضوری</span>
@@ -1541,17 +1337,19 @@ const PlanningModule = {
             const isOnline = card.querySelector('.class-type-container')?.getAttribute('data-online') === 'true';
             const activeDays = [];
             card.querySelectorAll('.day-circle.active').forEach(circle => activeDays.push(circle.dataset.day));
-            const idNum = card.id.split('_')[1];
+
+            const sNum = parseFloat(card.querySelector('.c-start')?.value) || 16;
+            const eNum = parseFloat(card.querySelector('.c-end')?.value) || 17.5;
 
             if (name !== "" && activeDays.length > 0) {
                 classesData.push({
                     name: name,
                     isOnline: isOnline,
                     days: activeDays,
-                    start: document.getElementById('v_start_' + idNum)?.innerText || '16:00',
-                    end: document.getElementById('v_end_' + idNum)?.innerText || '17:30',
-                    startNum: parseFloat(card.querySelector('.c-start')?.value) || 16,
-                    endNum: parseFloat(card.querySelector('.c-end')?.value) || 17.5
+                    start: this.minsToTimeStr(Math.round(sNum * 60)),
+                    end: this.minsToTimeStr(Math.round(eNum * 60)),
+                    startNum: sNum,
+                    endNum: eNum
                 });
             }
         });
@@ -1584,7 +1382,7 @@ const PlanningModule = {
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="save" class="icon"></i><span>ذخیره پیکربندی هسته</span>';
+                btn.innerHTML = '<i data-lucide="save" class="icon-sm"></i><span>ذخیره پیکربندی هسته</span>';
                 UI.refreshIcons();
             }
         }
