@@ -1456,3 +1456,82 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
         white-space: nowrap; font-size: 10px !important; padding: 3px 8px !important;
     }
 }
+
+/* ==========================================================================
+   ⏱️ ۱۸. استایل‌های استودیو تایمر تمرکز سینماتیک (timer.js)
+   ========================================================================== */
+.pomo-preset-bar {
+    display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+    z-index: 10; margin: 10px 0;
+}
+.pomo-preset-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    color: #cbd5e1; padding: 6px 12px; border-radius: 99px;
+    font-size: 11.5px; font-weight: 800; cursor: pointer; transition: 0.22s;
+}
+.pomo-preset-chip.active, .pomo-preset-chip:hover {
+    background: rgba(119, 187, 169, 0.22);
+    border-color: #77bba9; color: #ffffff;
+    box-shadow: 0 0 16px rgba(119, 187, 169, 0.3);
+}
+
+/* پنل میکسر صدای محیطی */
+.pomo-sound-mixer {
+    position: absolute; bottom: 82px; z-index: 30;
+    background: rgba(12, 20, 24, 0.96); backdrop-filter: blur(18px);
+    border: 1px solid rgba(119, 187, 169, 0.4); border-radius: 20px;
+    padding: 14px; width: calc(100% - 32px); max-width: 380px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.75); display: none;
+}
+.pomo-sound-mixer.open { display: block; animation: fadeSlideUp 0.22s ease-out; }
+.sound-grid-4 {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 10px;
+}
+.sound-opt-btn {
+    background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.12);
+    color: #cbd5e1; padding: 9px 8px; border-radius: 12px;
+    font-size: 11.5px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: 0.2s;
+}
+.sound-opt-btn.active {
+    background: rgba(119, 187, 169, 0.22); border-color: #77bba9; color: #fff;
+}
+
+/* نشانگر سپر تمرکز و بانک دقیقه امروز */
+.pomo-purity-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399; padding: 4px 11px; border-radius: 99px;
+    font-size: 11px; font-weight: 800; margin-top: 6px;
+}
+.pomo-purity-pill.warn {
+    background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;
+}
+
+/* دایره تنفس ۱۵ ثانیه‌ای قبل از مطالعه */
+.pomo-breath-modal {
+    position: absolute; inset: 0; z-index: 40;
+    background: rgba(7, 11, 14, 0.94); backdrop-filter: blur(12px);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; text-align: center; padding: 20px;
+}
+.pomo-breath-modal.active { display: flex; }
+.pomo-breath-orb {
+    width: 130px; height: 130px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(119,187,169,0.85), rgba(99,152,137,0.15));
+    box-shadow: 0 0 45px rgba(119,187,169,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: #fff;
+    transition: transform 3.8s ease-in-out;
+}
+
+/* حالت Zen (خلوت شدن صفحه هنگام مطالعه) */
+.immersive-timer-overlay.zen-idle .pomo-top-bar,
+.immersive-timer-overlay.zen-idle .pomo-preset-bar {
+    opacity: 0.18; transition: opacity 0.6s ease;
+}
+.immersive-timer-overlay.zen-idle:hover .pomo-top-bar,
+.immersive-timer-overlay.zen-idle:hover .pomo-preset-bar {
+    opacity: 1;
+}
