@@ -1669,3 +1669,51 @@ input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* ==========================================================================
+   🏠 ۲۰. استایل‌های اختصاصی تب خانه: هشدارهای هوشمند و بنر تبلیغاتی (home.js)
+   ========================================================================== */
+.smart-alerts-stack {
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;
+}
+.smart-alert-card {
+    background: var(--surface); border: 1.5px solid var(--primary);
+    border-right: 5px solid var(--primary); border-radius: 16px;
+    padding: 11px 13px; display: flex; justify-content: space-between;
+    align-items: center; gap: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: 0.2s;
+}
+.smart-alert-card:hover { transform: translateY(-2px); }
+.smart-alert-card.warn { border-color: var(--gold); border-right-color: var(--gold); background: linear-gradient(135deg, var(--surface), var(--gold-fade)); }
+.smart-alert-card.danger { border-color: var(--danger); border-right-color: var(--danger); background: linear-gradient(135deg, var(--surface), var(--danger-fade)); }
+.smart-alert-card.accent { border-color: var(--accent); border-right-color: var(--accent); background: linear-gradient(135deg, var(--surface), var(--accent-fade)); }
+
+.smart-alert-info { display: flex; align-items: center; gap: 10px; flex: 1; text-align: right; }
+.smart-alert-title { font-size: 12.5px; font-weight: 900; color: var(--text-main); margin-bottom: 2px; }
+.smart-alert-sub { font-size: 11px; color: var(--text-muted); font-weight: 700; line-height: 1.5; }
+.smart-alert-btn {
+    background: var(--primary); color: #fff; border: none;
+    padding: 7px 11px; border-radius: 10px; font-size: 11px; font-weight: 900;
+    white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.smart-alert-card.warn .smart-alert-btn { background: var(--gold); color: #0f172a; }
+.smart-alert-card.danger .smart-alert-btn { background: var(--danger); color: #fff; }
+.smart-alert-card.accent .smart-alert-btn { background: var(--accent); color: #fff; }
+
+/* باکس بنر تبلیغاتی مستطیلی در صفحه خانه */
+.home-promo-banner {
+    position: relative; width: 100%; border-radius: 20px;
+    overflow: hidden; margin-bottom: 12px; cursor: pointer;
+    border: 1.5px solid var(--border); box-shadow: var(--shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    background: linear-gradient(135deg, #132a26 0%, #1e1b4b 100%);
+}
+.home-promo-banner:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--primary); }
+.home-promo-banner img {
+    width: 100%; height: auto; max-height: 175px;
+    object-fit: cover; display: block;
+}
+.home-promo-fallback {
+    padding: 16px 18px; display: flex; justify-content: space-between;
+    align-items: center; gap: 12px; color: #fff;
+}
