@@ -1062,6 +1062,8 @@ const PlanningModule = {
                 p_student_options: studentOptions
             });
 
+           this.enrichMotivationsWithAiAsync(newSchedule, note);
+
             if (error) {
                 if (error.message && error.message.includes('TRIAL_LIMIT_REACHED')) {
                     UI.openModal('upsellModal');
@@ -1388,5 +1390,43 @@ const PlanningModule = {
         }
     }
 };
+
+// ارسال برنامه چیده‌شده روزبه‌روز (raw_plan) + یادداشت دانش‌آموز به هوش مصنوعی برای تولید جملات اختصاصی هر روز
+    enrichMotivationsWithAiAsync(scheduleObj, studentNote) {
+        if (!scheduleObj || !scheduleObj.id || typeof GAS_WEBAPP_URL === 'undefined') return;
+        try {
+            const rawPlan = Array.isArray(scheduleObj.raw_plan)
+                ? scheduleObj.raw_plan
+                : JSON.parse(scheduleObj.raw_plan || '[]');
+
+            // استخراج خلاصه دقیق برنامه چیده‌شده برای هر روز هفته (از شنبه تا جمعه)
+            const dailyPlanSummary = {};
+            this.daysArr.forEach(day => {
+                const dayBlocks = rawPlan.filter(b => b.day === day && b.type !== 'break');
+                dailyPlanSummary[day] = dayBlocks.map(b => `${b.subject}${b.topic ? ' (' + b.topic + ')' : ''} [${b.start_time}-${b.end_time}]`);
+            });
+
+            fetch(GAS_WEBAPP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'enrich_schedule_motivations',
+                    schedule_id: scheduleObj.id,
+                    student_id: AppState.userId,
+                    student_name: AppState.fullName,
+                    student_goal: AppState.vipSettings?.student_goal || '',
+                    student_note: studentNote || '',
+                    week_type: scheduleObj.week_type || 'advance',
+                    daily_plan_summary: dailyPlanSummary, // 👈 برنامه واقعی هر روز هفته (شنبه تا جمعه)
+                    raw_plan: rawPlan
+                })
+            }).then(r => r.json()).then(res => {
+                if (res && res.ai_motivations && AppState.currentScheduleObj?.id === scheduleObj.id) {
+                    AppState.currentScheduleObj.ai_motivations = res.ai_motivations;
+                    this.renderTodayTab();
+                }
+            }).catch(() => {});
+        } catch (_) {}
+    },
 
 window.PlanningModule = PlanningModule;
