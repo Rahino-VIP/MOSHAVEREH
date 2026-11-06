@@ -1056,13 +1056,10 @@ const PlanningModule = {
         }
 
         try {
-            // فراخوانی تابع الگوریتم در بک‌اند دیتابیس
             const { data: newSchedule, error } = await supabaseClient.rpc('generate_smart_schedule_rpc', {
                 p_student_note: note,
                 p_student_options: studentOptions
             });
-
-           this.enrichMotivationsWithAiAsync(newSchedule, note);
 
             if (error) {
                 if (error.message && error.message.includes('TRIAL_LIMIT_REACHED')) {
@@ -1071,6 +1068,9 @@ const PlanningModule = {
                 }
                 throw new Error(error.message);
             }
+
+            // ارسال برنامه ساخته‌شده و یادداشت به هوش مصنوعی در پس‌زمینه
+            this.enrichMotivationsWithAiAsync(newSchedule, note);
 
             await this.loadPlanningMetaFromDB();
 
@@ -1100,7 +1100,7 @@ const PlanningModule = {
             }
         }
     },
-
+   
     // ======================================================================
     // ⚙️ ۵. پیکربندی هسته برنامه‌ریز (VIP Setup) با اعداد ۱۰۰٪ فارسی
     // ======================================================================
@@ -1388,10 +1388,9 @@ const PlanningModule = {
                 UI.refreshIcons();
             }
         }
-    }
-};
+    },
 
-// ارسال برنامه چیده‌شده روزبه‌روز (raw_plan) + یادداشت دانش‌آموز به هوش مصنوعی برای تولید جملات اختصاصی هر روز
+    // ارسال برنامه چیده‌شده روزبه‌روز (raw_plan) + یادداشت دانش‌آموز به هوش مصنوعی برای تولید جملات اختصاصی هر روز
     enrichMotivationsWithAiAsync(scheduleObj, studentNote) {
         if (!scheduleObj || !scheduleObj.id || typeof GAS_WEBAPP_URL === 'undefined') return;
         try {
@@ -1399,7 +1398,6 @@ const PlanningModule = {
                 ? scheduleObj.raw_plan
                 : JSON.parse(scheduleObj.raw_plan || '[]');
 
-            // استخراج خلاصه دقیق برنامه چیده‌شده برای هر روز هفته (از شنبه تا جمعه)
             const dailyPlanSummary = {};
             this.daysArr.forEach(day => {
                 const dayBlocks = rawPlan.filter(b => b.day === day && b.type !== 'break');
@@ -1417,7 +1415,7 @@ const PlanningModule = {
                     student_goal: AppState.vipSettings?.student_goal || '',
                     student_note: studentNote || '',
                     week_type: scheduleObj.week_type || 'advance',
-                    daily_plan_summary: dailyPlanSummary, // 👈 برنامه واقعی هر روز هفته (شنبه تا جمعه)
+                    daily_plan_summary: dailyPlanSummary,
                     raw_plan: rawPlan
                 })
             }).then(r => r.json()).then(res => {
@@ -1427,6 +1425,7 @@ const PlanningModule = {
                 }
             }).catch(() => {});
         } catch (_) {}
-    },
+    }
+};
 
 window.PlanningModule = PlanningModule;
