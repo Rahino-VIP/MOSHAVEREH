@@ -323,11 +323,10 @@
 
         <!-- ======================================================================
              🏠 تب ۱: ماژول خانه (TAB 1: HOME MODULE)
-             هدر بالای صفحه (نام دانش‌آموز + پیام‌ها + پروفایل) فقط در این تب قرار دارد
              ====================================================================== -->
         <section id="tab-home" class="spa-view active">
             
-            <!-- 🔝 هدر اختصاصی تب خانه -->
+            <!-- 🔝 ۱. هدر اختصاصی تب خانه (بدون شمارش معکوس کنکور) -->
             <header class="home-top-navbar" id="homeTopHeader">
                 <div class="brand-user">
                     <div class="avatar-ring" onclick="Router.openSubPage('profile')" title="پروفایل و تنظیمات">
@@ -337,16 +336,16 @@
                         <h1 id="greetingText">سلام، دانش‌آموز عزیز!</h1>
                         <div class="greeting-meta">
                             <span id="todayShamsiDate">امروز</span>
-                            <span class="konkur-pill">
-                                <i data-lucide="flame" class="icon-sm"></i>
-                                <span id="konkurDaysLeft">قطب‌نمای راهینو</span>
+                            <span class="konkur-pill" id="homeWakeStreakPill">
+                                <i data-lucide="sun" class="icon-sm gold-text"></i>
+                                <span>سحرخیزی: <strong id="homeStreakCount">۰</strong> روز</span>
                             </span>
                         </div>
                     </div>
                 </div>
 
                 <div class="nav-actions">
-                    <button class="nav-icon-btn" onclick="UI.openModal('messagesModal')" title="صندوق پیام‌ها">
+                    <button class="nav-icon-btn" onclick="HomeModule.openMessagesModal()" title="صندوق پیام‌ها">
                         <i data-lucide="bell" class="icon"></i>
                         <span class="nav-badge" id="msgBadge">0</span>
                     </button>
@@ -356,33 +355,36 @@
                 </div>
             </header>
 
-            <!-- خلاصه وضعیت امروز دانش‌آموز (آماده توسعه در فاز تکمیل خانه) -->
+            <!-- 🚨 ۲. رادار هشدارها و یادآورهای هوشمند (تمدید اشتراک، اقساط، برنامه آخر هفته، تحلیل جمعه) -->
+            <div id="homeSmartAlertsContainer" class="smart-alerts-stack" style="display: none;"></div>
+
+            <!-- 📊 ۳. خلاصه وضعیت امروز دانش‌آموز -->
             <div class="card-box hero-summary-card">
-                <div class="card-header-row">
+                <div class="card-header-row" style="margin-bottom:12px;">
                     <div class="module-title-group">
                         <div class="module-icon-badge"><i data-lucide="compass" class="icon"></i></div>
                         <div>
                             <h2>میز کار امروز شما</h2>
-                            <p>خلاصه مأموریت‌ها، عادت‌ها و مرورهای امروز</p>
+                            <p>خلاصه مأموریت‌ها، گزارش و مرورهای امروز</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="kpi-grid-4">
+                <div class="kpi-grid-4" style="margin-bottom:0;">
                     <div class="kpi-card clickable" onclick="Router.switchMainTab('planning')">
                         <div class="kpi-top"><span>عملیات امروز</span><i data-lucide="calendar-check-2" class="icon-sm primary-text"></i></div>
                         <div class="kpi-val" id="homeTodayProgress">۰٪</div>
-                        <div class="kpi-sub">مشاهده برنامه امروز</div>
+                        <div class="kpi-sub" id="homeTodayPlanSub">مشاهده برنامه امروز</div>
                     </div>
                     <div class="kpi-card clickable" onclick="Router.switchMainTab('report')">
                         <div class="kpi-top"><span>گزارش امروز</span><i data-lucide="file-pen-line" class="icon-sm accent-text"></i></div>
                         <div class="kpi-val" id="homeReportStatus">ثبت نشده</div>
-                        <div class="kpi-sub">ثبت ساعت مطالعه و تست</div>
+                        <div class="kpi-sub" id="homeReportSub">ثبت ساعت مطالعه و تست</div>
                     </div>
                     <div class="kpi-card clickable" onclick="UI.openModal('flashcardModal')">
                         <div class="kpi-top"><span>فلش‌کارت امروز</span><i data-lucide="layers" class="icon-sm indigo-text"></i></div>
                         <div class="kpi-val" id="homeFcCount">۰ کارت</div>
-                        <div class="kpi-sub">مرور سریع نکات</div>
+                        <div class="kpi-sub" id="homeFcSub">مرور سریع نکات</div>
                     </div>
                     <div class="kpi-card clickable" onclick="Router.switchMainTab('analytics')">
                         <div class="kpi-top"><span>رادار عملکرد</span><i data-lucide="bar-chart-3" class="icon-sm gold-text"></i></div>
@@ -392,14 +394,22 @@
                 </div>
             </div>
 
-            <!-- ویجت سریع عادت‌های امروز در صفحه خانه -->
+            <!-- 🖼️ ۴. باکس بنر تبلیغاتی مستطیلی (مشاوره / اشتراک پرو / اطلاعیه‌های تصویری) -->
+            <div id="homePromoBannerContainer"></div>
+
+            <!-- ✅ ۵. ویجت عادت‌های باقی‌مانده امروز (هر عادتی تیک بخورد، از لیست حذف و صفحه خلوت می‌شود) -->
             <div class="card-box">
                 <div class="card-header-row">
                     <div class="section-inline-title">
                         <i data-lucide="check-circle-2" class="icon primary-text"></i>
-                        <span>عادت‌های روزانه امروز</span>
+                        <span>عادت‌های باقی‌مانده امروز</span>
                     </div>
-                    <span id="habitProgressText" class="status-pill">۰ از ۴</span>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span id="habitProgressText" class="status-pill">۰ از ۴</span>
+                        <button type="button" class="link-btn primary" style="font-size:11px;" onclick="UI.openModal('habitModal')">
+                            <span>جدول کامل</span><i data-lucide="chevron-left" class="icon-sm"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="homeHabitsContainer" class="habits-grid-2"></div>
             </div>
@@ -1530,6 +1540,7 @@
     <script src="flashcards.js"></script> <!-- 👈 ماژول مستقل فلش‌کارت و لایتنر -->
     <script src="habits.js"></script>
     <script src="timer.js"></script>
+    <script src="home.js"></script>
 
 </body>
 </html>
