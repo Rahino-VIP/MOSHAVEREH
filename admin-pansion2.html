@@ -22,7 +22,7 @@
             --text-muted: #94a3b8;
         }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; width: 100%; overflow: hidden; }
         
         /* Sidebar Styling */
         .sidebar { width: 260px; background: rgba(18, 26, 24, 0.95); backdrop-filter: blur(10px); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -38,28 +38,27 @@
         .overlay.active { display: block; opacity: 1; }
 
         /* Main Content */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #070b09 100%); }
-        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .main-content { flex: 1; min-width: 0; max-width: 100%; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #070b09 100%); }
+        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
         .top-nav::-webkit-scrollbar { display: none; }
-        .tab-btn { padding: 11px 18px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); border: 1px solid transparent; background: var(--surface-light); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .tab-btn { padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-muted); border: 1px solid transparent; background: var(--surface-light); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .tab-btn:hover { background: #22302e; color: var(--text-main); }
         .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
-        .tab-btn.highlight-tab { border: 1px dashed var(--primary); color: #cbd5e1; }
-        .tab-btn.highlight-tab.active { border-style: solid; background: var(--primary); color: #fff; }
         
         /* Container & Cards */
-        .tab-container { flex: 1; padding: 30px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) var(--surface-dark); }
-        .tab-content { display: none; animation: fadeIn 0.35s ease-out; }
+        .tab-container { flex: 1; min-width: 0; max-width: 100%; padding: 30px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--primary) var(--surface-dark); }
+        .tab-content { display: none; width: 100%; max-width: 100%; animation: fadeIn 0.35s ease-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s, box-shadow 0.2s; }
+        .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; max-width: 100%; transition: transform 0.2s, box-shadow 0.2s; }
         .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); border-color: #314541; }
-        .c-info div { margin-bottom: 6px; font-size: 13px; color: var(--text-muted); }
+        .c-info { min-width: 0; max-width: 100%; }
+        .c-info div { margin-bottom: 6px; font-size: 13px; color: var(--text-muted); word-break: break-word; }
         .c-info strong { color: var(--text-main); font-size: 16px; margin-bottom: 8px; display: inline-block; }
         
         /* Buttons */
-        .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; color: white; display: inline-flex; align-items: center; gap: 6px; }
+        .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; max-width: 100%; }
         .btn:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.02); }
         .btn:active:not(:disabled) { transform: scale(0.98); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -69,16 +68,16 @@
         .btn-amber { background: var(--warning); color: #000; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
         
         /* Capacity Grid */
-        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; width: 100%; }
         .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; text-align: center; transition: 0.3s; }
         .cap-card:hover { border-color: var(--primary); background: var(--surface-dark); }
         .cap-date { font-size: 15px; font-weight: 900; margin-bottom: 12px; color: var(--primary); }
-        .cap-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; transition: border 0.3s; }
+        .cap-input { width: 100%; max-width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; transition: border 0.3s; }
         .cap-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
 
         /* Data Table for Users */
-        .table-responsive { width: 100%; overflow-x: auto; background: var(--surface-dark); border-radius: 14px; border: 1px solid var(--border-color); }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: right; }
+        .table-responsive { width: 100%; max-width: 100%; overflow-x: auto; background: var(--surface-dark); border-radius: 14px; border: 1px solid var(--border-color); }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 720px; text-align: right; }
         .data-table th, .data-table td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
         .data-table th { background: rgba(27, 38, 36, 0.8); color: var(--primary); font-weight: bold; position: sticky; top: 0; }
         .data-table tr { transition: background 0.2s; }
@@ -98,37 +97,43 @@
         .btn-primary-sm { background: var(--primary); }
         .btn-amber-sm { background: var(--warning); color: #000; }
 
-        /* Admin Operator / Quick Actions Styles */
-        .op-grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
-        .op-panel { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; }
-        .user-search-results { max-height: 280px; overflow-y: auto; margin-top: 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-dark); }
-        .user-search-item { padding: 11px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        /* Admin Operator / Quick Actions Styles (100% Fluid & Mobile-Safe) */
+        .op-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; width: 100%; max-width: 100%; }
+        .op-panel { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; }
+        .user-search-results { max-height: 250px; overflow-y: auto; margin-top: 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-dark); }
+        .user-search-item { padding: 10px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; transition: background 0.2s; }
         .user-search-item:last-child { border-bottom: none; }
         .user-search-item:hover, .user-search-item.selected { background: var(--primary-fade); border-right: 3px solid var(--primary); }
         
-        .sub-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .sub-tab-btn { padding: 10px 16px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--surface-light); color: var(--text-muted); cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .sub-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; width: 100%; }
+        .sub-tab-btn { flex: 1; min-width: 140px; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--surface-light); color: var(--text-muted); cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; transition: 0.2s; }
         .sub-tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
 
-        .admin-cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; margin: 15px 0; }
-        .admin-cal-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 11px; padding: 12px 8px; text-align: center; cursor: pointer; transition: 0.2s; user-select: none; }
+        .admin-cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 15px 0; width: 100%; }
+        .admin-cal-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 11px; padding: 12px 6px; text-align: center; cursor: pointer; transition: 0.2s; user-select: none; min-width: 0; }
         .admin-cal-card:hover:not(.past-booked) { border-color: var(--primary); }
         .admin-cal-card.selected { background: var(--primary-fade); border: 2px solid var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
         .admin-cal-card.past-booked { background: rgba(16, 185, 129, 0.12); border-color: var(--success); cursor: default; opacity: 0.85; }
         .admin-cal-card.full-cap { border-color: rgba(239, 68, 68, 0.45); }
 
-        .seg-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .seg-btn { flex: 1; min-width: 90px; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--surface-light); color: var(--text-muted); font-weight: bold; font-size: 13px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .seg-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; width: 100%; }
+        .seg-btn { flex: 1; min-width: 75px; padding: 10px 10px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--surface-light); color: var(--text-muted); font-weight: bold; font-size: 13px; cursor: pointer; text-align: center; transition: 0.2s; }
         .seg-btn.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
 
-        .finance-box { background: rgba(7, 11, 9, 0.65); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin: 15px 0; }
-        .finance-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); }
+        .form-grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; margin-bottom: 15px; width: 100%; }
+        .finance-box { background: rgba(7, 11, 9, 0.65); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin: 15px 0; width: 100%; max-width: 100%; }
+        .finance-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); width: 100%; }
         .finance-row:last-child { margin-bottom: 0; }
         .finance-row strong { color: var(--text-main); font-size: 14px; }
+        .finance-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1; justify-content: flex-end; min-width: 200px; }
+        .finance-controls .cap-input { margin: 0; flex: 1; min-width: 100px; }
+
+        .inst-edit-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; width: 100%; background: rgba(27,38,36,0.5); padding: 8px 10px; border-radius: 8px; }
+        .inst-edit-row .cap-input { margin: 0; flex: 1; min-width: 110px; }
 
         /* Toast & Custom Modal */
-        .toast-container { position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: var(--surface-light); border-right: 4px solid var(--primary); color: var(--text-main); padding: 13px 18px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; animation: fadeIn 0.25s ease-out; }
+        .toast-container { position: fixed; bottom: 20px; left: 20px; right: 20px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+        .toast { pointer-events: auto; background: var(--surface-light); border-right: 4px solid var(--primary); color: var(--text-main); padding: 13px 18px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; max-width: 100%; animation: fadeIn 0.25s ease-out; }
         .toast.success { border-right-color: var(--success); }
         .toast.error { border-right-color: var(--danger); }
         .toast.warning { border-right-color: var(--warning); }
@@ -139,7 +144,7 @@
 
         /* Responsive Design */
         @media (max-width: 980px) {
-            .op-grid { grid-template-columns: 1fr; }
+            .op-grid { grid-template-columns: minmax(0, 1fr); }
         }
         @media (max-width: 900px) {
             .mobile-header { display: flex; }
@@ -148,6 +153,12 @@
             .top-nav { padding: 15px; }
             .tab-btn { padding: 10px 15px; font-size: 13px; }
             .tab-container { padding: 15px; }
+            .op-panel { padding: 15px; }
+            .form-grid-auto { grid-template-columns: 1fr; }
+            .admin-cal-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+            .finance-row { flex-direction: column; align-items: stretch; gap: 6px; }
+            .finance-controls { justify-content: stretch; width: 100%; }
+            .sub-tab-btn { min-width: 100%; }
             .card { flex-direction: column; align-items: flex-start; gap: 15px; }
             .card > div:last-child { width: 100%; display: flex; gap: 10px; flex-wrap: wrap; }
             .card .btn { flex: 1; justify-content: center; }
@@ -176,8 +187,9 @@
 
     <div class="sidebar" id="sidebar">
         <div class="brand">راهینو <span>پانسیون</span></div>
-        <div class="nav-item" onclick="switchTab('tab-admin-booking', document.getElementById('btnTabAdminBooking'))"><span>⚡</span> ثبت دستی و عملیات سریع</div>
         <div class="nav-item active" onclick="switchTab('tab-users', document.getElementById('btnTabPending'))"><span>📍</span> پنل مدیریت پانسیون</div>
+        <div class="nav-item" onclick="switchTab('tab-all-users', document.getElementById('btnTabAllUsers'))"><span>👥</span> لیست تمام کاربران</div>
+        <div class="nav-item" onclick="switchTab('tab-monthly', document.getElementById('btnTabMonthly'))"><span>💎</span> ماهانه و اقساط</div>
     </div>
 
     <div class="main-content">
@@ -188,13 +200,12 @@
             <div style="width: 24px;"></div>
         </div>
 
-        <!-- نوار منوی بالا -->
+        <!-- نوار منوی بالا (بدون دکمه اضافی؛ ورود به پنل دانش‌آموز از لیست کاربران یا ماهانه) -->
         <div class="top-nav">
-            <button class="tab-btn highlight-tab" id="btnTabAdminBooking" onclick="switchTab('tab-admin-booking', this)">⚡ عملیات سریع دانش‌آموز (رزرو / تمدید / قسط)</button>
             <button class="tab-btn active" id="btnTabPending" onclick="switchTab('tab-users', this)">📝 در انتظار تایید</button>
+            <button class="tab-btn" id="btnTabReceipts" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
             <button class="tab-btn" id="btnTabAllUsers" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
             <button class="tab-btn" id="btnTabMonthly" onclick="switchTab('tab-monthly', this)">💎 ماهانه و اقساط</button>
-            <button class="tab-btn" id="btnTabReceipts" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
             <button class="tab-btn" id="btnTabCapacity" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
             <button class="tab-btn" id="btnTabPromos" onclick="switchTab('tab-promos', this)">🎁 کدهای تخفیف</button>
             <button class="tab-btn" id="btnTabWithdraws" onclick="switchTab('tab-withdraws', this)">💳 درخواست‌های مالی</button>
@@ -204,23 +215,25 @@
         <div class="tab-container">
 
             <!-- ============================================== -->
-            <!-- ⚡ تب جدید: عملیات سریع دانش‌آموز (بدون نیاز به رمز) -->
+            <!-- ⚡ صفحه مدیریت و ثبت دستی دانش‌آموز (باز شونده از لیست کاربران یا ماهانه) -->
             <!-- ============================================== -->
             <div id="tab-admin-booking" class="tab-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <h3 style="color: var(--primary); font-size: 18px;">⚡ مرکز عملیات سریع دانش‌آموز (ثبت توسط مدیریت)</h3>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">انجام مستقیم رزرو روزانه، ثبت‌نام ماهانه، تمدید قرارداد، تسویه قسط و شارژ کیف پول بدون نیاز به شماره و رمز عبور دانش‌آموز</p>
+                        <h3 style="color: var(--primary); font-size: 18px;">⚡ پنل عملیات دانش‌آموز (ثبت توسط مدیریت)</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">انجام مستقیم رزرو روزانه، ثبت‌نام ماهانه، تمدید قرارداد و تسویه قسط بدون نیاز به ورود با رمز دانش‌آموز</p>
                     </div>
-                    <button class="btn btn-blue" onclick="refreshOperatorData()">🔄 بروزرسانی اطلاعات</button>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn" style="background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border-color);" onclick="switchTab('tab-all-users', document.getElementById('btnTabAllUsers'))">🔙 بازگشت به لیست کاربران</button>
+                        <button class="btn btn-blue" onclick="refreshOperatorData()">🔄 بروزرسانی</button>
+                    </div>
                 </div>
 
                 <div class="op-grid">
                     <!-- ستون راست: جستجو و کارت اطلاعات دانش‌آموز -->
                     <div class="op-panel">
-                        <label style="font-size: 13px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">۱. انتخاب دانش‌آموز</label>
-                        <input type="text" id="opUserSearchInput" class="cap-input" style="text-align: right; margin-bottom: 6px;" placeholder="نام دانش‌آموز یا شماره موبایل..." oninput="filterOperatorUsers()">
-                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">روی نام دانش‌آموز کلیک کنید یا از جدول «لیست تمام کاربران» دکمه عملیات سریع را بزنید:</div>
+                        <label style="font-size: 13px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">دانش‌آموز انتخاب‌شده / تغییر سریع</label>
+                        <input type="text" id="opUserSearchInput" class="cap-input" style="text-align: right; margin-bottom: 6px;" placeholder="جستجوی نام یا موبایل دیگر..." oninput="filterOperatorUsers()">
                         
                         <div class="user-search-results" id="opUserSearchResults">
                             <div style="padding: 15px; text-align: center; color: var(--text-muted); font-size: 12px;">در حال بارگذاری کاربران...</div>
@@ -228,7 +241,7 @@
 
                         <!-- خلاصه وضعیت دانش‌آموز انتخاب شده -->
                         <div id="opSelectedUserCard" style="display: none; margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--border-color);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
                                 <strong id="opUserName" style="font-size: 16px; color: var(--text-main);">---</strong>
                                 <span id="opUserStatusBadge"></span>
                             </div>
@@ -243,8 +256,8 @@
                             <!-- ابزار سریع کیف پول -->
                             <div style="margin-top: 14px; background: rgba(99, 152, 137, 0.08); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px;">
                                 <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">💰 تغییر دستی موجودی کیف پول</div>
-                                <div style="display: flex; gap: 6px;">
-                                    <input type="number" id="opWalletDeltaInput" class="cap-input" style="margin: 0; flex: 1; font-size: 13px;" placeholder="مبلغ (تومان)" step="10000">
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <input type="number" id="opWalletDeltaInput" class="cap-input" style="margin: 0; flex: 1; min-width: 110px; font-size: 13px;" placeholder="مبلغ (تومان)" step="10000">
                                     <button class="action-btn btn-approve-sm" onclick="adjustUserWallet(1)" title="افزایش موجودی">➕ شارژ</button>
                                     <button class="action-btn btn-block-sm" onclick="adjustUserWallet(-1)" title="کسر موجودی">➖ کسر</button>
                                 </div>
@@ -254,9 +267,9 @@
 
                     <!-- ستون چپ: پنل عملیات‌ها -->
                     <div class="op-panel" id="opActionWorkspace">
-                        <div id="opNoUserPlaceholder" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                        <div id="opNoUserPlaceholder" style="text-align: center; padding: 50px 15px; color: var(--text-muted);">
                             <div style="font-size: 42px; margin-bottom: 12px;">👈</div>
-                            <div style="font-size: 15px; font-weight: bold; color: var(--text-main); margin-bottom: 6px;">ابتدا یک دانش‌آموز را از ستون سمت راست انتخاب کنید</div>
+                            <div style="font-size: 15px; font-weight: bold; color: var(--text-main); margin-bottom: 6px;">یک دانش‌آموز را از لیست انتخاب کنید</div>
                             <div style="font-size: 12px;">پس از انتخاب دانش‌آموز، تمام ابزارهای رزرو روزانه، ثبت‌نام/تمدید ماهانه و پرداخت اقساط برای او فعال می‌شود.</div>
                         </div>
 
@@ -302,16 +315,16 @@
                                     </div>
                                     <div class="finance-row" style="padding-top: 10px; border-top: 1px solid var(--border-color);">
                                         <span>کد تخفیف یا تخفیف دستی ادمین (تومان):</span>
-                                        <div style="display: flex; gap: 6px; align-items: center;">
-                                            <input type="text" id="opDailyPromoInput" class="cap-input" style="width: 120px; margin: 0; font-size: 12px;" placeholder="کد تخفیف">
+                                        <div class="finance-controls">
+                                            <input type="text" id="opDailyPromoInput" class="cap-input" placeholder="کد تخفیف">
                                             <button class="action-btn btn-primary-sm" onclick="applyAdminDailyPromo()">اعمال کد</button>
-                                            <input type="number" id="opDailyManualDisc" class="cap-input" style="width: 130px; margin: 0; font-size: 12px;" placeholder="تخفیف دستی (تومان)" value="0" oninput="updateAdminDailyPricing()">
+                                            <input type="number" id="opDailyManualDisc" class="cap-input" placeholder="تخفیف دستی" value="0" oninput="updateAdminDailyPricing()">
                                         </div>
                                     </div>
                                     <div class="finance-row" style="padding-top: 10px; border-top: 1px dashed var(--primary); margin-top: 8px;">
                                         <span style="font-size: 14px; font-weight: bold; color: var(--text-main);">مبلغ نهایی ثبت در فاکتور (قابل ویرایش):</span>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="number" id="opDailyFinalInput" class="cap-input" style="width: 170px; margin: 0; font-size: 15px; color: var(--success); border-color: var(--success);" value="0">
+                                        <div class="finance-controls">
+                                            <input type="number" id="opDailyFinalInput" class="cap-input" style="font-size: 15px; color: var(--success); border-color: var(--success);" value="0">
                                             <span style="font-size: 12px; color: var(--text-muted);">تومان</span>
                                         </div>
                                     </div>
@@ -321,7 +334,7 @@
                                     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                                         <span style="font-size: 13px; font-weight: bold;">روش تسویه:</span>
                                         <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                            <input type="radio" name="opDailyPayMethod" value="card" checked> کارت به کارت / نقدی (دریافت شده توسط ادمین)
+                                            <input type="radio" name="opDailyPayMethod" value="card" checked> کارت به کارت / نقدی (دریافت شده)
                                         </label>
                                         <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                                             <input type="radio" name="opDailyPayMethod" value="wallet"> کسر از کیف پول دانش‌آموز
@@ -346,7 +359,7 @@
                                             <div style="font-size: 13px; font-weight: bold; color: var(--primary);">📌 این دانش‌آموز در حال حاضر اشتراک ماهانه فعال دارد</div>
                                             <div id="opMonCurrentSubDetails" style="font-size: 12px; color: var(--text-main); margin-top: 4px;">---</div>
                                         </div>
-                                        <button class="btn btn-amber" onclick="setAdminMonMode('renew')">🔄 تنظیم خودکار روی «تمدید قرارداد»</button>
+                                        <button class="btn btn-amber" onclick="setAdminMonMode('renew')">🔄 تنظیم خودکار روی «تمدید قرارداد (روزِ بعد از انقضا)»</button>
                                     </div>
                                 </div>
 
@@ -360,9 +373,9 @@
                                 </div>
 
                                 <!-- انتخاب طرح و تاریخ شروع -->
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                                <div class="form-grid-auto">
                                     <div>
-                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">انتخاب طرح پانسیون (از جدول services):</label>
+                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">انتخاب طرح پانسیون (متناسب با پایه دانش‌آموز):</label>
                                         <select id="opMonPlanSelect" class="cap-input" style="margin: 0; text-align: right;" onchange="onAdminMonPlanChange()"></select>
                                     </div>
                                     <div>
@@ -372,17 +385,17 @@
                                     <div>
                                         <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">تاریخ شروع قرارداد (شمسی YYYY-MM-DD):</label>
                                         <input type="text" id="opMonStartDateInput" class="cap-input" style="margin: 0; direction: ltr;" placeholder="1405-08-18" oninput="calculateAdminMonthly()">
-                                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                                        <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
                                             <button class="action-btn btn-primary-sm" onclick="setQuickMonStart(0)">امروز</button>
                                             <button class="action-btn btn-primary-sm" onclick="setQuickMonStart(1)">فردا</button>
                                             <button class="action-btn btn-primary-sm" onclick="setQuickMonStart(2)">پس‌فردا</button>
-                                            <button class="action-btn btn-amber-sm" id="btnStartFromSubEnd" style="display:none;" onclick="setQuickMonStartFromEnd()">از پایان قرارداد فعلی</button>
+                                            <button class="action-btn btn-amber-sm" id="btnStartFromSubEnd" style="display:none;" onclick="setQuickMonStartFromEnd()">فردای پایان قرارداد فعلی</button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- مدت قرارداد و نحوه پرداخت (نقد یا اقساطی) -->
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                                <div class="form-grid-auto">
                                     <div>
                                         <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">مدت قرارداد:</label>
                                         <div class="seg-group" style="margin: 0;">
@@ -417,24 +430,28 @@
                                     </div>
                                     <div class="finance-row" style="padding-top: 8px; border-top: 1px solid var(--border-color);">
                                         <span>کد تخفیف یا تخفیف دستی ادمین:</span>
-                                        <div style="display: flex; gap: 6px; align-items: center;">
-                                            <input type="text" id="opMonPromoInput" class="cap-input" style="width: 120px; margin: 0; font-size: 12px;" placeholder="کد تخفیف">
+                                        <div class="finance-controls">
+                                            <input type="text" id="opMonPromoInput" class="cap-input" placeholder="کد تخفیف">
                                             <button class="action-btn btn-primary-sm" onclick="applyAdminMonPromo()">اعمال کد</button>
-                                            <input type="number" id="opMonManualDisc" class="cap-input" style="width: 130px; margin: 0; font-size: 12px;" placeholder="تخفیف دستی (تومان)" value="0" oninput="calculateAdminMonthly()">
+                                            <input type="number" id="opMonManualDisc" class="cap-input" placeholder="تخفیف دستی" value="0" oninput="calculateAdminMonthly()">
                                         </div>
                                     </div>
                                     <div class="finance-row" style="padding-top: 10px; border-top: 1px dashed var(--border-color);">
                                         <span style="color: var(--text-main); font-weight: bold;">مبلغ نهایی کل قرارداد (قابل ویرایش):</span>
-                                        <input type="number" id="opMonFinalPriceInput" class="cap-input" style="width: 180px; margin: 0; font-size: 14px; color: var(--text-main);" oninput="recalcAdminInstallmentsFromFinal()">
+                                        <div class="finance-controls">
+                                            <input type="number" id="opMonFinalPriceInput" class="cap-input" style="font-size: 14px; color: var(--text-main);" oninput="recalcAdminInstallmentsFromFinal()">
+                                        </div>
                                     </div>
                                     <div class="finance-row">
                                         <span style="color: var(--success); font-weight: bold;">پیش‌پرداخت / دریافتی فعلی (تومان):</span>
-                                        <input type="number" id="opMonUpfrontInput" class="cap-input" style="width: 180px; margin: 0; font-size: 15px; color: var(--success); border-color: var(--success);" oninput="recalcAdminInstallmentsFromUpfront()">
+                                        <div class="finance-controls">
+                                            <input type="number" id="opMonUpfrontInput" class="cap-input" style="font-size: 15px; color: var(--success); border-color: var(--success);" oninput="recalcAdminInstallmentsFromUpfront()">
+                                        </div>
                                     </div>
 
                                     <!-- لیست اقساط تولید شده -->
                                     <div id="opMonInstallmentsBox" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); display: none;">
-                                        <div style="font-size: 12px; font-weight: bold; color: var(--warning); margin-bottom: 8px;">📅 جدول اقساطِ این قرارداد (می‌توانید مبلغ یا تاریخ هر قسط را قبل از ثبت تغییر دهید):</div>
+                                        <div style="font-size: 12px; font-weight: bold; color: var(--warning); margin-bottom: 8px;">📅 جدول اقساطِ این قرارداد (قابل ویرایش):</div>
                                         <div id="opMonInstRowsContainer"></div>
                                     </div>
                                 </div>
@@ -448,7 +465,7 @@
                                         <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                                             <input type="radio" name="opMonPaySource" value="wallet"> کسر از کیف پول دانش‌آموز
                                         </label>
-                                        <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px; margin-right: 10px;">
+                                        <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px;">
                                             <input type="checkbox" id="opMonDecreaseCap" checked> کسر ۱ نفر از ظرفیت طرح (در ثبت‌نام جدید)
                                         </label>
                                     </div>
@@ -466,7 +483,7 @@
                                 </div>
 
                                 <div class="table-responsive" style="margin-bottom: 20px;">
-                                    <table class="data-table" style="min-width: 600px;">
+                                    <table class="data-table" style="min-width: 560px;">
                                         <thead>
                                             <tr>
                                                 <th>شماره قسط</th>
@@ -486,9 +503,9 @@
                                 <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed var(--warning); border-radius: 12px; padding: 15px;">
                                     <div style="font-size: 13px; font-weight: bold; color: var(--warning); margin-bottom: 10px;">➕ تعریف قسط دستی جدید برای این دانش‌آموز</div>
                                     <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                                        <input type="number" id="newManualInstNum" class="cap-input" placeholder="شماره قسط (مثلا 1)" style="width: 140px; margin: 0;" value="1">
-                                        <input type="text" id="newManualInstDate" class="cap-input" placeholder="سررسید (1405-09-01)" style="width: 160px; margin: 0; direction: ltr;">
-                                        <input type="number" id="newManualInstAmount" class="cap-input" placeholder="مبلغ (تومان)" style="width: 170px; margin: 0;" step="50000">
+                                        <input type="number" id="newManualInstNum" class="cap-input" placeholder="شماره قسط (مثلا 1)" style="flex: 1; min-width: 110px; margin: 0;" value="1">
+                                        <input type="text" id="newManualInstDate" class="cap-input" placeholder="سررسید (1405-09-01)" style="flex: 1; min-width: 130px; margin: 0; direction: ltr;">
+                                        <input type="number" id="newManualInstAmount" class="cap-input" placeholder="مبلغ (تومان)" style="flex: 1; min-width: 140px; margin: 0;" step="50000">
                                         <button class="btn btn-amber" onclick="createManualInstallmentForUser()">➕ ثبت قسط جدید</button>
                                     </div>
                                 </div>
@@ -525,8 +542,8 @@
                 <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">لیست و مشخصات کامل کاربران ثبت‌نامی</h3>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                    <input type="text" id="searchInput" placeholder="جستجوی نام یا موبایل..." class="cap-input" style="width: auto; flex: 1; margin: 0; text-align: right;" onkeyup="renderAllUsers()">
-                    <select id="gradeFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
+                    <input type="text" id="searchInput" placeholder="جستجوی نام یا موبایل..." class="cap-input" style="width: auto; flex: 1; min-width: 180px; margin: 0; text-align: right;" onkeyup="renderAllUsers()">
+                    <select id="gradeFilter" class="cap-input" style="width: auto; min-width: 130px; margin: 0;" onchange="renderAllUsers()">
                         <option value="">همه پایه‌ها</option>
                         <option value="دوازدهم">دوازدهم</option>
                         <option value="یازدهم">یازدهم</option>
@@ -534,7 +551,7 @@
                         <option value="دانشجو">دانشجو</option>
                         <option value="پشت کنکوری">پشت کنکوری</option>
                     </select>
-                    <select id="statusFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
+                    <select id="statusFilter" class="cap-input" style="width: auto; min-width: 130px; margin: 0;" onchange="renderAllUsers()">
                         <option value="">همه وضعیت‌ها</option>
                         <option value="active">فعال</option>
                         <option value="approved">تایید شده</option>
@@ -723,7 +740,7 @@
         }
 
         // =======================
-        // توابع تاریخ شمسی (هماهنگ با app.js)
+        // توابع تاریخ شمسی (هماهنگ با app.js + محاسبه روز بعد برای تمدید)
         // =======================
         function getShamsiDate(dateObj) {
             const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
@@ -760,6 +777,25 @@
             return `${y}-${mm}-${dd}`;
         }
 
+        // محاسبه دقیق فردایِ تاریخ پایان قرارداد (مثلاً ۱۷ آبان -> ۱۸ آبان)
+        function addShamsiDaysExact(dateStr, daysToAdd = 1) {
+            let parts = dateStr.replace(/\//g, '-').split('-');
+            if(parts.length !== 3) return dateStr;
+            let y = parseInt(parts[0]), m = parseInt(parts[1]), d = parseInt(parts[2]);
+
+            d += daysToAdd;
+            let currentMonthDays = m <= 6 ? 31 : (m <= 11 ? 30 : 29);
+            while (d > currentMonthDays) {
+                d -= currentMonthDays;
+                m += 1;
+                if (m > 12) { m = 1; y += 1; }
+                currentMonthDays = m <= 6 ? 31 : (m <= 11 ? 30 : 29);
+            }
+            let mm = m < 10 ? '0' + m : m;
+            let dd = d < 10 ? '0' + d : d;
+            return `${y}-${mm}-${dd}`;
+        }
+
         async function rewardReferrer(referralCode, rewardAmount, messageBody) {
             try {
                 const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
@@ -787,7 +823,6 @@
             loadMonthlyData();
             loadCancellations();
 
-            // مقداردهی اولیه تاریخ امروز در فرم ماهانه ادمین
             const todayDash = getShamsiDateDash(new Date());
             document.getElementById('opMonStartDateInput').value = todayDash;
             document.getElementById('newManualInstDate').value = calcSimpleShamsi(todayDash, 1, 0);
@@ -796,16 +831,35 @@
         async function fetchPansionServices() {
             const { data } = await supabaseClient.from('services').select('*').eq('category', 'pansion').eq('is_active', true);
             pansionServices = data || [];
+            populatePlanSelectForUser(opSelectedUser);
+        }
+
+        // فیلتر کردن طرح دانش‌آموزی (student_plan) برای بچه‌های پشت کنکوری و دانشجو
+        function populatePlanSelectForUser(userObj) {
             const selectEl = document.getElementById('opMonPlanSelect');
-            if (pansionServices.length > 0) {
-                selectEl.innerHTML = pansionServices.map(s => 
+            if (!selectEl) return;
+
+            const userGrade = userObj?.grade || '';
+            const isPostKonkurOrUni = userGrade && (
+                userGrade.includes('پشت') || 
+                userGrade.includes('فارغ') || 
+                userGrade.includes('دانشجو')
+            );
+
+            const filteredPlans = pansionServices.filter(plan => {
+                if (plan.type === 'student_plan' && isPostKonkurOrUni) return false;
+                return true;
+            });
+
+            if (filteredPlans.length > 0) {
+                selectEl.innerHTML = filteredPlans.map(s => 
                     `<option value="${s.type}" data-price="${s.base_price}">${s.title} (${s.type}) - ${Number(s.base_price).toLocaleString()} تومان [ظرفیت: ${s.capacity}]</option>`
                 ).join('');
-                opMonState.planType = pansionServices[0].type;
-                opMonState.basePrice = Number(pansionServices[0].base_price || 3600000);
+                opMonState.planType = filteredPlans[0].type;
+                opMonState.basePrice = Number(filteredPlans[0].base_price || 3600000);
                 document.getElementById('opMonBasePriceInput').value = opMonState.basePrice;
             } else {
-                selectEl.innerHTML = `<option value="vip" data-price="3600000">طرح پیش‌فرض VIP - 3,600,000 تومان</option>`;
+                selectEl.innerHTML = `<option value="vip" data-price="3600000">طرح VIP - 3,600,000 تومان</option>`;
                 opMonState.planType = 'vip';
                 opMonState.basePrice = 3600000;
                 document.getElementById('opMonBasePriceInput').value = 3600000;
@@ -907,7 +961,7 @@
         }
 
         // =======================
-        // ⚡ مرکز عملیات سریع دانش‌آموز (Operator Functions)
+        // ⚡ مرکز عملیات دانش‌آموز (Operator Functions)
         // =======================
         function filterOperatorUsers() {
             const q = (document.getElementById('opUserSearchInput')?.value || '').trim();
@@ -928,8 +982,8 @@
                 const isSel = opSelectedUser && opSelectedUser.phone_number === u.phone_number;
                 return `
                     <div class="user-search-item ${isSel ? 'selected' : ''}" onclick="selectOperatorUser('${u.phone_number}')">
-                        <div>
-                            <div style="font-weight: bold; font-size: 13px; color: var(--text-main);">${u.full_name || 'بدون نام'}</div>
+                        <div style="min-width:0;">
+                            <div style="font-weight: bold; font-size: 13px; color: var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.full_name || 'بدون نام'}</div>
                             <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;">${u.phone_number} | ${u.grade || '-'}</div>
                         </div>
                         <span class="badge ${u.status === 'active' || u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${u.status === 'active' ? 'فعال' : u.status}</span>
@@ -939,7 +993,7 @@
         }
 
         async function openUserInOperator(phone, targetSubTab = 'op-sub-daily') {
-            switchTab('tab-admin-booking', document.getElementById('btnTabAdminBooking'));
+            switchTab('tab-admin-booking', null);
             await selectOperatorUser(phone);
             if (targetSubTab === 'op-sub-monthly') {
                 switchOpSubTab('op-sub-monthly', document.getElementById('subBtnMonthly'));
@@ -973,6 +1027,7 @@
             }
             opSelectedUser = freshUser;
             filterOperatorUsers();
+            populatePlanSelectForUser(freshUser);
 
             document.getElementById('opNoUserPlaceholder').style.display = 'none';
             document.getElementById('opActiveWorkspace').style.display = 'block';
@@ -985,7 +1040,6 @@
             document.getElementById('opUserPass').innerText = freshUser.password || 'ثبت نشده';
             document.getElementById('opUserWallet').innerText = `${Number(freshUser.wallet_balance || 0).toLocaleString()} تومان`;
 
-            // واکشی اطلاعات رزرو روزانه، اشتراک ماهانه و اقساط کاربر
             const [dailyRes, activeSubRes, allSubRes, instRes] = await Promise.all([
                 supabaseClient.from('pan_reservations').select('*').eq('phone_number', phone).order('created_at', { ascending: false }),
                 supabaseClient.from('pan_monthly_subs').select('*').eq('phone_number', phone).eq('status', 'active').order('start_date', { ascending: true }),
@@ -1008,16 +1062,17 @@
             opUserAllSubsCount = (allSubRes.data || []).length;
             opUserInstallments = instRes.data || [];
 
-            // نمایش وضعیت اشتراک در کارت راست
             const subBanner = document.getElementById('opMonCurrentSubBanner');
             const btnFromEnd = document.getElementById('btnStartFromSubEnd');
             if (opUserActiveSubs.length > 0) {
                 const lastSub = opUserActiveSubs[opUserActiveSubs.length - 1];
                 const firstSub = opUserActiveSubs[0];
+                const nextDayAfterEnd = addShamsiDaysExact(lastSub.end_date, 1);
                 document.getElementById('opUserSubStatus').innerText = `فعال (${lastSub.plan_type}) تا ${lastSub.end_date.replace(/-/g, '/')}`;
                 subBanner.style.display = 'block';
-                document.getElementById('opMonCurrentSubDetails').innerText = `طرح: ${lastSub.plan_type.toUpperCase()} | شروع: ${firstSub.start_date.replace(/-/g, '/')} | پایان آخرین قرارداد: ${lastSub.end_date.replace(/-/g, '/')}`;
+                document.getElementById('opMonCurrentSubDetails').innerText = `طرح: ${lastSub.plan_type.toUpperCase()} | شروع: ${firstSub.start_date.replace(/-/g, '/')} | پایان فعلی: ${lastSub.end_date.replace(/-/g, '/')} (شروع تمدید: ${nextDayAfterEnd.replace(/-/g, '/')})`;
                 btnFromEnd.style.display = 'inline-flex';
+                setAdminMonMode('renew');
             } else {
                 document.getElementById('opUserSubStatus').innerText = 'ندارد (غیرفعال)';
                 subBanner.style.display = 'none';
@@ -1025,7 +1080,6 @@
                 setAdminMonMode('new');
             }
 
-            // راه‌اندازی تقویم روزانه، فرم ماهانه و جدول اقساط
             await initAdminDailyCalendar();
             renderUserDailyHistory();
             calculateAdminMonthly();
@@ -1286,7 +1340,7 @@
                 let dArr = r.reserved_dates;
                 try { if (typeof dArr === 'string') dArr = JSON.parse(dArr); } catch(e) {}
                 const dTxt = Array.isArray(dArr) ? dArr.map(d => d.replace(/-/g, '/')).join(' ، ') : '-';
-                return `<div style="padding: 8px 12px; background: var(--surface-light); border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                return `<div style="padding: 8px 12px; background: var(--surface-light); border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                     <span>📅 روزها: <strong style="color: var(--primary);">${dTxt}</strong></span>
                     <span>💰 مبلغ: <strong>${Number(r.paid_amount || 0).toLocaleString()} تومان</strong></span>
                 </div>`;
@@ -1294,7 +1348,7 @@
         }
 
         // ==========================================
-        // 💎 ۲. منطق ثبت‌نام و تمدید ماهانه توسط ادمین
+        // 💎 ۲. منطق ثبت‌نام و تمدید ماهانه توسط ادمین (شروع تمدید از فردای روز انقضا)
         // ==========================================
         function setAdminMonMode(mode) {
             opMonState.mode = mode;
@@ -1309,7 +1363,9 @@
                     onAdminMonPlanChange();
                 }
                 const todayDash = getShamsiDateDash(new Date());
-                document.getElementById('opMonStartDateInput').value = (lastSub.end_date >= todayDash) ? lastSub.end_date : todayDash;
+                // 🚀 اصلاح کلیدی: تاریخ شروعِ تمدید = یک روز پس از تاریخ پایان قرارداد فعلی (مثلاً پایان ۱۷ آبان -> شروع جدید ۱۸ آبان)
+                const nextDayAfterEnd = addShamsiDaysExact(lastSub.end_date, 1);
+                document.getElementById('opMonStartDateInput').value = (lastSub.end_date >= todayDash) ? nextDayAfterEnd : todayDash;
                 document.getElementById('opMonDecreaseCap').checked = false;
             } else {
                 document.getElementById('opMonStartDateInput').value = getShamsiDateDash(new Date());
@@ -1339,7 +1395,8 @@
         function setQuickMonStartFromEnd() {
             if (opUserActiveSubs.length > 0) {
                 const lastSub = opUserActiveSubs[opUserActiveSubs.length - 1];
-                document.getElementById('opMonStartDateInput').value = lastSub.end_date;
+                // قرار دادن فردای تاریخ پایان قرارداد فعلی
+                document.getElementById('opMonStartDateInput').value = addShamsiDaysExact(lastSub.end_date, 1);
                 calculateAdminMonthly();
             }
         }
@@ -1380,6 +1437,7 @@
             const duration = parseInt(opMonState.duration) || 1;
             const basePrice = parseInt(document.getElementById('opMonBasePriceInput').value) || 0;
             const startDate = (document.getElementById('opMonStartDateInput').value || getShamsiDateDash(new Date())).replace(/\//g, '-');
+            // با توجه به اینکه شروع ۱۸ آبان است، calcSimpleShamsi(1405-08-18, 1, -1) دقیقاً می‌شود 1405-09-17 (۱۷ آذر)
             const endDate = calcSimpleShamsi(startDate, duration, -1);
 
             document.getElementById('opMonDateRangeTxt').innerText = `${startDate.replace(/-/g, '/')}  تا  ${endDate.replace(/-/g, '/')}`;
@@ -1395,14 +1453,12 @@
             const timeDisc = totalBase * timeDiscountRate;
             finalPrice -= timeDisc;
 
-            // هدیه اولین ثبت‌نام ماهانه با معرف
             let refDisc = 0;
             if (opSelectedUser && opUserAllSubsCount === 0 && opSelectedUser.invited_by && opMonState.mode === 'new') {
                 refDisc = 100000;
                 finalPrice -= refDisc;
             }
 
-            // کد تخفیف
             let promoDisc = 0;
             if (opMonState.promo && finalPrice > 0) {
                 if (opMonState.promo.discount_type === 'percent') {
@@ -1413,11 +1469,9 @@
                 finalPrice -= promoDisc;
             }
 
-            // تخفیف دستی ادمین
             const manualDisc = parseInt(document.getElementById('opMonManualDisc')?.value || '0') || 0;
             finalPrice = Math.max(0, finalPrice - manualDisc);
 
-            // گرد کردن مضرب ۵۰ هزار تومان مشابه اپ
             finalPrice = Math.round(finalPrice / 50000) * 50000;
             const totalDiscount = totalBase - finalPrice;
 
@@ -1496,10 +1550,10 @@
         function renderAdminMonInstallmentRows() {
             const container = document.getElementById('opMonInstRowsContainer');
             container.innerHTML = opMonState.installments.map((inst, idx) => `
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
-                    <span style="font-size: 12px; width: 70px;">قسط ${inst.installment_number}:</span>
-                    <input type="text" class="cap-input" style="width: 140px; margin: 0; font-size: 12px; direction: ltr;" value="${inst.due_date}" onchange="opMonState.installments[${idx}].due_date = this.value">
-                    <input type="number" class="cap-input" style="width: 160px; margin: 0; font-size: 12px;" value="${inst.amount}" step="50000" onchange="opMonState.installments[${idx}].amount = parseInt(this.value) || 0">
+                <div class="inst-edit-row">
+                    <span style="font-size: 12px; font-weight: bold; min-width: 60px;">قسط ${inst.installment_number}:</span>
+                    <input type="text" class="cap-input" style="font-size: 12px; direction: ltr;" value="${inst.due_date}" onchange="opMonState.installments[${idx}].due_date = this.value">
+                    <input type="number" class="cap-input" style="font-size: 12px;" value="${inst.amount}" step="50000" onchange="opMonState.installments[${idx}].amount = parseInt(this.value) || 0">
                     <span style="font-size: 11px; color: var(--text-muted);">تومان</span>
                 </div>
             `).join('');
