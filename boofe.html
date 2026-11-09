@@ -996,20 +996,41 @@
             }
 
             try {
+                let orderStatus = selectedMethod === 'wallet' ? 'paid' : 'pending_cash';
+                let newWalletBalance = userWalletBalance;
+
                 if (selectedMethod === 'wallet') {
                     if (totalToPay > (userWalletBalance + maxCredit)) throw new Error("موجودی ناکافی");
-                    userWalletBalance -= totalToPay; 
-                    await supabaseClient.from('users').update({ wallet_balance: userWalletBalance }).eq('phone_number', activeUser.phone_number);
-                    await supabaseClient.from('buffet_transactions').insert([{ phone_number: activeUser.phone_number, amount: -totalToPay, tx_type: 'purchase', status: 'approved' }]);
+                    newWalletBalance = userWalletBalance - totalToPay;
+
+                    // ۱. کسر از کیف پول و بررسی خطا
+                    const { error: walletErr } = await supabaseClient
+                        .from('users')
+                        .update({ wallet_balance: newWalletBalance })
+                        .eq('phone_number', activeUser.phone_number);
+                    if (walletErr) throw walletErr;
+
+                    // ۲. ثبت تراکنش خرید و بررسی خطا
+                    const { error: txErr } = await supabaseClient
+                        .from('buffet_transactions')
+                        .insert([{ phone_number: activeUser.phone_number, amount: -totalToPay, tx_type: 'purchase', status: 'approved' }]);
+                    if (txErr) throw txErr;
                 }
                 
-                let orderStatus = selectedMethod === 'wallet' ? 'paid' : 'pending_cash';
-                await supabaseClient.from('buffet_orders').insert([{ phone_number: activeUser.phone_number, items: JSON.stringify(cart), total_price: totalToPay, payment_method: selectedMethod, status: orderStatus }]);
+                // ۳. ثبت سفارش در جدول سفارش‌ها و بررسی خطا
+                const { error: orderErr } = await supabaseClient
+                    .from('buffet_orders')
+                    .insert([{ phone_number: activeUser.phone_number, items: JSON.stringify(cart), total_price: totalToPay, payment_method: selectedMethod, status: orderStatus }]);
+                if (orderErr) throw orderErr;
 
+                // بروزرسانی موجودی در برنامه فقط پس از موفقیت دیتابیس
+                userWalletBalance = newWalletBalance;
+
+                // ۴. ارسال به بله (با await تا درخواست کامل ارسال شود)
                 let mText = selectedMethod === 'wallet' ? "💳 کیف پول" : "💵 نقدی";
                 let iText = cart.map(i => `▫️ ${i.qty}x ${i.name}`).join("\n");
                 let payload = { text: `🚨 سفارش بوفه 🚨\n👤 خریدار: ${activeUser.full_name}\n💰 مبلغ: ${totalToPay.toLocaleString()} تومان\nوضعیت: ${mText}\n\n🛒 اقلام سفارش:\n${iText}` };
-                fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e=>{});
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e=>{});
 
                 alert(selectedMethod === 'wallet' ? '✅ سفارش ثبت و مبلغ کسر شد.\nخرید خود را تحویل بگیرید.' : '✅ سفارش نقدی ثبت شد.\nمبلغ را به سرپرست تحویل دهید.');
                 
@@ -1026,7 +1047,8 @@
                 
                 if(btn) { btn.innerHTML = 'تایید نهایی و خرید'; btn.disabled = false; }
             } catch(e) {
-                alert('خطا در ثبت سفارش.');
+                console.error("Checkout Error:", e);
+                alert('❌ خطا در ثبت سفارش در دیتابیس. لطفاً یک بار از حساب خارج و مجدداً وارد شوید.');
                 if(btn) { btn.innerHTML = 'تایید نهایی و خرید'; btn.disabled = false; }
             }
         }
@@ -1125,13 +1147,24 @@
 
             try {
                 let txType = chargeMethod === 'cash' ? 'cash_charge' : 'receipt_charge';
-                await supabaseClient.from('buffet_transactions').insert([{ phone_number: activeUser.phone_number, amount: amt, tx_type: txType, status: 'pending', receipt_base64: receiptBase64 || null }]);
+                
+                // ۱. ثبت در دیتابیس (بدون ذخیره عکس فیش در دیتابیس) و بررسی خطا
+                const { error: chargeErr } = await supabaseClient
+                    .from('buffet_transactions')
+                    .insert([{ 
+                        phone_number: activeUser.phone_number, 
+                        amount: amt, 
+                        tx_type: txType, 
+                        status: 'pending' 
+                    }]);
+                if (chargeErr) throw chargeErr;
 
+                // ۲. ارسال عکس فیش و مشخصات به بله (فقط در صورت ثبت موفق در دیتابیس)
                 let payload = {
                     text: chargeMethod === 'receipt' ? `⚡ تایید فیش بوفه ⚡\n👤 کاربر: ${activeUser.full_name}\n💰 مبلغ: ${amt.toLocaleString()} تومان` : `💵 شارژ نقدی بوفه 💵\n👤 کاربر: ${activeUser.full_name}\n💰 مبلغ: ${amt.toLocaleString()} تومان`,
                     image_base64: chargeMethod === 'receipt' ? receiptBase64 : ""
                 };
-                fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e=>{});
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(e=>{});
 
                 alert(chargeMethod === 'receipt' ? '✅ فیش ثبت شد. منتظر تایید باشید.' : '✅ درخواست ثبت شد. مبلغ را تحویل دهید.');
                 
@@ -1145,7 +1178,8 @@
                 validateChargeForm();
                 btn.innerHTML = 'ثبت درخواست شارژ';
             } catch(e) {
-                alert('خطا در ارسال درخواست.');
+                console.error("Charge Error:", e);
+                alert('❌ خطا در ثبت درخواست در دیتابیس. لطفاً دوباره تلاش کنید.');
                 btn.innerHTML = 'ثبت درخواست شارژ'; validateChargeForm();
             }
         }
