@@ -28,7 +28,7 @@
         .sidebar { width: 260px; background: rgba(18, 26, 24, 0.95); backdrop-filter: blur(10px); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 0; z-index: 1000; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .brand { text-align: center; font-size: 22px; font-weight: 900; margin-bottom: 30px; letter-spacing: -0.5px; }
         .brand span { color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); }
-        .nav-item { padding: 15px 25px; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; text-decoration: none; border-right: 3px solid transparent; transition: all 0.3s; }
+        .nav-item { padding: 15px 25px; color: var(--text-muted); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 12px; text-decoration: none; border-right: 3px solid transparent; transition: all 0.3s; cursor: pointer; }
         .nav-item:hover, .nav-item.active { background: linear-gradient(90deg, var(--primary-fade) 0%, transparent 100%); color: var(--primary); border-right-color: var(--primary); }
         
         /* Mobile Header */
@@ -39,43 +39,47 @@
 
         /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(circle at top left, #121a18 0%, #070b09 100%); }
-        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .top-nav { padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
         .top-nav::-webkit-scrollbar { display: none; }
-        .tab-btn { padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-muted); border: 1px solid transparent; background: var(--surface-light); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .tab-btn { padding: 11px 18px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); border: 1px solid transparent; background: var(--surface-light); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .tab-btn:hover { background: #22302e; color: var(--text-main); }
         .tab-btn.active { background: var(--primary-fade); color: var(--primary); border: 1px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+        .tab-btn.highlight-tab { border: 1px dashed var(--primary); color: #cbd5e1; }
+        .tab-btn.highlight-tab.active { border-style: solid; background: var(--primary); color: #fff; }
         
         /* Container & Cards */
         .tab-container { flex: 1; padding: 30px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) var(--surface-dark); }
-        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-content { display: none; animation: fadeIn 0.35s ease-out; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .card { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s, box-shadow 0.2s; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); border-color: #314541; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); border-color: #314541; }
         .c-info div { margin-bottom: 6px; font-size: 13px; color: var(--text-muted); }
         .c-info strong { color: var(--text-main); font-size: 16px; margin-bottom: 8px; display: inline-block; }
         
         /* Buttons */
-        .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; color: white; display: inline-flex; align-items: center; gap: 5px; }
-        .btn:hover { filter: brightness(1.1); transform: scale(1.02); }
-        .btn:active { transform: scale(0.98); }
+        .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; color: white; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.02); }
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-green { background: var(--success); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); } 
         .btn-red { background: var(--danger); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); } 
         .btn-blue { background: var(--primary); box-shadow: 0 4px 10px var(--primary-glow); }
+        .btn-amber { background: var(--warning); color: #000; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
         
         /* Capacity Grid */
         .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
         .cap-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; text-align: center; transition: 0.3s; }
         .cap-card:hover { border-color: var(--primary); background: var(--surface-dark); }
         .cap-date { font-size: 15px; font-weight: 900; margin-bottom: 12px; color: var(--primary); }
-        .cap-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 16px; transition: border 0.3s; }
+        .cap-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; transition: border 0.3s; }
         .cap-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
 
         /* Data Table for Users */
         .table-responsive { width: 100%; overflow-x: auto; background: var(--surface-dark); border-radius: 14px; border: 1px solid var(--border-color); }
         .data-table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: right; }
-        .data-table th, .data-table td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        .data-table th, .data-table td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
         .data-table th { background: rgba(27, 38, 36, 0.8); color: var(--primary); font-weight: bold; position: sticky; top: 0; }
         .data-table tr { transition: background 0.2s; }
         .data-table tr:hover { background: var(--surface-light); }
@@ -87,12 +91,56 @@
         .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-blocked { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
         .badge-duplicate { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px dashed var(--danger); margin-right: 8px; font-size: 10px; }
-        .action-btn { padding: 6px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; border: none; color: white; font-weight: bold; transition: 0.2s; }
-        .action-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+        .action-btn { padding: 6px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; border: none; color: white; font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+        .action-btn:hover { filter: brightness(1.1); transform: scale(1.04); }
         .btn-block-sm { background: var(--danger); }
         .btn-approve-sm { background: var(--success); }
+        .btn-primary-sm { background: var(--primary); }
+        .btn-amber-sm { background: var(--warning); color: #000; }
+
+        /* Admin Operator / Quick Actions Styles */
+        .op-grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+        .op-panel { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; }
+        .user-search-results { max-height: 280px; overflow-y: auto; margin-top: 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-dark); }
+        .user-search-item { padding: 11px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        .user-search-item:last-child { border-bottom: none; }
+        .user-search-item:hover, .user-search-item.selected { background: var(--primary-fade); border-right: 3px solid var(--primary); }
+        
+        .sub-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .sub-tab-btn { padding: 10px 16px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--surface-light); color: var(--text-muted); cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .sub-tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
+
+        .admin-cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; margin: 15px 0; }
+        .admin-cal-card { background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 11px; padding: 12px 8px; text-align: center; cursor: pointer; transition: 0.2s; user-select: none; }
+        .admin-cal-card:hover:not(.past-booked) { border-color: var(--primary); }
+        .admin-cal-card.selected { background: var(--primary-fade); border: 2px solid var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
+        .admin-cal-card.past-booked { background: rgba(16, 185, 129, 0.12); border-color: var(--success); cursor: default; opacity: 0.85; }
+        .admin-cal-card.full-cap { border-color: rgba(239, 68, 68, 0.45); }
+
+        .seg-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+        .seg-btn { flex: 1; min-width: 90px; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--surface-light); color: var(--text-muted); font-weight: bold; font-size: 13px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .seg-btn.active { background: var(--primary-fade); color: var(--primary); border-color: var(--primary); }
+
+        .finance-box { background: rgba(7, 11, 9, 0.65); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin: 15px 0; }
+        .finance-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--text-muted); }
+        .finance-row:last-child { margin-bottom: 0; }
+        .finance-row strong { color: var(--text-main); font-size: 14px; }
+
+        /* Toast & Custom Modal */
+        .toast-container { position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--surface-light); border-right: 4px solid var(--primary); color: var(--text-main); padding: 13px 18px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; animation: fadeIn 0.25s ease-out; }
+        .toast.success { border-right-color: var(--success); }
+        .toast.error { border-right-color: var(--danger); }
+        .toast.warning { border-right-color: var(--warning); }
+
+        .custom-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 5000; align-items: center; justify-content: center; padding: 15px; }
+        .custom-modal-backdrop.active { display: flex; }
+        .custom-modal { background: var(--surface-dark); border: 1px solid var(--border-color); border-radius: 16px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
 
         /* Responsive Design */
+        @media (max-width: 980px) {
+            .op-grid { grid-template-columns: 1fr; }
+        }
         @media (max-width: 900px) {
             .mobile-header { display: flex; }
             .sidebar { position: fixed; right: -260px; height: 100%; box-shadow: -5px 0 25px rgba(0,0,0,0.5); }
@@ -101,7 +149,7 @@
             .tab-btn { padding: 10px 15px; font-size: 13px; }
             .tab-container { padding: 15px; }
             .card { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .card > div:last-child { width: 100%; display: flex; gap: 10px; }
+            .card > div:last-child { width: 100%; display: flex; gap: 10px; flex-wrap: wrap; }
             .card .btn { flex: 1; justify-content: center; }
         }
     </style>
@@ -111,10 +159,25 @@
     <!-- Mobile Overlay -->
     <div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div class="custom-modal-backdrop" id="confirmModalBackdrop">
+        <div class="custom-modal">
+            <h4 id="confirmModalTitle" style="color: var(--primary); font-size: 16px; margin-bottom: 12px;">تایید عملیات</h4>
+            <p id="confirmModalMessage" style="font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-bottom: 20px; white-space: pre-line;"></p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn" style="background: var(--surface-light); color: var(--text-muted);" id="confirmModalCancelBtn">انصراف</button>
+                <button class="btn btn-green" id="confirmModalOkBtn">تایید و اجرا</button>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar" id="sidebar">
         <div class="brand">راهینو <span>پانسیون</span></div>
-        <a href="dashboard.html" class="nav-item"><span>🌅</span> بازگشت به داشبورد</a>
-        <a href="#" class="nav-item active"><span>📍</span> سیستم رزرو روزانه</a>
+        <div class="nav-item" onclick="switchTab('tab-admin-booking', document.getElementById('btnTabAdminBooking'))"><span>⚡</span> ثبت دستی و عملیات سریع</div>
+        <div class="nav-item active" onclick="switchTab('tab-users', document.getElementById('btnTabPending'))"><span>📍</span> پنل مدیریت پانسیون</div>
     </div>
 
     <div class="main-content">
@@ -122,22 +185,320 @@
         <div class="mobile-header">
             <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
             <div class="brand" style="margin:0; font-size:18px;">راهینو <span>پانسیون</span></div>
-            <div style="width: 24px;"></div> <!-- Spacer for flex alignment -->
+            <div style="width: 24px;"></div>
         </div>
 
         <!-- نوار منوی بالا -->
         <div class="top-nav">
-            <button class="tab-btn active" onclick="switchTab('tab-users', this)">📝 در انتظار تایید</button>
-            <button class="tab-btn" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
-            <button class="tab-btn" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
-            <button class="tab-btn" onclick="switchTab('tab-monthly', this)">💎 ماهانه و اقساط</button>
-            <button class="tab-btn" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
-            <button class="tab-btn" onclick="switchTab('tab-promos', this)">🎁 کدهای تخفیف</button>
-            <button class="tab-btn" onclick="switchTab('tab-withdraws', this)">💳 درخواست‌های مالی</button>
-            <button class="tab-btn" onclick="switchTab('tab-cancellations', this)">❌ لغو قراردادها</button>
+            <button class="tab-btn highlight-tab" id="btnTabAdminBooking" onclick="switchTab('tab-admin-booking', this)">⚡ عملیات سریع دانش‌آموز (رزرو / تمدید / قسط)</button>
+            <button class="tab-btn active" id="btnTabPending" onclick="switchTab('tab-users', this)">📝 در انتظار تایید</button>
+            <button class="tab-btn" id="btnTabAllUsers" onclick="switchTab('tab-all-users', this)">👥 لیست تمام کاربران</button>
+            <button class="tab-btn" id="btnTabMonthly" onclick="switchTab('tab-monthly', this)">💎 ماهانه و اقساط</button>
+            <button class="tab-btn" id="btnTabReceipts" onclick="switchTab('tab-receipts', this)">🧾 تاریخچه رزروها</button>
+            <button class="tab-btn" id="btnTabCapacity" onclick="switchTab('tab-capacity', this)">🗓️ مدیریت ظرفیت</button>
+            <button class="tab-btn" id="btnTabPromos" onclick="switchTab('tab-promos', this)">🎁 کدهای تخفیف</button>
+            <button class="tab-btn" id="btnTabWithdraws" onclick="switchTab('tab-withdraws', this)">💳 درخواست‌های مالی</button>
+            <button class="tab-btn" id="btnTabCancellations" onclick="switchTab('tab-cancellations', this)">❌ لغو قراردادها</button>
         </div>
 
         <div class="tab-container">
+
+            <!-- ============================================== -->
+            <!-- ⚡ تب جدید: عملیات سریع دانش‌آموز (بدون نیاز به رمز) -->
+            <!-- ============================================== -->
+            <div id="tab-admin-booking" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="color: var(--primary); font-size: 18px;">⚡ مرکز عملیات سریع دانش‌آموز (ثبت توسط مدیریت)</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">انجام مستقیم رزرو روزانه، ثبت‌نام ماهانه، تمدید قرارداد، تسویه قسط و شارژ کیف پول بدون نیاز به شماره و رمز عبور دانش‌آموز</p>
+                    </div>
+                    <button class="btn btn-blue" onclick="refreshOperatorData()">🔄 بروزرسانی اطلاعات</button>
+                </div>
+
+                <div class="op-grid">
+                    <!-- ستون راست: جستجو و کارت اطلاعات دانش‌آموز -->
+                    <div class="op-panel">
+                        <label style="font-size: 13px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">۱. انتخاب دانش‌آموز</label>
+                        <input type="text" id="opUserSearchInput" class="cap-input" style="text-align: right; margin-bottom: 6px;" placeholder="نام دانش‌آموز یا شماره موبایل..." oninput="filterOperatorUsers()">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">روی نام دانش‌آموز کلیک کنید یا از جدول «لیست تمام کاربران» دکمه عملیات سریع را بزنید:</div>
+                        
+                        <div class="user-search-results" id="opUserSearchResults">
+                            <div style="padding: 15px; text-align: center; color: var(--text-muted); font-size: 12px;">در حال بارگذاری کاربران...</div>
+                        </div>
+
+                        <!-- خلاصه وضعیت دانش‌آموز انتخاب شده -->
+                        <div id="opSelectedUserCard" style="display: none; margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <strong id="opUserName" style="font-size: 16px; color: var(--text-main);">---</strong>
+                                <span id="opUserStatusBadge"></span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.9;">
+                                <div>📱 موبایل: <span id="opUserPhone" style="font-family: monospace; color: var(--text-main); font-weight: bold;">---</span></div>
+                                <div>🎓 پایه و رشته: <span id="opUserGradeMajor" style="color: var(--text-main);">---</span></div>
+                                <div>🔑 رمز عبور فعلی: <span id="opUserPass" style="font-family: monospace; color: var(--warning);">---</span></div>
+                                <div>💳 موجودی کیف پول: <strong id="opUserWallet" style="color: var(--success);">۰ تومان</strong></div>
+                                <div>📦 اشتراک ماهانه: <strong id="opUserSubStatus" style="color: var(--primary);">---</strong></div>
+                            </div>
+
+                            <!-- ابزار سریع کیف پول -->
+                            <div style="margin-top: 14px; background: rgba(99, 152, 137, 0.08); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px;">
+                                <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">💰 تغییر دستی موجودی کیف پول</div>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="number" id="opWalletDeltaInput" class="cap-input" style="margin: 0; flex: 1; font-size: 13px;" placeholder="مبلغ (تومان)" step="10000">
+                                    <button class="action-btn btn-approve-sm" onclick="adjustUserWallet(1)" title="افزایش موجودی">➕ شارژ</button>
+                                    <button class="action-btn btn-block-sm" onclick="adjustUserWallet(-1)" title="کسر موجودی">➖ کسر</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ستون چپ: پنل عملیات‌ها -->
+                    <div class="op-panel" id="opActionWorkspace">
+                        <div id="opNoUserPlaceholder" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <div style="font-size: 42px; margin-bottom: 12px;">👈</div>
+                            <div style="font-size: 15px; font-weight: bold; color: var(--text-main); margin-bottom: 6px;">ابتدا یک دانش‌آموز را از ستون سمت راست انتخاب کنید</div>
+                            <div style="font-size: 12px;">پس از انتخاب دانش‌آموز، تمام ابزارهای رزرو روزانه، ثبت‌نام/تمدید ماهانه و پرداخت اقساط برای او فعال می‌شود.</div>
+                        </div>
+
+                        <div id="opActiveWorkspace" style="display: none;">
+                            <!-- ساب‌تب‌های عملیات -->
+                            <div class="sub-tabs">
+                                <button class="sub-tab-btn active" id="subBtnDaily" onclick="switchOpSubTab('op-sub-daily', this)">📅 ۱. رزرو روزانه</button>
+                                <button class="sub-tab-btn" id="subBtnMonthly" onclick="switchOpSubTab('op-sub-monthly', this)">💎 ۲. ثبت‌نام یا تمدید ماهانه</button>
+                                <button class="sub-tab-btn" id="subBtnInstallments" onclick="switchOpSubTab('op-sub-installments', this)">🧾 ۳. پرداخت و مدیریت اقساط <span id="opInstCountBadge" class="badge badge-pending" style="margin-right:4px; display:none;">0</span></button>
+                            </div>
+
+                            <!-- ==================== بخش ۱: رزرو روزانه ==================== -->
+                            <div id="op-sub-daily" class="op-sub-section">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                                    <div>
+                                        <h4 style="color: var(--primary); font-size: 15px;">انتخاب روزهای رزرو روزانه (۱۴ روز آینده)</h4>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">روزهای سبز قبلاً برای این دانش‌آموز رزرو شده‌اند. روی روزهای دلخواه کلیک کنید.</div>
+                                    </div>
+                                    <label style="font-size: 12px; color: var(--warning); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                        <input type="checkbox" id="opDailyIgnoreCap" onchange="renderAdminDailyCalendar()">
+                                        امکان انتخاب روزهای تکمیل ظرفیت (رزرو VIP ادمین)
+                                    </label>
+                                </div>
+
+                                <div class="admin-cal-grid" id="adminDailyCalGrid"></div>
+
+                                <div class="finance-box">
+                                    <div class="finance-row">
+                                        <span>روزهای رزرو شده قبلی در این بازه ۱۴ روزه:</span>
+                                        <strong id="opDailyPastCount">۰ روز</strong>
+                                    </div>
+                                    <div class="finance-row">
+                                        <span>روزهای جدید انتخاب شده:</span>
+                                        <strong id="opDailyNewCount" style="color: var(--primary);">۰ روز</strong>
+                                    </div>
+                                    <div class="finance-row">
+                                        <span>نرخ پلکانی هر روز (طبق سیستم اپ):</span>
+                                        <strong id="opDailyRateTxt">۰ هزار تومان</strong>
+                                    </div>
+                                    <div class="finance-row" id="opDailyDiscountNoticeRow" style="display:none;">
+                                        <span>تخفیف‌های سیستمی (اولین رزرو / معرف):</span>
+                                        <strong id="opDailyAutoDiscTxt" style="color: var(--success);">---</strong>
+                                    </div>
+                                    <div class="finance-row" style="padding-top: 10px; border-top: 1px solid var(--border-color);">
+                                        <span>کد تخفیف یا تخفیف دستی ادمین (تومان):</span>
+                                        <div style="display: flex; gap: 6px; align-items: center;">
+                                            <input type="text" id="opDailyPromoInput" class="cap-input" style="width: 120px; margin: 0; font-size: 12px;" placeholder="کد تخفیف">
+                                            <button class="action-btn btn-primary-sm" onclick="applyAdminDailyPromo()">اعمال کد</button>
+                                            <input type="number" id="opDailyManualDisc" class="cap-input" style="width: 130px; margin: 0; font-size: 12px;" placeholder="تخفیف دستی (تومان)" value="0" oninput="updateAdminDailyPricing()">
+                                        </div>
+                                    </div>
+                                    <div class="finance-row" style="padding-top: 10px; border-top: 1px dashed var(--primary); margin-top: 8px;">
+                                        <span style="font-size: 14px; font-weight: bold; color: var(--text-main);">مبلغ نهایی ثبت در فاکتور (قابل ویرایش):</span>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="number" id="opDailyFinalInput" class="cap-input" style="width: 170px; margin: 0; font-size: 15px; color: var(--success); border-color: var(--success);" value="0">
+                                            <span style="font-size: 12px; color: var(--text-muted);">تومان</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 15px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                        <span style="font-size: 13px; font-weight: bold;">روش تسویه:</span>
+                                        <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="opDailyPayMethod" value="card" checked> کارت به کارت / نقدی (دریافت شده توسط ادمین)
+                                        </label>
+                                        <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="opDailyPayMethod" value="wallet"> کسر از کیف پول دانش‌آموز
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-green" id="btnSubmitAdminDaily" onclick="submitAdminDailyBooking()">✅ ثبت نهایی رزرو روزانه</button>
+                                </div>
+
+                                <!-- لیست رزروهای قبلی روزانه همین کاربر -->
+                                <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                                    <h5 style="color: var(--text-muted); font-size: 13px; margin-bottom: 10px;">📜 تاریخچه رزروهای روزانه این دانش‌آموز:</h5>
+                                    <div id="opUserDailyHistory" style="font-size: 12px; color: var(--text-muted);">---</div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== بخش ۲: ثبت‌نام یا تمدید ماهانه ==================== -->
+                            <div id="op-sub-monthly" class="op-sub-section" style="display: none;">
+                                <!-- بنر وضعیت قرارداد فعلی -->
+                                <div id="opMonCurrentSubBanner" style="background: rgba(99, 152, 137, 0.12); border: 1px solid var(--primary); border-radius: 12px; padding: 14px; margin-bottom: 18px; display: none;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                        <div>
+                                            <div style="font-size: 13px; font-weight: bold; color: var(--primary);">📌 این دانش‌آموز در حال حاضر اشتراک ماهانه فعال دارد</div>
+                                            <div id="opMonCurrentSubDetails" style="font-size: 12px; color: var(--text-main); margin-top: 4px;">---</div>
+                                        </div>
+                                        <button class="btn btn-amber" onclick="setAdminMonMode('renew')">🔄 تنظیم خودکار روی «تمدید قرارداد»</button>
+                                    </div>
+                                </div>
+
+                                <!-- نوع عملیات: ثبت‌نام جدید یا تمدید -->
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">نوع قرارداد:</label>
+                                    <div class="seg-group">
+                                        <div class="seg-btn active" id="opMonModeNew" onclick="setAdminMonMode('new')">🆕 ثبت‌نام ماهانه جدید</div>
+                                        <div class="seg-btn" id="opMonModeRenew" onclick="setAdminMonMode('renew')">🔄 تمدید اشتراک ماهانه</div>
+                                    </div>
+                                </div>
+
+                                <!-- انتخاب طرح و تاریخ شروع -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">انتخاب طرح پانسیون (از جدول services):</label>
+                                        <select id="opMonPlanSelect" class="cap-input" style="margin: 0; text-align: right;" onchange="onAdminMonPlanChange()"></select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">قیمت پایه هر ماه (تومان - قابل ویرایش):</label>
+                                        <input type="number" id="opMonBasePriceInput" class="cap-input" style="margin: 0;" step="50000" oninput="calculateAdminMonthly()">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">تاریخ شروع قرارداد (شمسی YYYY-MM-DD):</label>
+                                        <input type="text" id="opMonStartDateInput" class="cap-input" style="margin: 0; direction: ltr;" placeholder="1405-08-18" oninput="calculateAdminMonthly()">
+                                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                                            <button class="action-btn btn-primary-sm" onclick="setQuickMonStart(0)">امروز</button>
+                                            <button class="action-btn btn-primary-sm" onclick="setQuickMonStart(1)">فردا</button>
+                                            <button class="action-btn btn-primary-sm" onclick="setQuickMonStart(2)">پس‌فردا</button>
+                                            <button class="action-btn btn-amber-sm" id="btnStartFromSubEnd" style="display:none;" onclick="setQuickMonStartFromEnd()">از پایان قرارداد فعلی</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- مدت قرارداد و نحوه پرداخت (نقد یا اقساطی) -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">مدت قرارداد:</label>
+                                        <div class="seg-group" style="margin: 0;">
+                                            <div class="seg-btn active" id="opDur1" onclick="setAdminMonDur(1)">۱ ماهه</div>
+                                            <div class="seg-btn" id="opDur3" onclick="setAdminMonDur(3)">۳ ماهه</div>
+                                            <div class="seg-btn" id="opDur6" onclick="setAdminMonDur(6)">۶ ماهه</div>
+                                            <div class="seg-btn" id="opDur9" onclick="setAdminMonDur(9)">۹ ماهه</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">شرایط پرداخت:</label>
+                                        <div class="seg-group" style="margin: 0;">
+                                            <div class="seg-btn active" id="opPlanCash" onclick="setAdminMonPayPlan('cash')">💵 نقد (تسویه کامل)</div>
+                                            <div class="seg-btn" id="opPlanInst" onclick="setAdminMonPayPlan('monthly')">📑 اقساطی (پیش‌پرداخت + قسط)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- خلاصه مالی و اقساط ماهانه -->
+                                <div class="finance-box">
+                                    <div class="finance-row">
+                                        <span>بازه زمانی قرارداد:</span>
+                                        <strong id="opMonDateRangeTxt" style="color: var(--primary); direction: ltr;">---</strong>
+                                    </div>
+                                    <div class="finance-row">
+                                        <span>مبلغ پایه کل دوره:</span>
+                                        <strong id="opMonTotalBaseTxt">۰ تومان</strong>
+                                    </div>
+                                    <div class="finance-row">
+                                        <span>تخفیف دوره / معرف:</span>
+                                        <strong id="opMonAutoDiscTxt" style="color: var(--success);">۰ تومان</strong>
+                                    </div>
+                                    <div class="finance-row" style="padding-top: 8px; border-top: 1px solid var(--border-color);">
+                                        <span>کد تخفیف یا تخفیف دستی ادمین:</span>
+                                        <div style="display: flex; gap: 6px; align-items: center;">
+                                            <input type="text" id="opMonPromoInput" class="cap-input" style="width: 120px; margin: 0; font-size: 12px;" placeholder="کد تخفیف">
+                                            <button class="action-btn btn-primary-sm" onclick="applyAdminMonPromo()">اعمال کد</button>
+                                            <input type="number" id="opMonManualDisc" class="cap-input" style="width: 130px; margin: 0; font-size: 12px;" placeholder="تخفیف دستی (تومان)" value="0" oninput="calculateAdminMonthly()">
+                                        </div>
+                                    </div>
+                                    <div class="finance-row" style="padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                                        <span style="color: var(--text-main); font-weight: bold;">مبلغ نهایی کل قرارداد (قابل ویرایش):</span>
+                                        <input type="number" id="opMonFinalPriceInput" class="cap-input" style="width: 180px; margin: 0; font-size: 14px; color: var(--text-main);" oninput="recalcAdminInstallmentsFromFinal()">
+                                    </div>
+                                    <div class="finance-row">
+                                        <span style="color: var(--success); font-weight: bold;">پیش‌پرداخت / دریافتی فعلی (تومان):</span>
+                                        <input type="number" id="opMonUpfrontInput" class="cap-input" style="width: 180px; margin: 0; font-size: 15px; color: var(--success); border-color: var(--success);" oninput="recalcAdminInstallmentsFromUpfront()">
+                                    </div>
+
+                                    <!-- لیست اقساط تولید شده -->
+                                    <div id="opMonInstallmentsBox" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); display: none;">
+                                        <div style="font-size: 12px; font-weight: bold; color: var(--warning); margin-bottom: 8px;">📅 جدول اقساطِ این قرارداد (می‌توانید مبلغ یا تاریخ هر قسط را قبل از ثبت تغییر دهید):</div>
+                                        <div id="opMonInstRowsContainer"></div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 15px;">
+                                    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                                        <span style="font-size: 13px; font-weight: bold;">روش دریافت پیش‌پرداخت:</span>
+                                        <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="opMonPaySource" value="card" checked> کارت به کارت / نقد (دریافت شده)
+                                        </label>
+                                        <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="opMonPaySource" value="wallet"> کسر از کیف پول دانش‌آموز
+                                        </label>
+                                        <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px; margin-right: 10px;">
+                                            <input type="checkbox" id="opMonDecreaseCap" checked> کسر ۱ نفر از ظرفیت طرح (در ثبت‌نام جدید)
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-green" onclick="submitAdminMonthlyBooking()">✅ ثبت نهایی قرارداد ماهانه</button>
+                                </div>
+                            </div>
+
+                            <!-- ==================== بخش ۳: پرداخت و مدیریت اقساط ==================== -->
+                            <div id="op-sub-installments" class="op-sub-section" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                    <div>
+                                        <h4 style="color: var(--primary); font-size: 15px;">اقساط ثبت‌شده برای این دانش‌آموز</h4>
+                                        <div style="font-size: 12px; color: var(--text-muted);">می‌توانید هر قسط را با یک کلیک به صورت «پرداخت شده با کارت به کارت» یا «کسر از کیف پول» تسویه کنید.</div>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive" style="margin-bottom: 20px;">
+                                    <table class="data-table" style="min-width: 600px;">
+                                        <thead>
+                                            <tr>
+                                                <th>شماره قسط</th>
+                                                <th>تاریخ سررسید</th>
+                                                <th>مبلغ (تومان)</th>
+                                                <th>وضعیت</th>
+                                                <th>تسویه / عملیات سریع ادمین</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="opUserInstallmentsList">
+                                            <tr><td colspan="5" style="text-align: center;">در حال بارگذاری...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- افزودن قسط دستی جدید -->
+                                <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed var(--warning); border-radius: 12px; padding: 15px;">
+                                    <div style="font-size: 13px; font-weight: bold; color: var(--warning); margin-bottom: 10px;">➕ تعریف قسط دستی جدید برای این دانش‌آموز</div>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                        <input type="number" id="newManualInstNum" class="cap-input" placeholder="شماره قسط (مثلا 1)" style="width: 140px; margin: 0;" value="1">
+                                        <input type="text" id="newManualInstDate" class="cap-input" placeholder="سررسید (1405-09-01)" style="width: 160px; margin: 0; direction: ltr;">
+                                        <input type="number" id="newManualInstAmount" class="cap-input" placeholder="مبلغ (تومان)" style="width: 170px; margin: 0;" step="50000">
+                                        <button class="btn btn-amber" onclick="createManualInstallmentForUser()">➕ ثبت قسط جدید</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- تب کاربران در انتظار -->
             <div id="tab-users" class="tab-content active">
                 <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">کاربران در انتظار تایید عضویت</h3>
@@ -148,7 +509,7 @@
             <div id="tab-capacity" class="tab-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                     <h3 style="color: var(--primary); font-size: 18px;">ظرفیتِ باقی‌مانده‌ی ۱۴ روز آینده</h3>
-                    <button class="btn btn-blue" onclick="saveCapacities()">💾 ذخیره تغییرات</button>
+                    <button class="btn btn-blue" id="btnSaveCaps" onclick="saveCapacities()">💾 ذخیره تغییرات</button>
                 </div>
                 <div class="capacity-grid" id="capacityGrid"><div style="color:var(--text-muted); text-align:center; grid-column: 1/-1;">در حال دریافت اطلاعات...</div></div>
             </div>
@@ -175,6 +536,7 @@
                     </select>
                     <select id="statusFilter" class="cap-input" style="width: auto; margin: 0;" onchange="renderAllUsers()">
                         <option value="">همه وضعیت‌ها</option>
+                        <option value="active">فعال</option>
                         <option value="approved">تایید شده</option>
                         <option value="pending">در انتظار</option>
                         <option value="blocked">مسدود</option>
@@ -190,9 +552,9 @@
                                 <th>پایه تحصیلی</th>
                                 <th>رشته</th>
                                 <th>مدرسه / دانشگاه</th>
+                                <th>کیف پول</th>
                                 <th>وضعیت</th>
-                                <th>تاریخ ثبت‌نام</th>
-                                <th>عملیات</th>
+                                <th>عملیات سریع / وضعیت</th>
                             </tr>
                         </thead>
                         <tbody id="allUsersList">
@@ -205,21 +567,21 @@
             <!-- تب ماهانه و اقساط -->
             <div id="tab-monthly" class="tab-content">
                 <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 18px;">مانیتورینگ قراردادها و اقساط ماهانه</h3>
-                <div style="font-size:12px; color:var(--text-muted); margin-bottom: 20px;">این لیست بر اساس نزدیک‌ترین تاریخ انقضا و سررسید مرتب شده است. اقساطی که سررسید آن‌ها نزدیک یا گذشته باشد، با رنگ هشدار نمایش داده می‌شوند.</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom: 20px;">این لیست بر اساس نزدیک‌ترین تاریخ انقضا و سررسید مرتب شده است. می‌توانید مستقیماً از همین جدول قسط دانش‌آموز را تسویه کنید یا قراردادش را تمدید نمایید.</div>
                 
                 <h4 style="margin-top:20px; margin-bottom: 10px; color: var(--warning);">⏳ اقساط در پیش‌رو یا گذشته</h4>
                 <div class="table-responsive" style="margin-bottom: 30px;">
                     <table class="data-table">
-                        <thead><tr><th>کاربر</th><th>شماره قسط</th><th>تاریخ سررسید</th><th>مبلغ (تومان)</th><th>وضعیت قسط</th></tr></thead>
-                        <tbody id="installmentsAdminList"><tr><td colspan="5" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                        <thead><tr><th>کاربر</th><th>شماره قسط</th><th>تاریخ سررسید</th><th>مبلغ (تومان)</th><th>وضعیت قسط</th><th>تسویه سریع ادمین</th></tr></thead>
+                        <tbody id="installmentsAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
                     </table>
                 </div>
 
                 <h4 style="margin-bottom: 10px; color: var(--success);">📅 قراردادهای فعال پانسیون</h4>
                 <div class="table-responsive">
                     <table class="data-table">
-                        <thead><tr><th>کاربر</th><th>طرح</th><th>تاریخ شروع</th><th>تاریخ پایان</th><th>وضعیت</th></tr></thead>
-                        <tbody id="subsAdminList"><tr><td colspan="5" style="text-align:center;">در حال دریافت...</td></tr></tbody>
+                        <thead><tr><th>کاربر</th><th>طرح</th><th>تاریخ شروع</th><th>تاریخ پایان</th><th>وضعیت</th><th>عملیات سریع</th></tr></thead>
+                        <tbody id="subsAdminList"><tr><td colspan="6" style="text-align:center;">در حال دریافت...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -240,10 +602,9 @@
                         <option value="monthly">فقط ماهانه</option>
                     </select>
                     <input type="number" id="newPromoCap" class="cap-input" placeholder="ظرفیت" value="5" style="width:80px; margin:0;">
-                    <!-- فیلد جدید تاریخ انقضا -->
                     <input type="date" id="newPromoValidUntil" class="cap-input" title="تاریخ انقضا (میلادی - اختیاری)" style="flex:1; margin:0; min-width:120px;">
                     
-                    <button class="btn btn-blue" onclick="createPromo()" style="white-space: nowrap;">➕ ساخت کد</button>
+                    <button class="btn btn-blue" id="btnCreatePromo" onclick="createPromo()" style="white-space: nowrap;">➕ ساخت کد</button>
                 </div>
                 <div class="table-responsive" style="margin-top: 20px;">
                     <table class="data-table">
@@ -297,14 +658,127 @@
         });
         
         let capacitiesData = {};
-        let usersDict = {}; // دیکشنری برای نگهداری موبایل -> نام
+        let usersDict = {};
         let allUsersData = [];
+        let pansionServices = [];
+
+        // متغیرهای عملیات سریع ادمین (Operator State)
+        const pricingTiers = { 1: 200, 2: 190, 3: 180, 4: 175, 5: 170, 6: 160, 7: 155 };
+        let opSelectedUser = null;
+        let opUserPastDailyDates = [];
+        let opUserDailyRecords = [];
+        let opSelectedDailyDates = [];
+        let opDailyWindow14 = [];
+        let opDailyPromo = null;
+
+        let opUserActiveSubs = [];
+        let opUserAllSubsCount = 0;
+        let opUserInstallments = [];
+        let opMonState = {
+            mode: 'new', // 'new' | 'renew'
+            planType: '',
+            basePrice: 3600000,
+            duration: 1,
+            payPlan: 'cash', // 'cash' | 'monthly'
+            startDate: '',
+            promo: null,
+            installments: []
+        };
+
+        // =======================
+        // نوتیفیکیشن و مودال تایید
+        // =======================
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3800);
+        }
+
+        function askConfirm(title, message) {
+            return new Promise((resolve) => {
+                const backdrop = document.getElementById('confirmModalBackdrop');
+                document.getElementById('confirmModalTitle').innerText = title;
+                document.getElementById('confirmModalMessage').innerText = message;
+                backdrop.classList.add('active');
+
+                const okBtn = document.getElementById('confirmModalOkBtn');
+                const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+                const cleanup = (result) => {
+                    backdrop.classList.remove('active');
+                    okBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                    resolve(result);
+                };
+
+                okBtn.onclick = () => cleanup(true);
+                cancelBtn.onclick = () => cleanup(false);
+            });
+        }
+
+        // =======================
+        // توابع تاریخ شمسی (هماهنگ با app.js)
+        // =======================
+        function getShamsiDate(dateObj) {
+            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
+            let y, m, d;
+            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
+            return `${y}/${m}/${d}`;
+        }
+
+        function getShamsiDateDash(dateObj) {
+            return getShamsiDate(dateObj).replace(/\//g, '-');
+        }
+
+        function calcSimpleShamsi(dateStr, monthsToAdd, daysOffset = 0) {
+            let parts = dateStr.replace(/\//g, '-').split('-');
+            if(parts.length !== 3) return dateStr;
+            let y = parseInt(parts[0]), m = parseInt(parts[1]), d = parseInt(parts[2]);
+
+            m += monthsToAdd;
+            d += daysOffset;
+
+            if (d <= 0) {
+                m -= 1;
+                d += 30;
+            } else if (d > 31) {
+                d -= 30;
+                m += 1;
+            }
+
+            while (m > 12) { m -= 12; y += 1; }
+            while (m <= 0) { m += 12; y -= 1; }
+
+            let mm = m < 10 ? '0' + m : m;
+            let dd = d < 10 ? '0' + d : d;
+            return `${y}-${mm}-${dd}`;
+        }
+
+        async function rewardReferrer(referralCode, rewardAmount, messageBody) {
+            try {
+                const gasUrl = "https://script.google.com/macros/s/AKfycbz2CXGMkNTKY8Pn--zI4R2l-we9f6jjaCXxYpljlO5trI4IcFxcO46bYm_ogPOHVAm5/exec";
+                const payload = {
+                    action: 'reward_referrer',
+                    referralCode: referralCode,
+                    amount: rewardAmount,
+                    messageBody: messageBody
+                };
+                fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(() => {});
+            } catch(e) {}
+        }
 
         window.onload = async () => { 
-            // ابتدا تمام کاربران را دریافت می‌کنیم تا اسامی آنها در همه تب‌ها قابل نمایش باشد
-            await fetchAllUsers();
+            await Promise.all([
+                fetchAllUsers(),
+                fetchPansionServices()
+            ]);
             
-            // سپس بقیه توابع اجرا می‌شوند
             loadPendingUsers(); 
             loadCapacities(); 
             loadReservations(); 
@@ -312,10 +786,34 @@
             loadPromos();
             loadMonthlyData();
             loadCancellations();
+
+            // مقداردهی اولیه تاریخ امروز در فرم ماهانه ادمین
+            const todayDash = getShamsiDateDash(new Date());
+            document.getElementById('opMonStartDateInput').value = todayDash;
+            document.getElementById('newManualInstDate').value = calcSimpleShamsi(todayDash, 1, 0);
         };
 
+        async function fetchPansionServices() {
+            const { data } = await supabaseClient.from('services').select('*').eq('category', 'pansion').eq('is_active', true);
+            pansionServices = data || [];
+            const selectEl = document.getElementById('opMonPlanSelect');
+            if (pansionServices.length > 0) {
+                selectEl.innerHTML = pansionServices.map(s => 
+                    `<option value="${s.type}" data-price="${s.base_price}">${s.title} (${s.type}) - ${Number(s.base_price).toLocaleString()} تومان [ظرفیت: ${s.capacity}]</option>`
+                ).join('');
+                opMonState.planType = pansionServices[0].type;
+                opMonState.basePrice = Number(pansionServices[0].base_price || 3600000);
+                document.getElementById('opMonBasePriceInput').value = opMonState.basePrice;
+            } else {
+                selectEl.innerHTML = `<option value="vip" data-price="3600000">طرح پیش‌فرض VIP - 3,600,000 تومان</option>`;
+                opMonState.planType = 'vip';
+                opMonState.basePrice = 3600000;
+                document.getElementById('opMonBasePriceInput').value = 3600000;
+            }
+        }
+
         // =======================
-        // مدیریت کاربران (اصلاح شده برای جدول users)
+        // مدیریت کاربران
         // =======================
         async function fetchAllUsers() {
             const { data } = await supabaseClient.from('users').select('*').order('created_at', {ascending: false});
@@ -325,6 +823,7 @@
                     usersDict[u.phone_number] = u.full_name || 'کاربر بدون نام';
                 });
                 renderAllUsers(); 
+                filterOperatorUsers();
             }
         }
 
@@ -338,7 +837,7 @@
             allUsersData.forEach(u => { nameCounts[u.full_name] = (nameCounts[u.full_name] || 0) + 1; });
 
             const filteredUsers = allUsersData.filter(u => {
-                const matchSearch = (u.full_name && u.full_name.includes(searchTerm)) || u.phone_number.includes(searchTerm);
+                const matchSearch = (u.full_name && u.full_name.includes(searchTerm)) || (u.phone_number && u.phone_number.includes(searchTerm));
                 const matchGrade = gradeFilter === "" || u.grade === gradeFilter;
                 const matchStatus = statusFilter === "" || u.status === statusFilter;
                 return matchSearch && matchGrade && matchStatus;
@@ -350,16 +849,10 @@
             }
 
             list.innerHTML = filteredUsers.map(u => {
-                let dateStr = '-';
-                if(u.created_at) {
-                    const dateObj = new Date(u.created_at);
-                    dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(dateObj);
-                }
-
                 const isDuplicate = u.full_name && nameCounts[u.full_name] > 1;
                 const duplicateBadge = isDuplicate ? '<span class="badge badge-duplicate">⚠️ نام تکراری</span>' : '';
 
-                const actionBtn = u.status !== 'blocked' 
+                const statusToggleBtn = u.status !== 'blocked' 
                     ? `<button class="action-btn btn-block-sm" onclick="updateUserStatus('${u.phone_number}', 'blocked')">🚫 مسدود</button>`
                     : `<button class="action-btn btn-approve-sm" onclick="updateUserStatus('${u.phone_number}', 'active')">✅ فعال‌سازی</button>`;
 
@@ -372,16 +865,18 @@
                     <td>${u.grade || '-'}</td>
                     <td>${u.major || '-'}</td>
                     <td>${u.school_name || '-'}</td>
+                    <td style="color:var(--success); font-weight:bold;">${Number(u.wallet_balance || 0).toLocaleString()}</td>
                     <td>${getStatusBadge(u.status)}</td>
-                    <td style="direction:ltr; text-align:right;">${dateStr}</td>
-                    <td>${actionBtn}</td>
+                    <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="action-btn btn-primary-sm" onclick="openUserInOperator('${u.phone_number}', 'op-sub-daily')">⚡ رزرو / مدیریت</button>
+                        ${statusToggleBtn}
+                    </td>
                 </tr>
                 `;
             }).join('');
         }
 
         async function loadPendingUsers() {
-            // جایگزینی pan_users با users
             const { data } = await supabaseClient.from('users').select('*').eq('status', 'pending');
             const list = document.getElementById('pendingUsersList');
             if(!data || data.length === 0) { list.innerHTML = '<div style="background:var(--surface-light); padding:20px; border-radius:10px; text-align:center; color:var(--success);">✨ هیچ درخواست بررسی نشده‌ای وجود ندارد.</div>'; return; }
@@ -403,9 +898,853 @@
 
         async function updateUserStatus(phone, status) {
             await supabaseClient.from('users').update({ status: status }).eq('phone_number', phone);
-            // رفرش کردن تب‌ها بعد از تغییر وضعیت
+            showToast('وضعیت کاربر بروزرسانی شد.');
             await fetchAllUsers();
             loadPendingUsers();
+            if (opSelectedUser && opSelectedUser.phone_number === phone) {
+                selectOperatorUser(phone);
+            }
+        }
+
+        // =======================
+        // ⚡ مرکز عملیات سریع دانش‌آموز (Operator Functions)
+        // =======================
+        function filterOperatorUsers() {
+            const q = (document.getElementById('opUserSearchInput')?.value || '').trim();
+            const container = document.getElementById('opUserSearchResults');
+            if (!container) return;
+
+            const matches = allUsersData.filter(u => {
+                if (!q) return true;
+                return (u.full_name && u.full_name.includes(q)) || (u.phone_number && u.phone_number.includes(q));
+            }).slice(0, 40);
+
+            if (matches.length === 0) {
+                container.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">کاربری یافت نشد.</div>';
+                return;
+            }
+
+            container.innerHTML = matches.map(u => {
+                const isSel = opSelectedUser && opSelectedUser.phone_number === u.phone_number;
+                return `
+                    <div class="user-search-item ${isSel ? 'selected' : ''}" onclick="selectOperatorUser('${u.phone_number}')">
+                        <div>
+                            <div style="font-weight: bold; font-size: 13px; color: var(--text-main);">${u.full_name || 'بدون نام'}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;">${u.phone_number} | ${u.grade || '-'}</div>
+                        </div>
+                        <span class="badge ${u.status === 'active' || u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${u.status === 'active' ? 'فعال' : u.status}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function openUserInOperator(phone, targetSubTab = 'op-sub-daily') {
+            switchTab('tab-admin-booking', document.getElementById('btnTabAdminBooking'));
+            await selectOperatorUser(phone);
+            if (targetSubTab === 'op-sub-monthly') {
+                switchOpSubTab('op-sub-monthly', document.getElementById('subBtnMonthly'));
+            } else if (targetSubTab === 'op-sub-installments') {
+                switchOpSubTab('op-sub-installments', document.getElementById('subBtnInstallments'));
+            } else {
+                switchOpSubTab('op-sub-daily', document.getElementById('subBtnDaily'));
+            }
+        }
+
+        function switchOpSubTab(subId, btnEl) {
+            document.querySelectorAll('.op-sub-section').forEach(el => el.style.display = 'none');
+            document.getElementById(subId).style.display = 'block';
+            document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+        }
+
+        async function refreshOperatorData() {
+            await Promise.all([fetchAllUsers(), fetchPansionServices(), loadCapacities(), loadMonthlyData(), loadReservations()]);
+            if (opSelectedUser) {
+                await selectOperatorUser(opSelectedUser.phone_number);
+            }
+            showToast('اطلاعات پنل به‌روزرسانی شد.');
+        }
+
+        async function selectOperatorUser(phone) {
+            const { data: freshUser, error } = await supabaseClient.from('users').select('*').eq('phone_number', phone).single();
+            if (error || !freshUser) {
+                showToast('خطا در واکشی اطلاعات کاربر', 'error');
+                return;
+            }
+            opSelectedUser = freshUser;
+            filterOperatorUsers();
+
+            document.getElementById('opNoUserPlaceholder').style.display = 'none';
+            document.getElementById('opActiveWorkspace').style.display = 'block';
+            document.getElementById('opSelectedUserCard').style.display = 'block';
+
+            document.getElementById('opUserName').innerText = freshUser.full_name || 'بدون نام';
+            document.getElementById('opUserStatusBadge').innerHTML = getStatusBadge(freshUser.status);
+            document.getElementById('opUserPhone').innerText = freshUser.phone_number;
+            document.getElementById('opUserGradeMajor').innerText = `${freshUser.grade || '-'} (${freshUser.major || '-'})`;
+            document.getElementById('opUserPass').innerText = freshUser.password || 'ثبت نشده';
+            document.getElementById('opUserWallet').innerText = `${Number(freshUser.wallet_balance || 0).toLocaleString()} تومان`;
+
+            // واکشی اطلاعات رزرو روزانه، اشتراک ماهانه و اقساط کاربر
+            const [dailyRes, activeSubRes, allSubRes, instRes] = await Promise.all([
+                supabaseClient.from('pan_reservations').select('*').eq('phone_number', phone).order('created_at', { ascending: false }),
+                supabaseClient.from('pan_monthly_subs').select('*').eq('phone_number', phone).eq('status', 'active').order('start_date', { ascending: true }),
+                supabaseClient.from('pan_monthly_subs').select('id').eq('phone_number', phone),
+                supabaseClient.from('pan_installments').select('*').eq('phone_number', phone).order('due_date', { ascending: true })
+            ]);
+
+            opUserDailyRecords = dailyRes.data || [];
+            let allPastDates = [];
+            opUserDailyRecords.forEach(r => {
+                let dArr = r.reserved_dates;
+                try { if (typeof dArr === 'string') dArr = JSON.parse(dArr); } catch(e) {}
+                if (Array.isArray(dArr)) {
+                    dArr.forEach(d => allPastDates.push(d.replace(/\//g, '-')));
+                }
+            });
+            opUserPastDailyDates = allPastDates;
+
+            opUserActiveSubs = activeSubRes.data || [];
+            opUserAllSubsCount = (allSubRes.data || []).length;
+            opUserInstallments = instRes.data || [];
+
+            // نمایش وضعیت اشتراک در کارت راست
+            const subBanner = document.getElementById('opMonCurrentSubBanner');
+            const btnFromEnd = document.getElementById('btnStartFromSubEnd');
+            if (opUserActiveSubs.length > 0) {
+                const lastSub = opUserActiveSubs[opUserActiveSubs.length - 1];
+                const firstSub = opUserActiveSubs[0];
+                document.getElementById('opUserSubStatus').innerText = `فعال (${lastSub.plan_type}) تا ${lastSub.end_date.replace(/-/g, '/')}`;
+                subBanner.style.display = 'block';
+                document.getElementById('opMonCurrentSubDetails').innerText = `طرح: ${lastSub.plan_type.toUpperCase()} | شروع: ${firstSub.start_date.replace(/-/g, '/')} | پایان آخرین قرارداد: ${lastSub.end_date.replace(/-/g, '/')}`;
+                btnFromEnd.style.display = 'inline-flex';
+            } else {
+                document.getElementById('opUserSubStatus').innerText = 'ندارد (غیرفعال)';
+                subBanner.style.display = 'none';
+                btnFromEnd.style.display = 'none';
+                setAdminMonMode('new');
+            }
+
+            // راه‌اندازی تقویم روزانه، فرم ماهانه و جدول اقساط
+            await initAdminDailyCalendar();
+            renderUserDailyHistory();
+            calculateAdminMonthly();
+            renderOperatorUserInstallments();
+        }
+
+        async function adjustUserWallet(direction) {
+            if (!opSelectedUser) return;
+            const amtInput = document.getElementById('opWalletDeltaInput');
+            const amt = parseInt(amtInput.value);
+            if (!amt || amt <= 0) {
+                showToast('لطفاً مبلغ معتبر وارد کنید.', 'warning');
+                return;
+            }
+            const delta = amt * direction;
+            const currentBal = Number(opSelectedUser.wallet_balance || 0);
+            const newBal = Math.max(0, currentBal + delta);
+
+            const ok = await askConfirm(
+                'تغییر موجودی کیف پول',
+                `موجودی فعلی ${opSelectedUser.full_name}: ${currentBal.toLocaleString()} تومان\nموجودی جدید پس از تغییر: ${newBal.toLocaleString()} تومان\nآیا تایید می‌کنید؟`
+            );
+            if (!ok) return;
+
+            const { error } = await supabaseClient.from('users').update({ wallet_balance: newBal }).eq('phone_number', opSelectedUser.phone_number);
+            if (error) {
+                showToast('خطا در تغییر موجودی کیف پول', 'error');
+                return;
+            }
+            amtInput.value = '';
+            showToast('موجودی کیف پول با موفقیت بروزرسانی شد.');
+            await selectOperatorUser(opSelectedUser.phone_number);
+            await fetchAllUsers();
+        }
+
+        // ==========================================
+        // 📅 ۱. منطق رزرو روزانه توسط ادمین
+        // ==========================================
+        async function initAdminDailyCalendar() {
+            opDailyWindow14 = [];
+            for (let i = 0; i < 14; i++) {
+                let d = new Date();
+                d.setDate(d.getDate() + i);
+                const parts = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).formatToParts(d);
+                let formattedDate = getShamsiDateDash(d);
+                opDailyWindow14.push({
+                    date: formattedDate,
+                    dayName: parts.find(p => p.type === 'weekday').value
+                });
+            }
+
+            const justDates = opDailyWindow14.map(d => d.date);
+            const { data: capData } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', justDates);
+            capacitiesData = {};
+            if (capData) {
+                capData.forEach(c => { capacitiesData[c.target_date] = c; });
+            }
+
+            opSelectedDailyDates = [];
+            opDailyPromo = null;
+            document.getElementById('opDailyPromoInput').value = '';
+            document.getElementById('opDailyManualDisc').value = '0';
+            renderAdminDailyCalendar();
+        }
+
+        function renderAdminDailyCalendar() {
+            const grid = document.getElementById('adminDailyCalGrid');
+            if (!grid) return;
+            const ignoreCap = document.getElementById('opDailyIgnoreCap')?.checked;
+
+            grid.innerHTML = opDailyWindow14.map(d => {
+                const capInfo = capacitiesData[d.date] || { available_capacity: 4 };
+                const avail = capInfo.available_capacity;
+                const isPastBooked = opUserPastDailyDates.includes(d.date);
+                const isSelected = opSelectedDailyDates.includes(d.date);
+
+                let cls = 'admin-cal-card';
+                let statusTxt = `ظرفیت: ${avail}`;
+                let clickAttr = '';
+
+                if (isPastBooked) {
+                    cls += ' past-booked';
+                    statusTxt = 'رزرو شده ✅';
+                } else if (avail <= 0 && !ignoreCap) {
+                    cls += ' full-cap';
+                    statusTxt = 'تکمیل ❌';
+                } else {
+                    if (avail <= 0) cls += ' full-cap';
+                    if (isSelected) cls += ' selected';
+                    clickAttr = `onclick="toggleAdminDailyDate('${d.date}')"`;
+                }
+
+                return `
+                    <div class="${cls}" ${clickAttr}>
+                        <div style="font-size: 12px; font-weight: bold; color: var(--text-main);">${d.dayName}</div>
+                        <div style="font-size: 13px; font-weight: 900; color: var(--primary); margin: 4px 0;">${d.date.replace(/-/g, '/').substring(5)}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">${statusTxt}</div>
+                    </div>
+                `;
+            }).join('');
+
+            updateAdminDailyPricing();
+        }
+
+        function toggleAdminDailyDate(dateStr) {
+            if (opSelectedDailyDates.includes(dateStr)) {
+                opSelectedDailyDates = opSelectedDailyDates.filter(d => d !== dateStr);
+            } else {
+                opSelectedDailyDates.push(dateStr);
+            }
+            renderAdminDailyCalendar();
+        }
+
+        async function applyAdminDailyPromo() {
+            const code = document.getElementById('opDailyPromoInput').value.trim().toUpperCase();
+            if (!code) return;
+            const { data: promo, error } = await supabaseClient.from('promos_codes').select('*').eq('code', code).eq('is_active', true).single();
+            if (error || !promo) {
+                showToast('کد تخفیف نامعتبر یا غیرفعال است.', 'error');
+                opDailyPromo = null;
+            } else if (promo.target_service !== 'all' && promo.target_service !== 'daily') {
+                showToast('این کد تخفیف مربوط به رزرو روزانه نیست.', 'warning');
+                opDailyPromo = null;
+            } else {
+                opDailyPromo = promo;
+                showToast(`کد تخفیف ${code} اعمال شد.`);
+            }
+            updateAdminDailyPricing();
+        }
+
+        function updateAdminDailyPricing() {
+            if (!opSelectedUser) return;
+            const activeBookedInWindow = opUserPastDailyDates.filter(pastDate =>
+                opDailyWindow14.some(w => w.date === pastDate)
+            ).length;
+
+            const newCount = opSelectedDailyDates.length;
+            const totalD = activeBookedInWindow + newCount;
+            const rate = (totalD === 0) ? 0 : (totalD >= 8 ? 150 : pricingTiers[totalD]);
+            let payable = (newCount * rate) * 1000;
+
+            let autoDiscNotes = [];
+            const isFirstEverDaily = (opUserPastDailyDates.length === 0);
+            if (isFirstEverDaily && newCount > 0) {
+                payable -= 50000;
+                autoDiscNotes.push('۵۰ هزار تومان هدیه اولین رزرو');
+            }
+            if (isFirstEverDaily && opSelectedUser.invited_by && newCount > 0) {
+                payable -= 20000;
+                autoDiscNotes.push('۲۰ هزار تومان هدیه کد معرف');
+            }
+
+            if (opDailyPromo && payable > 0) {
+                if (opDailyPromo.discount_type === 'percent') {
+                    payable -= payable * (opDailyPromo.discount_value / 100);
+                } else {
+                    payable -= opDailyPromo.discount_value;
+                }
+                autoDiscNotes.push(`کد تخفیف ${opDailyPromo.code}`);
+            }
+
+            const manualDisc = parseInt(document.getElementById('opDailyManualDisc')?.value || '0') || 0;
+            payable = Math.max(0, payable - manualDisc);
+
+            document.getElementById('opDailyPastCount').innerText = `${activeBookedInWindow} روز`;
+            document.getElementById('opDailyNewCount').innerText = `${newCount} روز`;
+            document.getElementById('opDailyRateTxt').innerText = `${rate} هزار تومان`;
+
+            const noticeRow = document.getElementById('opDailyDiscountNoticeRow');
+            if (autoDiscNotes.length > 0) {
+                noticeRow.style.display = 'flex';
+                document.getElementById('opDailyAutoDiscTxt').innerText = autoDiscNotes.join(' + ');
+            } else {
+                noticeRow.style.display = 'none';
+            }
+
+            document.getElementById('opDailyFinalInput').value = Math.round(payable);
+        }
+
+        async function submitAdminDailyBooking() {
+            if (!opSelectedUser) return;
+            if (opSelectedDailyDates.length === 0) {
+                showToast('لطفاً حداقل یک روز را از تقویم انتخاب کنید.', 'warning');
+                return;
+            }
+
+            const finalPay = parseInt(document.getElementById('opDailyFinalInput').value) || 0;
+            const payMethod = document.querySelector('input[name="opDailyPayMethod"]:checked')?.value || 'card';
+
+            if (payMethod === 'wallet' && Number(opSelectedUser.wallet_balance || 0) < finalPay) {
+                showToast('موجودی کیف پول دانش‌آموز کمتر از مبلغ نهایی است.', 'error');
+                return;
+            }
+
+            const sortedDates = [...opSelectedDailyDates].sort();
+            const ok = await askConfirm(
+                'تایید ثبت رزرو روزانه',
+                `دانش‌آموز: ${opSelectedUser.full_name} (${opSelectedUser.phone_number})\nروزهای انتخابی: ${sortedDates.map(d => d.replace(/-/g, '/')).join(' ، ')}\nمبلغ ثبت شده: ${finalPay.toLocaleString()} تومان\nروش پرداخت: ${payMethod === 'wallet' ? 'کسر از کیف پول' : 'کارت به کارت / دریافت شده توسط مدیریت'}`
+            );
+            if (!ok) return;
+
+            const btn = document.getElementById('btnSubmitAdminDaily');
+            btn.disabled = true;
+            btn.innerText = '⏳ در حال ثبت...';
+
+            try {
+                const { error: insErr } = await supabaseClient.from('pan_reservations').insert([{
+                    phone_number: opSelectedUser.phone_number,
+                    reserved_dates: JSON.stringify(sortedDates),
+                    paid_amount: finalPay,
+                    receipt_base64: null
+                }]);
+                if (insErr) throw insErr;
+
+                for (let dateStr of sortedDates) {
+                    let currentAvail = capacitiesData[dateStr]?.available_capacity ?? 4;
+                    let nextAvail = Math.max(0, currentAvail - 1);
+                    await supabaseClient.from('pan_daily_capacity').upsert({
+                        target_date: dateStr,
+                        available_capacity: nextAvail
+                    });
+                }
+
+                const isFirstEverDaily = (opUserPastDailyDates.length === 0);
+                if (isFirstEverDaily && opSelectedUser.invited_by) {
+                    await rewardReferrer(opSelectedUser.invited_by, 50000, `یکی از دوستان شما با کد معرف شما اولین رزرو روزانه خود را ثبت کرد. مبلغ ۵۰,۰۰۰ تومان به کیف پول شما اضافه شد!`);
+                }
+
+                if (payMethod === 'wallet' && finalPay > 0) {
+                    const nextWallet = Number(opSelectedUser.wallet_balance || 0) - finalPay;
+                    await supabaseClient.from('users').update({ wallet_balance: nextWallet }).eq('phone_number', opSelectedUser.phone_number);
+                }
+
+                if (opDailyPromo) {
+                    await supabaseClient.from('promos_codes').update({ used_count: (opDailyPromo.used_count || 0) + 1 }).eq('id', opDailyPromo.id);
+                }
+
+                showToast('✅ رزرو روزانه با موفقیت برای دانش‌آموز ثبت شد.');
+                await selectOperatorUser(opSelectedUser.phone_number);
+                loadReservations();
+                loadCapacities();
+            } catch (e) {
+                console.error(e);
+                showToast('خطا در ثبت رزرو روزانه: ' + (e.message || ''), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '✅ ثبت نهایی رزرو روزانه';
+            }
+        }
+
+        function renderUserDailyHistory() {
+            const box = document.getElementById('opUserDailyHistory');
+            if (!opUserDailyRecords || opUserDailyRecords.length === 0) {
+                box.innerHTML = 'این دانش‌آموز تاکنون رزرو روزانه‌ای نداشته است.';
+                return;
+            }
+            box.innerHTML = opUserDailyRecords.map(r => {
+                let dArr = r.reserved_dates;
+                try { if (typeof dArr === 'string') dArr = JSON.parse(dArr); } catch(e) {}
+                const dTxt = Array.isArray(dArr) ? dArr.map(d => d.replace(/-/g, '/')).join(' ، ') : '-';
+                return `<div style="padding: 8px 12px; background: var(--surface-light); border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📅 روزها: <strong style="color: var(--primary);">${dTxt}</strong></span>
+                    <span>💰 مبلغ: <strong>${Number(r.paid_amount || 0).toLocaleString()} تومان</strong></span>
+                </div>`;
+            }).join('');
+        }
+
+        // ==========================================
+        // 💎 ۲. منطق ثبت‌نام و تمدید ماهانه توسط ادمین
+        // ==========================================
+        function setAdminMonMode(mode) {
+            opMonState.mode = mode;
+            document.getElementById('opMonModeNew').classList.toggle('active', mode === 'new');
+            document.getElementById('opMonModeRenew').classList.toggle('active', mode === 'renew');
+
+            if (mode === 'renew' && opUserActiveSubs.length > 0) {
+                const lastSub = opUserActiveSubs[opUserActiveSubs.length - 1];
+                const sel = document.getElementById('opMonPlanSelect');
+                if ([...sel.options].some(o => o.value === lastSub.plan_type)) {
+                    sel.value = lastSub.plan_type;
+                    onAdminMonPlanChange();
+                }
+                const todayDash = getShamsiDateDash(new Date());
+                document.getElementById('opMonStartDateInput').value = (lastSub.end_date >= todayDash) ? lastSub.end_date : todayDash;
+                document.getElementById('opMonDecreaseCap').checked = false;
+            } else {
+                document.getElementById('opMonStartDateInput').value = getShamsiDateDash(new Date());
+                document.getElementById('opMonDecreaseCap').checked = true;
+            }
+            calculateAdminMonthly();
+        }
+
+        function onAdminMonPlanChange() {
+            const sel = document.getElementById('opMonPlanSelect');
+            const opt = sel.options[sel.selectedIndex];
+            if (opt) {
+                opMonState.planType = opt.value;
+                opMonState.basePrice = Number(opt.getAttribute('data-price') || 3600000);
+                document.getElementById('opMonBasePriceInput').value = opMonState.basePrice;
+                calculateAdminMonthly();
+            }
+        }
+
+        function setQuickMonStart(offsetDays) {
+            let d = new Date();
+            d.setDate(d.getDate() + offsetDays);
+            document.getElementById('opMonStartDateInput').value = getShamsiDateDash(d);
+            calculateAdminMonthly();
+        }
+
+        function setQuickMonStartFromEnd() {
+            if (opUserActiveSubs.length > 0) {
+                const lastSub = opUserActiveSubs[opUserActiveSubs.length - 1];
+                document.getElementById('opMonStartDateInput').value = lastSub.end_date;
+                calculateAdminMonthly();
+            }
+        }
+
+        function setAdminMonDur(dur) {
+            opMonState.duration = dur;
+            [1, 3, 6, 9].forEach(d => {
+                document.getElementById('opDur' + d).classList.toggle('active', d === dur);
+            });
+            calculateAdminMonthly();
+        }
+
+        function setAdminMonPayPlan(plan) {
+            opMonState.payPlan = plan;
+            document.getElementById('opPlanCash').classList.toggle('active', plan === 'cash');
+            document.getElementById('opPlanInst').classList.toggle('active', plan === 'monthly');
+            calculateAdminMonthly();
+        }
+
+        async function applyAdminMonPromo() {
+            const code = document.getElementById('opMonPromoInput').value.trim().toUpperCase();
+            if (!code) return;
+            const { data: promo, error } = await supabaseClient.from('promos_codes').select('*').eq('code', code).eq('is_active', true).single();
+            if (error || !promo) {
+                showToast('کد تخفیف نامعتبر یا غیرفعال است.', 'error');
+                opMonState.promo = null;
+            } else if (promo.target_service !== 'all' && promo.target_service !== 'monthly') {
+                showToast('این کد تخفیف برای اشتراک ماهانه معتبر نیست.', 'warning');
+                opMonState.promo = null;
+            } else {
+                opMonState.promo = promo;
+                showToast(`کد تخفیف ${code} اعمال شد.`);
+            }
+            calculateAdminMonthly();
+        }
+
+        function calculateAdminMonthly() {
+            const duration = parseInt(opMonState.duration) || 1;
+            const basePrice = parseInt(document.getElementById('opMonBasePriceInput').value) || 0;
+            const startDate = (document.getElementById('opMonStartDateInput').value || getShamsiDateDash(new Date())).replace(/\//g, '-');
+            const endDate = calcSimpleShamsi(startDate, duration, -1);
+
+            document.getElementById('opMonDateRangeTxt').innerText = `${startDate.replace(/-/g, '/')}  تا  ${endDate.replace(/-/g, '/')}`;
+
+            const totalBase = basePrice * duration;
+            let finalPrice = totalBase;
+
+            let timeDiscountRate = 0;
+            if (duration === 9) timeDiscountRate = opMonState.payPlan === 'cash' ? 0.15 : 0.08;
+            else if (duration === 6) timeDiscountRate = opMonState.payPlan === 'cash' ? 0.10 : 0.06;
+            else if (duration === 3) timeDiscountRate = opMonState.payPlan === 'cash' ? 0.05 : 0.03;
+
+            const timeDisc = totalBase * timeDiscountRate;
+            finalPrice -= timeDisc;
+
+            // هدیه اولین ثبت‌نام ماهانه با معرف
+            let refDisc = 0;
+            if (opSelectedUser && opUserAllSubsCount === 0 && opSelectedUser.invited_by && opMonState.mode === 'new') {
+                refDisc = 100000;
+                finalPrice -= refDisc;
+            }
+
+            // کد تخفیف
+            let promoDisc = 0;
+            if (opMonState.promo && finalPrice > 0) {
+                if (opMonState.promo.discount_type === 'percent') {
+                    promoDisc = finalPrice * (opMonState.promo.discount_value / 100);
+                } else {
+                    promoDisc = opMonState.promo.discount_value;
+                }
+                finalPrice -= promoDisc;
+            }
+
+            // تخفیف دستی ادمین
+            const manualDisc = parseInt(document.getElementById('opMonManualDisc')?.value || '0') || 0;
+            finalPrice = Math.max(0, finalPrice - manualDisc);
+
+            // گرد کردن مضرب ۵۰ هزار تومان مشابه اپ
+            finalPrice = Math.round(finalPrice / 50000) * 50000;
+            const totalDiscount = totalBase - finalPrice;
+
+            document.getElementById('opMonTotalBaseTxt').innerText = `${totalBase.toLocaleString()} تومان`;
+            document.getElementById('opMonAutoDiscTxt').innerText = `${totalDiscount.toLocaleString()} تومان`;
+            document.getElementById('opMonFinalPriceInput').value = finalPrice;
+
+            buildAdminInstallmentsSchedule(finalPrice, startDate, duration);
+        }
+
+        function recalcAdminInstallmentsFromFinal() {
+            const finalPrice = parseInt(document.getElementById('opMonFinalPriceInput').value) || 0;
+            const startDate = (document.getElementById('opMonStartDateInput').value || getShamsiDateDash(new Date())).replace(/\//g, '-');
+            buildAdminInstallmentsSchedule(finalPrice, startDate, opMonState.duration);
+        }
+
+        function recalcAdminInstallmentsFromUpfront() {
+            const finalPrice = parseInt(document.getElementById('opMonFinalPriceInput').value) || 0;
+            const upfront = parseInt(document.getElementById('opMonUpfrontInput').value) || 0;
+            const remaining = Math.max(0, finalPrice - upfront);
+            if (opMonState.payPlan === 'monthly' && opMonState.installments.length > 0) {
+                const count = opMonState.installments.length;
+                const perInst = Math.round((remaining / count) / 50000) * 50000;
+                opMonState.installments.forEach((inst, idx) => {
+                    if (idx === count - 1) {
+                        inst.amount = Math.max(0, remaining - perInst * (count - 1));
+                    } else {
+                        inst.amount = perInst;
+                    }
+                });
+                renderAdminMonInstallmentRows();
+            }
+        }
+
+        function buildAdminInstallmentsSchedule(finalPrice, baseDate, duration) {
+            opMonState.installments = [];
+            const instBox = document.getElementById('opMonInstallmentsBox');
+
+            if (opMonState.payPlan === 'monthly') {
+                instBox.style.display = 'block';
+                if (duration === 1) {
+                    let upfront = Math.ceil((finalPrice * 0.50) / 50000) * 50000;
+                    let rem = Math.max(0, finalPrice - upfront);
+                    document.getElementById('opMonUpfrontInput').value = upfront;
+                    opMonState.installments.push({ installment_number: 1, due_date: calcSimpleShamsi(baseDate, 0, 10), amount: rem });
+                } else if (duration === 3) {
+                    let upfront = Math.ceil((finalPrice * 0.50) / 50000) * 50000;
+                    let rem = Math.max(0, finalPrice - upfront);
+                    document.getElementById('opMonUpfrontInput').value = upfront;
+                    opMonState.installments.push({ installment_number: 1, due_date: calcSimpleShamsi(baseDate, 1, 0), amount: rem });
+                } else if (duration === 6) {
+                    let upfront = Math.ceil((finalPrice * 0.25) / 50000) * 50000;
+                    let checkAmt = Math.round((finalPrice * 0.25) / 50000) * 50000;
+                    let lastAmt = Math.max(0, finalPrice - upfront - (checkAmt * 2));
+                    document.getElementById('opMonUpfrontInput').value = upfront;
+                    opMonState.installments.push({ installment_number: 1, due_date: calcSimpleShamsi(baseDate, 1, 0), amount: checkAmt });
+                    opMonState.installments.push({ installment_number: 2, due_date: calcSimpleShamsi(baseDate, 2, 0), amount: checkAmt });
+                    opMonState.installments.push({ installment_number: 3, due_date: calcSimpleShamsi(baseDate, 4, 0), amount: lastAmt });
+                } else if (duration === 9) {
+                    let upfront = Math.ceil((finalPrice * 0.20) / 50000) * 50000;
+                    let checkAmt = Math.round((finalPrice * 0.20) / 50000) * 50000;
+                    let lastAmt = Math.max(0, finalPrice - upfront - (checkAmt * 3));
+                    document.getElementById('opMonUpfrontInput').value = upfront;
+                    opMonState.installments.push({ installment_number: 1, due_date: calcSimpleShamsi(baseDate, 1, 0), amount: checkAmt });
+                    opMonState.installments.push({ installment_number: 2, due_date: calcSimpleShamsi(baseDate, 2, 0), amount: checkAmt });
+                    opMonState.installments.push({ installment_number: 3, due_date: calcSimpleShamsi(baseDate, 4, 0), amount: checkAmt });
+                    opMonState.installments.push({ installment_number: 4, due_date: calcSimpleShamsi(baseDate, 6, 0), amount: lastAmt });
+                }
+                renderAdminMonInstallmentRows();
+            } else {
+                instBox.style.display = 'none';
+                document.getElementById('opMonUpfrontInput').value = finalPrice;
+            }
+        }
+
+        function renderAdminMonInstallmentRows() {
+            const container = document.getElementById('opMonInstRowsContainer');
+            container.innerHTML = opMonState.installments.map((inst, idx) => `
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 12px; width: 70px;">قسط ${inst.installment_number}:</span>
+                    <input type="text" class="cap-input" style="width: 140px; margin: 0; font-size: 12px; direction: ltr;" value="${inst.due_date}" onchange="opMonState.installments[${idx}].due_date = this.value">
+                    <input type="number" class="cap-input" style="width: 160px; margin: 0; font-size: 12px;" value="${inst.amount}" step="50000" onchange="opMonState.installments[${idx}].amount = parseInt(this.value) || 0">
+                    <span style="font-size: 11px; color: var(--text-muted);">تومان</span>
+                </div>
+            `).join('');
+        }
+
+        async function submitAdminMonthlyBooking() {
+            if (!opSelectedUser) return;
+            const duration = parseInt(opMonState.duration) || 1;
+            const basePrice = parseInt(document.getElementById('opMonBasePriceInput').value) || 0;
+            const totalBase = basePrice * duration;
+            const finalPrice = parseInt(document.getElementById('opMonFinalPriceInput').value) || 0;
+            const upfront = parseInt(document.getElementById('opMonUpfrontInput').value) || 0;
+            const totalDisc = Math.max(0, totalBase - finalPrice);
+            const startDate = (document.getElementById('opMonStartDateInput').value || getShamsiDateDash(new Date())).replace(/\//g, '-');
+            const endDate = calcSimpleShamsi(startDate, duration, -1);
+            const planType = document.getElementById('opMonPlanSelect').value;
+            const paySource = document.querySelector('input[name="opMonPaySource"]:checked')?.value || 'card';
+            const decCap = document.getElementById('opMonDecreaseCap').checked;
+
+            if (paySource === 'wallet' && Number(opSelectedUser.wallet_balance || 0) < upfront) {
+                showToast('موجودی کیف پول دانش‌آموز برای کسر پیش‌پرداخت کافی نیست.', 'error');
+                return;
+            }
+
+            const modeFa = opMonState.mode === 'new' ? 'ثبت‌‌نام ماهانه' : 'تمدید ماهانه';
+            const ok = await askConfirm(
+                `تایید ${modeFa}`,
+                `دانش‌آموز: ${opSelectedUser.full_name} (${opSelectedUser.phone_number})\nطرح: ${planType} (${duration} ماهه)\nبازه: ${startDate.replace(/-/g, '/')} تا ${endDate.replace(/-/g, '/')}\nمبلغ کل نهایی: ${finalPrice.toLocaleString()} تومان\nپیش‌پرداخت فعلی: ${upfront.toLocaleString()} تومان\nتعداد اقساط بعدی: ${opMonState.installments.length} قسط`
+            );
+            if (!ok) return;
+
+            try {
+                const invDetails = `طرح: ${planType} | مدت: ${duration} ماه | شروع: ${startDate} (ثبت توسط ادمین)`;
+                const payMethodDB = paySource === 'wallet' ? 'wallet' : (opMonState.payPlan === 'cash' ? 'cash' : 'monthly');
+
+                const { data: invData, error: invError } = await supabaseClient.from('pan_invoices').insert([{
+                    phone_number: opSelectedUser.phone_number,
+                    invoice_type: modeFa,
+                    total_amount: totalBase,
+                    discount_amount: totalDisc,
+                    final_amount: finalPrice,
+                    paid_upfront: upfront,
+                    payment_method: payMethodDB,
+                    status: 'approved',
+                    details_text: invDetails
+                }]).select('id').single();
+                if (invError) throw invError;
+
+                const { error: subError } = await supabaseClient.from('pan_monthly_subs').insert([{
+                    invoice_id: invData.id,
+                    phone_number: opSelectedUser.phone_number,
+                    plan_type: planType,
+                    start_date: startDate,
+                    end_date: endDate,
+                    status: 'active'
+                }]);
+                if (subError) throw subError;
+
+                if (opMonState.payPlan === 'monthly' && opMonState.installments.length > 0) {
+                    const instInserts = opMonState.installments.map(inst => ({
+                        invoice_id: invData.id,
+                        phone_number: opSelectedUser.phone_number,
+                        amount: inst.amount,
+                        due_date: inst.due_date.replace(/\//g, '-'),
+                        installment_number: inst.installment_number,
+                        status: 'pending_upload'
+                    }));
+                    const { error: instErr } = await supabaseClient.from('pan_installments').insert(instInserts);
+                    if (instErr) throw instErr;
+                }
+
+                if (opUserAllSubsCount === 0 && opSelectedUser.invited_by && opMonState.mode === 'new') {
+                    await rewardReferrer(
+                        opSelectedUser.invited_by,
+                        150000,
+                        `یکی از دوستان شما با کد معرف شما اولین رزرو ماهانه خود را ثبت کرد. مبلغ ۱۵۰,۰۰۰ تومان به کیف پول شما اضافه شد!`
+                    );
+                }
+
+                if (paySource === 'wallet' && upfront > 0) {
+                    const nextBal = Number(opSelectedUser.wallet_balance || 0) - upfront;
+                    await supabaseClient.from('users').update({ wallet_balance: nextBal }).eq('phone_number', opSelectedUser.phone_number);
+                }
+
+                if (decCap && opMonState.mode === 'new') {
+                    const { data: srv } = await supabaseClient.from('services').select('capacity').eq('type', planType).single();
+                    if (srv && srv.capacity > 0) {
+                        await supabaseClient.from('services').update({ capacity: srv.capacity - 1 }).eq('type', planType);
+                    }
+                }
+
+                if (opMonState.promo) {
+                    await supabaseClient.from('promos_codes').update({ used_count: (opMonState.promo.used_count || 0) + 1 }).eq('id', opMonState.promo.id);
+                }
+
+                showToast(`✅ ${modeFa} با موفقیت برای ${opSelectedUser.full_name} ثبت شد.`);
+                await fetchPansionServices();
+                await selectOperatorUser(opSelectedUser.phone_number);
+                loadMonthlyData();
+            } catch (e) {
+                console.error(e);
+                showToast('خطا در ثبت قرارداد ماهانه: ' + (e.message || ''), 'error');
+            }
+        }
+
+        // ==========================================
+        // 🧾 ۳. منطق پرداخت و مدیریت اقساط توسط ادمین
+        // ==========================================
+        function renderOperatorUserInstallments() {
+            const tbody = document.getElementById('opUserInstallmentsList');
+            const badge = document.getElementById('opInstCountBadge');
+            const unpaidCount = opUserInstallments.filter(i => i.status !== 'paid' && i.status !== 'approved' && i.status !== 'canceled').length;
+
+            if (unpaidCount > 0) {
+                badge.style.display = 'inline-block';
+                badge.innerText = unpaidCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            if (!opUserInstallments || opUserInstallments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">هیچ قسطی برای این دانش‌آموز ثبت نشده است.</td></tr>';
+                return;
+            }
+
+            const todayDash = getShamsiDateDash(new Date());
+            tbody.innerHTML = opUserInstallments.map(inst => {
+                const isPaid = inst.status === 'paid' || inst.status === 'approved';
+                const isCanceled = inst.status === 'canceled';
+                const isOverdue = !isPaid && !isCanceled && inst.due_date < todayDash;
+
+                let statusHtml = '';
+                if (isPaid) statusHtml = '<span class="badge badge-approved">پرداخت شده ✅</span>';
+                else if (isCanceled) statusHtml = '<span class="badge badge-blocked">لغو شده</span>';
+                else if (isOverdue) statusHtml = '<span class="badge badge-blocked">سررسید گذشته ⚠️</span>';
+                else statusHtml = '<span class="badge badge-pending">در انتظار پرداخت</span>';
+
+                let actionsHtml = '---';
+                if (!isPaid && !isCanceled) {
+                    actionsHtml = `
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="action-btn btn-approve-sm" onclick="payInstallmentByAdmin('${inst.id}', '${inst.phone_number}', ${inst.amount}, 'card')">💳 تسویه (کارت به کارت)</button>
+                            <button class="action-btn btn-primary-sm" onclick="payInstallmentByAdmin('${inst.id}', '${inst.phone_number}', ${inst.amount}, 'wallet')">👛 کسر از کیف پول</button>
+                            <button class="action-btn btn-block-sm" onclick="cancelSingleInstallment('${inst.id}')">🗑️ لغو قسط</button>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <tr>
+                        <td style="font-weight: bold;">قسط شماره ${inst.installment_number}</td>
+                        <td style="direction: ltr; text-align: right;">${inst.due_date.replace(/-/g, '/')}</td>
+                        <td style="font-weight: bold; color: var(--text-main);">${Number(inst.amount || 0).toLocaleString()}</td>
+                        <td>${statusHtml}</td>
+                        <td>${actionsHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function payInstallmentByAdmin(instId, phone, amount, method) {
+            const userName = usersDict[phone] || phone;
+            if (method === 'wallet') {
+                const { data: uData } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
+                const wBal = Number(uData?.wallet_balance || 0);
+                if (wBal < amount) {
+                    showToast(`موجودی کیف پول (${wBal.toLocaleString()} تومان) کمتر از مبلغ قسط است.`, 'error');
+                    return;
+                }
+            }
+
+            const methodFa = method === 'wallet' ? 'کسر از کیف پول دانش‌آموز' : 'کارت به کارت / دریافت مستقیم توسط مدیریت';
+            const ok = await askConfirm(
+                'تایید تسویه قسط',
+                `دانش‌آموز: ${userName}\nمبلغ قسط: ${Number(amount).toLocaleString()} تومان\nروش تسویه: ${methodFa}\nآیا قسط به وضعیت «پرداخت شده» تغییر کند؟`
+            );
+            if (!ok) return;
+
+            try {
+                if (method === 'wallet') {
+                    const { data: uData } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
+                    const newBal = Math.max(0, Number(uData?.wallet_balance || 0) - Number(amount));
+                    const { error: wErr } = await supabaseClient.from('users').update({ wallet_balance: newBal }).eq('phone_number', phone);
+                    if (wErr) throw wErr;
+                }
+
+                const { error } = await supabaseClient.from('pan_installments').update({ status: 'paid' }).eq('id', instId);
+                if (error) throw error;
+
+                showToast('✅ قسط با موفقیت تسویه شد.');
+                if (opSelectedUser && opSelectedUser.phone_number === phone) {
+                    await selectOperatorUser(phone);
+                }
+                loadMonthlyData();
+                fetchAllUsers();
+            } catch (e) {
+                console.error(e);
+                showToast('خطا در تسویه قسط', 'error');
+            }
+        }
+
+        async function cancelSingleInstallment(instId) {
+            const ok = await askConfirm('لغو قسط', 'آیا از لغو کردن این قسط مطمئن هستید؟');
+            if (!ok) return;
+            const { error } = await supabaseClient.from('pan_installments').update({ status: 'canceled' }).eq('id', instId);
+            if (error) {
+                showToast('خطا در لغو قسط', 'error');
+                return;
+            }
+            showToast('قسط لغو شد.');
+            if (opSelectedUser) await selectOperatorUser(opSelectedUser.phone_number);
+            loadMonthlyData();
+        }
+
+        async function createManualInstallmentForUser() {
+            if (!opSelectedUser) return;
+            const num = parseInt(document.getElementById('newManualInstNum').value) || 1;
+            const due = document.getElementById('newManualInstDate').value.trim().replace(/\//g, '-');
+            const amt = parseInt(document.getElementById('newManualInstAmount').value) || 0;
+
+            if (!due || amt <= 0) {
+                showToast('لطفاً تاریخ سررسید و مبلغ قسط را وارد کنید.', 'warning');
+                return;
+            }
+
+            let targetInvoiceId = opUserActiveSubs.length > 0 ? opUserActiveSubs[opUserActiveSubs.length - 1].invoice_id : null;
+
+            const { error } = await supabaseClient.from('pan_installments').insert([{
+                invoice_id: targetInvoiceId,
+                phone_number: opSelectedUser.phone_number,
+                installment_number: num,
+                due_date: due,
+                amount: amt,
+                status: 'pending_upload'
+            }]);
+
+            if (error) {
+                showToast('خطا در ثبت قسط جدید: ' + error.message, 'error');
+                return;
+            }
+
+            showToast('✅ قسط جدید برای دانش‌آموز ثبت شد.');
+            document.getElementById('newManualInstAmount').value = '';
+            await selectOperatorUser(opSelectedUser.phone_number);
+            loadMonthlyData();
         }
 
         // =======================
@@ -420,7 +1759,7 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
         }
 
         function getStatusBadge(status) {
@@ -431,13 +1770,6 @@
                 case 'blocked': return '<span class="badge badge-blocked">مسدود شده</span>';
                 default: return `<span class="badge badge-pending">${status}</span>`;
             }
-        }
-
-        function getShamsiDate(dateObj) {
-            const parts = new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(dateObj);
-            let y, m, d;
-            for (let p of parts) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') d = p.value; }
-            return `${y}/${m}/${d}`;
         }
 
         // =======================
@@ -453,10 +1785,11 @@
             let dbDates = dates14.map(d => d.replace(/\//g, '-'));
             const { data } = await supabaseClient.from('pan_daily_capacity').select('*').in('target_date', dbDates);
             
-            data?.forEach(d => { capacitiesData[d.target_date.replace(/-/g, '/')] = d; });
+            let capMap = {};
+            data?.forEach(d => { capMap[d.target_date.replace(/-/g, '/')] = d; });
 
             document.getElementById('capacityGrid').innerHTML = dates14.map(date => {
-                let available = capacitiesData[date]?.available_capacity ?? 4; 
+                let available = capMap[date]?.available_capacity ?? 4; 
                 return `
                     <div class="cap-card">
                         <div class="cap-date">${date}</div>
@@ -478,17 +1811,16 @@
                     available_capacity: parseInt(inputVal)
                 });
             }
-            const btn = document.querySelector('.btn-blue');
+            const btn = document.getElementById('btnSaveCaps');
             btn.innerHTML = '⏳ در حال ذخیره...';
             const { error } = await supabaseClient.from('pan_daily_capacity').upsert(updates);
             btn.innerHTML = '💾 ذخیره تغییرات';
-            if(error) alert('خطا در ذخیره:\n' + error.message); 
-            else alert('✅ ظرفیت‌ها با موفقیت ذخیره شدند.');
+            if(error) showToast('خطا در ذخیره: ' + error.message, 'error'); 
+            else showToast('✅ ظرفیت‌ها با موفقیت ذخیره شدند.');
             loadCapacities();
         }
 
         async function loadReservations() {
-            // حذف جوین با pan_users و استفاده از usersDict
             const { data } = await supabaseClient.from('pan_reservations').select('*').order('created_at', {ascending: false}).limit(50);
             const list = document.getElementById('reservationsList');
             if(!data || data.length === 0) { list.innerHTML = '<div style="background:var(--surface-light); padding:20px; border-radius:10px; text-align:center; color:var(--text-muted);">هنوز رزروی ثبت نشده است.</div>'; return; }
@@ -505,8 +1837,8 @@
                         <div style="margin-top:8px; font-size: 14px;">📅 روزهای رزرو: <span style="color:var(--primary); font-weight:bold;">${datesStr}</span></div>
                         <div style="font-size: 14px;">💰 پرداختی: <span style="color:var(--text-main);">${(r.paid_amount || 0).toLocaleString()} تومان</span></div>
                     </div>
-                    <div style="background: rgba(16, 185, 129, 0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                        <span style="color:var(--success); font-size:13px; font-weight:bold;">✅ فیش در بله</span>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button class="action-btn btn-primary-sm" onclick="openUserInOperator('${r.phone_number}', 'op-sub-daily')">⚡ رزرو جدید برای این شخص</button>
                     </div>
                 </div>
                 `;
@@ -544,26 +1876,30 @@
         }
 
         async function approveWithdraw(id) {
-            if(!confirm('آیا وجه به حساب شخص واریز شده است؟')) return;
+            const ok = await askConfirm('تایید واریز وجه', 'آیا وجه به حساب شخص واریز شده است؟');
+            if(!ok) return;
             await supabaseClient.from('withdraw_requests').update({ status: 'approved' }).eq('id', id);
+            showToast('درخواست برداشت تایید شد.');
             loadWithdraws();
         }
 
         async function rejectWithdraw(id, phone, amount) {
-            if(!confirm('آیا از رد درخواست مطمئنید؟ مبلغ به کیف پول کاربر برمی‌گردد.')) return;
+            const ok = await askConfirm('رد درخواست برداشت', 'آیا از رد درخواست مطمئنید؟ مبلغ به کیف پول کاربر برمی‌گردد.');
+            if(!ok) return;
             const { data: user } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
             const newBal = Number(user?.wallet_balance || 0) + amount;
             await supabaseClient.from('users').update({ wallet_balance: newBal }).eq('phone_number', phone);
             await supabaseClient.from('withdraw_requests').update({ status: 'rejected' }).eq('id', id);
+            showToast('درخواست رد شد و مبلغ به کیف پول برگشت.');
             loadWithdraws();
         }
 
         // =======================
-        // مانیتورینگ اقساط و ماهانه
+        // مانیتورینگ اقساط و ماهانه (همراه با دکمه‌های عملیات سریع)
         // =======================
         async function loadMonthlyData() {
             const { data: subs } = await supabaseClient.from('pan_monthly_subs').select('*').eq('status', 'active').order('end_date', {ascending: true});
-            const { data: insts } = await supabaseClient.from('pan_installments').select('*').neq('status', 'paid').order('due_date', {ascending: true});
+            const { data: insts } = await supabaseClient.from('pan_installments').select('*').neq('status', 'paid').neq('status', 'canceled').order('due_date', {ascending: true});
             
             let today = getShamsiDate(new Date()).replace(/\//g, '-');
 
@@ -581,7 +1917,10 @@
                         <td>${s.plan_type}</td>
                         <td>${s.start_date.replace(/-/g, '/')}</td>
                         <td>${s.end_date.replace(/-/g, '/')} ${isExpiring ? '⚠️' : ''}</td>
-                        <td>فعال</td>
+                        <td><span class="badge badge-approved">فعال</span></td>
+                        <td>
+                            <button class="action-btn btn-amber-sm" onclick="openUserInOperator('${s.phone_number}', 'op-sub-monthly')">🔄 تمدید / مدیریت اشتراک</button>
+                        </td>
                     </tr>`;
                 }).join('');
             }
@@ -601,6 +1940,10 @@
                         <td style="direction:ltr; text-align:right;">${i.due_date.replace(/-/g, '/')} ${isPastDue ? '⚠️' : ''}</td>
                         <td style="font-weight:bold;">${Number(i.amount).toLocaleString()}</td>
                         <td><span class="badge badge-pending">${i.status}</span></td>
+                        <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button class="action-btn btn-approve-sm" onclick="payInstallmentByAdmin('${i.id}', '${i.phone_number}', ${i.amount}, 'card')">💳 ثبت پرداخت (کارت)</button>
+                            <button class="action-btn btn-primary-sm" onclick="payInstallmentByAdmin('${i.id}', '${i.phone_number}', ${i.amount}, 'wallet')">👛 کسر از کیف پول</button>
+                        </td>
                     </tr>`;
                 }).join('');
             }
@@ -618,8 +1961,6 @@
                 let valText = p.discount_type === 'percent' ? `${p.discount_value} درصد` : `${Number(p.discount_value).toLocaleString()} تومان`;
                 let targetText = p.target_service === 'all' ? 'همه' : (p.target_service === 'daily' ? 'روزانه' : 'ماهانه');
                 let statusBadge = p.is_active ? '<span class="badge badge-approved">فعال</span>' : '<span class="badge badge-blocked">غیرفعال</span>';
-                
-                // تبدیل تاریخ انقضا به شمسی
                 let expireText = p.valid_until ? getShamsiDate(new Date(p.valid_until)) : '<span style="color:var(--text-muted)">بدون انقضا</span>';
                 
                 return `<tr>
@@ -647,10 +1988,9 @@
             const cap = document.getElementById('newPromoCap').value;
             const validUntil = document.getElementById('newPromoValidUntil').value;
 
-            if(!code || !val) return alert('کد و مبلغ/درصد الزامی است.');
+            if(!code || !val) return showToast('کد و مبلغ/درصد الزامی است.', 'warning');
             
-            // نمایش حالت لودینگ روی دکمه
-            const btn = document.querySelector('#tab-promos .btn-blue');
+            const btn = document.getElementById('btnCreatePromo');
             btn.innerHTML = '⏳ در حال ساخت...';
 
             const payload = {
@@ -661,21 +2001,19 @@
                 max_uses: cap ? parseInt(cap) : null,
                 used_count: 0,
                 is_active: true,
-                valid_from: new Date().toISOString(), // این خط مشکل ارور 400 را حل می‌کند
-                valid_until: validUntil ? new Date(validUntil).toISOString() : null // اضافه شدن تاریخ انقضا
+                valid_from: new Date().toISOString(),
+                valid_until: validUntil ? new Date(validUntil).toISOString() : null
             };
 
             const { error } = await supabaseClient.from('promos_codes').insert([payload]);
-            
             btn.innerHTML = '➕ ساخت کد';
 
             if(error) {
                 console.error(error);
-                return alert('خطا در ارتباط با دیتابیس: ' + error.message);
+                return showToast('خطا در ارتباط با دیتابیس: ' + error.message, 'error');
             }
             
-            alert('✅ کد تخفیف با موفقیت ساخته شد.');
-            // ریست کردن فرم
+            showToast('✅ کد تخفیف با موفقیت ساخته شد.');
             document.getElementById('newPromoCode').value = '';
             document.getElementById('newPromoVal').value = '';
             document.getElementById('newPromoValidUntil').value = '';
@@ -731,32 +2069,31 @@
         }
 
         async function approveCancellation(id, phone, refundAmount) {
-            if(!confirm(`آیا از تایید این درخواست و شارژ مبلغ ${Number(refundAmount).toLocaleString()} تومان به کیف پول کاربر مطمئن هستید؟\n\nقراردادهای ماهانه فعال و اقساط پرداخت نشده این کاربر نیز لغو خواهند شد.`)) return;
+            const ok = await askConfirm(
+                'تایید لغو قرارداد',
+                `آیا از تایید این درخواست و شارژ مبلغ ${Number(refundAmount).toLocaleString()} تومان به کیف پول کاربر مطمئن هستید؟\nقراردادهای ماهانه فعال و اقساط پرداخت نشده این کاربر نیز لغو خواهند شد.`
+            );
+            if(!ok) return;
 
-            // نمایش حالت لودینگ کلی
             document.body.style.cursor = 'wait';
 
             try {
-                // ۱. شارژ کیف پول کاربر
                 if (refundAmount > 0) {
                     const { data: user } = await supabaseClient.from('users').select('wallet_balance').eq('phone_number', phone).single();
                     const newBalance = Number(user?.wallet_balance || 0) + Number(refundAmount);
                     await supabaseClient.from('users').update({ wallet_balance: newBalance }).eq('phone_number', phone);
                 }
 
-                // ۲. تغییر وضعیت قرارداد ماهانه کاربر به لغو شده
                 await supabaseClient.from('pan_monthly_subs')
                     .update({ status: 'canceled' })
                     .eq('phone_number', phone)
                     .eq('status', 'active');
 
-                // ۳. لغو اقساط پرداخت نشده کاربر
                 await supabaseClient.from('pan_installments')
                     .update({ status: 'canceled' })
                     .eq('phone_number', phone)
                     .eq('status', 'pending_upload');
 
-                // ۴. ثبت پیام برای کاربر
                 await supabaseClient.from('messages').insert([{
                     phone_number: phone, 
                     title: '✅ تایید درخواست لغو قرارداد',
@@ -765,33 +2102,28 @@
                     created_at: new Date().toISOString()
                 }]);
 
-                // ۵. تغییر وضعیت درخواست لغو به تایید شده
                 await supabaseClient.from('cancellation_requests').update({ status: 'approved' }).eq('id', id);
 
-                alert('✅ درخواست لغو با موفقیت تایید، قرارداد و اقساط لغو و کیف پول کاربر شارژ شد.');
-                
-                // به‌روزرسانی تب‌های مرتبط در پنل ادمین
+                showToast('✅ درخواست لغو با موفقیت تایید و کیف پول کاربر شارژ شد.');
                 loadCancellations();
-                loadMonthlyData(); // برای به‌روزرسانی لیست اقساط و قراردادها
-                
+                loadMonthlyData();
             } catch (error) {
                 console.error("خطا در فرآیند تایید لغو:", error);
-                alert("خطا در تایید درخواست. لطفاً دوباره تلاش کنید.");
+                showToast("خطا در تایید درخواست.", "error");
             } finally {
                 document.body.style.cursor = 'default';
             }
         }
 
         async function rejectCancellation(id, phone) {
-            if(!confirm('آیا از رد کردن این درخواست لغو مطمئن هستید؟')) return;
+            const ok = await askConfirm('رد درخواست لغو قرارداد', 'آیا از رد کردن این درخواست لغو مطمئن هستید؟');
+            if(!ok) return;
 
             document.body.style.cursor = 'wait';
 
             try {
-                // ۱. تغییر وضعیت درخواست لغو به رد شده
                 await supabaseClient.from('cancellation_requests').update({ status: 'rejected' }).eq('id', id);
 
-                // ۲. ثبت پیام برای کاربر
                 await supabaseClient.from('messages').insert([{
                     phone_number: phone, 
                     title: '❌ رد درخواست لغو قرارداد',
@@ -800,12 +2132,11 @@
                     created_at: new Date().toISOString()
                 }]);
 
-                alert('درخواست لغو رد شد و پیام اطلاع‌رسانی برای کاربر ارسال گردید.');
+                showToast('درخواست لغو رد شد و پیام اطلاع‌رسانی ارسال گردید.');
                 loadCancellations();
-
             } catch (error) {
                 console.error("خطا در رد درخواست لغو:", error);
-                alert("خطا در رد درخواست. لطفاً دوباره تلاش کنید.");
+                showToast("خطا در رد درخواست.", "error");
             } finally {
                 document.body.style.cursor = 'default';
             }
