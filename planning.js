@@ -1102,7 +1102,7 @@ const PlanningModule = {
     },
    
     // ======================================================================
-    // ⚙️ ۵. پیکربندی هسته برنامه‌ریز (VIP Setup) با اعداد ۱۰۰٪ فارسی
+    // ⚙️ ۵. پیکربندی هسته برنامه‌ریز (VIP Setup) متصل به ستون‌های ساعت در vip_settings
     // ======================================================================
     populateVipSetupUI() {
         const existing = AppState.vipSettings;
@@ -1112,8 +1112,14 @@ const PlanningModule = {
         this.selectedWeaknesses = [];
 
         const uid = String(AppState.userId || '');
-        this.studyStartHour = parseFloat(Storage.get(`qotbnama_study_start_${uid}`, '7')) || 7.0;
-        this.studyEndHour = parseFloat(Storage.get(`qotbnama_study_end_${uid}`, '23.5')) || 23.5;
+        // خواندن ساعت شروع و پایان از جدول vip_settings (یا حافظه محلی در صورت عدم وجود)
+        this.studyStartHour = (existing && existing.study_start_hour != null)
+            ? parseFloat(existing.study_start_hour)
+            : (parseFloat(Storage.get(`qotbnama_study_start_${uid}`, '7')) || 7.0);
+
+        this.studyEndHour = (existing && existing.study_end_hour != null)
+            ? parseFloat(existing.study_end_hour)
+            : (parseFloat(Storage.get(`qotbnama_study_end_${uid}`, '23.5')) || 23.5);
 
         const inpStart = document.getElementById('inpStudyStartHour');
         const inpEnd = document.getElementById('inpStudyEndHour');
@@ -1365,6 +1371,8 @@ const PlanningModule = {
             subject_skills: skills,
             class_schedule: classesData,
             is_farhangian: document.getElementById('farhangianToggle')?.checked || false,
+            study_start_hour: this.studyStartHour,
+            study_end_hour: this.studyEndHour,
             updated_at: new Date().toISOString()
         };
 
@@ -1378,7 +1386,7 @@ const PlanningModule = {
             AppState.vipSettings = payload;
             this.populateVipSetupUI();
             this.toggleSetupPanel();
-            UI.showToast('پیکربندی هسته و بازه ساعت مطالعه با موفقیت ذخیره شد.', 'success');
+            UI.showToast('پیکربندی هسته و بازه ساعت مطالعه در دیتابیس ذخیره شد.', 'success');
         } catch (err) {
             UI.showToast('خطا در ذخیره تنظیمات در سرور.', 'error');
         } finally {
@@ -1390,7 +1398,6 @@ const PlanningModule = {
         }
     },
 
-    // ارسال برنامه چیده‌شده روزبه‌روز (raw_plan) + یادداشت دانش‌آموز به هوش مصنوعی برای تولید جملات اختصاصی هر روز
     enrichMotivationsWithAiAsync(scheduleObj, studentNote) {
         if (!scheduleObj || !scheduleObj.id || typeof GAS_WEBAPP_URL === 'undefined') return;
         try {
